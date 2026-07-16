@@ -1,9 +1,12 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.routers.match import router as match_router
+from app.routers.player import router as player_router
+from app.routers.meta import router as meta_router
+
 app = FastAPI(title="BrawlAnalytics API")
 
-# CORSの設定（ローカルとCloudflare Pagesを想定）
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"],
@@ -11,6 +14,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(match_router)
+app.include_router(player_router)
+app.include_router(meta_router)
 
 @app.get("/")
 def read_root():

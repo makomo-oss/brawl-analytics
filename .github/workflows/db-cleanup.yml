@@ -1,0 +1,30 @@
+name: Daily DB Cleanup
+
+on:
+  schedule:
+    - cron: '30 4 * * *' # Every day at 4:30 AM UTC
+  workflow_dispatch:
+
+jobs:
+  db-cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+          
+      - name: Run DB Cleanup Script
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: |
+          cd backend
+          python -m app.scripts.db_cleanup

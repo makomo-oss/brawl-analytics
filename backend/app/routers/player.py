@@ -23,6 +23,7 @@ async def get_dashboard(player_tag: str):
     Brawl Stars APIから取得した直近のバトルログを解析してダッシュボード用のデータを返す
     """
     try:
+        player_info = await get_player(player_tag)
         battlelog = await get_player_battlelog(player_tag)
         items = battlelog.get("items", [])
         
@@ -32,7 +33,6 @@ async def get_dashboard(player_tag: str):
         
         for item in items:
             battle = item.get("battle", {})
-            # ランクマッチ等の判定 (現状は全てを集計するが、rankedに絞ってもよい)
             if battle.get("result"):
                 total_matches += 1
                 is_win = (battle.get("result") == "victory")
@@ -84,6 +84,14 @@ async def get_dashboard(player_tag: str):
         
         return {
             "player_tag": player_tag,
+            "profile": {
+                "name": player_info.get("name", "Unknown"),
+                "trophies": player_info.get("trophies", 0),
+                "highest_trophies": player_info.get("highestTrophies", 0),
+                "level": player_info.get("expLevel", 0),
+                "3v3_victories": player_info.get("3vs3Victories", 0),
+                "club_name": player_info.get("club", {}).get("name", "No Club")
+            },
             "metrics": {
                 "total_matches_analyzed": total_matches,
                 "overall_win_rate": round((wins / total_matches * 100) if total_matches > 0 else 0, 1)
@@ -98,9 +106,4 @@ async def get_dashboard(player_tag: str):
         }
     except Exception as e:
         logger.error(f"Dashboard error: {e}")
-        return {
-            "player_tag": player_tag,
-            "metrics": {"total_matches_analyzed": 0, "overall_win_rate": 0},
-            "insights": {"hidden_weapons": ["dynamike"], "needs_practice": ["piper"]},
-            "gap_analysis": [{"char": "API Error", "global_win_rate": 50.0, "personal_win_rate": 0.0, "matches": 0}]
-        }
+        return {"error": "Failed to generate dashboard"}

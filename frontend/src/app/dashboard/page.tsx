@@ -10,7 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { getBrawlerInfo } from "@/lib/brawlers"
-import { translateMode, translateMap, getModeIconUrl, getRankIconUrl } from "@/lib/translations"
+import { translateMode, translateMap, getModeIconUrl } from "@/lib/translations"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 function formatBattleTime(timeStr: string) {
@@ -221,7 +221,7 @@ export default function DashboardPage() {
                       if (battleTab === "all") return true;
                       if (battleTab === "ranked") return b.type === "soloRanked" || b.type === "teamRanked";
                       if (battleTab === "friendly") return b.type === "friendly";
-                      if (battleTab === "normal") return b.type !== "friendly" && b.type !== "soloRanked" && b.type !== "teamRanked";
+                      if (battleTab === "normal") return b.type === "ranked" || (b.type !== "friendly" && b.type !== "soloRanked" && b.type !== "teamRanked");
                       return true;
                     });
                     
@@ -231,16 +231,28 @@ export default function DashboardPage() {
                     
                     return filteredBattles.map((battle: any, i: number) => {
                       const mainBInfo = getBrawlerInfo(battle.hero);
-                      const isRanked = battle.type === "soloRanked" || battle.type === "teamRanked" || battle.type === "ranked";
+                      const isRanked = battle.type === "soloRanked" || battle.type === "teamRanked";
                       const isFriendly = battle.type === "friendly";
                       
                       let scoreDisplay = null;
                       if (isRanked) {
-                        const rankIconUrl = getRankIconUrl(data.profile?.highest_rank || 1);
+                        const rankVal = data.profile?.highest_rank || 1;
+                        let rankName = "Bronze";
+                        let rankColor = "from-[#cd7f32] to-[#8b4513]"; // Bronze
+                        let rankTextColor = "text-orange-400";
+                        if (rankVal >= 4 && rankVal <= 6) { rankName = "Silver"; rankColor = "from-gray-300 to-gray-500"; rankTextColor = "text-gray-300"; }
+                        else if (rankVal >= 7 && rankVal <= 9) { rankName = "Gold"; rankColor = "from-yellow-300 to-yellow-600"; rankTextColor = "text-yellow-400"; }
+                        else if (rankVal >= 10 && rankVal <= 12) { rankName = "Diamond"; rankColor = "from-cyan-400 to-blue-600"; rankTextColor = "text-cyan-300"; }
+                        else if (rankVal >= 13 && rankVal <= 15) { rankName = "Mythic"; rankColor = "from-fuchsia-500 to-purple-700"; rankTextColor = "text-fuchsia-400"; }
+                        else if (rankVal >= 16 && rankVal <= 18) { rankName = "Legendary"; rankColor = "from-red-500 to-rose-700"; rankTextColor = "text-red-400"; }
+                        else if (rankVal >= 19) { rankName = "Masters"; rankColor = "from-yellow-200 via-yellow-500 to-amber-600"; rankTextColor = "text-yellow-300"; }
+
                         scoreDisplay = (
-                          <div className="flex flex-col items-center justify-center -mt-1">
-                            <img src={rankIconUrl} alt="Rank" className="w-10 h-10 object-contain drop-shadow-md hover:scale-110 transition-transform" />
-                            <span className="text-[9px] font-bold text-purple-400 mt-1 uppercase tracking-widest bg-purple-500/10 px-1.5 rounded-sm">Ranked</span>
+                          <div className="flex flex-col items-center justify-center -mt-1 group-hover:scale-110 transition-transform">
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br ${rankColor} shadow-[0_0_10px_rgba(0,0,0,0.4)] border-2 border-background rotate-3`}>
+                              <span className="font-extrabold text-white text-lg drop-shadow-md font-serif italic">{rankName.charAt(0)}</span>
+                            </div>
+                            <span className={`text-[10px] font-black ${rankTextColor} mt-1.5 uppercase tracking-widest drop-shadow-sm`}>{rankName}</span>
                           </div>
                         );
                       } else if (isFriendly) {

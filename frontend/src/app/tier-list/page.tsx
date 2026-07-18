@@ -11,6 +11,7 @@ import { Progress } from "@/components/ui/progress"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { getBrawlerInfo } from "@/lib/brawlers"
+import { translateMode, translateMap } from "@/lib/translations"
 
 const tierConfig = {
   S: { color: "from-pink-500 to-rose-500", label: "環境トップ", bg: "bg-pink-500/10 border-pink-500/30" },
@@ -89,7 +90,11 @@ export default function TierListPage() {
 
   const fetchCharacterDetail = async (charName: string) => {
     try {
-      const res = await fetch(`http://localhost:8000/meta/characters/${charName}`)
+      let url = `http://localhost:8000/meta/characters/${charName}?type=${selectedType}`
+      if ((selectedType === "mode" || selectedType === "map") && selectedId) {
+        url += `&id=${encodeURIComponent(selectedId)}`
+      }
+      const res = await fetch(url)
       const data = await res.json()
       setSelectedChar(data)
       setSheetOpen(true)
@@ -143,7 +148,7 @@ export default function TierListPage() {
               </SelectTrigger>
               <SelectContent>
                 {categories.modes.map((m: string) => (
-                  <SelectItem key={m} value={m}>{m}</SelectItem>
+                  <SelectItem key={m} value={m}>{translateMode(m)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -156,7 +161,7 @@ export default function TierListPage() {
               </SelectTrigger>
               <SelectContent>
                 {categories.maps.map((m: string) => (
-                  <SelectItem key={m} value={m}>{m}</SelectItem>
+                  <SelectItem key={m} value={m}>{translateMap(m)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>

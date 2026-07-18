@@ -57,7 +57,7 @@ def get_categories():
     }
 
 @router.get("/characters/{character_id}")
-def get_character_detail(character_id: str):
+def get_character_detail(character_id: str, type: str = "global", id: str = None):
     """
     特定キャラクターの詳細ビュー（カモ・天敵など）を返す
     """
@@ -65,7 +65,16 @@ def get_character_detail(character_id: str):
     if not meta:
         raise HTTPException(status_code=503, detail="Meta data not ready yet")
         
-    chars = meta.get("characters", {})
+    if type == "global":
+        target = meta.get("global", {})
+    elif type == "mode" and id:
+        target = meta.get("modes", {}).get(id)
+    elif type == "map" and id:
+        target = meta.get("maps", {}).get(id)
+    else:
+        target = meta.get("global", {})
+        
+    chars = target.get("characters", {})
     char_id_lower = character_id.lower()
     
     if char_id_lower not in chars:

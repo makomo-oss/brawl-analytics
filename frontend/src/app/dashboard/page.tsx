@@ -63,8 +63,24 @@ export default function DashboardPage() {
       </Card>
 
       {data && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <Card className="bg-card/80 backdrop-blur-sm shadow-[0_0_15px_rgba(var(--primary),0.1)]">
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 mt-8">
+          {data.profile && (
+            <Card className="bg-card/50 backdrop-blur-sm border-border mb-8">
+              <CardHeader>
+                <CardTitle className="text-2xl flex items-center gap-2">
+                  {data.profile.name} <Badge variant="outline" className="text-sm font-normal">{data.profile.club_name}</Badge>
+                </CardTitle>
+                <CardDescription className="text-muted-foreground flex gap-4">
+                  <span>🏆 {data.profile.trophies.toLocaleString()} (最高: {data.profile.highest_trophies.toLocaleString()})</span>
+                  <span>🌟 レベル: {data.profile.level}</span>
+                  <span>⚔️ 3v3勝利数: {data.profile["3v3_victories"].toLocaleString()}</span>
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <Card className="bg-card/80 backdrop-blur-sm shadow-[0_0_15px_rgba(var(--primary),0.1)]">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-primary" />

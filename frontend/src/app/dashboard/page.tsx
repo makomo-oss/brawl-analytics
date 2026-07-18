@@ -49,6 +49,8 @@ interface DashboardData {
     highest_rank: number;
     ranked_elo: number;
     highest_ranked_elo: number;
+    ranked_rank: number;
+    highest_ranked_rank: number;
     level: number;
     club_name: string;
     "3v3_victories": number;
@@ -147,12 +149,22 @@ export default function DashboardPage() {
                   <div className="text-xs text-muted-foreground">最高: {data.profile?.highest_trophies.toLocaleString()}</div>
                 </div>
                 {data.profile?.ranked_elo ? (
-                  <div className="text-right bg-purple-500/5 px-4 py-2 rounded-xl border border-purple-500/10">
-                    <div className="text-sm font-semibold text-purple-600 dark:text-purple-400 flex items-center justify-end gap-1">
-                      <Swords className="w-4 h-4" /> ガチバトル現在スコア
+                  <div className="flex items-center gap-2">
+                    {data.profile.ranked_rank > 0 && (
+                      <img 
+                        src={`/images/ranks/${data.profile.ranked_rank}.png`} 
+                        alt="Rank" 
+                        className="w-16 h-16 drop-shadow-md bg-secondary/20 rounded-full p-1 border border-primary/10" 
+                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                      />
+                    )}
+                    <div className="text-right bg-purple-500/5 px-4 py-2 rounded-xl border border-purple-500/10">
+                      <div className="text-sm font-semibold text-purple-600 dark:text-purple-400 flex items-center justify-end gap-1">
+                        <Swords className="w-4 h-4" /> ガチバトル現在スコア
+                      </div>
+                      <div className="text-2xl font-black text-purple-600 dark:text-purple-400">{data.profile.ranked_elo.toLocaleString()}</div>
+                      <div className="text-xs text-purple-500/70">最高: {data.profile.highest_ranked_elo.toLocaleString()}</div>
                     </div>
-                    <div className="text-2xl font-black text-purple-600 dark:text-purple-400">{data.profile.ranked_elo.toLocaleString()}</div>
-                    <div className="text-xs text-purple-500/70">最高: {data.profile.highest_ranked_elo.toLocaleString()}</div>
                   </div>
                 ) : null}
               </div>

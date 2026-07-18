@@ -135,6 +135,8 @@ async def get_dashboard(player_tag: str):
         icon_id = player_info.get("icon", {}).get("id", 28000000)
         ranked_elo = player_info.get("rankedElo", 0)
         highest_ranked_elo = player_info.get("highestAllTimeRankedElo", 0)
+        ranked_rank = player_info.get("rankedRank", 0)
+        highest_ranked_rank = player_info.get("highestAllTimeRankedRank", 0)
         brawlers = player_info.get("brawlers", [])
         
         return {
@@ -147,6 +149,8 @@ async def get_dashboard(player_tag: str):
                 "highest_rank": highest_rank,
                 "ranked_elo": ranked_elo,
                 "highest_ranked_elo": highest_ranked_elo,
+                "ranked_rank": ranked_rank,
+                "highest_ranked_rank": highest_ranked_rank,
                 "level": player_info.get("expLevel", 0),
                 "3v3_victories": player_info.get("3vs3Victories", 0),
                 "club_name": player_info.get("club", {}).get("name", "No Club")

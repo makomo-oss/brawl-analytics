@@ -287,16 +287,16 @@ export default function DraftCompanionPage() {
                   <Button 
                     type="button"
                     variant={myTeam === "blue" ? "default" : "outline"} 
-                    className={`w-full ${myTeam === "blue" ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
-                    onClick={() => setMyTeam("blue")}
+                    className={myTeam === "blue" ? "w-full bg-blue-600 hover:bg-blue-700 text-white" : "w-full"}
+                    onClick={(e) => { e.preventDefault(); setMyTeam("blue"); }}
                   >
                     青チーム
                   </Button>
                   <Button 
                     type="button"
                     variant={myTeam === "red" ? "default" : "outline"} 
-                    className={`w-full ${myTeam === "red" ? 'bg-red-600 hover:bg-red-700' : ''}`}
-                    onClick={() => setMyTeam("red")}
+                    className={myTeam === "red" ? "w-full bg-red-600 hover:bg-red-700 text-white" : "w-full"}
+                    onClick={(e) => { e.preventDefault(); setMyTeam("red"); }}
                   >
                     赤チーム
                   </Button>
@@ -309,16 +309,16 @@ export default function DraftCompanionPage() {
                   <Button 
                     type="button"
                     variant={firstPickTeam === "blue" ? "default" : "outline"} 
-                    className={`w-full ${firstPickTeam === "blue" ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
-                    onClick={() => setFirstPickTeam("blue")}
+                    className={firstPickTeam === "blue" ? "w-full bg-blue-600 hover:bg-blue-700 text-white" : "w-full"}
+                    onClick={(e) => { e.preventDefault(); setFirstPickTeam("blue"); }}
                   >
                     青チーム
                   </Button>
                   <Button 
                     type="button"
                     variant={firstPickTeam === "red" ? "default" : "outline"} 
-                    className={`w-full ${firstPickTeam === "red" ? 'bg-red-600 hover:bg-red-700' : ''}`}
-                    onClick={() => setFirstPickTeam("red")}
+                    className={firstPickTeam === "red" ? "w-full bg-red-600 hover:bg-red-700 text-white" : "w-full"}
+                    onClick={(e) => { e.preventDefault(); setFirstPickTeam("red"); }}
                   >
                     赤チーム
                   </Button>

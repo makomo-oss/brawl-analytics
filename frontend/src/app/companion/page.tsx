@@ -64,7 +64,7 @@ export default function CompanionPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">ゲームモード</label>
-                <Select value={mode} onValueChange={setMode}>
+                <Select value={mode} onValueChange={(val) => setMode(val || "")}>
                   <SelectTrigger>
                     <SelectValue placeholder="モードを選択" />
                   </SelectTrigger>
@@ -77,7 +77,7 @@ export default function CompanionPage() {
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">マップ</label>
-                <Select value={mapId} onValueChange={setMapId}>
+                <Select value={mapId} onValueChange={(val) => setMapId(val || "")}>
                   <SelectTrigger>
                     <SelectValue placeholder="マップを選択" />
                   </SelectTrigger>

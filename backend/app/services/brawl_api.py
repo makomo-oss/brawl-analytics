@@ -5,7 +5,8 @@ from app.config import BRAWL_API_TOKEN, BRAWL_API_PROXY, BRAWL_API_BASE_URL
 logger = logging.getLogger(__name__)
 
 async def get_player_battlelog(player_tag: str):
-    tag = player_tag.replace("#", "%23")
+    clean_tag = player_tag.replace("#", "")
+    tag = f"%23{clean_tag}"
     url = f"{BRAWL_API_BASE_URL}/players/{tag}/battlelog"
     headers = {
         "Authorization": f"Bearer {BRAWL_API_TOKEN}",
@@ -30,7 +31,8 @@ async def get_player_battlelog(player_tag: str):
         }
 
 async def get_player(player_tag: str):
-    tag = player_tag.replace("#", "%23")
+    clean_tag = player_tag.replace("#", "")
+    tag = f"%23{clean_tag}"
     url = f"{BRAWL_API_BASE_URL}/players/{tag}"
     headers = {
         "Authorization": f"Bearer {BRAWL_API_TOKEN}",

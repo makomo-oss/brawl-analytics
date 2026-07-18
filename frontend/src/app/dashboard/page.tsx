@@ -15,10 +15,26 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
 
 function formatBattleTime(timeStr: string) {
-  // ISO 8601 形式のパースとフォーマット
-  const d = new Date(timeStr);
+  if (!timeStr) return "";
+  
+  // Brawl Stars API format: "20240718T123045.000Z"
+  // Convert to valid ISO 8601: "2024-07-18T12:30:45.000Z"
+  let parsedTime = timeStr;
+  if (timeStr.length >= 15 && timeStr.indexOf('T') === 8) {
+    const yyyy = timeStr.substring(0, 4);
+    const MM = timeStr.substring(4, 6);
+    const dd = timeStr.substring(6, 8);
+    const HH = timeStr.substring(9, 11);
+    const mm = timeStr.substring(11, 13);
+    const ss = timeStr.substring(13, 15);
+    const msZ = timeStr.substring(15);
+    parsedTime = `${yyyy}-${MM}-${dd}T${HH}:${mm}:${ss}${msZ}`;
+  }
+
+  const d = new Date(parsedTime);
   if (isNaN(d.getTime())) return timeStr;
-  return `${d.getMonth() + 1}月${d.getDate()}日 ${d.getHours()}:${d.getMinutes().toString().padStart(2, '0')}`;
+  
+  return `${d.getMonth() + 1}月${d.getDate()}日 ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
 }
 
 function getRankImage(rankValue: number) {

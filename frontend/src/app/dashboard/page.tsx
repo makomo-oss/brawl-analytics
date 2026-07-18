@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Search, TrendingUp, AlertTriangle, Lightbulb, Trophy, Swords } from "lucide-react"
+import { Search, TrendingUp, AlertTriangle, Lightbulb, Trophy, Swords, Star } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -75,7 +75,19 @@ interface DashboardData {
   brawlers?: Brawler[];
   recent_battles?: any[];
   gap_analysis?: any[];
-  insights?: { hidden_weapons: string[]; needs_practice: string[] };
+  insights?: {
+    gap_analysis: any[];
+    hidden_weapons: string[];
+    needs_practice: string[];
+    mode_analysis: {
+      mode: string;
+      matches: number;
+      wins: number;
+      win_rate: number;
+      star_player_count: number;
+      top_brawlers: string[];
+    }[];
+  };
 }
 
 export default function DashboardPage() {
@@ -211,7 +223,7 @@ export default function DashboardPage() {
               <CardDescription>世間の勝率とあなたの勝率の差（マップ総合）</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {data.gap_analysis?.map((item: any) => {
+              {data.insights?.gap_analysis?.map((item: any) => {
                 const bInfo = getBrawlerInfo(item.char);
                 return (
                 <div key={item.char} className="space-y-2">
@@ -302,6 +314,75 @@ export default function DashboardPage() {
             <TabsTrigger value="analysis" className="rounded-md font-semibold text-md">モード別分析</TabsTrigger>
             <TabsTrigger value="characters" className="rounded-md font-semibold text-md">キャラクター</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="analysis" className="space-y-6">
+            <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2 text-primary/80">
+              📊 モード別分析
+            </h2>
+            {data.insights?.mode_analysis && data.insights.mode_analysis.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {data.insights.mode_analysis.map((modeStat) => (
+                  <Card key={modeStat.mode} className="bg-card/40 backdrop-blur-md border-primary/20 shadow-xl overflow-hidden hover:shadow-2xl transition-all">
+                    <div className="p-4 bg-secondary/30 flex justify-between items-center border-b border-primary/10">
+                      <h3 className="font-bold text-lg">{modeStat.mode}</h3>
+                      <Badge variant="outline" className="font-mono">{modeStat.matches} 試合</Badge>
+                    </div>
+                    <CardContent className="p-5 space-y-6">
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-end">
+                          <span className="text-sm font-medium text-muted-foreground">勝率</span>
+                          <span className={`text-2xl font-black ${modeStat.win_rate >= 60 ? 'text-green-500' : modeStat.win_rate >= 50 ? 'text-blue-500' : 'text-orange-500'}`}>
+                            {modeStat.win_rate}%
+                          </span>
+                        </div>
+                        <div className="h-3 w-full bg-secondary/50 rounded-full overflow-hidden shadow-inner">
+                          <div 
+                            className={`h-full rounded-full transition-all duration-1000 ${modeStat.win_rate >= 60 ? 'bg-gradient-to-r from-green-500 to-emerald-400' : modeStat.win_rate >= 50 ? 'bg-gradient-to-r from-blue-500 to-cyan-400' : 'bg-gradient-to-r from-orange-500 to-red-400'}`}
+                            style={{ width: `${modeStat.win_rate}%` }}
+                          />
+                        </div>
+                        <div className="flex justify-between text-xs text-muted-foreground font-mono">
+                          <span>{modeStat.wins} Wins</span>
+                          <span>{modeStat.matches - modeStat.wins} Losses</span>
+                        </div>
+                      </div>
+
+                      {modeStat.star_player_count > 0 && (
+                        <div className="flex items-center gap-2 bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 p-2 rounded-lg border border-yellow-500/20">
+                          <Star className="w-4 h-4 fill-current" />
+                          <span className="text-sm font-semibold">MVP獲得: {modeStat.star_player_count}回</span>
+                        </div>
+                      )}
+
+                      <div className="space-y-3">
+                        <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">よく使うキャラクター</span>
+                        <div className="flex gap-3">
+                          {modeStat.top_brawlers.map(brawlerName => {
+                            const bInfo = getBrawlerInfo(brawlerName);
+                            return (
+                              <div key={brawlerName} className="flex flex-col items-center gap-1 group">
+                                <Avatar className="w-12 h-12 border-2 border-primary/20 shadow-sm group-hover:scale-110 transition-transform">
+                                  <AvatarImage src={bInfo.imageUrl} />
+                                  <AvatarFallback>{bInfo.nameJa.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                <span className="text-[10px] font-medium text-muted-foreground truncate w-14 text-center">
+                                  {bInfo.nameJa}
+                                </span>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="py-12 text-center text-muted-foreground bg-secondary/20 rounded-xl border border-dashed">
+                分析データがありません。
+              </div>
+            )}
+          </TabsContent>
 
           <TabsContent value="battles" className="space-y-6">
             <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2 text-primary/80">

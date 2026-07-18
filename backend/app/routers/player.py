@@ -28,9 +28,12 @@ async def get_dashboard(player_tag: str):
         items = battlelog.get("items", [])
         
         char_stats = {}
+        mode_stats = {}
         total_matches = 0
         wins = 0
         recent_battles = []
+        
+        player_tag_fmt = f"#{player_tag.replace('%23', '').replace('#', '').upper()}"
         
         for item in items:
             battle = item.get("battle", {})
@@ -43,10 +46,13 @@ async def get_dashboard(player_tag: str):
                     wins += 1
                     
                 hero_used = "unknown"
-                player_tag_fmt = f"#{player_tag.replace('%23', '').replace('#', '').upper()}"
                 
                 my_team = []
                 opponent_teams = []
+                
+                # スタープレイヤーの判定
+                star_player_tag = battle.get("starPlayer", {}).get("tag", "").replace("#", "")
+                is_star_player = (star_player_tag == player_tag_fmt.replace("#", ""))
                 
                 for team in battle.get("teams", []):
                     is_my_team = False
@@ -73,15 +79,30 @@ async def get_dashboard(player_tag: str):
                     if is_win:
                         char_stats[hero_used]["wins"] += 1
                         
+                # モード別統計の集計
+                mode_name = battle.get("mode", "unknown").replace("_", " ").title()
+                if mode_name not in mode_stats:
+                    mode_stats[mode_name] = {"matches": 0, "wins": 0, "star_player": 0, "brawlers": {}}
+                
+                mode_stats[mode_name]["matches"] += 1
+                if is_win:
+                    mode_stats[mode_name]["wins"] += 1
+                if is_star_player:
+                    mode_stats[mode_name]["star_player"] += 1
+                
+                if hero_used != "unknown":
+                    if hero_used not in mode_stats[mode_name]["brawlers"]:
+                        mode_stats[mode_name]["brawlers"][hero_used] = 0
+                    mode_stats[mode_name]["brawlers"][hero_used] += 1
+                        
                 # バトル履歴用データの作成
                 trophy_change = battle.get("trophyChange")
                 if trophy_change is None:
-                    # ランクマ等で増減が取れない場合のダミー（見た目用）
                     trophy_change = 8 if is_win else (-6 if battle.get("result") == "defeat" else 0)
                 
                 recent_battles.append({
                     "time": item.get("battleTime", ""),
-                    "mode": battle.get("mode", "unknown").replace("_", " ").title(),
+                    "mode": mode_name,
                     "map": event.get("map", "Unknown"),
                     "type": battle.get("type", "unknown"),
                     "result": battle.get("result", "draw"),
@@ -117,12 +138,23 @@ async def get_dashboard(player_tag: str):
                     
         gap_analysis.sort(key=lambda x: x["matches"], reverse=True)
         
-        if not hidden_weapons: hidden_weapons = ["dynamike", "barley"]
-        if not needs_practice: needs_practice = ["piper", "leon"]
+        mode_analysis = []
+        for mode_n, stats in mode_stats.items():
+            top_brawlers = sorted(stats["brawlers"].items(), key=lambda x: x[1], reverse=True)[:3]
+            top_brawlers_names = [b[0] for b in top_brawlers]
+            win_rate = round((stats["wins"] / stats["matches"]) * 100, 1) if stats["matches"] > 0 else 0.0
+            mode_analysis.append({
+                "mode": mode_n,
+                "matches": stats["matches"],
+                "wins": stats["wins"],
+                "win_rate": win_rate,
+                "star_player_count": stats["star_player"],
+                "top_brawlers": top_brawlers_names
+            })
+        mode_analysis.sort(key=lambda x: x["matches"], reverse=True)
         
         highest_rank = player_info.get("rankedRank") or player_info.get("highestAllTimeRankedRank") or player_info.get("highestRank")
         if not highest_rank:
-            # APIにランク情報が含まれていない場合のフォールバック（最高トロフィーから推定してUI用ランクを設定）
             highest_trophies = player_info.get("highestTrophies", 0)
             if highest_trophies >= 80000: highest_rank = 19
             elif highest_trophies >= 60000: highest_rank = 16
@@ -132,42 +164,34 @@ async def get_dashboard(player_tag: str):
             elif highest_trophies >= 10000: highest_rank = 4
             else: highest_rank = 1
         
-        icon_id = player_info.get("icon", {}).get("id", 28000000)
-        ranked_elo = player_info.get("rankedElo", 0)
-        highest_ranked_elo = player_info.get("highestAllTimeRankedElo", 0)
-        ranked_rank = player_info.get("rankedRank", 0)
-        highest_ranked_rank = player_info.get("highestAllTimeRankedRank", 0)
-        brawlers = player_info.get("brawlers", [])
-        
         return {
             "player_tag": player_tag,
             "profile": {
                 "name": player_info.get("name", "Unknown"),
-                "icon_id": icon_id,
+                "icon_id": player_info.get("icon", {}).get("id", 28000000),
                 "trophies": player_info.get("trophies", 0),
                 "highest_trophies": player_info.get("highestTrophies", 0),
                 "highest_rank": highest_rank,
-                "ranked_elo": ranked_elo,
-                "highest_ranked_elo": highest_ranked_elo,
-                "ranked_rank": ranked_rank,
-                "highest_ranked_rank": highest_ranked_rank,
+                "ranked_elo": player_info.get("rankedElo", 0),
+                "highest_ranked_elo": player_info.get("highestAllTimeRankedElo", 0),
+                "ranked_rank": player_info.get("rankedRank", 0),
+                "highest_ranked_rank": player_info.get("highestAllTimeRankedRank", 0),
                 "level": player_info.get("expLevel", 0),
                 "3v3_victories": player_info.get("3vs3Victories", 0),
                 "club_name": player_info.get("club", {}).get("name", "No Club")
             },
-            "brawlers": brawlers,
-            "recent_battles": recent_battles, # 全件返す
+            "brawlers": player_info.get("brawlers", []),
+            "recent_battles": recent_battles,
             "metrics": {
                 "total_matches_analyzed": total_matches,
                 "overall_win_rate": round((wins / total_matches * 100) if total_matches > 0 else 0, 1)
             },
             "insights": {
+                "gap_analysis": gap_analysis[:5] if gap_analysis else [{"char": "no data", "global_win_rate": 50.0, "personal_win_rate": 50.0, "matches": 0}],
                 "hidden_weapons": hidden_weapons[:3],
-                "needs_practice": needs_practice[:3]
-            },
-            "gap_analysis": gap_analysis[:5] if gap_analysis else [
-                {"char": "no data", "global_win_rate": 50.0, "personal_win_rate": 50.0, "matches": 0}
-            ]
+                "needs_practice": needs_practice[:3],
+                "mode_analysis": mode_analysis
+            }
         }
     except Exception as e:
         logger.error(f"Dashboard error: {e}")

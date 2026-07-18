@@ -13,7 +13,7 @@ def load_meta_data():
         return json.load(f)
 
 @router.get("/tier-list")
-def get_tier_list(type: str = "global", sub_type: str = None, id: str = None):
+def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, include_details: bool = False):
     """
     環境分析ページ（メタレポート）のTier表を返す
     type: 'global', 'gachi'
@@ -39,13 +39,17 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None):
     if not target:
         raise HTTPException(status_code=404, detail=f"Data for {type} not found")
         
-    return {
+    response_data = {
         "updated_at": meta.get("updated_at"),
         "tiers": target.get("tiers", {}),
-        "characters": target.get("characters", {}),
         "type": type,
         "metrics": target.get("metrics", {})
     }
+    
+    if include_details:
+        response_data["characters"] = target.get("characters", {})
+        
+    return response_data
 
 @router.get("/categories")
 def get_categories():

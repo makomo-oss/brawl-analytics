@@ -152,7 +152,7 @@ export default function TierListPage() {
             </Tabs>
 
             {subType === "mode" && (
-              <Select value={selectedId} onValueChange={setSelectedId}>
+              <Select value={selectedId} onValueChange={(val) => setSelectedId(val || "")}>
                 <SelectTrigger className="w-full sm:w-[250px] bg-background">
                   <SelectValue placeholder="モードを選択..." />
                 </SelectTrigger>
@@ -165,7 +165,7 @@ export default function TierListPage() {
             )}
 
             {subType === "map" && (
-              <Select value={selectedId} onValueChange={setSelectedId}>
+              <Select value={selectedId} onValueChange={(val) => setSelectedId(val || "")}>
                 <SelectTrigger className="w-full sm:w-[250px] bg-background">
                   <SelectValue placeholder="マップを選択..." />
                 </SelectTrigger>

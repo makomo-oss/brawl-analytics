@@ -21,6 +21,31 @@ function formatBattleTime(timeStr: string) {
   return `${d.getMonth() + 1}月${d.getDate()}日 ${d.getHours()}:${d.getMinutes().toString().padStart(2, '0')}`;
 }
 
+function getRankBadge(rankValue: number) {
+  if (!rankValue || rankValue <= 0) return null;
+  if (rankValue >= 19) return { name: "MASTERS", color: "bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-600", text: "text-white shadow-sm" };
+  
+  const tiers = ["BRONZE", "SILVER", "GOLD", "DIAMOND", "MYTHIC", "LEGENDARY"];
+  const colors = [
+    "bg-gradient-to-tr from-amber-800 to-amber-600", // Bronze
+    "bg-gradient-to-tr from-slate-400 to-slate-300", // Silver
+    "bg-gradient-to-tr from-yellow-500 to-yellow-300", // Gold
+    "bg-gradient-to-tr from-cyan-500 to-blue-500",     // Diamond
+    "bg-gradient-to-tr from-purple-600 to-fuchsia-500", // Mythic
+    "bg-gradient-to-tr from-red-600 via-orange-500 to-yellow-500" // Legendary
+  ];
+  
+  const tierIndex = Math.floor((rankValue - 1) / 3);
+  const subTier = ((rankValue - 1) % 3) + 1; // 1, 2, 3
+  const numerals = ["I", "II", "III"];
+  
+  return {
+    name: `${tiers[tierIndex]} ${numerals[subTier - 1]}`,
+    color: colors[tierIndex],
+    text: tierIndex === 1 || tierIndex === 2 ? "text-slate-900 shadow-sm" : "text-white shadow-sm"
+  };
+}
+
 interface ComponentItem {
   id: number;
   name: string;
@@ -149,15 +174,23 @@ export default function DashboardPage() {
                   <div className="text-xs text-muted-foreground">最高: {data.profile?.highest_trophies.toLocaleString()}</div>
                 </div>
                 {data.profile?.ranked_elo ? (
-                  <div className="flex items-center gap-2">
-                    {data.profile.ranked_rank > 0 && (
-                      <img 
-                        src={`/images/ranks/${data.profile.ranked_rank}.png`} 
-                        alt="Rank" 
-                        className="w-16 h-16 drop-shadow-md bg-secondary/20 rounded-full p-1 border border-primary/10" 
-                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                      />
-                    )}
+                  <div className="flex items-center gap-3">
+                    {data.profile.ranked_rank > 0 && (() => {
+                      const badge = getRankBadge(data.profile.ranked_rank);
+                      if (!badge) return null;
+                      return (
+                        <div className={`w-16 h-16 rounded-xl flex flex-col items-center justify-center ${badge.color} border-2 border-white/20 shadow-lg transform hover:scale-105 transition-transform`}>
+                          <div className={`text-[10px] font-black uppercase tracking-tighter ${badge.text} leading-tight text-center`}>
+                            {badge.name.split(' ')[0]}
+                          </div>
+                          {badge.name.split(' ')[1] && (
+                            <div className={`text-xl font-black ${badge.text} leading-none mt-0.5`}>
+                              {badge.name.split(' ')[1]}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })()}
                     <div className="text-right bg-purple-500/5 px-4 py-2 rounded-xl border border-purple-500/10">
                       <div className="text-sm font-semibold text-purple-600 dark:text-purple-400 flex items-center justify-end gap-1">
                         <Swords className="w-4 h-4" /> ガチバトル現在スコア

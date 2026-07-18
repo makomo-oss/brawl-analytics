@@ -45,10 +45,25 @@ async def get_dashboard(player_tag: str):
                 hero_used = "unknown"
                 player_tag_fmt = f"#{player_tag.replace('%23', '').replace('#', '').upper()}"
                 
+                my_team = []
+                opponent_teams = []
+                
                 for team in battle.get("teams", []):
+                    is_my_team = False
+                    team_data = []
                     for p in team:
+                        team_data.append({
+                            "name": p.get("name", "Unknown"),
+                            "brawler": p.get("brawler", {}).get("name", "unknown").lower()
+                        })
                         if p.get("tag") == player_tag_fmt:
+                            is_my_team = True
                             hero_used = p.get("brawler", {}).get("name", "unknown").lower()
+                    
+                    if is_my_team:
+                        my_team = team_data
+                    else:
+                        opponent_teams.append(team_data)
                             
                 if hero_used != "unknown":
                     if hero_used not in char_stats:
@@ -69,7 +84,9 @@ async def get_dashboard(player_tag: str):
                     "map": event.get("map", "Unknown"),
                     "result": battle.get("result", "draw"),
                     "hero": hero_used,
-                    "trophy_change": trophy_change
+                    "trophy_change": trophy_change,
+                    "my_team": my_team,
+                    "opponent_teams": opponent_teams
                 })
                         
         gap_analysis = []
@@ -110,7 +127,7 @@ async def get_dashboard(player_tag: str):
                 "3v3_victories": player_info.get("3vs3Victories", 0),
                 "club_name": player_info.get("club", {}).get("name", "No Club")
             },
-            "recent_battles": recent_battles[:10], # 直近10件を返す
+            "recent_battles": recent_battles, # 全件返す
             "metrics": {
                 "total_matches_analyzed": total_matches,
                 "overall_win_rate": round((wins / total_matches * 100) if total_matches > 0 else 0, 1)

@@ -8,6 +8,12 @@ import { Badge } from "@/components/ui/badge"
 import { Search, TrendingUp, AlertTriangle, Lightbulb } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 
 export default function DashboardPage() {
   const [playerTag, setPlayerTag] = useState("")
@@ -162,30 +168,60 @@ export default function DashboardPage() {
               ⚔️ 直近のバトル履歴
             </h2>
             <Card className="bg-card/40 backdrop-blur-md border-primary/20 shadow-xl overflow-hidden">
-              <ScrollArea className="h-[400px]">
+              <ScrollArea className="h-[500px]">
                 <div className="p-4 space-y-2">
-                  {data.recent_battles.map((battle: any, i: number) => (
-                    <div key={i}>
-                      <div className="flex items-center justify-between group hover:bg-primary/5 p-3 rounded-lg transition-all duration-300 cursor-default">
-                        <div className="flex items-center gap-4">
-                          <div className={`w-2 h-12 rounded-full ${battle.result === 'victory' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]' : battle.result === 'defeat' ? 'bg-destructive shadow-[0_0_10px_rgba(239,68,68,0.5)]' : 'bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)]'}`} />
-                          <div>
-                            <p className="font-bold text-lg capitalize tracking-wide">{battle.hero}</p>
-                            <p className="text-sm text-muted-foreground">{battle.mode} <span className="opacity-50">|</span> {battle.map}</p>
+                  <Accordion className="w-full">
+                    {data.recent_battles.map((battle: any, i: number) => (
+                      <AccordionItem value={`item-${i}`} key={i} className="border-b-0 mb-2 bg-background/20 rounded-lg">
+                        <AccordionTrigger className="hover:bg-primary/5 px-3 py-2 rounded-lg transition-all duration-300 hover:no-underline">
+                          <div className="flex items-center justify-between w-full text-left">
+                            <div className="flex items-center gap-4">
+                              <div className={`w-2 h-12 rounded-full ${battle.result === 'victory' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]' : battle.result === 'defeat' ? 'bg-destructive shadow-[0_0_10px_rgba(239,68,68,0.5)]' : 'bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)]'}`} />
+                              <div>
+                                <p className="font-bold text-lg capitalize tracking-wide">{battle.hero}</p>
+                                <p className="text-sm text-muted-foreground">{battle.mode} <span className="opacity-50">|</span> {battle.map}</p>
+                              </div>
+                            </div>
+                            <div className="text-right flex flex-col items-end justify-center mr-4">
+                              <Badge variant={battle.result === 'victory' ? 'default' : battle.result === 'defeat' ? 'destructive' : 'outline'} className="mb-1 uppercase shadow-sm text-xs font-bold tracking-wider">
+                                {battle.result}
+                              </Badge>
+                              <p className={`font-semibold text-sm ${battle.trophy_change > 0 ? 'text-green-500' : battle.trophy_change < 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                                {battle.trophy_change > 0 ? '+' : ''}{battle.trophy_change} 🏆
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                        <div className="text-right flex flex-col items-end justify-center">
-                          <Badge variant={battle.result === 'victory' ? 'default' : battle.result === 'defeat' ? 'destructive' : 'outline'} className="mb-1 uppercase shadow-sm text-xs font-bold tracking-wider">
-                            {battle.result}
-                          </Badge>
-                          <p className={`font-semibold text-sm ${battle.trophy_change > 0 ? 'text-green-500' : battle.trophy_change < 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
-                            {battle.trophy_change > 0 ? '+' : ''}{battle.trophy_change} 🏆
-                          </p>
-                        </div>
-                      </div>
-                      {i < data.recent_battles.length - 1 && <Separator className="my-2 bg-primary/10" />}
-                    </div>
-                  ))}
+                        </AccordionTrigger>
+                        <AccordionContent className="px-4 pb-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                            <div className="space-y-2 bg-primary/5 p-3 rounded-md">
+                              <p className="font-semibold text-primary text-sm mb-2 border-b border-primary/20 pb-1">味方チーム</p>
+                              {battle.my_team && battle.my_team.map((p: any, idx: number) => (
+                                <div key={idx} className="flex justify-between items-center text-sm">
+                                  <span className="truncate max-w-[120px]">{p.name}</span>
+                                  <Badge variant="outline" className="capitalize text-xs font-normal">{p.brawler}</Badge>
+                                </div>
+                              ))}
+                            </div>
+                            <div className="space-y-2 bg-destructive/5 p-3 rounded-md">
+                              <p className="font-semibold text-destructive text-sm mb-2 border-b border-destructive/20 pb-1">相手チーム</p>
+                              {battle.opponent_teams && battle.opponent_teams.map((team: any, t_idx: number) => (
+                                <div key={t_idx} className="space-y-1">
+                                  {team.map((p: any, idx: number) => (
+                                    <div key={`${t_idx}-${idx}`} className="flex justify-between items-center text-sm">
+                                      <span className="truncate max-w-[120px]">{p.name}</span>
+                                      <Badge variant="outline" className="capitalize text-xs font-normal border-destructive/30">{p.brawler}</Badge>
+                                    </div>
+                                  ))}
+                                  {t_idx < battle.opponent_teams.length - 1 && <Separator className="my-1 opacity-50 bg-destructive/20" />}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
                 </div>
               </ScrollArea>
             </Card>

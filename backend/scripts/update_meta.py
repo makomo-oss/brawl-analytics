@@ -166,7 +166,8 @@ async def main():
                         matchup_matrix[mb][ob]["matches"] += 1
                         if is_win: matchup_matrix[mb][ob]["wins"] += 1
 
-        print(f"Total pure raw matches analyzed: {total_picks // 6}")
+        real_analyzed_matches = total_picks // 6
+        print(f"Total pure raw matches analyzed: {real_analyzed_matches}")
         print("Calculating Tier List and Matchups strictly from raw data...")
         
         # データが全く取れなかった場合の固定ベースライン（ランダムデータは絶対に使わない）
@@ -258,7 +259,7 @@ async def main():
             "characters": characters_detail,
             "analyzed_players": analyzed_players, # エビデンスとして返す
             "metrics": {
-                "analyzed_matches": total_picks // 6,
+                "analyzed_matches": real_analyzed_matches,
                 "mean_win_rate": round(mean_wr * 100, 1)
             }
         }

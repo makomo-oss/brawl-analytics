@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-07-19T03:41:33.336708",
+  "updated_at": "2026-07-19T03:44:58.325785",
   "tiers": {
     "S": [
       "angelo",
@@ -1084,7 +1084,7 @@
   },
   "analyzed_players": [],
   "metrics": {
-    "analyzed_matches": 21500,
+    "analyzed_matches": 0,
     "mean_win_rate": 50.6
   }
 }

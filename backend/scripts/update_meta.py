@@ -136,22 +136,47 @@ async def main():
 
         print("Calculating Tier List and Matchups...")
         
-        # もしデータが少なすぎる場合はダミーデータで補完 (APIリミット等のため)
+        # データが少ない場合は、より現実的なメタ分布に基づいたデータを生成する
         if total_picks < 100:
-            print("Not enough real data. Generating synthetic data based on global assumptions...")
-            # 全キャラにダミーデータを注入
+            print("Not enough real data. Generating synthetic data based on realistic meta assumptions...")
             import random
+            
+            # 2024年の一般的なTier上位キャラ（ボーナス付与）
+            meta_s_tier = ["piper", "angelo", "melodie", "sandy", "cordelius", "charlie", "leon", "spike"]
+            meta_a_tier = ["crow", "fang", "collette", "nani", "belle", "amber", "gene", "max", "surge", "stu"]
+            meta_d_tier = ["hank", "doug", "frank", "chester", "penny", "ash"]
+
             for b in all_brawlers:
-                matches = random.randint(100, 5000)
-                wr = random.uniform(0.4, 0.6)
-                brawler_stats[b] = {"matches": matches, "wins": int(matches * wr)}
-                total_picks += matches
+                # 基礎マッチ数と勝率
+                base_matches = random.randint(500, 2000)
+                base_wr = random.uniform(0.45, 0.52)
+                
+                if b in meta_s_tier:
+                    base_matches += random.randint(2000, 4000)
+                    base_wr += random.uniform(0.05, 0.08) # 50% ~ 60%
+                elif b in meta_a_tier:
+                    base_matches += random.randint(1000, 2000)
+                    base_wr += random.uniform(0.02, 0.05) # 47% ~ 57%
+                elif b in meta_d_tier:
+                    base_matches = random.randint(100, 500)
+                    base_wr -= random.uniform(0.05, 0.10) # 35% ~ 47%
+                    
+                brawler_stats[b] = {"matches": base_matches, "wins": int(base_matches * base_wr)}
+                total_picks += base_matches
                 
                 matchup_matrix[b] = {}
                 for ob in all_brawlers:
                     if b == ob: continue
-                    m_matches = random.randint(10, 500)
-                    m_wr = random.uniform(0.3, 0.7)
+                    m_matches = random.randint(20, 200)
+                    # S Tier は他のキャラに対しても勝率が高くなりやすい
+                    m_wr = base_wr + random.uniform(-0.1, 0.1)
+                    if ob in meta_s_tier:
+                        m_wr -= random.uniform(0.05, 0.15) # 相手がSなら下がる
+                    if ob in meta_d_tier:
+                        m_wr += random.uniform(0.05, 0.15) # 相手がDなら上がる
+                        
+                    # 勝率を0~1に丸める
+                    m_wr = max(0.1, min(0.9, m_wr))
                     matchup_matrix[b][ob] = {"matches": m_matches, "wins": int(m_matches * m_wr)}
 
         # 偏差値計算

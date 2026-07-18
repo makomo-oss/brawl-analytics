@@ -5,7 +5,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Search, TrendingUp, AlertTriangle, Lightbulb } from "lucide-react"
 import { Search, TrendingUp, AlertTriangle, Lightbulb, Trophy, Swords } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"

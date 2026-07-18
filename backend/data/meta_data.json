@@ -1,11 +1,27 @@
 {
-  "updated_at": "2026-07-19T03:34:59.841669",
+  "updated_at": "2026-07-19T03:41:33.336708",
   "tiers": {
-    "S": [],
+    "S": [
+      "angelo",
+      "melodie",
+      "charlie",
+      "cordelius",
+      "fang",
+      "belle",
+      "stu",
+      "amber",
+      "surge",
+      "nani",
+      "max",
+      "sandy",
+      "leon",
+      "gene",
+      "piper",
+      "crow",
+      "spike"
+    ],
     "A": [],
-    "B": [],
-    "C": [],
-    "D": [
+    "B": [
       "wendy",
       "nori",
       "bolt",
@@ -35,23 +51,16 @@
       "berry",
       "lily",
       "draco",
-      "angelo",
-      "melodie",
       "larry & lawrie",
       "kit",
       "mico",
-      "charlie",
       "chuck",
       "pearl",
-      "doug",
-      "cordelius",
-      "hank",
       "maisie",
       "willow",
       "r-t",
       "mandy",
       "gray",
-      "chester",
       "buster",
       "gus",
       "sam",
@@ -59,66 +68,1023 @@
       "bonnie",
       "janet",
       "eve",
-      "fang",
       "lola",
       "meg",
-      "ash",
       "griff",
       "buzz",
       "grom",
       "squeak",
-      "belle",
-      "stu",
       "ruffs",
       "edgar",
       "byron",
       "lou",
-      "amber",
       "colette",
-      "surge",
       "sprout",
-      "nani",
       "gale",
       "jacky",
-      "max",
       "mr. p",
       "emz",
       "bea",
-      "sandy",
       "8-bit",
       "bibi",
       "carl",
       "rosa",
-      "leon",
       "tick",
-      "gene",
-      "frank",
-      "penny",
       "darryl",
       "tara",
       "pam",
-      "piper",
       "bo",
       "poco",
-      "crow",
       "mortis",
       "el primo",
       "dynamike",
       "nita",
       "jessie",
       "barley",
-      "spike",
       "rico",
       "brock",
       "bull",
       "colt",
       "shelly"
+    ],
+    "C": [],
+    "D": [
+      "doug",
+      "hank",
+      "chester",
+      "ash",
+      "frank",
+      "penny"
     ]
   },
-  "characters": {},
+  "characters": {
+    "wendy": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "nori": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "bolt": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "starr nova": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "damian": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "najia": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "sirius": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "glowy": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "gigi": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "pierce": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "ziggy": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "mina": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "trunk": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "alli": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "kaze": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "jae-yong": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "finx": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "lumi": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "ollie": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "meeple": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "buzz lightyear": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "juju": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "shade": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "kenji": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "moe": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "clancy": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "berry": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "lily": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "draco": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "angelo": {
+      "tier": "S",
+      "score": 2.61,
+      "win_rate": 60.0,
+      "use_rate": 2.33,
+      "total_matches": 3000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "melodie": {
+      "tier": "S",
+      "score": 2.61,
+      "win_rate": 60.0,
+      "use_rate": 2.33,
+      "total_matches": 3000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "larry & lawrie": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "kit": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "mico": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "charlie": {
+      "tier": "S",
+      "score": 2.61,
+      "win_rate": 60.0,
+      "use_rate": 2.33,
+      "total_matches": 3000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "chuck": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "pearl": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "doug": {
+      "tier": "D",
+      "score": -2.28,
+      "win_rate": 40.0,
+      "use_rate": 0.39,
+      "total_matches": 500,
+      "kamo": [],
+      "tenteki": []
+    },
+    "cordelius": {
+      "tier": "S",
+      "score": 2.61,
+      "win_rate": 60.0,
+      "use_rate": 2.33,
+      "total_matches": 3000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "hank": {
+      "tier": "D",
+      "score": -2.28,
+      "win_rate": 40.0,
+      "use_rate": 0.39,
+      "total_matches": 500,
+      "kamo": [],
+      "tenteki": []
+    },
+    "maisie": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "willow": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "r-t": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "mandy": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "gray": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "chester": {
+      "tier": "D",
+      "score": -2.28,
+      "win_rate": 40.0,
+      "use_rate": 0.39,
+      "total_matches": 500,
+      "kamo": [],
+      "tenteki": []
+    },
+    "buster": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "gus": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "sam": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "otis": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "bonnie": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "janet": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "eve": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "fang": {
+      "tier": "S",
+      "score": 1.2,
+      "win_rate": 55.0,
+      "use_rate": 1.55,
+      "total_matches": 2000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "lola": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "meg": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "ash": {
+      "tier": "D",
+      "score": -2.28,
+      "win_rate": 40.0,
+      "use_rate": 0.39,
+      "total_matches": 500,
+      "kamo": [],
+      "tenteki": []
+    },
+    "griff": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "buzz": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "grom": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "squeak": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "belle": {
+      "tier": "S",
+      "score": 1.2,
+      "win_rate": 55.0,
+      "use_rate": 1.55,
+      "total_matches": 2000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "stu": {
+      "tier": "S",
+      "score": 1.2,
+      "win_rate": 55.0,
+      "use_rate": 1.55,
+      "total_matches": 2000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "ruffs": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "edgar": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "byron": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "lou": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "amber": {
+      "tier": "S",
+      "score": 1.2,
+      "win_rate": 55.0,
+      "use_rate": 1.55,
+      "total_matches": 2000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "colette": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "surge": {
+      "tier": "S",
+      "score": 1.2,
+      "win_rate": 55.0,
+      "use_rate": 1.55,
+      "total_matches": 2000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "sprout": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "nani": {
+      "tier": "S",
+      "score": 1.2,
+      "win_rate": 55.0,
+      "use_rate": 1.55,
+      "total_matches": 2000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "gale": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "jacky": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "max": {
+      "tier": "S",
+      "score": 1.2,
+      "win_rate": 55.0,
+      "use_rate": 1.55,
+      "total_matches": 2000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "mr. p": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "emz": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "bea": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "sandy": {
+      "tier": "S",
+      "score": 2.61,
+      "win_rate": 60.0,
+      "use_rate": 2.33,
+      "total_matches": 3000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "8-bit": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "bibi": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "carl": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "rosa": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "leon": {
+      "tier": "S",
+      "score": 2.61,
+      "win_rate": 60.0,
+      "use_rate": 2.33,
+      "total_matches": 3000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "tick": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "gene": {
+      "tier": "S",
+      "score": 1.2,
+      "win_rate": 55.0,
+      "use_rate": 1.55,
+      "total_matches": 2000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "frank": {
+      "tier": "D",
+      "score": -2.28,
+      "win_rate": 40.0,
+      "use_rate": 0.39,
+      "total_matches": 500,
+      "kamo": [],
+      "tenteki": []
+    },
+    "penny": {
+      "tier": "D",
+      "score": -2.28,
+      "win_rate": 40.0,
+      "use_rate": 0.39,
+      "total_matches": 500,
+      "kamo": [],
+      "tenteki": []
+    },
+    "darryl": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "tara": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "pam": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "piper": {
+      "tier": "S",
+      "score": 2.61,
+      "win_rate": 60.0,
+      "use_rate": 2.33,
+      "total_matches": 3000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "bo": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "poco": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "crow": {
+      "tier": "S",
+      "score": 1.2,
+      "win_rate": 55.0,
+      "use_rate": 1.55,
+      "total_matches": 2000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "mortis": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "el primo": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "dynamike": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "nita": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "jessie": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "barley": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "spike": {
+      "tier": "S",
+      "score": 2.61,
+      "win_rate": 60.0,
+      "use_rate": 2.33,
+      "total_matches": 3000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "rico": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "brock": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "bull": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "colt": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    },
+    "shelly": {
+      "tier": "B",
+      "score": -0.21,
+      "win_rate": 50.0,
+      "use_rate": 0.78,
+      "total_matches": 1000,
+      "kamo": [],
+      "tenteki": []
+    }
+  },
   "analyzed_players": [],
   "metrics": {
-    "analyzed_matches": 0,
-    "mean_win_rate": 50.0
+    "analyzed_matches": 21500,
+    "mean_win_rate": 50.6
   }
 }

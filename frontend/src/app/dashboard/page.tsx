@@ -324,7 +324,7 @@ export default function DashboardPage() {
                 {data.insights.mode_analysis.map((modeStat) => (
                   <Card key={modeStat.mode} className="bg-card/40 backdrop-blur-md border-primary/20 shadow-xl overflow-hidden hover:shadow-2xl transition-all">
                     <div className="p-4 bg-secondary/30 flex justify-between items-center border-b border-primary/10">
-                      <h3 className="font-bold text-lg">{modeStat.mode}</h3>
+                      <h3 className="font-bold text-lg">{translateMode(modeStat.mode)}</h3>
                       <Badge variant="outline" className="font-mono">{modeStat.matches} 試合</Badge>
                     </div>
                     <CardContent className="p-5 space-y-6">
@@ -342,8 +342,8 @@ export default function DashboardPage() {
                           />
                         </div>
                         <div className="flex justify-between text-xs text-muted-foreground font-mono">
-                          <span>{modeStat.wins} Wins</span>
-                          <span>{modeStat.matches - modeStat.wins} Losses</span>
+                          <span>{modeStat.wins} 勝</span>
+                          <span>{modeStat.matches - modeStat.wins} 敗</span>
                         </div>
                       </div>
 
@@ -588,7 +588,7 @@ export default function DashboardPage() {
                       <div className="grid grid-cols-4 gap-2 mt-2 pt-2 border-t border-border/50">
                         {/* Gadgets */}
                         <div className="flex flex-col gap-1 items-center">
-                          <span className="text-[9px] font-bold text-green-500">Gadget</span>
+                          <span className="text-[9px] font-bold text-green-500">ガジェット</span>
                           <div className="flex gap-1 justify-center flex-wrap">
                             {brawler.gadgets.length > 0 ? brawler.gadgets.map((g) => (
                               <img key={g.id} src={`https://cdn.brawlify.com/gadgets/regular/${g.id}.png`} alt={g.name} className="w-6 h-6 rounded-full border border-green-500/50 shadow-sm" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
@@ -597,7 +597,7 @@ export default function DashboardPage() {
                         </div>
                         {/* Star Powers */}
                         <div className="flex flex-col gap-1 items-center">
-                          <span className="text-[9px] font-bold text-yellow-500">StarPower</span>
+                          <span className="text-[9px] font-bold text-yellow-500">スターパワー</span>
                           <div className="flex gap-1 justify-center flex-wrap">
                             {brawler.starPowers.length > 0 ? brawler.starPowers.map((s) => (
                               <img key={s.id} src={`https://cdn.brawlify.com/star-powers/regular/${s.id}.png`} alt={s.name} className="w-6 h-6 rounded-full border border-yellow-500/50 shadow-sm" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
@@ -606,7 +606,7 @@ export default function DashboardPage() {
                         </div>
                         {/* Gears */}
                         <div className="flex flex-col gap-1 items-center">
-                          <span className="text-[9px] font-bold text-blue-500">Gear</span>
+                          <span className="text-[9px] font-bold text-blue-500">ギア</span>
                           <div className="flex gap-1 justify-center flex-wrap">
                             {brawler.gears.length > 0 ? brawler.gears.map((g) => (
                               <img key={g.id} src={`https://cdn.brawlify.com/gears/regular/${g.id}.png`} alt={g.name} className="w-6 h-6 rounded-full border border-blue-500/50 shadow-sm" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
@@ -615,7 +615,7 @@ export default function DashboardPage() {
                         </div>
                         {/* Hypercharge */}
                         <div className="flex flex-col gap-1 items-center">
-                          <span className="text-[9px] font-bold text-purple-500">Hyper</span>
+                          <span className="text-[9px] font-bold text-purple-500">ハイパー</span>
                           <div className="flex gap-1 justify-center flex-wrap">
                             {brawler.hyperCharges.length > 0 ? brawler.hyperCharges.map((h) => (
                               <div key={h.id} className="w-6 h-6 rounded border border-purple-500/50 bg-gradient-to-tr from-purple-600 to-fuchsia-500 flex items-center justify-center shadow-sm">

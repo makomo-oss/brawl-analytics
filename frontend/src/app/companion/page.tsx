@@ -31,6 +31,7 @@ export default function DraftCompanionPage() {
   const [selectedMode, setSelectedMode] = useState("")
   const [selectedMap, setSelectedMap] = useState("")
   const [myTeam, setMyTeam] = useState<Team>("blue")
+  const [firstPickTeam, setFirstPickTeam] = useState<Team>("blue")
   
   // Draft State
   const [bans, setBans] = useState<string[]>([])
@@ -101,8 +102,8 @@ export default function DraftCompanionPage() {
   }
 
   // ドラフトロジック：現在どちらのターンか？
-  // BANフェーズ: 全6枠。青(先) -> 赤(後) -> 青 -> 赤 -> 青 -> 赤
-  // Pickフェーズ: 全6枠。1-2-2-1方式。青1 -> 赤2 -> 青2 -> 赤1
+  // BANフェーズ: 全6枠。交互。
+  // Pickフェーズ: 全6枠。1-2-2-1方式。
   const totalBans = bans.length
   const totalPicks = bluePicks.length + redPicks.length
   
@@ -111,12 +112,14 @@ export default function DraftCompanionPage() {
   
   if (phase === "ban") {
     turnType = "ban"
-    currentTurnTeam = totalBans % 2 === 0 ? "blue" : "red"
+    const isFirstPickTurn = totalBans % 2 === 0
+    currentTurnTeam = isFirstPickTurn ? firstPickTeam : (firstPickTeam === "blue" ? "red" : "blue")
   } else if (phase === "pick") {
     turnType = "pick"
-    const pickOrder: Team[] = ["blue", "red", "red", "blue", "blue", "red"]
+    const pickOrder = ["first", "second", "second", "first", "first", "second"]
     if (totalPicks < 6) {
-      currentTurnTeam = pickOrder[totalPicks]
+      const order = pickOrder[totalPicks]
+      currentTurnTeam = order === "first" ? firstPickTeam : (firstPickTeam === "blue" ? "red" : "blue")
     }
   }
 
@@ -277,25 +280,49 @@ export default function DraftCompanionPage() {
               </div>
             </div>
 
-            <div className="space-y-3">
-              <label className="text-sm font-bold">自チーム（自分が所属するチーム）</label>
-              <div className="flex gap-4">
-                <Button 
-                  type="button"
-                  variant={myTeam === "blue" ? "default" : "outline"} 
-                  className={`w-full ${myTeam === "blue" ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
-                  onClick={() => setMyTeam("blue")}
-                >
-                  青チーム (先攻)
-                </Button>
-                <Button 
-                  type="button"
-                  variant={myTeam === "red" ? "default" : "outline"} 
-                  className={`w-full ${myTeam === "red" ? 'bg-red-600 hover:bg-red-700' : ''}`}
-                  onClick={() => setMyTeam("red")}
-                >
-                  赤チーム (後攻)
-                </Button>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-3">
+                <label className="text-sm font-bold">自チーム</label>
+                <div className="flex gap-4">
+                  <Button 
+                    type="button"
+                    variant={myTeam === "blue" ? "default" : "outline"} 
+                    className={`w-full ${myTeam === "blue" ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
+                    onClick={() => setMyTeam("blue")}
+                  >
+                    青チーム
+                  </Button>
+                  <Button 
+                    type="button"
+                    variant={myTeam === "red" ? "default" : "outline"} 
+                    className={`w-full ${myTeam === "red" ? 'bg-red-600 hover:bg-red-700' : ''}`}
+                    onClick={() => setMyTeam("red")}
+                  >
+                    赤チーム
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-sm font-bold">先攻チーム</label>
+                <div className="flex gap-4">
+                  <Button 
+                    type="button"
+                    variant={firstPickTeam === "blue" ? "default" : "outline"} 
+                    className={`w-full ${firstPickTeam === "blue" ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
+                    onClick={() => setFirstPickTeam("blue")}
+                  >
+                    青チーム
+                  </Button>
+                  <Button 
+                    type="button"
+                    variant={firstPickTeam === "red" ? "default" : "outline"} 
+                    className={`w-full ${firstPickTeam === "red" ? 'bg-red-600 hover:bg-red-700' : ''}`}
+                    onClick={() => setFirstPickTeam("red")}
+                  >
+                    赤チーム
+                  </Button>
+                </div>
               </div>
             </div>
 
@@ -326,7 +353,10 @@ export default function DraftCompanionPage() {
           <p className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
             {translateMode(selectedMode)} - {translateMap(selectedMap)}
             <Badge variant="outline" className={myTeam === "blue" ? "text-blue-500 border-blue-200" : "text-red-500 border-red-200"}>
-              自チーム: {myTeam === "blue" ? "青チーム (先攻)" : "赤チーム (後攻)"}
+              自チーム: {myTeam === "blue" ? "青チーム" : "赤チーム"}
+            </Badge>
+            <Badge variant="secondary">
+              先攻: {firstPickTeam === "blue" ? "青チーム" : "赤チーム"}
             </Badge>
           </p>
         </div>
@@ -358,7 +388,7 @@ export default function DraftCompanionPage() {
               {/* Blue Team Area */}
               <div className="space-y-3">
                 <h3 className="font-bold text-blue-500 flex items-center justify-center gap-2 bg-blue-500/10 p-2 rounded-lg">
-                  青チーム (先攻) {myTeam === "blue" && "(味方)"}
+                  青チーム {firstPickTeam === "blue" ? "(先攻)" : "(後攻)"} {myTeam === "blue" && "(味方)"}
                 </h3>
                 <div className="flex flex-col gap-3">
                   {[0, 1, 2].map(i => {
@@ -383,7 +413,7 @@ export default function DraftCompanionPage() {
               {/* Red Team Area */}
               <div className="space-y-3">
                 <h3 className="font-bold text-red-500 flex items-center justify-center gap-2 bg-red-500/10 p-2 rounded-lg">
-                  赤チーム (後攻) {myTeam === "red" && "(味方)"}
+                  赤チーム {firstPickTeam === "red" ? "(先攻)" : "(後攻)"} {myTeam === "red" && "(味方)"}
                 </h3>
                 <div className="flex flex-col gap-3">
                   {[0, 1, 2].map(i => {

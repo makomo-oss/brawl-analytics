@@ -14,8 +14,7 @@ async def get_player_battlelog(player_tag: str):
     
     try:
         proxy = BRAWL_API_PROXY if BRAWL_API_PROXY else None
-        # ポートが不明等のため、とりあえずタイムアウトを短くして繋がらなければモックを返す
-        async with httpx.AsyncClient(proxy=proxy, verify=False, timeout=3.0) as client:
+        async with httpx.AsyncClient(proxy=proxy, verify=False, timeout=10.0) as client:
             response = await client.get(url, headers=headers)
             response.raise_for_status()
             return response.json()
@@ -39,7 +38,7 @@ async def get_player(player_tag: str):
     }
     try:
         proxy = BRAWL_API_PROXY if BRAWL_API_PROXY else None
-        async with httpx.AsyncClient(proxy=proxy, verify=False, timeout=3.0) as client:
+        async with httpx.AsyncClient(proxy=proxy, verify=False, timeout=10.0) as client:
             response = await client.get(url, headers=headers)
             response.raise_for_status()
             return response.json()

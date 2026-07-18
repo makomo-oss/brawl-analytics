@@ -132,17 +132,26 @@ async def get_dashboard(player_tag: str):
             elif highest_trophies >= 10000: highest_rank = 4
             else: highest_rank = 1
         
+        icon_id = player_info.get("icon", {}).get("id", 28000000)
+        ranked_elo = player_info.get("rankedElo", 0)
+        highest_ranked_elo = player_info.get("highestAllTimeRankedElo", 0)
+        brawlers = player_info.get("brawlers", [])
+        
         return {
             "player_tag": player_tag,
             "profile": {
                 "name": player_info.get("name", "Unknown"),
+                "icon_id": icon_id,
                 "trophies": player_info.get("trophies", 0),
                 "highest_trophies": player_info.get("highestTrophies", 0),
                 "highest_rank": highest_rank,
+                "ranked_elo": ranked_elo,
+                "highest_ranked_elo": highest_ranked_elo,
                 "level": player_info.get("expLevel", 0),
                 "3v3_victories": player_info.get("3vs3Victories", 0),
                 "club_name": player_info.get("club", {}).get("name", "No Club")
             },
+            "brawlers": brawlers,
             "recent_battles": recent_battles, # 全件返す
             "metrics": {
                 "total_matches_analyzed": total_matches,

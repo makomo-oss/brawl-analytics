@@ -49,11 +49,37 @@ async def get_player(player_tag: str):
         return {
             "name": "Makomo (Mock)",
             "tag": player_tag,
+            "icon": {"id": 28000013},
             "trophies": 35420,
             "highestTrophies": 38000,
             "rankedRank": 16,
             "highestAllTimeRankedRank": 16,
+            "rankedElo": 6000,
+            "highestAllTimeRankedElo": 6650,
             "expLevel": 150,
             "3vs3Victories": 4500,
-            "club": {"name": "Brawl Masters"}
+            "club": {"name": "Brawl Masters"},
+            "brawlers": [
+                {
+                    "name": "SHELLY", "power": 11, "rank": 25, "trophies": 750, "highestTrophies": 800,
+                    "gadgets": [{"id":1,"name":"FAST FORWARD"}, {"id":2,"name":"CLAY PIGEONS"}],
+                    "starPowers": [{"id":1,"name":"SHELL SHOCK"}, {"id":2,"name":"BAND-AID"}],
+                    "gears": [{"id":1,"name":"DAMAGE","level":3}, {"id":2,"name":"SPEED","level":3}],
+                    "hyperCharges": [{"id":1,"name":"DOUBLE BARREL"}]
+                },
+                {
+                    "name": "COLT", "power": 9, "rank": 20, "trophies": 500, "highestTrophies": 550,
+                    "gadgets": [{"id":1,"name":"SPEEDLOADER"}],
+                    "starPowers": [{"id":1,"name":"SLICK BOOTS"}],
+                    "gears": [{"id":1,"name":"DAMAGE","level":3}],
+                    "hyperCharges": []
+                },
+                {
+                    "name": "LEON", "power": 11, "rank": 30, "trophies": 1000, "highestTrophies": 1050,
+                    "gadgets": [{"id":1,"name":"CLONE PROJECTOR"}, {"id":2,"name":"LOLLIPOP DROP"}],
+                    "starPowers": [{"id":1,"name":"SMOKE TRAILS"}, {"id":2,"name":"INVISIHEAL"}],
+                    "gears": [{"id":1,"name":"DAMAGE","level":3}, {"id":2,"name":"MYTHIC","level":3}],
+                    "hyperCharges": [{"id":1,"name":"LIMBO"}]
+                }
+            ]
         }

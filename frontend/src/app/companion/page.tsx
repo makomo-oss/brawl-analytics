@@ -249,6 +249,21 @@ export default function DraftCompanionPage() {
     return []
   }, [phase, allyBans, enemyBans, bluePicks, redPicks, metaData, enemyPicks])
 
+  // 勝率予測計算
+  const predictedWinRate = useMemo(() => {
+    if (phase !== "done" || !metaData || !metaData.characters) return 50
+    let myScore = 0
+    let enemyScore = 0
+    
+    allyPicks.forEach(c => myScore += metaData.characters[c]?.score || 0)
+    enemyPicks.forEach(c => enemyScore += metaData.characters[c]?.score || 0)
+    
+    const diff = myScore - enemyScore
+    // シグモイド関数で勝率に変換 (係数2.0で適度に丸める)
+    const p = 1 / (1 + Math.exp(-2.0 * diff))
+    return Math.round(p * 100)
+  }, [phase, allyPicks, enemyPicks, metaData])
+
   // ================= UI Components =================
 
   if (phase === "setup") {
@@ -496,6 +511,38 @@ export default function DraftCompanionPage() {
 
             </CardContent>
           </Card>
+
+          {/* Win Rate Prediction (Done Phase) */}
+          {phase === "done" && (
+            <Card className="col-span-1 md:col-span-2 shadow-lg border-primary/20 bg-gradient-to-b from-background to-secondary/10">
+              <CardContent className="p-8 flex flex-col items-center justify-center space-y-4">
+                <div className="flex items-center gap-3 text-primary">
+                  <Trophy className="w-8 h-8 text-yellow-500" />
+                  <h2 className="text-2xl font-bold">予測勝率</h2>
+                </div>
+                <div className="relative">
+                  <svg className="w-48 h-48 transform -rotate-90">
+                    <circle cx="96" cy="96" r="80" stroke="currentColor" strokeWidth="12" fill="transparent" className="text-muted/20" />
+                    <circle 
+                      cx="96" cy="96" r="80" stroke="currentColor" strokeWidth="12" fill="transparent" 
+                      strokeDasharray="502" 
+                      strokeDashoffset={502 - (502 * predictedWinRate) / 100}
+                      className={predictedWinRate >= 50 ? "text-blue-500 transition-all duration-1000 ease-out" : "text-red-500 transition-all duration-1000 ease-out"} 
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-5xl font-extrabold">{predictedWinRate}%</span>
+                  </div>
+                </div>
+                <p className="text-sm text-muted-foreground text-center max-w-[300px]">
+                  現在の環境メタとマップ適正度に基づく自チームの理論上の勝率です
+                </p>
+                <Button className="mt-4" size="lg" onClick={handleReset}>
+                  <RefreshCw className="w-4 h-4 mr-2" /> 新しいドラフトを始める
+                </Button>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Character Pool */}
           {phase !== "done" && (

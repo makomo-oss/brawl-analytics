@@ -197,17 +197,26 @@ async def main():
                 total_picks += brawler_stats[b]["matches"]
 
         # 偏差値計算 (生データ、もしくは固定ベースラインを使用。ダミーの乱数は使用しない)
-        win_rates = []
+        raw_win_rates = []
         use_rates = []
         for b, stats in brawler_stats.items():
             if stats["matches"] > 0:
-                win_rates.append(stats["wins"] / stats["matches"])
-                use_rates.append(stats["matches"] / total_picks)
+                raw_win_rates.append(stats["wins"] / stats["matches"])
+                use_rates.append(stats["matches"] / (total_picks or 1))
                 
-        mean_wr = sum(win_rates) / len(win_rates) if win_rates else 0.5
-        std_wr = math.sqrt(sum((x - mean_wr)**2 for x in win_rates) / len(win_rates)) if len(win_rates) > 1 else 0.01
-        
+        mean_wr = sum(raw_win_rates) / len(raw_win_rates) if raw_win_rates else 0.5
         mean_ur = sum(use_rates) / len(use_rates) if use_rates else 1.0/len(all_brawlers)
+        
+        # 勝率にベイズ推定（スムージング）をかける（N試合未満のノイズを平均に近づける）
+        # 架空の「10試合分の平均勝率」を足し合わせることで、1勝0敗(100%)が54%程度に落ち着く
+        SMOOTHING_FACTOR = 10
+        smoothed_win_rates = []
+        for b, stats in brawler_stats.items():
+            if stats["matches"] > 0:
+                bayesian_wr = (stats["wins"] + (mean_wr * SMOOTHING_FACTOR)) / (stats["matches"] + SMOOTHING_FACTOR)
+                smoothed_win_rates.append(bayesian_wr)
+                
+        std_wr = math.sqrt(sum((x - mean_wr)**2 for x in smoothed_win_rates) / len(smoothed_win_rates)) if len(smoothed_win_rates) > 1 else 0.01
         std_ur = math.sqrt(sum((x - mean_ur)**2 for x in use_rates) / len(use_rates)) if len(use_rates) > 1 else 0.001
         
         if std_wr == 0: std_wr = 0.01
@@ -222,10 +231,13 @@ async def main():
                 tiers["D"].append(b)
                 continue
                 
-            wr = stats["wins"] / stats["matches"]
-            ur = stats["matches"] / total_picks
+            raw_wr = stats["wins"] / stats["matches"]
+            ur = stats["matches"] / (total_picks or 1)
             
-            z_wr = (wr - mean_wr) / std_wr
+            # 評価にはスムージングされた勝率を使う
+            bayesian_wr = (stats["wins"] + (mean_wr * SMOOTHING_FACTOR)) / (stats["matches"] + SMOOTHING_FACTOR)
+            
+            z_wr = (bayesian_wr - mean_wr) / std_wr
             z_ur = (ur - mean_ur) / std_ur
             
             # 生データからのスコア算出
@@ -254,7 +266,8 @@ async def main():
             characters_detail[b] = {
                 "tier": tier,
                 "score": round(score, 2),
-                "win_rate": round(wr * 100, 1),
+                "win_rate": round(raw_wr * 100, 1), # 表示用には生の勝率を見せる
+                "adjusted_win_rate": round(bayesian_wr * 100, 1), # 評価用に使った補正勝率
                 "use_rate": round(ur * 100, 2),
                 "total_matches": stats["matches"],
                 "kamo": kamo,

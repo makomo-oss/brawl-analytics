@@ -167,13 +167,13 @@ export default function TierListPage() {
                       <Badge variant="outline" className={`font-black text-sm bg-gradient-to-r ${tierConfig[selectedChar.tier as keyof typeof tierConfig]?.color || 'from-gray-500 to-gray-600'} text-white border-none`}>
                         環境Tier {selectedChar.tier}
                       </Badge>
-                      <span className="text-xs font-mono text-muted-foreground">スコア: {selectedChar.score}</span>
+                      <span className="text-xs font-mono text-muted-foreground">スコア: {selectedChar.score} / {selectedChar.total_matches}試合</span>
                     </SheetDescription>
                   </div>
                 </div>
               </SheetHeader>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <Card className="bg-secondary/20 border-none shadow-inner">
                   <CardContent className="p-4 flex flex-col items-center justify-center">
                     <span className="text-xs font-bold text-muted-foreground mb-1">総合勝率</span>
@@ -187,6 +187,14 @@ export default function TierListPage() {
                     <span className="text-xs font-bold text-muted-foreground mb-1">使用率</span>
                     <span className="text-2xl font-black text-primary">
                       {selectedChar.use_rate}%
+                    </span>
+                  </CardContent>
+                </Card>
+                <Card className="bg-secondary/20 border-none shadow-inner">
+                  <CardContent className="p-4 flex flex-col items-center justify-center">
+                    <span className="text-[10px] font-bold text-muted-foreground mb-1 text-center leading-tight">分析<br/>試合数</span>
+                    <span className="text-xl font-black text-foreground">
+                      {selectedChar.total_matches}
                     </span>
                   </CardContent>
                 </Card>

@@ -10,7 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { getBrawlerInfo } from "@/lib/brawlers"
-import { translateMode, translateMap } from "@/lib/translations"
+import { translateMode, translateMap, getModeIconUrl } from "@/lib/translations"
 
 export default function DashboardPage() {
   const [playerTag, setPlayerTag] = useState("")
@@ -199,16 +199,21 @@ export default function DashboardPage() {
                              <Badge variant={battle.result === 'victory' ? 'default' : battle.result === 'defeat' ? 'destructive' : 'outline'} className="uppercase text-[10px] mb-1 px-2 font-bold tracking-wider">
                                {battle.result === 'victory' ? '勝利' : battle.result === 'defeat' ? '敗北' : '引き分け'}
                              </Badge>
-                             <p className="text-xs text-muted-foreground">{translateMode(battle.mode)} <span className="opacity-50">|</span> {translateMap(battle.map)}</p>
+                             <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
+                               <img src={getModeIconUrl(battle.mode)} alt={battle.mode} className="w-4 h-4 object-contain drop-shadow-md" />
+                               <span className="font-medium text-foreground/80">{translateMode(battle.mode)}</span>
+                               <span className="opacity-40">|</span>
+                               <span>{translateMap(battle.map)}</span>
+                             </div>
                            </div>
                         </div>
                         <div className="text-right flex items-center gap-3">
-                          <Avatar className="w-10 h-10 border-2 border-primary/20 shadow-md">
+                          <Avatar className="w-12 h-12 border-2 border-primary/30 shadow-[0_0_15px_rgba(var(--primary),0.2)]">
                             <AvatarImage src={mainBInfo.imageUrl} />
                             <AvatarFallback>{mainBInfo.nameJa.charAt(0)}</AvatarFallback>
                           </Avatar>
                           <div className="w-16 text-right">
-                            <p className={`font-bold text-lg ${battle.trophy_change > 0 ? 'text-green-500' : battle.trophy_change < 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                            <p className={`font-bold text-xl drop-shadow-sm ${battle.trophy_change > 0 ? 'text-green-500' : battle.trophy_change < 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
                               {battle.trophy_change > 0 ? '+' : ''}{battle.trophy_change} 🏆
                             </p>
                           </div>
@@ -216,46 +221,61 @@ export default function DashboardPage() {
                       </div>
                       
                       {/* Teams section */}
-                      <div className="p-3 grid grid-cols-2 gap-4 bg-background/20">
+                      <div className="p-3 grid grid-cols-2 gap-4 bg-background/30 backdrop-blur-sm">
                         {/* My Team */}
-                        <div className="space-y-2">
-                          <p className="text-xs font-semibold text-primary/80 border-b border-primary/10 pb-1">味方チーム</p>
-                          <div className="flex flex-col gap-1.5">
+                        <div className="space-y-3 relative">
+                          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -z-10" />
+                          <p className="text-xs font-bold text-primary tracking-widest border-b border-primary/20 pb-1.5 flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                            味方チーム
+                          </p>
+                          <div className="flex flex-col gap-2.5">
                             {battle.my_team && battle.my_team.map((p: any, idx: number) => {
                               const bInfo = getBrawlerInfo(p.brawler);
+                              const isMe = p.brawler.toLowerCase() === battle.hero.toLowerCase(); // 簡易判定
                               return (
-                                <div key={idx} className="flex items-center gap-2">
-                                  <Avatar className="w-6 h-6 border border-primary/20 bg-background">
+                                <div key={idx} className={`flex items-center gap-3 p-1.5 rounded-lg transition-colors ${isMe ? 'bg-primary/10 border border-primary/20' : 'hover:bg-white/5'}`}>
+                                  <Avatar className={`w-10 h-10 shadow-md ${isMe ? 'border-2 border-primary ring-2 ring-primary/30 ring-offset-1 ring-offset-background' : 'border border-primary/30'}`}>
                                     <AvatarImage src={bInfo.imageUrl} />
-                                    <AvatarFallback className="text-[8px]">{bInfo.nameJa.charAt(0)}</AvatarFallback>
+                                    <AvatarFallback>{bInfo.nameJa.charAt(0)}</AvatarFallback>
                                   </Avatar>
-                                  <span className="text-xs truncate max-w-[90px]" title={p.name}>{p.name}</span>
-                                  <span className="text-[10px] text-muted-foreground ml-auto">{bInfo.nameJa}</span>
+                                  <div className="flex flex-col overflow-hidden">
+                                    <span className={`text-sm truncate max-w-[120px] font-semibold ${isMe ? 'text-primary' : 'text-foreground/90'}`} title={p.name}>
+                                      {p.name}
+                                    </span>
+                                    <span className="text-[11px] text-muted-foreground">{bInfo.nameJa}</span>
+                                  </div>
                                 </div>
                               )
                             })}
                           </div>
                         </div>
                         {/* Opponent Teams */}
-                        <div className="space-y-2 border-l border-primary/10 pl-4">
-                          <p className="text-xs font-semibold text-destructive/80 border-b border-destructive/10 pb-1">相手チーム</p>
-                          <div className="flex flex-col gap-1.5">
+                        <div className="space-y-3 border-l border-primary/10 pl-4 relative">
+                          <div className="absolute top-0 right-0 w-32 h-32 bg-destructive/5 rounded-full blur-3xl -z-10" />
+                          <p className="text-xs font-bold text-destructive tracking-widest border-b border-destructive/20 pb-1.5 flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-destructive" />
+                            相手チーム
+                          </p>
+                          <div className="flex flex-col gap-2.5">
                             {battle.opponent_teams && battle.opponent_teams.map((team: any, t_idx: number) => (
-                              <div key={t_idx} className="space-y-1.5">
+                              <div key={t_idx} className="space-y-2.5">
                                 {team.map((p: any, idx: number) => {
                                   const bInfo = getBrawlerInfo(p.brawler);
                                   return (
-                                    <div key={`${t_idx}-${idx}`} className="flex items-center gap-2">
-                                      <Avatar className="w-6 h-6 border border-destructive/20 bg-background">
+                                    <div key={`${t_idx}-${idx}`} className="flex items-center gap-3 p-1.5 rounded-lg hover:bg-white/5 transition-colors">
+                                      <Avatar className="w-10 h-10 border border-destructive/40 shadow-md">
                                         <AvatarImage src={bInfo.imageUrl} />
-                                        <AvatarFallback className="text-[8px]">{bInfo.nameJa.charAt(0)}</AvatarFallback>
+                                        <AvatarFallback>{bInfo.nameJa.charAt(0)}</AvatarFallback>
                                       </Avatar>
-                                      <span className="text-xs truncate max-w-[90px]" title={p.name}>{p.name}</span>
-                                      <span className="text-[10px] text-muted-foreground ml-auto">{bInfo.nameJa}</span>
+                                      <div className="flex flex-col overflow-hidden">
+                                        <span className="text-sm truncate max-w-[120px] font-semibold text-foreground/90" title={p.name}>{p.name}</span>
+                                        <span className="text-[11px] text-muted-foreground">{bInfo.nameJa}</span>
+                                      </div>
                                     </div>
                                   )
                                 })}
-                                {t_idx < battle.opponent_teams.length - 1 && <Separator className="my-1.5 opacity-30 bg-destructive/20" />}
+                                {t_idx < battle.opponent_teams.length - 1 && <Separator className="my-2 opacity-40 bg-destructive/30" />}
                               </div>
                             ))}
                           </div>

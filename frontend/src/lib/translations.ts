@@ -89,6 +89,31 @@ export function translateMode(mode: string) {
   return NORMALIZED_MODE_MAP[normalizedMode] || mode
 }
 
+export function getModeIconUrl(mode: string) {
+  if (!mode) return ""
+  const normalizedMode = mode.replace(/[\s\-_]/g, '').toLowerCase()
+  
+  const MODE_ICON_MAP: Record<string, string> = {
+    "gemgrab": "Gem-Grab",
+    "brawlball": "Brawl-Ball",
+    "bounty": "Bounty",
+    "heist": "Heist",
+    "hotzone": "Hot-Zone",
+    "knockout": "Knockout",
+    "wipeout": "Wipeout",
+    "soloshowdown": "Showdown",
+    "duoshowdown": "Duo-Showdown",
+    "duels": "Duels",
+    "basketbrawl": "Basket-Brawl",
+    "volleybrawl": "Volley-Brawl",
+    "payload": "Payload",
+    "hunters": "Hunters",
+  }
+  
+  const iconId = MODE_ICON_MAP[normalizedMode] || "Unknown"
+  return `https://cdn.brawlify.com/gamemode/${iconId}.png`
+}
+
 export function translateMap(mapName: string) {
   if (!mapName) return "不明"
   const normalizedMapName = mapName.replace(/[\s\-_]/g, '').toLowerCase()

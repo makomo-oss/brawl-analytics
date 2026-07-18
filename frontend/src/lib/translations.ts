@@ -46,22 +46,28 @@ export function getModeIconUrl(mode: string) {
   const normalizedMode = mode.replace(/[\s\-_]/g, '').toLowerCase()
   
   const MODE_ICON_MAP: Record<string, string> = {
-    "gemgrab": "Gem-Grab",
-    "brawlball": "Brawl-Ball",
-    "bounty": "Bounty",
-    "heist": "Heist",
-    "hotzone": "Hot-Zone",
-    "knockout": "Knockout",
-    "wipeout": "Wipeout",
-    "soloshowdown": "Showdown",
-    "duoshowdown": "Duo-Showdown",
-    "duels": "Duels",
-    "basketbrawl": "Basket-Brawl",
-    "volleybrawl": "Volley-Brawl",
-    "payload": "Payload",
-    "hunters": "Hunters",
+    "gemgrab": "48000000",
+    "heist": "48000002",
+    "bounty": "48000003",
+    "brawlball": "48000005",
+    "soloshowdown": "48000006",
+    "duoshowdown": "48000009",
+    "hotzone": "48000017",
+    "knockout": "48000020",
+    "basketbrawl": "48000022",
+    "volleybrawl": "48000023",
+    "duels": "48000024",
+    "wipeout": "48000025",
+    "payload": "48000026",
+    "hunters": "48000028",
+    "wipeout5v5": "48000031",
+    "brawlball5v5": "48000032",
+    "gemgrab5v5": "48000033",
+    "knockout5v5": "48000035",
+    "paintbrawl": "48000037",
+    "drumroll": "48000039"
   }
   
-  const iconId = MODE_ICON_MAP[normalizedMode] || "Unknown"
-  return `https://cdn.brawlify.com/gamemode/${iconId}.png`
+  const iconId = MODE_ICON_MAP[normalizedMode] || "48000000"
+  return `https://cdn.brawlify.com/game-modes/regular/${iconId}.png`
 }

@@ -1,0 +1,6655 @@
+{
+  "updated_at": "2026-07-19T03:16:32.971552",
+  "tiers": {
+    "S": [
+      "gigi",
+      "mina",
+      "r-t",
+      "buster",
+      "sam",
+      "ruffs",
+      "max",
+      "bea",
+      "sandy",
+      "carl",
+      "penny",
+      "poco",
+      "crow",
+      "mortis"
+    ],
+    "A": [
+      "wendy",
+      "nori",
+      "ziggy",
+      "trunk",
+      "kaze",
+      "buzz lightyear",
+      "kenji",
+      "draco",
+      "charlie",
+      "maisie",
+      "willow",
+      "mandy",
+      "gus",
+      "bonnie",
+      "ash",
+      "buzz",
+      "belle",
+      "edgar",
+      "amber",
+      "jacky",
+      "mr. p",
+      "bibi",
+      "bo",
+      "brock"
+    ],
+    "B": [
+      "damian",
+      "najia",
+      "glowy",
+      "pierce",
+      "jae-yong",
+      "finx",
+      "ollie",
+      "meeple",
+      "juju",
+      "shade",
+      "berry",
+      "lily",
+      "melodie",
+      "kit",
+      "mico",
+      "chuck",
+      "cordelius",
+      "hank",
+      "chester",
+      "fang",
+      "meg",
+      "squeak",
+      "stu",
+      "byron",
+      "lou",
+      "surge",
+      "sprout",
+      "nani",
+      "gale",
+      "emz",
+      "8-bit",
+      "rosa",
+      "leon",
+      "tick",
+      "tara",
+      "el primo",
+      "dynamike",
+      "nita",
+      "jessie",
+      "barley"
+    ],
+    "C": [
+      "bolt",
+      "starr nova",
+      "sirius",
+      "lumi",
+      "moe",
+      "angelo",
+      "larry & lawrie",
+      "pearl",
+      "doug",
+      "gray",
+      "janet",
+      "lola",
+      "griff",
+      "grom",
+      "colette",
+      "frank",
+      "darryl",
+      "pam",
+      "piper",
+      "spike",
+      "rico",
+      "bull",
+      "colt",
+      "shelly"
+    ],
+    "D": [
+      "alli",
+      "clancy",
+      "otis",
+      "eve",
+      "gene"
+    ]
+  },
+  "characters": {
+    "wendy": {
+      "tier": "A",
+      "score": 0.86,
+      "win_rate": 57.0,
+      "use_rate": 0.95,
+      "total_matches": 2625,
+      "kamo": [
+        {
+          "brawler": "brock",
+          "win_rate": 67.7,
+          "matches": 415
+        },
+        {
+          "brawler": "meeple",
+          "win_rate": 67.5,
+          "matches": 83
+        },
+        {
+          "brawler": "rosa",
+          "win_rate": 67.2,
+          "matches": 271
+        },
+        {
+          "brawler": "bolt",
+          "win_rate": 67.0,
+          "matches": 464
+        },
+        {
+          "brawler": "draco",
+          "win_rate": 66.5,
+          "matches": 230
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "juju",
+          "win_rate": 29.3,
+          "matches": 58
+        },
+        {
+          "brawler": "moe",
+          "win_rate": 29.9,
+          "matches": 401
+        },
+        {
+          "brawler": "shade",
+          "win_rate": 30.4,
+          "matches": 336
+        },
+        {
+          "brawler": "dynamike",
+          "win_rate": 31.1,
+          "matches": 151
+        },
+        {
+          "brawler": "kit",
+          "win_rate": 31.4,
+          "matches": 354
+        }
+      ]
+    },
+    "nori": {
+      "tier": "A",
+      "score": 0.99,
+      "win_rate": 56.0,
+      "use_rate": 1.37,
+      "total_matches": 3806,
+      "kamo": [
+        {
+          "brawler": "doug",
+          "win_rate": 69.8,
+          "matches": 235
+        },
+        {
+          "brawler": "trunk",
+          "win_rate": 69.3,
+          "matches": 150
+        },
+        {
+          "brawler": "berry",
+          "win_rate": 69.3,
+          "matches": 75
+        },
+        {
+          "brawler": "jacky",
+          "win_rate": 68.8,
+          "matches": 352
+        },
+        {
+          "brawler": "lumi",
+          "win_rate": 68.7,
+          "matches": 265
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "sprout",
+          "win_rate": 30.1,
+          "matches": 326
+        },
+        {
+          "brawler": "lola",
+          "win_rate": 30.4,
+          "matches": 437
+        },
+        {
+          "brawler": "alli",
+          "win_rate": 30.8,
+          "matches": 65
+        },
+        {
+          "brawler": "mina",
+          "win_rate": 30.8,
+          "matches": 497
+        },
+        {
+          "brawler": "buster",
+          "win_rate": 31.5,
+          "matches": 495
+        }
+      ]
+    },
+    "bolt": {
+      "tier": "C",
+      "score": -0.92,
+      "win_rate": 45.2,
+      "use_rate": 0.43,
+      "total_matches": 1206,
+      "kamo": [
+        {
+          "brawler": "pierce",
+          "win_rate": 69.8,
+          "matches": 268
+        },
+        {
+          "brawler": "dynamike",
+          "win_rate": 69.7,
+          "matches": 122
+        },
+        {
+          "brawler": "ollie",
+          "win_rate": 69.2,
+          "matches": 338
+        },
+        {
+          "brawler": "spike",
+          "win_rate": 68.3,
+          "matches": 382
+        },
+        {
+          "brawler": "ruffs",
+          "win_rate": 67.6,
+          "matches": 312
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "edgar",
+          "win_rate": 29.8,
+          "matches": 124
+        },
+        {
+          "brawler": "griff",
+          "win_rate": 30.3,
+          "matches": 244
+        },
+        {
+          "brawler": "shade",
+          "win_rate": 31.9,
+          "matches": 279
+        },
+        {
+          "brawler": "leon",
+          "win_rate": 32.2,
+          "matches": 87
+        },
+        {
+          "brawler": "buster",
+          "win_rate": 32.4,
+          "matches": 68
+        }
+      ]
+    },
+    "starr nova": {
+      "tier": "C",
+      "score": -1.05,
+      "win_rate": 44.0,
+      "use_rate": 0.46,
+      "total_matches": 1266,
+      "kamo": [
+        {
+          "brawler": "shade",
+          "win_rate": 69.3,
+          "matches": 495
+        },
+        {
+          "brawler": "r-t",
+          "win_rate": 69.3,
+          "matches": 397
+        },
+        {
+          "brawler": "bolt",
+          "win_rate": 68.8,
+          "matches": 407
+        },
+        {
+          "brawler": "wendy",
+          "win_rate": 68.7,
+          "matches": 115
+        },
+        {
+          "brawler": "buzz",
+          "win_rate": 68.4,
+          "matches": 412
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "griff",
+          "win_rate": 30.0,
+          "matches": 213
+        },
+        {
+          "brawler": "byron",
+          "win_rate": 30.6,
+          "matches": 481
+        },
+        {
+          "brawler": "stu",
+          "win_rate": 30.9,
+          "matches": 110
+        },
+        {
+          "brawler": "sirius",
+          "win_rate": 31.5,
+          "matches": 365
+        },
+        {
+          "brawler": "tick",
+          "win_rate": 32.0,
+          "matches": 97
+        }
+      ]
+    },
+    "damian": {
+      "tier": "B",
+      "score": -0.14,
+      "win_rate": 48.0,
+      "use_rate": 1.13,
+      "total_matches": 3126,
+      "kamo": [
+        {
+          "brawler": "colette",
+          "win_rate": 69.7,
+          "matches": 277
+        },
+        {
+          "brawler": "trunk",
+          "win_rate": 68.9,
+          "matches": 476
+        },
+        {
+          "brawler": "nori",
+          "win_rate": 68.2,
+          "matches": 424
+        },
+        {
+          "brawler": "starr nova",
+          "win_rate": 67.6,
+          "matches": 102
+        },
+        {
+          "brawler": "otis",
+          "win_rate": 66.7,
+          "matches": 153
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "lumi",
+          "win_rate": 25.0,
+          "matches": 12
+        },
+        {
+          "brawler": "eve",
+          "win_rate": 30.6,
+          "matches": 49
+        },
+        {
+          "brawler": "hank",
+          "win_rate": 31.0,
+          "matches": 84
+        },
+        {
+          "brawler": "darryl",
+          "win_rate": 31.1,
+          "matches": 411
+        },
+        {
+          "brawler": "emz",
+          "win_rate": 31.2,
+          "matches": 382
+        }
+      ]
+    },
+    "najia": {
+      "tier": "B",
+      "score": -0.3,
+      "win_rate": 51.0,
+      "use_rate": 0.27,
+      "total_matches": 736,
+      "kamo": [
+        {
+          "brawler": "glowy",
+          "win_rate": 68.7,
+          "matches": 227
+        },
+        {
+          "brawler": "bo",
+          "win_rate": 68.2,
+          "matches": 308
+        },
+        {
+          "brawler": "shelly",
+          "win_rate": 68.2,
+          "matches": 462
+        },
+        {
+          "brawler": "willow",
+          "win_rate": 67.9,
+          "matches": 84
+        },
+        {
+          "brawler": "r-t",
+          "win_rate": 67.6,
+          "matches": 170
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "mina",
+          "win_rate": 30.0,
+          "matches": 404
+        },
+        {
+          "brawler": "mortis",
+          "win_rate": 30.6,
+          "matches": 232
+        },
+        {
+          "brawler": "ziggy",
+          "win_rate": 30.6,
+          "matches": 36
+        },
+        {
+          "brawler": "emz",
+          "win_rate": 30.9,
+          "matches": 470
+        },
+        {
+          "brawler": "sandy",
+          "win_rate": 31.4,
+          "matches": 121
+        }
+      ]
+    },
+    "sirius": {
+      "tier": "C",
+      "score": -1.08,
+      "win_rate": 42.9,
+      "use_rate": 0.63,
+      "total_matches": 1749,
+      "kamo": [
+        {
+          "brawler": "spike",
+          "win_rate": 69.3,
+          "matches": 300
+        },
+        {
+          "brawler": "finx",
+          "win_rate": 68.7,
+          "matches": 233
+        },
+        {
+          "brawler": "melodie",
+          "win_rate": 68.6,
+          "matches": 405
+        },
+        {
+          "brawler": "angelo",
+          "win_rate": 68.3,
+          "matches": 145
+        },
+        {
+          "brawler": "charlie",
+          "win_rate": 68.1,
+          "matches": 91
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "pearl",
+          "win_rate": 30.0,
+          "matches": 213
+        },
+        {
+          "brawler": "ziggy",
+          "win_rate": 30.2,
+          "matches": 411
+        },
+        {
+          "brawler": "lily",
+          "win_rate": 30.6,
+          "matches": 258
+        },
+        {
+          "brawler": "r-t",
+          "win_rate": 31.7,
+          "matches": 492
+        },
+        {
+          "brawler": "bo",
+          "win_rate": 32.9,
+          "matches": 170
+        }
+      ]
+    },
+    "glowy": {
+      "tier": "B",
+      "score": -0.24,
+      "win_rate": 46.1,
+      "use_rate": 1.36,
+      "total_matches": 3762,
+      "kamo": [
+        {
+          "brawler": "juju",
+          "win_rate": 69.0,
+          "matches": 216
+        },
+        {
+          "brawler": "sprout",
+          "win_rate": 68.9,
+          "matches": 235
+        },
+        {
+          "brawler": "janet",
+          "win_rate": 68.8,
+          "matches": 439
+        },
+        {
+          "brawler": "buzz",
+          "win_rate": 68.8,
+          "matches": 205
+        },
+        {
+          "brawler": "barley",
+          "win_rate": 68.5,
+          "matches": 435
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "otis",
+          "win_rate": 28.6,
+          "matches": 14
+        },
+        {
+          "brawler": "belle",
+          "win_rate": 30.0,
+          "matches": 20
+        },
+        {
+          "brawler": "brock",
+          "win_rate": 30.6,
+          "matches": 85
+        },
+        {
+          "brawler": "berry",
+          "win_rate": 31.0,
+          "matches": 255
+        },
+        {
+          "brawler": "nori",
+          "win_rate": 31.0,
+          "matches": 491
+        }
+      ]
+    },
+    "gigi": {
+      "tier": "S",
+      "score": 1.64,
+      "win_rate": 59.2,
+      "use_rate": 1.77,
+      "total_matches": 4901,
+      "kamo": [
+        {
+          "brawler": "cordelius",
+          "win_rate": 69.3,
+          "matches": 231
+        },
+        {
+          "brawler": "rico",
+          "win_rate": 68.6,
+          "matches": 446
+        },
+        {
+          "brawler": "sirius",
+          "win_rate": 68.2,
+          "matches": 343
+        },
+        {
+          "brawler": "janet",
+          "win_rate": 67.9,
+          "matches": 498
+        },
+        {
+          "brawler": "chuck",
+          "win_rate": 67.8,
+          "matches": 264
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "bolt",
+          "win_rate": 30.0,
+          "matches": 10
+        },
+        {
+          "brawler": "jacky",
+          "win_rate": 30.4,
+          "matches": 148
+        },
+        {
+          "brawler": "mandy",
+          "win_rate": 30.4,
+          "matches": 355
+        },
+        {
+          "brawler": "darryl",
+          "win_rate": 30.7,
+          "matches": 179
+        },
+        {
+          "brawler": "ziggy",
+          "win_rate": 32.0,
+          "matches": 222
+        }
+      ]
+    },
+    "pierce": {
+      "tier": "B",
+      "score": 0.03,
+      "win_rate": 50.3,
+      "use_rate": 0.95,
+      "total_matches": 2648,
+      "kamo": [
+        {
+          "brawler": "lumi",
+          "win_rate": 69.0,
+          "matches": 468
+        },
+        {
+          "brawler": "melodie",
+          "win_rate": 68.6,
+          "matches": 188
+        },
+        {
+          "brawler": "clancy",
+          "win_rate": 68.4,
+          "matches": 19
+        },
+        {
+          "brawler": "pam",
+          "win_rate": 68.4,
+          "matches": 79
+        },
+        {
+          "brawler": "colette",
+          "win_rate": 68.0,
+          "matches": 147
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "carl",
+          "win_rate": 30.9,
+          "matches": 443
+        },
+        {
+          "brawler": "el primo",
+          "win_rate": 31.0,
+          "matches": 197
+        },
+        {
+          "brawler": "bibi",
+          "win_rate": 31.4,
+          "matches": 70
+        },
+        {
+          "brawler": "cordelius",
+          "win_rate": 31.6,
+          "matches": 374
+        },
+        {
+          "brawler": "fang",
+          "win_rate": 32.1,
+          "matches": 162
+        }
+      ]
+    },
+    "ziggy": {
+      "tier": "A",
+      "score": 0.6,
+      "win_rate": 59.0,
+      "use_rate": 0.11,
+      "total_matches": 295,
+      "kamo": [
+        {
+          "brawler": "grom",
+          "win_rate": 69.9,
+          "matches": 422
+        },
+        {
+          "brawler": "ollie",
+          "win_rate": 69.3,
+          "matches": 417
+        },
+        {
+          "brawler": "piper",
+          "win_rate": 68.3,
+          "matches": 482
+        },
+        {
+          "brawler": "poco",
+          "win_rate": 68.2,
+          "matches": 377
+        },
+        {
+          "brawler": "lumi",
+          "win_rate": 67.8,
+          "matches": 87
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "gray",
+          "win_rate": 30.2,
+          "matches": 367
+        },
+        {
+          "brawler": "otis",
+          "win_rate": 30.6,
+          "matches": 186
+        },
+        {
+          "brawler": "bea",
+          "win_rate": 31.5,
+          "matches": 124
+        },
+        {
+          "brawler": "lou",
+          "win_rate": 31.6,
+          "matches": 282
+        },
+        {
+          "brawler": "r-t",
+          "win_rate": 31.8,
+          "matches": 399
+        }
+      ]
+    },
+    "mina": {
+      "tier": "S",
+      "score": 1.31,
+      "win_rate": 58.8,
+      "use_rate": 1.31,
+      "total_matches": 3626,
+      "kamo": [
+        {
+          "brawler": "lou",
+          "win_rate": 69.0,
+          "matches": 390
+        },
+        {
+          "brawler": "najia",
+          "win_rate": 68.0,
+          "matches": 122
+        },
+        {
+          "brawler": "larry & lawrie",
+          "win_rate": 67.9,
+          "matches": 78
+        },
+        {
+          "brawler": "rosa",
+          "win_rate": 67.9,
+          "matches": 78
+        },
+        {
+          "brawler": "gene",
+          "win_rate": 67.8,
+          "matches": 307
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "chuck",
+          "win_rate": 30.1,
+          "matches": 239
+        },
+        {
+          "brawler": "sam",
+          "win_rate": 30.3,
+          "matches": 287
+        },
+        {
+          "brawler": "ruffs",
+          "win_rate": 30.5,
+          "matches": 308
+        },
+        {
+          "brawler": "tick",
+          "win_rate": 31.6,
+          "matches": 465
+        },
+        {
+          "brawler": "byron",
+          "win_rate": 31.6,
+          "matches": 196
+        }
+      ]
+    },
+    "trunk": {
+      "tier": "A",
+      "score": 0.44,
+      "win_rate": 50.0,
+      "use_rate": 1.68,
+      "total_matches": 4670,
+      "kamo": [
+        {
+          "brawler": "maisie",
+          "win_rate": 69.3,
+          "matches": 303
+        },
+        {
+          "brawler": "sirius",
+          "win_rate": 68.7,
+          "matches": 262
+        },
+        {
+          "brawler": "buster",
+          "win_rate": 68.7,
+          "matches": 297
+        },
+        {
+          "brawler": "clancy",
+          "win_rate": 68.0,
+          "matches": 491
+        },
+        {
+          "brawler": "piper",
+          "win_rate": 67.7,
+          "matches": 353
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "belle",
+          "win_rate": 30.0,
+          "matches": 30
+        },
+        {
+          "brawler": "rosa",
+          "win_rate": 30.9,
+          "matches": 417
+        },
+        {
+          "brawler": "lou",
+          "win_rate": 31.1,
+          "matches": 151
+        },
+        {
+          "brawler": "hank",
+          "win_rate": 31.1,
+          "matches": 267
+        },
+        {
+          "brawler": "charlie",
+          "win_rate": 31.1,
+          "matches": 167
+        }
+      ]
+    },
+    "alli": {
+      "tier": "D",
+      "score": -1.23,
+      "win_rate": 44.3,
+      "use_rate": 0.11,
+      "total_matches": 296,
+      "kamo": [
+        {
+          "brawler": "buzz lightyear",
+          "win_rate": 69.5,
+          "matches": 200
+        },
+        {
+          "brawler": "squeak",
+          "win_rate": 69.1,
+          "matches": 434
+        },
+        {
+          "brawler": "penny",
+          "win_rate": 69.1,
+          "matches": 499
+        },
+        {
+          "brawler": "moe",
+          "win_rate": 69.0,
+          "matches": 326
+        },
+        {
+          "brawler": "buzz",
+          "win_rate": 69.0,
+          "matches": 171
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "sam",
+          "win_rate": 30.6,
+          "matches": 186
+        },
+        {
+          "brawler": "willow",
+          "win_rate": 31.2,
+          "matches": 250
+        },
+        {
+          "brawler": "tara",
+          "win_rate": 31.3,
+          "matches": 281
+        },
+        {
+          "brawler": "max",
+          "win_rate": 31.3,
+          "matches": 476
+        },
+        {
+          "brawler": "spike",
+          "win_rate": 31.5,
+          "matches": 222
+        }
+      ]
+    },
+    "kaze": {
+      "tier": "A",
+      "score": 0.53,
+      "win_rate": 50.9,
+      "use_rate": 1.65,
+      "total_matches": 4573,
+      "kamo": [
+        {
+          "brawler": "buster",
+          "win_rate": 69.5,
+          "matches": 246
+        },
+        {
+          "brawler": "byron",
+          "win_rate": 69.5,
+          "matches": 203
+        },
+        {
+          "brawler": "shade",
+          "win_rate": 69.2,
+          "matches": 351
+        },
+        {
+          "brawler": "darryl",
+          "win_rate": 69.0,
+          "matches": 442
+        },
+        {
+          "brawler": "damian",
+          "win_rate": 68.6,
+          "matches": 382
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "tick",
+          "win_rate": 30.9,
+          "matches": 233
+        },
+        {
+          "brawler": "squeak",
+          "win_rate": 31.5,
+          "matches": 146
+        },
+        {
+          "brawler": "janet",
+          "win_rate": 31.6,
+          "matches": 408
+        },
+        {
+          "brawler": "jae-yong",
+          "win_rate": 31.8,
+          "matches": 66
+        },
+        {
+          "brawler": "gale",
+          "win_rate": 32.4,
+          "matches": 111
+        }
+      ]
+    },
+    "jae-yong": {
+      "tier": "B",
+      "score": 0.14,
+      "win_rate": 54.2,
+      "use_rate": 0.33,
+      "total_matches": 924,
+      "kamo": [
+        {
+          "brawler": "ruffs",
+          "win_rate": 69.7,
+          "matches": 241
+        },
+        {
+          "brawler": "kaze",
+          "win_rate": 68.8,
+          "matches": 202
+        },
+        {
+          "brawler": "finx",
+          "win_rate": 68.7,
+          "matches": 297
+        },
+        {
+          "brawler": "bea",
+          "win_rate": 68.6,
+          "matches": 236
+        },
+        {
+          "brawler": "glowy",
+          "win_rate": 67.9,
+          "matches": 190
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "bibi",
+          "win_rate": 29.4,
+          "matches": 17
+        },
+        {
+          "brawler": "trunk",
+          "win_rate": 30.1,
+          "matches": 113
+        },
+        {
+          "brawler": "leon",
+          "win_rate": 30.3,
+          "matches": 185
+        },
+        {
+          "brawler": "shade",
+          "win_rate": 30.3,
+          "matches": 485
+        },
+        {
+          "brawler": "fang",
+          "win_rate": 31.5,
+          "matches": 89
+        }
+      ]
+    },
+    "finx": {
+      "tier": "B",
+      "score": -0.36,
+      "win_rate": 49.6,
+      "use_rate": 0.45,
+      "total_matches": 1246,
+      "kamo": [
+        {
+          "brawler": "meg",
+          "win_rate": 69.7,
+          "matches": 274
+        },
+        {
+          "brawler": "piper",
+          "win_rate": 69.1,
+          "matches": 191
+        },
+        {
+          "brawler": "emz",
+          "win_rate": 68.7,
+          "matches": 115
+        },
+        {
+          "brawler": "nani",
+          "win_rate": 68.0,
+          "matches": 337
+        },
+        {
+          "brawler": "brock",
+          "win_rate": 67.5,
+          "matches": 308
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "gus",
+          "win_rate": 29.8,
+          "matches": 57
+        },
+        {
+          "brawler": "gigi",
+          "win_rate": 30.2,
+          "matches": 116
+        },
+        {
+          "brawler": "maisie",
+          "win_rate": 31.0,
+          "matches": 336
+        },
+        {
+          "brawler": "kenji",
+          "win_rate": 31.0,
+          "matches": 29
+        },
+        {
+          "brawler": "sam",
+          "win_rate": 31.2,
+          "matches": 109
+        }
+      ]
+    },
+    "lumi": {
+      "tier": "C",
+      "score": -1.01,
+      "win_rate": 42.1,
+      "use_rate": 0.91,
+      "total_matches": 2515,
+      "kamo": [
+        {
+          "brawler": "gale",
+          "win_rate": 68.3,
+          "matches": 363
+        },
+        {
+          "brawler": "ollie",
+          "win_rate": 67.9,
+          "matches": 196
+        },
+        {
+          "brawler": "dynamike",
+          "win_rate": 67.8,
+          "matches": 87
+        },
+        {
+          "brawler": "hank",
+          "win_rate": 66.6,
+          "matches": 485
+        },
+        {
+          "brawler": "mandy",
+          "win_rate": 66.3,
+          "matches": 344
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "tick",
+          "win_rate": 27.3,
+          "matches": 11
+        },
+        {
+          "brawler": "kaze",
+          "win_rate": 30.0,
+          "matches": 110
+        },
+        {
+          "brawler": "mina",
+          "win_rate": 30.9,
+          "matches": 165
+        },
+        {
+          "brawler": "spike",
+          "win_rate": 31.3,
+          "matches": 422
+        },
+        {
+          "brawler": "meg",
+          "win_rate": 31.8,
+          "matches": 456
+        }
+      ]
+    },
+    "ollie": {
+      "tier": "B",
+      "score": -0.07,
+      "win_rate": 52.2,
+      "use_rate": 0.41,
+      "total_matches": 1129,
+      "kamo": [
+        {
+          "brawler": "juju",
+          "win_rate": 69.3,
+          "matches": 440
+        },
+        {
+          "brawler": "mandy",
+          "win_rate": 68.7,
+          "matches": 281
+        },
+        {
+          "brawler": "jessie",
+          "win_rate": 68.2,
+          "matches": 336
+        },
+        {
+          "brawler": "willow",
+          "win_rate": 68.0,
+          "matches": 300
+        },
+        {
+          "brawler": "gray",
+          "win_rate": 67.8,
+          "matches": 90
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "tara",
+          "win_rate": 29.4,
+          "matches": 34
+        },
+        {
+          "brawler": "melodie",
+          "win_rate": 30.1,
+          "matches": 133
+        },
+        {
+          "brawler": "ash",
+          "win_rate": 30.5,
+          "matches": 243
+        },
+        {
+          "brawler": "mico",
+          "win_rate": 30.5,
+          "matches": 331
+        },
+        {
+          "brawler": "rosa",
+          "win_rate": 30.6,
+          "matches": 36
+        }
+      ]
+    },
+    "meeple": {
+      "tier": "B",
+      "score": -0.19,
+      "win_rate": 49.4,
+      "use_rate": 0.76,
+      "total_matches": 2115,
+      "kamo": [
+        {
+          "brawler": "mico",
+          "win_rate": 69.4,
+          "matches": 396
+        },
+        {
+          "brawler": "spike",
+          "win_rate": 68.8,
+          "matches": 378
+        },
+        {
+          "brawler": "leon",
+          "win_rate": 68.1,
+          "matches": 339
+        },
+        {
+          "brawler": "jacky",
+          "win_rate": 67.0,
+          "matches": 306
+        },
+        {
+          "brawler": "mandy",
+          "win_rate": 66.8,
+          "matches": 253
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "rosa",
+          "win_rate": 27.3,
+          "matches": 11
+        },
+        {
+          "brawler": "griff",
+          "win_rate": 30.4,
+          "matches": 385
+        },
+        {
+          "brawler": "moe",
+          "win_rate": 30.5,
+          "matches": 59
+        },
+        {
+          "brawler": "trunk",
+          "win_rate": 30.6,
+          "matches": 160
+        },
+        {
+          "brawler": "otis",
+          "win_rate": 30.7,
+          "matches": 466
+        }
+      ]
+    },
+    "buzz lightyear": {
+      "tier": "A",
+      "score": 0.3,
+      "win_rate": 52.0,
+      "use_rate": 1.05,
+      "total_matches": 2906,
+      "kamo": [
+        {
+          "brawler": "sirius",
+          "win_rate": 68.8,
+          "matches": 474
+        },
+        {
+          "brawler": "damian",
+          "win_rate": 68.6,
+          "matches": 194
+        },
+        {
+          "brawler": "pierce",
+          "win_rate": 67.6,
+          "matches": 411
+        },
+        {
+          "brawler": "lumi",
+          "win_rate": 67.1,
+          "matches": 76
+        },
+        {
+          "brawler": "mina",
+          "win_rate": 66.7,
+          "matches": 87
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "bull",
+          "win_rate": 29.6,
+          "matches": 27
+        },
+        {
+          "brawler": "janet",
+          "win_rate": 29.7,
+          "matches": 209
+        },
+        {
+          "brawler": "8-bit",
+          "win_rate": 31.5,
+          "matches": 457
+        },
+        {
+          "brawler": "r-t",
+          "win_rate": 31.6,
+          "matches": 76
+        },
+        {
+          "brawler": "gene",
+          "win_rate": 31.8,
+          "matches": 255
+        }
+      ]
+    },
+    "juju": {
+      "tier": "B",
+      "score": -0.26,
+      "win_rate": 44.5,
+      "use_rate": 1.65,
+      "total_matches": 4568,
+      "kamo": [
+        {
+          "brawler": "lumi",
+          "win_rate": 69.5,
+          "matches": 200
+        },
+        {
+          "brawler": "sam",
+          "win_rate": 69.5,
+          "matches": 420
+        },
+        {
+          "brawler": "larry & lawrie",
+          "win_rate": 69.3,
+          "matches": 228
+        },
+        {
+          "brawler": "belle",
+          "win_rate": 68.9,
+          "matches": 190
+        },
+        {
+          "brawler": "grom",
+          "win_rate": 68.7,
+          "matches": 278
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "r-t",
+          "win_rate": 29.8,
+          "matches": 141
+        },
+        {
+          "brawler": "mico",
+          "win_rate": 30.6,
+          "matches": 474
+        },
+        {
+          "brawler": "damian",
+          "win_rate": 30.7,
+          "matches": 137
+        },
+        {
+          "brawler": "bonnie",
+          "win_rate": 31.1,
+          "matches": 379
+        },
+        {
+          "brawler": "doug",
+          "win_rate": 31.2,
+          "matches": 263
+        }
+      ]
+    },
+    "shade": {
+      "tier": "B",
+      "score": -0.37,
+      "win_rate": 50.8,
+      "use_rate": 0.18,
+      "total_matches": 504,
+      "kamo": [
+        {
+          "brawler": "pam",
+          "win_rate": 69.6,
+          "matches": 148
+        },
+        {
+          "brawler": "frank",
+          "win_rate": 69.4,
+          "matches": 111
+        },
+        {
+          "brawler": "poco",
+          "win_rate": 69.2,
+          "matches": 490
+        },
+        {
+          "brawler": "trunk",
+          "win_rate": 67.8,
+          "matches": 59
+        },
+        {
+          "brawler": "willow",
+          "win_rate": 67.4,
+          "matches": 264
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "jacky",
+          "win_rate": 29.4,
+          "matches": 34
+        },
+        {
+          "brawler": "meg",
+          "win_rate": 30.0,
+          "matches": 10
+        },
+        {
+          "brawler": "eve",
+          "win_rate": 30.1,
+          "matches": 229
+        },
+        {
+          "brawler": "belle",
+          "win_rate": 30.2,
+          "matches": 275
+        },
+        {
+          "brawler": "stu",
+          "win_rate": 30.7,
+          "matches": 449
+        }
+      ]
+    },
+    "kenji": {
+      "tier": "A",
+      "score": 0.51,
+      "win_rate": 54.2,
+      "use_rate": 0.94,
+      "total_matches": 2599,
+      "kamo": [
+        {
+          "brawler": "gale",
+          "win_rate": 69.6,
+          "matches": 460
+        },
+        {
+          "brawler": "mico",
+          "win_rate": 69.3,
+          "matches": 391
+        },
+        {
+          "brawler": "frank",
+          "win_rate": 69.3,
+          "matches": 394
+        },
+        {
+          "brawler": "poco",
+          "win_rate": 69.2,
+          "matches": 295
+        },
+        {
+          "brawler": "glowy",
+          "win_rate": 69.1,
+          "matches": 207
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "bolt",
+          "win_rate": 30.4,
+          "matches": 23
+        },
+        {
+          "brawler": "ollie",
+          "win_rate": 30.6,
+          "matches": 245
+        },
+        {
+          "brawler": "ruffs",
+          "win_rate": 31.1,
+          "matches": 469
+        },
+        {
+          "brawler": "berry",
+          "win_rate": 31.4,
+          "matches": 287
+        },
+        {
+          "brawler": "griff",
+          "win_rate": 31.8,
+          "matches": 346
+        }
+      ]
+    },
+    "moe": {
+      "tier": "C",
+      "score": -0.9,
+      "win_rate": 46.0,
+      "use_rate": 0.29,
+      "total_matches": 817,
+      "kamo": [
+        {
+          "brawler": "angelo",
+          "win_rate": 69.8,
+          "matches": 394
+        },
+        {
+          "brawler": "kit",
+          "win_rate": 69.0,
+          "matches": 371
+        },
+        {
+          "brawler": "bea",
+          "win_rate": 68.7,
+          "matches": 147
+        },
+        {
+          "brawler": "brock",
+          "win_rate": 68.5,
+          "matches": 432
+        },
+        {
+          "brawler": "ruffs",
+          "win_rate": 67.4,
+          "matches": 46
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "penny",
+          "win_rate": 29.7,
+          "matches": 91
+        },
+        {
+          "brawler": "bonnie",
+          "win_rate": 29.9,
+          "matches": 127
+        },
+        {
+          "brawler": "meg",
+          "win_rate": 30.7,
+          "matches": 137
+        },
+        {
+          "brawler": "shade",
+          "win_rate": 30.8,
+          "matches": 13
+        },
+        {
+          "brawler": "poco",
+          "win_rate": 31.1,
+          "matches": 61
+        }
+      ]
+    },
+    "clancy": {
+      "tier": "D",
+      "score": -1.42,
+      "win_rate": 40.6,
+      "use_rate": 0.54,
+      "total_matches": 1500,
+      "kamo": [
+        {
+          "brawler": "el primo",
+          "win_rate": 69.9,
+          "matches": 402
+        },
+        {
+          "brawler": "wendy",
+          "win_rate": 69.5,
+          "matches": 131
+        },
+        {
+          "brawler": "gus",
+          "win_rate": 69.5,
+          "matches": 384
+        },
+        {
+          "brawler": "colette",
+          "win_rate": 69.2,
+          "matches": 383
+        },
+        {
+          "brawler": "chuck",
+          "win_rate": 68.8,
+          "matches": 359
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "alli",
+          "win_rate": 29.8,
+          "matches": 181
+        },
+        {
+          "brawler": "spike",
+          "win_rate": 30.4,
+          "matches": 415
+        },
+        {
+          "brawler": "barley",
+          "win_rate": 30.5,
+          "matches": 394
+        },
+        {
+          "brawler": "gale",
+          "win_rate": 30.8,
+          "matches": 347
+        },
+        {
+          "brawler": "eve",
+          "win_rate": 31.5,
+          "matches": 165
+        }
+      ]
+    },
+    "berry": {
+      "tier": "B",
+      "score": -0.37,
+      "win_rate": 51.4,
+      "use_rate": 0.07,
+      "total_matches": 181,
+      "kamo": [
+        {
+          "brawler": "ash",
+          "win_rate": 68.0,
+          "matches": 269
+        },
+        {
+          "brawler": "starr nova",
+          "win_rate": 67.9,
+          "matches": 287
+        },
+        {
+          "brawler": "otis",
+          "win_rate": 67.5,
+          "matches": 372
+        },
+        {
+          "brawler": "bo",
+          "win_rate": 67.5,
+          "matches": 114
+        },
+        {
+          "brawler": "mortis",
+          "win_rate": 67.3,
+          "matches": 101
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "lily",
+          "win_rate": 29.9,
+          "matches": 488
+        },
+        {
+          "brawler": "finx",
+          "win_rate": 30.4,
+          "matches": 359
+        },
+        {
+          "brawler": "charlie",
+          "win_rate": 30.5,
+          "matches": 187
+        },
+        {
+          "brawler": "janet",
+          "win_rate": 30.7,
+          "matches": 430
+        },
+        {
+          "brawler": "clancy",
+          "win_rate": 30.8,
+          "matches": 289
+        }
+      ]
+    },
+    "lily": {
+      "tier": "B",
+      "score": 0.14,
+      "win_rate": 51.4,
+      "use_rate": 0.9,
+      "total_matches": 2502,
+      "kamo": [
+        {
+          "brawler": "crow",
+          "win_rate": 69.5,
+          "matches": 465
+        },
+        {
+          "brawler": "lola",
+          "win_rate": 68.6,
+          "matches": 303
+        },
+        {
+          "brawler": "hank",
+          "win_rate": 66.9,
+          "matches": 142
+        },
+        {
+          "brawler": "gray",
+          "win_rate": 66.9,
+          "matches": 124
+        },
+        {
+          "brawler": "ruffs",
+          "win_rate": 65.7,
+          "matches": 414
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "angelo",
+          "win_rate": 30.2,
+          "matches": 43
+        },
+        {
+          "brawler": "alli",
+          "win_rate": 30.4,
+          "matches": 484
+        },
+        {
+          "brawler": "edgar",
+          "win_rate": 30.5,
+          "matches": 463
+        },
+        {
+          "brawler": "trunk",
+          "win_rate": 31.1,
+          "matches": 438
+        },
+        {
+          "brawler": "eve",
+          "win_rate": 31.2,
+          "matches": 77
+        }
+      ]
+    },
+    "draco": {
+      "tier": "A",
+      "score": 0.73,
+      "win_rate": 54.6,
+      "use_rate": 1.23,
+      "total_matches": 3411,
+      "kamo": [
+        {
+          "brawler": "doug",
+          "win_rate": 69.0,
+          "matches": 174
+        },
+        {
+          "brawler": "bolt",
+          "win_rate": 68.2,
+          "matches": 299
+        },
+        {
+          "brawler": "meeple",
+          "win_rate": 68.2,
+          "matches": 85
+        },
+        {
+          "brawler": "gus",
+          "win_rate": 68.1,
+          "matches": 439
+        },
+        {
+          "brawler": "max",
+          "win_rate": 68.1,
+          "matches": 427
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "bo",
+          "win_rate": 29.9,
+          "matches": 461
+        },
+        {
+          "brawler": "gigi",
+          "win_rate": 30.3,
+          "matches": 76
+        },
+        {
+          "brawler": "darryl",
+          "win_rate": 30.4,
+          "matches": 391
+        },
+        {
+          "brawler": "glowy",
+          "win_rate": 30.7,
+          "matches": 267
+        },
+        {
+          "brawler": "lumi",
+          "win_rate": 31.2,
+          "matches": 480
+        }
+      ]
+    },
+    "angelo": {
+      "tier": "C",
+      "score": -0.65,
+      "win_rate": 46.9,
+      "use_rate": 0.52,
+      "total_matches": 1453,
+      "kamo": [
+        {
+          "brawler": "starr nova",
+          "win_rate": 68.1,
+          "matches": 260
+        },
+        {
+          "brawler": "bea",
+          "win_rate": 67.6,
+          "matches": 219
+        },
+        {
+          "brawler": "emz",
+          "win_rate": 67.5,
+          "matches": 458
+        },
+        {
+          "brawler": "gray",
+          "win_rate": 67.1,
+          "matches": 474
+        },
+        {
+          "brawler": "otis",
+          "win_rate": 66.2,
+          "matches": 136
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "chester",
+          "win_rate": 30.2,
+          "matches": 461
+        },
+        {
+          "brawler": "bonnie",
+          "win_rate": 30.6,
+          "matches": 324
+        },
+        {
+          "brawler": "nori",
+          "win_rate": 30.8,
+          "matches": 65
+        },
+        {
+          "brawler": "crow",
+          "win_rate": 31.4,
+          "matches": 440
+        },
+        {
+          "brawler": "charlie",
+          "win_rate": 32.1,
+          "matches": 417
+        }
+      ]
+    },
+    "melodie": {
+      "tier": "B",
+      "score": 0.2,
+      "win_rate": 53.4,
+      "use_rate": 0.59,
+      "total_matches": 1632,
+      "kamo": [
+        {
+          "brawler": "crow",
+          "win_rate": 68.4,
+          "matches": 310
+        },
+        {
+          "brawler": "buzz lightyear",
+          "win_rate": 68.0,
+          "matches": 153
+        },
+        {
+          "brawler": "amber",
+          "win_rate": 68.0,
+          "matches": 353
+        },
+        {
+          "brawler": "cordelius",
+          "win_rate": 67.5,
+          "matches": 169
+        },
+        {
+          "brawler": "juju",
+          "win_rate": 67.0,
+          "matches": 279
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "lou",
+          "win_rate": 29.8,
+          "matches": 396
+        },
+        {
+          "brawler": "lily",
+          "win_rate": 29.8,
+          "matches": 325
+        },
+        {
+          "brawler": "r-t",
+          "win_rate": 30.6,
+          "matches": 36
+        },
+        {
+          "brawler": "buster",
+          "win_rate": 31.0,
+          "matches": 142
+        },
+        {
+          "brawler": "mico",
+          "win_rate": 31.5,
+          "matches": 184
+        }
+      ]
+    },
+    "larry & lawrie": {
+      "tier": "C",
+      "score": -0.7,
+      "win_rate": 42.6,
+      "use_rate": 1.33,
+      "total_matches": 3685,
+      "kamo": [
+        {
+          "brawler": "spike",
+          "win_rate": 69.6,
+          "matches": 339
+        },
+        {
+          "brawler": "mr. p",
+          "win_rate": 69.2,
+          "matches": 393
+        },
+        {
+          "brawler": "dynamike",
+          "win_rate": 69.2,
+          "matches": 279
+        },
+        {
+          "brawler": "gigi",
+          "win_rate": 68.8,
+          "matches": 112
+        },
+        {
+          "brawler": "trunk",
+          "win_rate": 68.0,
+          "matches": 75
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "willow",
+          "win_rate": 30.2,
+          "matches": 53
+        },
+        {
+          "brawler": "ash",
+          "win_rate": 32.1,
+          "matches": 302
+        },
+        {
+          "brawler": "max",
+          "win_rate": 32.3,
+          "matches": 282
+        },
+        {
+          "brawler": "finx",
+          "win_rate": 32.8,
+          "matches": 61
+        },
+        {
+          "brawler": "lou",
+          "win_rate": 33.0,
+          "matches": 415
+        }
+      ]
+    },
+    "kit": {
+      "tier": "B",
+      "score": 0.14,
+      "win_rate": 52.3,
+      "use_rate": 0.71,
+      "total_matches": 1983,
+      "kamo": [
+        {
+          "brawler": "draco",
+          "win_rate": 69.4,
+          "matches": 288
+        },
+        {
+          "brawler": "melodie",
+          "win_rate": 68.2,
+          "matches": 415
+        },
+        {
+          "brawler": "sirius",
+          "win_rate": 67.7,
+          "matches": 31
+        },
+        {
+          "brawler": "bo",
+          "win_rate": 67.4,
+          "matches": 473
+        },
+        {
+          "brawler": "willow",
+          "win_rate": 66.7,
+          "matches": 321
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "poco",
+          "win_rate": 29.5,
+          "matches": 44
+        },
+        {
+          "brawler": "ziggy",
+          "win_rate": 29.9,
+          "matches": 355
+        },
+        {
+          "brawler": "lou",
+          "win_rate": 30.0,
+          "matches": 140
+        },
+        {
+          "brawler": "otis",
+          "win_rate": 31.1,
+          "matches": 235
+        },
+        {
+          "brawler": "alli",
+          "win_rate": 31.1,
+          "matches": 322
+        }
+      ]
+    },
+    "mico": {
+      "tier": "B",
+      "score": -0.13,
+      "win_rate": 45.1,
+      "use_rate": 1.75,
+      "total_matches": 4846,
+      "kamo": [
+        {
+          "brawler": "gene",
+          "win_rate": 69.8,
+          "matches": 407
+        },
+        {
+          "brawler": "shelly",
+          "win_rate": 69.6,
+          "matches": 158
+        },
+        {
+          "brawler": "bibi",
+          "win_rate": 69.4,
+          "matches": 222
+        },
+        {
+          "brawler": "janet",
+          "win_rate": 69.3,
+          "matches": 231
+        },
+        {
+          "brawler": "alli",
+          "win_rate": 68.9,
+          "matches": 334
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "byron",
+          "win_rate": 30.2,
+          "matches": 262
+        },
+        {
+          "brawler": "doug",
+          "win_rate": 30.2,
+          "matches": 63
+        },
+        {
+          "brawler": "bo",
+          "win_rate": 30.6,
+          "matches": 98
+        },
+        {
+          "brawler": "tara",
+          "win_rate": 31.2,
+          "matches": 256
+        },
+        {
+          "brawler": "lola",
+          "win_rate": 31.5,
+          "matches": 499
+        }
+      ]
+    },
+    "charlie": {
+      "tier": "A",
+      "score": 0.33,
+      "win_rate": 51.6,
+      "use_rate": 1.18,
+      "total_matches": 3283,
+      "kamo": [
+        {
+          "brawler": "bo",
+          "win_rate": 69.8,
+          "matches": 182
+        },
+        {
+          "brawler": "poco",
+          "win_rate": 69.8,
+          "matches": 311
+        },
+        {
+          "brawler": "kenji",
+          "win_rate": 69.2,
+          "matches": 266
+        },
+        {
+          "brawler": "leon",
+          "win_rate": 66.2,
+          "matches": 71
+        },
+        {
+          "brawler": "nani",
+          "win_rate": 65.5,
+          "matches": 310
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "gene",
+          "win_rate": 26.7,
+          "matches": 15
+        },
+        {
+          "brawler": "eve",
+          "win_rate": 30.0,
+          "matches": 80
+        },
+        {
+          "brawler": "jae-yong",
+          "win_rate": 30.4,
+          "matches": 335
+        },
+        {
+          "brawler": "edgar",
+          "win_rate": 31.0,
+          "matches": 29
+        },
+        {
+          "brawler": "lily",
+          "win_rate": 31.5,
+          "matches": 333
+        }
+      ]
+    },
+    "chuck": {
+      "tier": "B",
+      "score": -0.45,
+      "win_rate": 49.5,
+      "use_rate": 0.33,
+      "total_matches": 920,
+      "kamo": [
+        {
+          "brawler": "dynamike",
+          "win_rate": 69.5,
+          "matches": 407
+        },
+        {
+          "brawler": "gus",
+          "win_rate": 68.6,
+          "matches": 172
+        },
+        {
+          "brawler": "stu",
+          "win_rate": 68.5,
+          "matches": 251
+        },
+        {
+          "brawler": "edgar",
+          "win_rate": 68.4,
+          "matches": 117
+        },
+        {
+          "brawler": "jacky",
+          "win_rate": 68.4,
+          "matches": 313
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "hank",
+          "win_rate": 25.0,
+          "matches": 12
+        },
+        {
+          "brawler": "moe",
+          "win_rate": 29.9,
+          "matches": 354
+        },
+        {
+          "brawler": "belle",
+          "win_rate": 30.8,
+          "matches": 52
+        },
+        {
+          "brawler": "willow",
+          "win_rate": 31.0,
+          "matches": 116
+        },
+        {
+          "brawler": "sirius",
+          "win_rate": 32.8,
+          "matches": 64
+        }
+      ]
+    },
+    "pearl": {
+      "tier": "C",
+      "score": -0.83,
+      "win_rate": 42.2,
+      "use_rate": 1.18,
+      "total_matches": 3274,
+      "kamo": [
+        {
+          "brawler": "sprout",
+          "win_rate": 69.7,
+          "matches": 489
+        },
+        {
+          "brawler": "jae-yong",
+          "win_rate": 69.1,
+          "matches": 482
+        },
+        {
+          "brawler": "colt",
+          "win_rate": 68.8,
+          "matches": 382
+        },
+        {
+          "brawler": "leon",
+          "win_rate": 68.6,
+          "matches": 293
+        },
+        {
+          "brawler": "charlie",
+          "win_rate": 68.4,
+          "matches": 196
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "8-bit",
+          "win_rate": 30.0,
+          "matches": 340
+        },
+        {
+          "brawler": "chuck",
+          "win_rate": 30.0,
+          "matches": 10
+        },
+        {
+          "brawler": "stu",
+          "win_rate": 30.2,
+          "matches": 162
+        },
+        {
+          "brawler": "rico",
+          "win_rate": 30.7,
+          "matches": 127
+        },
+        {
+          "brawler": "sandy",
+          "win_rate": 30.9,
+          "matches": 265
+        }
+      ]
+    },
+    "doug": {
+      "tier": "C",
+      "score": -0.58,
+      "win_rate": 41.8,
+      "use_rate": 1.67,
+      "total_matches": 4624,
+      "kamo": [
+        {
+          "brawler": "nita",
+          "win_rate": 69.7,
+          "matches": 402
+        },
+        {
+          "brawler": "gus",
+          "win_rate": 69.3,
+          "matches": 362
+        },
+        {
+          "brawler": "r-t",
+          "win_rate": 69.1,
+          "matches": 327
+        },
+        {
+          "brawler": "surge",
+          "win_rate": 69.1,
+          "matches": 372
+        },
+        {
+          "brawler": "mr. p",
+          "win_rate": 69.1,
+          "matches": 282
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "juju",
+          "win_rate": 29.9,
+          "matches": 264
+        },
+        {
+          "brawler": "emz",
+          "win_rate": 31.6,
+          "matches": 19
+        },
+        {
+          "brawler": "ollie",
+          "win_rate": 31.7,
+          "matches": 82
+        },
+        {
+          "brawler": "damian",
+          "win_rate": 32.9,
+          "matches": 498
+        },
+        {
+          "brawler": "brock",
+          "win_rate": 33.1,
+          "matches": 435
+        }
+      ]
+    },
+    "cordelius": {
+      "tier": "B",
+      "score": 0.1,
+      "win_rate": 47.4,
+      "use_rate": 1.64,
+      "total_matches": 4549,
+      "kamo": [
+        {
+          "brawler": "clancy",
+          "win_rate": 68.8,
+          "matches": 208
+        },
+        {
+          "brawler": "el primo",
+          "win_rate": 68.5,
+          "matches": 73
+        },
+        {
+          "brawler": "nori",
+          "win_rate": 67.9,
+          "matches": 234
+        },
+        {
+          "brawler": "kenji",
+          "win_rate": 67.4,
+          "matches": 479
+        },
+        {
+          "brawler": "chester",
+          "win_rate": 66.9,
+          "matches": 350
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "frank",
+          "win_rate": 29.2,
+          "matches": 24
+        },
+        {
+          "brawler": "mina",
+          "win_rate": 30.1,
+          "matches": 362
+        },
+        {
+          "brawler": "grom",
+          "win_rate": 30.2,
+          "matches": 43
+        },
+        {
+          "brawler": "nita",
+          "win_rate": 30.3,
+          "matches": 89
+        },
+        {
+          "brawler": "ollie",
+          "win_rate": 32.1,
+          "matches": 212
+        }
+      ]
+    },
+    "hank": {
+      "tier": "B",
+      "score": 0.08,
+      "win_rate": 49.0,
+      "use_rate": 1.28,
+      "total_matches": 3558,
+      "kamo": [
+        {
+          "brawler": "colette",
+          "win_rate": 69.7,
+          "matches": 465
+        },
+        {
+          "brawler": "surge",
+          "win_rate": 68.6,
+          "matches": 385
+        },
+        {
+          "brawler": "ziggy",
+          "win_rate": 68.2,
+          "matches": 346
+        },
+        {
+          "brawler": "sirius",
+          "win_rate": 68.0,
+          "matches": 147
+        },
+        {
+          "brawler": "gray",
+          "win_rate": 67.6,
+          "matches": 386
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "poco",
+          "win_rate": 27.3,
+          "matches": 11
+        },
+        {
+          "brawler": "gus",
+          "win_rate": 27.3,
+          "matches": 22
+        },
+        {
+          "brawler": "gigi",
+          "win_rate": 29.4,
+          "matches": 68
+        },
+        {
+          "brawler": "grom",
+          "win_rate": 29.6,
+          "matches": 27
+        },
+        {
+          "brawler": "ash",
+          "win_rate": 30.3,
+          "matches": 254
+        }
+      ]
+    },
+    "maisie": {
+      "tier": "A",
+      "score": 0.44,
+      "win_rate": 52.9,
+      "use_rate": 1.1,
+      "total_matches": 3052,
+      "kamo": [
+        {
+          "brawler": "shelly",
+          "win_rate": 69.3,
+          "matches": 423
+        },
+        {
+          "brawler": "brock",
+          "win_rate": 69.0,
+          "matches": 494
+        },
+        {
+          "brawler": "bo",
+          "win_rate": 68.2,
+          "matches": 330
+        },
+        {
+          "brawler": "ash",
+          "win_rate": 67.8,
+          "matches": 438
+        },
+        {
+          "brawler": "bonnie",
+          "win_rate": 67.4,
+          "matches": 86
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "frank",
+          "win_rate": 30.6,
+          "matches": 425
+        },
+        {
+          "brawler": "mina",
+          "win_rate": 30.6,
+          "matches": 186
+        },
+        {
+          "brawler": "glowy",
+          "win_rate": 30.7,
+          "matches": 75
+        },
+        {
+          "brawler": "grom",
+          "win_rate": 31.1,
+          "matches": 286
+        },
+        {
+          "brawler": "trunk",
+          "win_rate": 31.4,
+          "matches": 137
+        }
+      ]
+    },
+    "willow": {
+      "tier": "A",
+      "score": 0.71,
+      "win_rate": 59.2,
+      "use_rate": 0.26,
+      "total_matches": 732,
+      "kamo": [
+        {
+          "brawler": "starr nova",
+          "win_rate": 69.6,
+          "matches": 326
+        },
+        {
+          "brawler": "ollie",
+          "win_rate": 68.9,
+          "matches": 441
+        },
+        {
+          "brawler": "max",
+          "win_rate": 68.5,
+          "matches": 356
+        },
+        {
+          "brawler": "mandy",
+          "win_rate": 68.4,
+          "matches": 307
+        },
+        {
+          "brawler": "shelly",
+          "win_rate": 68.3,
+          "matches": 221
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "gus",
+          "win_rate": 27.8,
+          "matches": 18
+        },
+        {
+          "brawler": "sandy",
+          "win_rate": 28.6,
+          "matches": 14
+        },
+        {
+          "brawler": "sam",
+          "win_rate": 28.6,
+          "matches": 14
+        },
+        {
+          "brawler": "clancy",
+          "win_rate": 29.4,
+          "matches": 34
+        },
+        {
+          "brawler": "rico",
+          "win_rate": 30.2,
+          "matches": 43
+        }
+      ]
+    },
+    "r-t": {
+      "tier": "S",
+      "score": 1.05,
+      "win_rate": 55.9,
+      "use_rate": 1.49,
+      "total_matches": 4130,
+      "kamo": [
+        {
+          "brawler": "rico",
+          "win_rate": 69.5,
+          "matches": 465
+        },
+        {
+          "brawler": "gene",
+          "win_rate": 69.0,
+          "matches": 471
+        },
+        {
+          "brawler": "glowy",
+          "win_rate": 68.9,
+          "matches": 395
+        },
+        {
+          "brawler": "gigi",
+          "win_rate": 68.9,
+          "matches": 103
+        },
+        {
+          "brawler": "8-bit",
+          "win_rate": 68.6,
+          "matches": 70
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "willow",
+          "win_rate": 30.0,
+          "matches": 10
+        },
+        {
+          "brawler": "sandy",
+          "win_rate": 30.5,
+          "matches": 82
+        },
+        {
+          "brawler": "carl",
+          "win_rate": 30.6,
+          "matches": 281
+        },
+        {
+          "brawler": "barley",
+          "win_rate": 31.7,
+          "matches": 221
+        },
+        {
+          "brawler": "mortis",
+          "win_rate": 32.1,
+          "matches": 327
+        }
+      ]
+    },
+    "mandy": {
+      "tier": "A",
+      "score": 0.68,
+      "win_rate": 57.0,
+      "use_rate": 0.65,
+      "total_matches": 1795,
+      "kamo": [
+        {
+          "brawler": "nita",
+          "win_rate": 69.1,
+          "matches": 343
+        },
+        {
+          "brawler": "el primo",
+          "win_rate": 68.5,
+          "matches": 276
+        },
+        {
+          "brawler": "amber",
+          "win_rate": 68.0,
+          "matches": 303
+        },
+        {
+          "brawler": "mina",
+          "win_rate": 67.6,
+          "matches": 204
+        },
+        {
+          "brawler": "surge",
+          "win_rate": 66.6,
+          "matches": 443
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "charlie",
+          "win_rate": 31.2,
+          "matches": 327
+        },
+        {
+          "brawler": "trunk",
+          "win_rate": 31.6,
+          "matches": 468
+        },
+        {
+          "brawler": "berry",
+          "win_rate": 33.0,
+          "matches": 270
+        },
+        {
+          "brawler": "frank",
+          "win_rate": 33.1,
+          "matches": 145
+        },
+        {
+          "brawler": "griff",
+          "win_rate": 33.2,
+          "matches": 382
+        }
+      ]
+    },
+    "gray": {
+      "tier": "C",
+      "score": -0.84,
+      "win_rate": 41.2,
+      "use_rate": 1.37,
+      "total_matches": 3815,
+      "kamo": [
+        {
+          "brawler": "barley",
+          "win_rate": 69.5,
+          "matches": 82
+        },
+        {
+          "brawler": "colette",
+          "win_rate": 69.4,
+          "matches": 232
+        },
+        {
+          "brawler": "piper",
+          "win_rate": 69.3,
+          "matches": 189
+        },
+        {
+          "brawler": "sirius",
+          "win_rate": 69.2,
+          "matches": 169
+        },
+        {
+          "brawler": "emz",
+          "win_rate": 69.1,
+          "matches": 472
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "damian",
+          "win_rate": 29.7,
+          "matches": 101
+        },
+        {
+          "brawler": "gale",
+          "win_rate": 30.0,
+          "matches": 267
+        },
+        {
+          "brawler": "nani",
+          "win_rate": 30.2,
+          "matches": 179
+        },
+        {
+          "brawler": "bonnie",
+          "win_rate": 31.0,
+          "matches": 290
+        },
+        {
+          "brawler": "buster",
+          "win_rate": 31.1,
+          "matches": 499
+        }
+      ]
+    },
+    "chester": {
+      "tier": "B",
+      "score": -0.02,
+      "win_rate": 45.8,
+      "use_rate": 1.79,
+      "total_matches": 4960,
+      "kamo": [
+        {
+          "brawler": "fang",
+          "win_rate": 69.4,
+          "matches": 310
+        },
+        {
+          "brawler": "belle",
+          "win_rate": 68.9,
+          "matches": 251
+        },
+        {
+          "brawler": "gene",
+          "win_rate": 68.5,
+          "matches": 197
+        },
+        {
+          "brawler": "penny",
+          "win_rate": 66.5,
+          "matches": 254
+        },
+        {
+          "brawler": "nori",
+          "win_rate": 65.5,
+          "matches": 29
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "hank",
+          "win_rate": 27.8,
+          "matches": 18
+        },
+        {
+          "brawler": "chuck",
+          "win_rate": 29.3,
+          "matches": 99
+        },
+        {
+          "brawler": "glowy",
+          "win_rate": 32.7,
+          "matches": 104
+        },
+        {
+          "brawler": "el primo",
+          "win_rate": 33.0,
+          "matches": 115
+        },
+        {
+          "brawler": "nani",
+          "win_rate": 33.0,
+          "matches": 294
+        }
+      ]
+    },
+    "buster": {
+      "tier": "S",
+      "score": 1.04,
+      "win_rate": 54.7,
+      "use_rate": 1.71,
+      "total_matches": 4736,
+      "kamo": [
+        {
+          "brawler": "piper",
+          "win_rate": 69.7,
+          "matches": 488
+        },
+        {
+          "brawler": "mr. p",
+          "win_rate": 69.3,
+          "matches": 495
+        },
+        {
+          "brawler": "sam",
+          "win_rate": 69.1,
+          "matches": 136
+        },
+        {
+          "brawler": "sprout",
+          "win_rate": 68.8,
+          "matches": 93
+        },
+        {
+          "brawler": "shelly",
+          "win_rate": 68.1,
+          "matches": 207
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "fang",
+          "win_rate": 29.8,
+          "matches": 419
+        },
+        {
+          "brawler": "otis",
+          "win_rate": 30.2,
+          "matches": 444
+        },
+        {
+          "brawler": "melodie",
+          "win_rate": 30.2,
+          "matches": 394
+        },
+        {
+          "brawler": "gray",
+          "win_rate": 30.6,
+          "matches": 183
+        },
+        {
+          "brawler": "dynamike",
+          "win_rate": 30.7,
+          "matches": 179
+        }
+      ]
+    },
+    "gus": {
+      "tier": "A",
+      "score": 0.71,
+      "win_rate": 59.2,
+      "use_rate": 0.26,
+      "total_matches": 720,
+      "kamo": [
+        {
+          "brawler": "mr. p",
+          "win_rate": 69.1,
+          "matches": 288
+        },
+        {
+          "brawler": "eve",
+          "win_rate": 68.7,
+          "matches": 307
+        },
+        {
+          "brawler": "fang",
+          "win_rate": 68.4,
+          "matches": 152
+        },
+        {
+          "brawler": "buzz",
+          "win_rate": 68.3,
+          "matches": 278
+        },
+        {
+          "brawler": "charlie",
+          "win_rate": 67.5,
+          "matches": 212
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "crow",
+          "win_rate": 27.3,
+          "matches": 22
+        },
+        {
+          "brawler": "mortis",
+          "win_rate": 29.6,
+          "matches": 27
+        },
+        {
+          "brawler": "poco",
+          "win_rate": 30.2,
+          "matches": 106
+        },
+        {
+          "brawler": "kit",
+          "win_rate": 30.3,
+          "matches": 89
+        },
+        {
+          "brawler": "moe",
+          "win_rate": 30.6,
+          "matches": 183
+        }
+      ]
+    },
+    "sam": {
+      "tier": "S",
+      "score": 1.11,
+      "win_rate": 56.5,
+      "use_rate": 1.46,
+      "total_matches": 4049,
+      "kamo": [
+        {
+          "brawler": "meg",
+          "win_rate": 69.4,
+          "matches": 412
+        },
+        {
+          "brawler": "darryl",
+          "win_rate": 69.1,
+          "matches": 68
+        },
+        {
+          "brawler": "moe",
+          "win_rate": 69.0,
+          "matches": 100
+        },
+        {
+          "brawler": "larry & lawrie",
+          "win_rate": 67.9,
+          "matches": 386
+        },
+        {
+          "brawler": "trunk",
+          "win_rate": 67.3,
+          "matches": 422
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "tick",
+          "win_rate": 29.8,
+          "matches": 124
+        },
+        {
+          "brawler": "sprout",
+          "win_rate": 29.9,
+          "matches": 304
+        },
+        {
+          "brawler": "bolt",
+          "win_rate": 30.0,
+          "matches": 323
+        },
+        {
+          "brawler": "shade",
+          "win_rate": 30.9,
+          "matches": 395
+        },
+        {
+          "brawler": "lumi",
+          "win_rate": 30.9,
+          "matches": 492
+        }
+      ]
+    },
+    "otis": {
+      "tier": "D",
+      "score": -1.4,
+      "win_rate": 41.9,
+      "use_rate": 0.33,
+      "total_matches": 908,
+      "kamo": [
+        {
+          "brawler": "shade",
+          "win_rate": 69.3,
+          "matches": 329
+        },
+        {
+          "brawler": "surge",
+          "win_rate": 69.1,
+          "matches": 194
+        },
+        {
+          "brawler": "kenji",
+          "win_rate": 69.0,
+          "matches": 142
+        },
+        {
+          "brawler": "fang",
+          "win_rate": 66.9,
+          "matches": 369
+        },
+        {
+          "brawler": "berry",
+          "win_rate": 66.8,
+          "matches": 455
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "darryl",
+          "win_rate": 30.3,
+          "matches": 142
+        },
+        {
+          "brawler": "ollie",
+          "win_rate": 30.4,
+          "matches": 125
+        },
+        {
+          "brawler": "wendy",
+          "win_rate": 30.4,
+          "matches": 56
+        },
+        {
+          "brawler": "jae-yong",
+          "win_rate": 30.9,
+          "matches": 94
+        },
+        {
+          "brawler": "eve",
+          "win_rate": 31.2,
+          "matches": 32
+        }
+      ]
+    },
+    "bonnie": {
+      "tier": "A",
+      "score": 0.39,
+      "win_rate": 52.6,
+      "use_rate": 1.05,
+      "total_matches": 2926,
+      "kamo": [
+        {
+          "brawler": "pam",
+          "win_rate": 69.8,
+          "matches": 443
+        },
+        {
+          "brawler": "najia",
+          "win_rate": 68.9,
+          "matches": 183
+        },
+        {
+          "brawler": "crow",
+          "win_rate": 68.9,
+          "matches": 228
+        },
+        {
+          "brawler": "mico",
+          "win_rate": 68.7,
+          "matches": 431
+        },
+        {
+          "brawler": "stu",
+          "win_rate": 68.5,
+          "matches": 381
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "amber",
+          "win_rate": 30.0,
+          "matches": 20
+        },
+        {
+          "brawler": "maisie",
+          "win_rate": 30.0,
+          "matches": 130
+        },
+        {
+          "brawler": "lumi",
+          "win_rate": 30.1,
+          "matches": 196
+        },
+        {
+          "brawler": "jacky",
+          "win_rate": 31.2,
+          "matches": 288
+        },
+        {
+          "brawler": "cordelius",
+          "win_rate": 31.3,
+          "matches": 278
+        }
+      ]
+    },
+    "janet": {
+      "tier": "C",
+      "score": -0.93,
+      "win_rate": 40.5,
+      "use_rate": 1.36,
+      "total_matches": 3784,
+      "kamo": [
+        {
+          "brawler": "byron",
+          "win_rate": 69.9,
+          "matches": 335
+        },
+        {
+          "brawler": "tara",
+          "win_rate": 68.9,
+          "matches": 483
+        },
+        {
+          "brawler": "juju",
+          "win_rate": 68.7,
+          "matches": 67
+        },
+        {
+          "brawler": "bea",
+          "win_rate": 68.6,
+          "matches": 493
+        },
+        {
+          "brawler": "r-t",
+          "win_rate": 68.5,
+          "matches": 260
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "griff",
+          "win_rate": 30.0,
+          "matches": 263
+        },
+        {
+          "brawler": "melodie",
+          "win_rate": 30.0,
+          "matches": 217
+        },
+        {
+          "brawler": "alli",
+          "win_rate": 30.5,
+          "matches": 236
+        },
+        {
+          "brawler": "kaze",
+          "win_rate": 31.4,
+          "matches": 70
+        },
+        {
+          "brawler": "darryl",
+          "win_rate": 32.5,
+          "matches": 40
+        }
+      ]
+    },
+    "eve": {
+      "tier": "D",
+      "score": -1.44,
+      "win_rate": 42.9,
+      "use_rate": 0.05,
+      "total_matches": 140,
+      "kamo": [
+        {
+          "brawler": "squeak",
+          "win_rate": 69.2,
+          "matches": 78
+        },
+        {
+          "brawler": "sam",
+          "win_rate": 68.7,
+          "matches": 316
+        },
+        {
+          "brawler": "bea",
+          "win_rate": 68.3,
+          "matches": 126
+        },
+        {
+          "brawler": "surge",
+          "win_rate": 68.2,
+          "matches": 179
+        },
+        {
+          "brawler": "wendy",
+          "win_rate": 68.0,
+          "matches": 363
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "rico",
+          "win_rate": 28.1,
+          "matches": 32
+        },
+        {
+          "brawler": "mr. p",
+          "win_rate": 30.0,
+          "matches": 50
+        },
+        {
+          "brawler": "angelo",
+          "win_rate": 30.6,
+          "matches": 193
+        },
+        {
+          "brawler": "carl",
+          "win_rate": 31.6,
+          "matches": 136
+        },
+        {
+          "brawler": "bibi",
+          "win_rate": 32.0,
+          "matches": 25
+        }
+      ]
+    },
+    "fang": {
+      "tier": "B",
+      "score": 0.22,
+      "win_rate": 48.4,
+      "use_rate": 1.65,
+      "total_matches": 4575,
+      "kamo": [
+        {
+          "brawler": "nori",
+          "win_rate": 68.0,
+          "matches": 419
+        },
+        {
+          "brawler": "jae-yong",
+          "win_rate": 67.9,
+          "matches": 290
+        },
+        {
+          "brawler": "belle",
+          "win_rate": 67.5,
+          "matches": 403
+        },
+        {
+          "brawler": "bolt",
+          "win_rate": 66.9,
+          "matches": 251
+        },
+        {
+          "brawler": "kit",
+          "win_rate": 66.9,
+          "matches": 390
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "jessie",
+          "win_rate": 30.0,
+          "matches": 10
+        },
+        {
+          "brawler": "buzz",
+          "win_rate": 30.3,
+          "matches": 234
+        },
+        {
+          "brawler": "alli",
+          "win_rate": 30.5,
+          "matches": 174
+        },
+        {
+          "brawler": "ziggy",
+          "win_rate": 30.9,
+          "matches": 314
+        },
+        {
+          "brawler": "buzz lightyear",
+          "win_rate": 31.3,
+          "matches": 262
+        }
+      ]
+    },
+    "lola": {
+      "tier": "C",
+      "score": -1.18,
+      "win_rate": 40.3,
+      "use_rate": 1.01,
+      "total_matches": 2793,
+      "kamo": [
+        {
+          "brawler": "poco",
+          "win_rate": 69.8,
+          "matches": 262
+        },
+        {
+          "brawler": "edgar",
+          "win_rate": 69.5,
+          "matches": 321
+        },
+        {
+          "brawler": "bea",
+          "win_rate": 69.5,
+          "matches": 492
+        },
+        {
+          "brawler": "brock",
+          "win_rate": 68.8,
+          "matches": 282
+        },
+        {
+          "brawler": "sam",
+          "win_rate": 66.8,
+          "matches": 364
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "chester",
+          "win_rate": 26.7,
+          "matches": 15
+        },
+        {
+          "brawler": "gray",
+          "win_rate": 30.0,
+          "matches": 140
+        },
+        {
+          "brawler": "lily",
+          "win_rate": 30.1,
+          "matches": 469
+        },
+        {
+          "brawler": "leon",
+          "win_rate": 31.7,
+          "matches": 60
+        },
+        {
+          "brawler": "sirius",
+          "win_rate": 31.7,
+          "matches": 416
+        }
+      ]
+    },
+    "meg": {
+      "tier": "B",
+      "score": 0.07,
+      "win_rate": 50.9,
+      "use_rate": 0.89,
+      "total_matches": 2459,
+      "kamo": [
+        {
+          "brawler": "nori",
+          "win_rate": 69.2,
+          "matches": 120
+        },
+        {
+          "brawler": "griff",
+          "win_rate": 69.1,
+          "matches": 97
+        },
+        {
+          "brawler": "gene",
+          "win_rate": 68.1,
+          "matches": 382
+        },
+        {
+          "brawler": "chester",
+          "win_rate": 67.9,
+          "matches": 56
+        },
+        {
+          "brawler": "mico",
+          "win_rate": 67.8,
+          "matches": 422
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "bolt",
+          "win_rate": 30.1,
+          "matches": 73
+        },
+        {
+          "brawler": "byron",
+          "win_rate": 30.5,
+          "matches": 459
+        },
+        {
+          "brawler": "cordelius",
+          "win_rate": 30.6,
+          "matches": 157
+        },
+        {
+          "brawler": "penny",
+          "win_rate": 31.0,
+          "matches": 200
+        },
+        {
+          "brawler": "rico",
+          "win_rate": 31.2,
+          "matches": 199
+        }
+      ]
+    },
+    "ash": {
+      "tier": "A",
+      "score": 0.65,
+      "win_rate": 52.7,
+      "use_rate": 1.47,
+      "total_matches": 4081,
+      "kamo": [
+        {
+          "brawler": "barley",
+          "win_rate": 69.4,
+          "matches": 255
+        },
+        {
+          "brawler": "berry",
+          "win_rate": 69.1,
+          "matches": 382
+        },
+        {
+          "brawler": "amber",
+          "win_rate": 68.5,
+          "matches": 438
+        },
+        {
+          "brawler": "colette",
+          "win_rate": 68.4,
+          "matches": 98
+        },
+        {
+          "brawler": "doug",
+          "win_rate": 68.0,
+          "matches": 344
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "brock",
+          "win_rate": 30.1,
+          "matches": 236
+        },
+        {
+          "brawler": "pearl",
+          "win_rate": 30.1,
+          "matches": 346
+        },
+        {
+          "brawler": "fang",
+          "win_rate": 30.2,
+          "matches": 179
+        },
+        {
+          "brawler": "gray",
+          "win_rate": 30.8,
+          "matches": 13
+        },
+        {
+          "brawler": "piper",
+          "win_rate": 31.2,
+          "matches": 285
+        }
+      ]
+    },
+    "griff": {
+      "tier": "C",
+      "score": -0.68,
+      "win_rate": 48.0,
+      "use_rate": 0.26,
+      "total_matches": 719,
+      "kamo": [
+        {
+          "brawler": "hank",
+          "win_rate": 69.4,
+          "matches": 121
+        },
+        {
+          "brawler": "ollie",
+          "win_rate": 68.9,
+          "matches": 325
+        },
+        {
+          "brawler": "kit",
+          "win_rate": 68.6,
+          "matches": 255
+        },
+        {
+          "brawler": "otis",
+          "win_rate": 68.6,
+          "matches": 70
+        },
+        {
+          "brawler": "pam",
+          "win_rate": 68.4,
+          "matches": 263
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "nita",
+          "win_rate": 30.0,
+          "matches": 303
+        },
+        {
+          "brawler": "sam",
+          "win_rate": 30.7,
+          "matches": 280
+        },
+        {
+          "brawler": "melodie",
+          "win_rate": 31.0,
+          "matches": 458
+        },
+        {
+          "brawler": "nani",
+          "win_rate": 31.5,
+          "matches": 213
+        },
+        {
+          "brawler": "juju",
+          "win_rate": 32.7,
+          "matches": 410
+        }
+      ]
+    },
+    "buzz": {
+      "tier": "A",
+      "score": 0.32,
+      "win_rate": 56.5,
+      "use_rate": 0.17,
+      "total_matches": 471,
+      "kamo": [
+        {
+          "brawler": "barley",
+          "win_rate": 69.9,
+          "matches": 428
+        },
+        {
+          "brawler": "colette",
+          "win_rate": 69.4,
+          "matches": 111
+        },
+        {
+          "brawler": "damian",
+          "win_rate": 68.9,
+          "matches": 177
+        },
+        {
+          "brawler": "meeple",
+          "win_rate": 68.3,
+          "matches": 344
+        },
+        {
+          "brawler": "el primo",
+          "win_rate": 68.2,
+          "matches": 355
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "alli",
+          "win_rate": 29.9,
+          "matches": 194
+        },
+        {
+          "brawler": "surge",
+          "win_rate": 30.5,
+          "matches": 394
+        },
+        {
+          "brawler": "pearl",
+          "win_rate": 30.7,
+          "matches": 215
+        },
+        {
+          "brawler": "shelly",
+          "win_rate": 30.9,
+          "matches": 476
+        },
+        {
+          "brawler": "r-t",
+          "win_rate": 31.0,
+          "matches": 323
+        }
+      ]
+    },
+    "grom": {
+      "tier": "C",
+      "score": -1.1,
+      "win_rate": 42.9,
+      "use_rate": 0.6,
+      "total_matches": 1658,
+      "kamo": [
+        {
+          "brawler": "piper",
+          "win_rate": 69.8,
+          "matches": 367
+        },
+        {
+          "brawler": "nani",
+          "win_rate": 69.5,
+          "matches": 341
+        },
+        {
+          "brawler": "poco",
+          "win_rate": 69.5,
+          "matches": 59
+        },
+        {
+          "brawler": "r-t",
+          "win_rate": 68.8,
+          "matches": 353
+        },
+        {
+          "brawler": "hank",
+          "win_rate": 68.1,
+          "matches": 207
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "gale",
+          "win_rate": 30.5,
+          "matches": 210
+        },
+        {
+          "brawler": "glowy",
+          "win_rate": 30.6,
+          "matches": 402
+        },
+        {
+          "brawler": "gray",
+          "win_rate": 30.7,
+          "matches": 391
+        },
+        {
+          "brawler": "willow",
+          "win_rate": 30.9,
+          "matches": 421
+        },
+        {
+          "brawler": "jacky",
+          "win_rate": 31.0,
+          "matches": 42
+        }
+      ]
+    },
+    "squeak": {
+      "tier": "B",
+      "score": 0.08,
+      "win_rate": 51.7,
+      "use_rate": 0.76,
+      "total_matches": 2096,
+      "kamo": [
+        {
+          "brawler": "brock",
+          "win_rate": 69.8,
+          "matches": 268
+        },
+        {
+          "brawler": "lily",
+          "win_rate": 69.7,
+          "matches": 228
+        },
+        {
+          "brawler": "doug",
+          "win_rate": 69.6,
+          "matches": 460
+        },
+        {
+          "brawler": "nani",
+          "win_rate": 69.4,
+          "matches": 252
+        },
+        {
+          "brawler": "dynamike",
+          "win_rate": 69.3,
+          "matches": 264
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "kit",
+          "win_rate": 30.0,
+          "matches": 350
+        },
+        {
+          "brawler": "berry",
+          "win_rate": 31.0,
+          "matches": 200
+        },
+        {
+          "brawler": "maisie",
+          "win_rate": 31.1,
+          "matches": 418
+        },
+        {
+          "brawler": "jessie",
+          "win_rate": 31.7,
+          "matches": 230
+        },
+        {
+          "brawler": "mortis",
+          "win_rate": 32.3,
+          "matches": 297
+        }
+      ]
+    },
+    "belle": {
+      "tier": "A",
+      "score": 0.39,
+      "win_rate": 55.1,
+      "use_rate": 0.55,
+      "total_matches": 1528,
+      "kamo": [
+        {
+          "brawler": "gray",
+          "win_rate": 69.0,
+          "matches": 142
+        },
+        {
+          "brawler": "melodie",
+          "win_rate": 68.8,
+          "matches": 459
+        },
+        {
+          "brawler": "juju",
+          "win_rate": 68.5,
+          "matches": 289
+        },
+        {
+          "brawler": "najia",
+          "win_rate": 68.4,
+          "matches": 155
+        },
+        {
+          "brawler": "jae-yong",
+          "win_rate": 68.0,
+          "matches": 366
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "tick",
+          "win_rate": 30.7,
+          "matches": 140
+        },
+        {
+          "brawler": "bibi",
+          "win_rate": 30.8,
+          "matches": 39
+        },
+        {
+          "brawler": "willow",
+          "win_rate": 31.1,
+          "matches": 270
+        },
+        {
+          "brawler": "mandy",
+          "win_rate": 31.3,
+          "matches": 348
+        },
+        {
+          "brawler": "sirius",
+          "win_rate": 31.3,
+          "matches": 147
+        }
+      ]
+    },
+    "stu": {
+      "tier": "B",
+      "score": 0.02,
+      "win_rate": 48.3,
+      "use_rate": 1.33,
+      "total_matches": 3686,
+      "kamo": [
+        {
+          "brawler": "surge",
+          "win_rate": 69.1,
+          "matches": 194
+        },
+        {
+          "brawler": "sam",
+          "win_rate": 68.7,
+          "matches": 326
+        },
+        {
+          "brawler": "gus",
+          "win_rate": 67.9,
+          "matches": 184
+        },
+        {
+          "brawler": "gene",
+          "win_rate": 67.9,
+          "matches": 402
+        },
+        {
+          "brawler": "mandy",
+          "win_rate": 67.8,
+          "matches": 366
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "sandy",
+          "win_rate": 29.7,
+          "matches": 91
+        },
+        {
+          "brawler": "brock",
+          "win_rate": 29.9,
+          "matches": 388
+        },
+        {
+          "brawler": "charlie",
+          "win_rate": 30.1,
+          "matches": 449
+        },
+        {
+          "brawler": "rico",
+          "win_rate": 30.3,
+          "matches": 393
+        },
+        {
+          "brawler": "maisie",
+          "win_rate": 31.2,
+          "matches": 240
+        }
+      ]
+    },
+    "ruffs": {
+      "tier": "S",
+      "score": 1.04,
+      "win_rate": 58.5,
+      "use_rate": 0.93,
+      "total_matches": 2585,
+      "kamo": [
+        {
+          "brawler": "ziggy",
+          "win_rate": 69.5,
+          "matches": 243
+        },
+        {
+          "brawler": "clancy",
+          "win_rate": 68.7,
+          "matches": 115
+        },
+        {
+          "brawler": "poco",
+          "win_rate": 68.1,
+          "matches": 232
+        },
+        {
+          "brawler": "barley",
+          "win_rate": 68.1,
+          "matches": 455
+        },
+        {
+          "brawler": "hank",
+          "win_rate": 67.8,
+          "matches": 205
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "frank",
+          "win_rate": 29.4,
+          "matches": 68
+        },
+        {
+          "brawler": "nani",
+          "win_rate": 30.0,
+          "matches": 160
+        },
+        {
+          "brawler": "otis",
+          "win_rate": 30.2,
+          "matches": 315
+        },
+        {
+          "brawler": "rico",
+          "win_rate": 30.4,
+          "matches": 79
+        },
+        {
+          "brawler": "kaze",
+          "win_rate": 30.6,
+          "matches": 288
+        }
+      ]
+    },
+    "edgar": {
+      "tier": "A",
+      "score": 0.76,
+      "win_rate": 54.6,
+      "use_rate": 1.28,
+      "total_matches": 3561,
+      "kamo": [
+        {
+          "brawler": "meg",
+          "win_rate": 68.9,
+          "matches": 331
+        },
+        {
+          "brawler": "emz",
+          "win_rate": 68.5,
+          "matches": 466
+        },
+        {
+          "brawler": "ruffs",
+          "win_rate": 68.0,
+          "matches": 456
+        },
+        {
+          "brawler": "glowy",
+          "win_rate": 67.5,
+          "matches": 191
+        },
+        {
+          "brawler": "trunk",
+          "win_rate": 67.5,
+          "matches": 424
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "bea",
+          "win_rate": 29.2,
+          "matches": 24
+        },
+        {
+          "brawler": "belle",
+          "win_rate": 30.1,
+          "matches": 193
+        },
+        {
+          "brawler": "kit",
+          "win_rate": 30.2,
+          "matches": 149
+        },
+        {
+          "brawler": "jacky",
+          "win_rate": 30.9,
+          "matches": 162
+        },
+        {
+          "brawler": "lily",
+          "win_rate": 31.1,
+          "matches": 74
+        }
+      ]
+    },
+    "byron": {
+      "tier": "B",
+      "score": -0.13,
+      "win_rate": 48.0,
+      "use_rate": 1.15,
+      "total_matches": 3197,
+      "kamo": [
+        {
+          "brawler": "belle",
+          "win_rate": 69.7,
+          "matches": 386
+        },
+        {
+          "brawler": "jacky",
+          "win_rate": 69.6,
+          "matches": 493
+        },
+        {
+          "brawler": "tara",
+          "win_rate": 69.3,
+          "matches": 479
+        },
+        {
+          "brawler": "pearl",
+          "win_rate": 69.0,
+          "matches": 229
+        },
+        {
+          "brawler": "emz",
+          "win_rate": 68.7,
+          "matches": 147
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "ash",
+          "win_rate": 30.0,
+          "matches": 487
+        },
+        {
+          "brawler": "surge",
+          "win_rate": 30.4,
+          "matches": 450
+        },
+        {
+          "brawler": "kaze",
+          "win_rate": 30.4,
+          "matches": 158
+        },
+        {
+          "brawler": "kenji",
+          "win_rate": 30.5,
+          "matches": 351
+        },
+        {
+          "brawler": "rosa",
+          "win_rate": 30.6,
+          "matches": 464
+        }
+      ]
+    },
+    "lou": {
+      "tier": "B",
+      "score": -0.08,
+      "win_rate": 53.2,
+      "use_rate": 0.17,
+      "total_matches": 479,
+      "kamo": [
+        {
+          "brawler": "max",
+          "win_rate": 69.4,
+          "matches": 206
+        },
+        {
+          "brawler": "bea",
+          "win_rate": 69.0,
+          "matches": 226
+        },
+        {
+          "brawler": "amber",
+          "win_rate": 68.8,
+          "matches": 192
+        },
+        {
+          "brawler": "ruffs",
+          "win_rate": 68.5,
+          "matches": 203
+        },
+        {
+          "brawler": "moe",
+          "win_rate": 68.2,
+          "matches": 192
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "jae-yong",
+          "win_rate": 30.0,
+          "matches": 20
+        },
+        {
+          "brawler": "fang",
+          "win_rate": 30.2,
+          "matches": 338
+        },
+        {
+          "brawler": "trunk",
+          "win_rate": 30.2,
+          "matches": 129
+        },
+        {
+          "brawler": "gene",
+          "win_rate": 30.8,
+          "matches": 13
+        },
+        {
+          "brawler": "pierce",
+          "win_rate": 30.9,
+          "matches": 55
+        }
+      ]
+    },
+    "amber": {
+      "tier": "A",
+      "score": 0.32,
+      "win_rate": 53.9,
+      "use_rate": 0.68,
+      "total_matches": 1878,
+      "kamo": [
+        {
+          "brawler": "jessie",
+          "win_rate": 69.8,
+          "matches": 387
+        },
+        {
+          "brawler": "mortis",
+          "win_rate": 69.0,
+          "matches": 258
+        },
+        {
+          "brawler": "barley",
+          "win_rate": 68.8,
+          "matches": 144
+        },
+        {
+          "brawler": "doug",
+          "win_rate": 68.6,
+          "matches": 105
+        },
+        {
+          "brawler": "lou",
+          "win_rate": 68.4,
+          "matches": 472
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "leon",
+          "win_rate": 29.9,
+          "matches": 361
+        },
+        {
+          "brawler": "mandy",
+          "win_rate": 30.2,
+          "matches": 53
+        },
+        {
+          "brawler": "trunk",
+          "win_rate": 30.3,
+          "matches": 188
+        },
+        {
+          "brawler": "glowy",
+          "win_rate": 30.9,
+          "matches": 94
+        },
+        {
+          "brawler": "wendy",
+          "win_rate": 31.1,
+          "matches": 257
+        }
+      ]
+    },
+    "colette": {
+      "tier": "C",
+      "score": -0.97,
+      "win_rate": 41.0,
+      "use_rate": 1.21,
+      "total_matches": 3360,
+      "kamo": [
+        {
+          "brawler": "moe",
+          "win_rate": 68.4,
+          "matches": 19
+        },
+        {
+          "brawler": "grom",
+          "win_rate": 68.4,
+          "matches": 415
+        },
+        {
+          "brawler": "alli",
+          "win_rate": 68.2,
+          "matches": 393
+        },
+        {
+          "brawler": "bolt",
+          "win_rate": 67.4,
+          "matches": 288
+        },
+        {
+          "brawler": "berry",
+          "win_rate": 67.1,
+          "matches": 70
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "colt",
+          "win_rate": 26.3,
+          "matches": 19
+        },
+        {
+          "brawler": "rico",
+          "win_rate": 30.0,
+          "matches": 90
+        },
+        {
+          "brawler": "sandy",
+          "win_rate": 30.0,
+          "matches": 420
+        },
+        {
+          "brawler": "shelly",
+          "win_rate": 30.9,
+          "matches": 136
+        },
+        {
+          "brawler": "ollie",
+          "win_rate": 31.1,
+          "matches": 167
+        }
+      ]
+    },
+    "surge": {
+      "tier": "B",
+      "score": 0.01,
+      "win_rate": 47.0,
+      "use_rate": 1.58,
+      "total_matches": 4394,
+      "kamo": [
+        {
+          "brawler": "draco",
+          "win_rate": 69.3,
+          "matches": 199
+        },
+        {
+          "brawler": "mico",
+          "win_rate": 69.2,
+          "matches": 159
+        },
+        {
+          "brawler": "chester",
+          "win_rate": 69.2,
+          "matches": 159
+        },
+        {
+          "brawler": "jessie",
+          "win_rate": 69.1,
+          "matches": 207
+        },
+        {
+          "brawler": "colette",
+          "win_rate": 69.0,
+          "matches": 42
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "sam",
+          "win_rate": 30.0,
+          "matches": 10
+        },
+        {
+          "brawler": "pearl",
+          "win_rate": 30.6,
+          "matches": 144
+        },
+        {
+          "brawler": "poco",
+          "win_rate": 31.1,
+          "matches": 183
+        },
+        {
+          "brawler": "nori",
+          "win_rate": 32.5,
+          "matches": 342
+        },
+        {
+          "brawler": "hank",
+          "win_rate": 33.3,
+          "matches": 15
+        }
+      ]
+    },
+    "sprout": {
+      "tier": "B",
+      "score": -0.41,
+      "win_rate": 48.2,
+      "use_rate": 0.64,
+      "total_matches": 1777,
+      "kamo": [
+        {
+          "brawler": "ollie",
+          "win_rate": 69.7,
+          "matches": 390
+        },
+        {
+          "brawler": "jacky",
+          "win_rate": 68.3,
+          "matches": 63
+        },
+        {
+          "brawler": "janet",
+          "win_rate": 68.2,
+          "matches": 299
+        },
+        {
+          "brawler": "belle",
+          "win_rate": 68.2,
+          "matches": 280
+        },
+        {
+          "brawler": "otis",
+          "win_rate": 67.2,
+          "matches": 418
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "melodie",
+          "win_rate": 29.4,
+          "matches": 85
+        },
+        {
+          "brawler": "tick",
+          "win_rate": 30.7,
+          "matches": 394
+        },
+        {
+          "brawler": "ruffs",
+          "win_rate": 31.7,
+          "matches": 442
+        },
+        {
+          "brawler": "angelo",
+          "win_rate": 31.9,
+          "matches": 477
+        },
+        {
+          "brawler": "rico",
+          "win_rate": 32.3,
+          "matches": 328
+        }
+      ]
+    },
+    "nani": {
+      "tier": "B",
+      "score": -0.1,
+      "win_rate": 51.6,
+      "use_rate": 0.48,
+      "total_matches": 1324,
+      "kamo": [
+        {
+          "brawler": "maisie",
+          "win_rate": 69.9,
+          "matches": 402
+        },
+        {
+          "brawler": "trunk",
+          "win_rate": 68.9,
+          "matches": 209
+        },
+        {
+          "brawler": "leon",
+          "win_rate": 67.9,
+          "matches": 374
+        },
+        {
+          "brawler": "najia",
+          "win_rate": 67.3,
+          "matches": 150
+        },
+        {
+          "brawler": "mandy",
+          "win_rate": 66.6,
+          "matches": 362
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "carl",
+          "win_rate": 30.0,
+          "matches": 283
+        },
+        {
+          "brawler": "starr nova",
+          "win_rate": 30.2,
+          "matches": 344
+        },
+        {
+          "brawler": "ruffs",
+          "win_rate": 30.5,
+          "matches": 321
+        },
+        {
+          "brawler": "otis",
+          "win_rate": 30.5,
+          "matches": 59
+        },
+        {
+          "brawler": "pam",
+          "win_rate": 31.6,
+          "matches": 269
+        }
+      ]
+    },
+    "gale": {
+      "tier": "B",
+      "score": -0.44,
+      "win_rate": 50.3,
+      "use_rate": 0.18,
+      "total_matches": 489,
+      "kamo": [
+        {
+          "brawler": "damian",
+          "win_rate": 68.1,
+          "matches": 401
+        },
+        {
+          "brawler": "gigi",
+          "win_rate": 68.1,
+          "matches": 354
+        },
+        {
+          "brawler": "colette",
+          "win_rate": 68.1,
+          "matches": 329
+        },
+        {
+          "brawler": "bo",
+          "win_rate": 67.5,
+          "matches": 203
+        },
+        {
+          "brawler": "sandy",
+          "win_rate": 66.7,
+          "matches": 165
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "finx",
+          "win_rate": 28.6,
+          "matches": 21
+        },
+        {
+          "brawler": "lola",
+          "win_rate": 30.0,
+          "matches": 10
+        },
+        {
+          "brawler": "ash",
+          "win_rate": 30.2,
+          "matches": 427
+        },
+        {
+          "brawler": "buster",
+          "win_rate": 30.4,
+          "matches": 191
+        },
+        {
+          "brawler": "ollie",
+          "win_rate": 30.7,
+          "matches": 277
+        }
+      ]
+    },
+    "jacky": {
+      "tier": "A",
+      "score": 0.76,
+      "win_rate": 53.7,
+      "use_rate": 1.45,
+      "total_matches": 4038,
+      "kamo": [
+        {
+          "brawler": "rosa",
+          "win_rate": 69.6,
+          "matches": 359
+        },
+        {
+          "brawler": "melodie",
+          "win_rate": 69.3,
+          "matches": 449
+        },
+        {
+          "brawler": "charlie",
+          "win_rate": 69.1,
+          "matches": 220
+        },
+        {
+          "brawler": "bea",
+          "win_rate": 68.1,
+          "matches": 182
+        },
+        {
+          "brawler": "gale",
+          "win_rate": 66.4,
+          "matches": 438
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "jae-yong",
+          "win_rate": 30.7,
+          "matches": 388
+        },
+        {
+          "brawler": "angelo",
+          "win_rate": 31.4,
+          "matches": 35
+        },
+        {
+          "brawler": "kaze",
+          "win_rate": 31.7,
+          "matches": 495
+        },
+        {
+          "brawler": "nita",
+          "win_rate": 32.4,
+          "matches": 34
+        },
+        {
+          "brawler": "willow",
+          "win_rate": 32.5,
+          "matches": 443
+        }
+      ]
+    },
+    "max": {
+      "tier": "S",
+      "score": 1.09,
+      "win_rate": 59.0,
+      "use_rate": 0.92,
+      "total_matches": 2566,
+      "kamo": [
+        {
+          "brawler": "grom",
+          "win_rate": 69.7,
+          "matches": 284
+        },
+        {
+          "brawler": "nita",
+          "win_rate": 68.0,
+          "matches": 147
+        },
+        {
+          "brawler": "edgar",
+          "win_rate": 67.8,
+          "matches": 385
+        },
+        {
+          "brawler": "bolt",
+          "win_rate": 67.5,
+          "matches": 323
+        },
+        {
+          "brawler": "carl",
+          "win_rate": 67.4,
+          "matches": 175
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "gigi",
+          "win_rate": 29.7,
+          "matches": 249
+        },
+        {
+          "brawler": "hank",
+          "win_rate": 30.6,
+          "matches": 458
+        },
+        {
+          "brawler": "rosa",
+          "win_rate": 30.8,
+          "matches": 416
+        },
+        {
+          "brawler": "colt",
+          "win_rate": 31.1,
+          "matches": 402
+        },
+        {
+          "brawler": "byron",
+          "win_rate": 31.5,
+          "matches": 89
+        }
+      ]
+    },
+    "mr. p": {
+      "tier": "A",
+      "score": 0.61,
+      "win_rate": 56.3,
+      "use_rate": 0.68,
+      "total_matches": 1886,
+      "kamo": [
+        {
+          "brawler": "nita",
+          "win_rate": 69.7,
+          "matches": 445
+        },
+        {
+          "brawler": "max",
+          "win_rate": 69.5,
+          "matches": 449
+        },
+        {
+          "brawler": "cordelius",
+          "win_rate": 69.4,
+          "matches": 395
+        },
+        {
+          "brawler": "finx",
+          "win_rate": 68.8,
+          "matches": 478
+        },
+        {
+          "brawler": "stu",
+          "win_rate": 68.8,
+          "matches": 208
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "grom",
+          "win_rate": 30.0,
+          "matches": 50
+        },
+        {
+          "brawler": "sprout",
+          "win_rate": 30.6,
+          "matches": 36
+        },
+        {
+          "brawler": "kit",
+          "win_rate": 30.6,
+          "matches": 369
+        },
+        {
+          "brawler": "meg",
+          "win_rate": 31.2,
+          "matches": 465
+        },
+        {
+          "brawler": "rosa",
+          "win_rate": 31.3,
+          "matches": 246
+        }
+      ]
+    },
+    "emz": {
+      "tier": "B",
+      "score": 0.3,
+      "win_rate": 52.2,
+      "use_rate": 1.0,
+      "total_matches": 2769,
+      "kamo": [
+        {
+          "brawler": "shelly",
+          "win_rate": 69.5,
+          "matches": 177
+        },
+        {
+          "brawler": "gene",
+          "win_rate": 69.2,
+          "matches": 484
+        },
+        {
+          "brawler": "trunk",
+          "win_rate": 69.1,
+          "matches": 363
+        },
+        {
+          "brawler": "sam",
+          "win_rate": 68.7,
+          "matches": 323
+        },
+        {
+          "brawler": "chester",
+          "win_rate": 67.0,
+          "matches": 94
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "buzz",
+          "win_rate": 29.4,
+          "matches": 34
+        },
+        {
+          "brawler": "bo",
+          "win_rate": 31.4,
+          "matches": 382
+        },
+        {
+          "brawler": "grom",
+          "win_rate": 31.5,
+          "matches": 267
+        },
+        {
+          "brawler": "eve",
+          "win_rate": 31.9,
+          "matches": 464
+        },
+        {
+          "brawler": "byron",
+          "win_rate": 32.0,
+          "matches": 241
+        }
+      ]
+    },
+    "bea": {
+      "tier": "S",
+      "score": 1.06,
+      "win_rate": 59.5,
+      "use_rate": 0.76,
+      "total_matches": 2112,
+      "kamo": [
+        {
+          "brawler": "stu",
+          "win_rate": 69.8,
+          "matches": 86
+        },
+        {
+          "brawler": "cordelius",
+          "win_rate": 69.6,
+          "matches": 368
+        },
+        {
+          "brawler": "damian",
+          "win_rate": 68.5,
+          "matches": 124
+        },
+        {
+          "brawler": "melodie",
+          "win_rate": 68.4,
+          "matches": 212
+        },
+        {
+          "brawler": "alli",
+          "win_rate": 68.1,
+          "matches": 270
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "ollie",
+          "win_rate": 30.0,
+          "matches": 110
+        },
+        {
+          "brawler": "clancy",
+          "win_rate": 30.2,
+          "matches": 245
+        },
+        {
+          "brawler": "hank",
+          "win_rate": 30.6,
+          "matches": 408
+        },
+        {
+          "brawler": "lola",
+          "win_rate": 30.8,
+          "matches": 195
+        },
+        {
+          "brawler": "mina",
+          "win_rate": 31.4,
+          "matches": 204
+        }
+      ]
+    },
+    "sandy": {
+      "tier": "S",
+      "score": 1.19,
+      "win_rate": 57.4,
+      "use_rate": 1.39,
+      "total_matches": 3869,
+      "kamo": [
+        {
+          "brawler": "maisie",
+          "win_rate": 69.7,
+          "matches": 294
+        },
+        {
+          "brawler": "griff",
+          "win_rate": 68.6,
+          "matches": 140
+        },
+        {
+          "brawler": "jae-yong",
+          "win_rate": 68.2,
+          "matches": 289
+        },
+        {
+          "brawler": "kaze",
+          "win_rate": 68.0,
+          "matches": 178
+        },
+        {
+          "brawler": "byron",
+          "win_rate": 68.0,
+          "matches": 250
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "meg",
+          "win_rate": 30.4,
+          "matches": 404
+        },
+        {
+          "brawler": "bo",
+          "win_rate": 30.5,
+          "matches": 374
+        },
+        {
+          "brawler": "belle",
+          "win_rate": 30.5,
+          "matches": 449
+        },
+        {
+          "brawler": "edgar",
+          "win_rate": 31.4,
+          "matches": 35
+        },
+        {
+          "brawler": "lily",
+          "win_rate": 31.4,
+          "matches": 271
+        }
+      ]
+    },
+    "8-bit": {
+      "tier": "B",
+      "score": -0.13,
+      "win_rate": 47.5,
+      "use_rate": 1.26,
+      "total_matches": 3501,
+      "kamo": [
+        {
+          "brawler": "crow",
+          "win_rate": 69.2,
+          "matches": 120
+        },
+        {
+          "brawler": "nani",
+          "win_rate": 68.6,
+          "matches": 344
+        },
+        {
+          "brawler": "jacky",
+          "win_rate": 68.5,
+          "matches": 305
+        },
+        {
+          "brawler": "mina",
+          "win_rate": 68.4,
+          "matches": 494
+        },
+        {
+          "brawler": "colt",
+          "win_rate": 68.1,
+          "matches": 229
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "berry",
+          "win_rate": 30.8,
+          "matches": 13
+        },
+        {
+          "brawler": "jessie",
+          "win_rate": 31.0,
+          "matches": 439
+        },
+        {
+          "brawler": "barley",
+          "win_rate": 32.1,
+          "matches": 274
+        },
+        {
+          "brawler": "lou",
+          "win_rate": 32.2,
+          "matches": 329
+        },
+        {
+          "brawler": "wendy",
+          "win_rate": 32.5,
+          "matches": 286
+        }
+      ]
+    },
+    "bibi": {
+      "tier": "A",
+      "score": 0.53,
+      "win_rate": 55.2,
+      "use_rate": 0.77,
+      "total_matches": 2133,
+      "kamo": [
+        {
+          "brawler": "damian",
+          "win_rate": 68.9,
+          "matches": 222
+        },
+        {
+          "brawler": "amber",
+          "win_rate": 68.8,
+          "matches": 337
+        },
+        {
+          "brawler": "nori",
+          "win_rate": 67.6,
+          "matches": 447
+        },
+        {
+          "brawler": "janet",
+          "win_rate": 67.6,
+          "matches": 108
+        },
+        {
+          "brawler": "gus",
+          "win_rate": 67.3,
+          "matches": 153
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "wendy",
+          "win_rate": 30.2,
+          "matches": 484
+        },
+        {
+          "brawler": "colette",
+          "win_rate": 30.4,
+          "matches": 395
+        },
+        {
+          "brawler": "nita",
+          "win_rate": 30.6,
+          "matches": 350
+        },
+        {
+          "brawler": "maisie",
+          "win_rate": 30.7,
+          "matches": 361
+        },
+        {
+          "brawler": "shelly",
+          "win_rate": 30.9,
+          "matches": 414
+        }
+      ]
+    },
+    "carl": {
+      "tier": "S",
+      "score": 1.16,
+      "win_rate": 59.3,
+      "use_rate": 0.97,
+      "total_matches": 2683,
+      "kamo": [
+        {
+          "brawler": "penny",
+          "win_rate": 69.2,
+          "matches": 159
+        },
+        {
+          "brawler": "bolt",
+          "win_rate": 69.1,
+          "matches": 479
+        },
+        {
+          "brawler": "cordelius",
+          "win_rate": 68.8,
+          "matches": 218
+        },
+        {
+          "brawler": "lola",
+          "win_rate": 67.7,
+          "matches": 217
+        },
+        {
+          "brawler": "larry & lawrie",
+          "win_rate": 67.5,
+          "matches": 166
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "griff",
+          "win_rate": 30.1,
+          "matches": 166
+        },
+        {
+          "brawler": "sam",
+          "win_rate": 31.0,
+          "matches": 268
+        },
+        {
+          "brawler": "dynamike",
+          "win_rate": 31.1,
+          "matches": 151
+        },
+        {
+          "brawler": "gray",
+          "win_rate": 31.5,
+          "matches": 324
+        },
+        {
+          "brawler": "shelly",
+          "win_rate": 31.8,
+          "matches": 472
+        }
+      ]
+    },
+    "rosa": {
+      "tier": "B",
+      "score": 0.25,
+      "win_rate": 53.3,
+      "use_rate": 0.69,
+      "total_matches": 1911,
+      "kamo": [
+        {
+          "brawler": "clancy",
+          "win_rate": 69.2,
+          "matches": 373
+        },
+        {
+          "brawler": "8-bit",
+          "win_rate": 69.2,
+          "matches": 260
+        },
+        {
+          "brawler": "buzz",
+          "win_rate": 68.7,
+          "matches": 214
+        },
+        {
+          "brawler": "jessie",
+          "win_rate": 68.6,
+          "matches": 207
+        },
+        {
+          "brawler": "byron",
+          "win_rate": 68.1,
+          "matches": 364
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "gene",
+          "win_rate": 30.3,
+          "matches": 254
+        },
+        {
+          "brawler": "nita",
+          "win_rate": 30.5,
+          "matches": 430
+        },
+        {
+          "brawler": "najia",
+          "win_rate": 31.2,
+          "matches": 317
+        },
+        {
+          "brawler": "shelly",
+          "win_rate": 31.9,
+          "matches": 445
+        },
+        {
+          "brawler": "penny",
+          "win_rate": 32.1,
+          "matches": 352
+        }
+      ]
+    },
+    "leon": {
+      "tier": "B",
+      "score": 0.21,
+      "win_rate": 54.1,
+      "use_rate": 0.47,
+      "total_matches": 1309,
+      "kamo": [
+        {
+          "brawler": "crow",
+          "win_rate": 69.6,
+          "matches": 161
+        },
+        {
+          "brawler": "buzz",
+          "win_rate": 68.8,
+          "matches": 298
+        },
+        {
+          "brawler": "8-bit",
+          "win_rate": 68.6,
+          "matches": 226
+        },
+        {
+          "brawler": "lou",
+          "win_rate": 68.1,
+          "matches": 389
+        },
+        {
+          "brawler": "lola",
+          "win_rate": 67.9,
+          "matches": 468
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "byron",
+          "win_rate": 30.1,
+          "matches": 216
+        },
+        {
+          "brawler": "sprout",
+          "win_rate": 30.5,
+          "matches": 498
+        },
+        {
+          "brawler": "kaze",
+          "win_rate": 31.0,
+          "matches": 277
+        },
+        {
+          "brawler": "gus",
+          "win_rate": 32.0,
+          "matches": 347
+        },
+        {
+          "brawler": "darryl",
+          "win_rate": 32.6,
+          "matches": 132
+        }
+      ]
+    },
+    "tick": {
+      "tier": "B",
+      "score": 0.14,
+      "win_rate": 47.4,
+      "use_rate": 1.72,
+      "total_matches": 4769,
+      "kamo": [
+        {
+          "brawler": "griff",
+          "win_rate": 69.5,
+          "matches": 262
+        },
+        {
+          "brawler": "mortis",
+          "win_rate": 69.3,
+          "matches": 261
+        },
+        {
+          "brawler": "kaze",
+          "win_rate": 68.7,
+          "matches": 457
+        },
+        {
+          "brawler": "gale",
+          "win_rate": 68.4,
+          "matches": 481
+        },
+        {
+          "brawler": "shade",
+          "win_rate": 68.2,
+          "matches": 179
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "rico",
+          "win_rate": 27.3,
+          "matches": 11
+        },
+        {
+          "brawler": "kit",
+          "win_rate": 29.0,
+          "matches": 31
+        },
+        {
+          "brawler": "pearl",
+          "win_rate": 31.0,
+          "matches": 271
+        },
+        {
+          "brawler": "edgar",
+          "win_rate": 31.3,
+          "matches": 453
+        },
+        {
+          "brawler": "leon",
+          "win_rate": 31.5,
+          "matches": 124
+        }
+      ]
+    },
+    "gene": {
+      "tier": "D",
+      "score": -1.37,
+      "win_rate": 43.5,
+      "use_rate": 0.04,
+      "total_matches": 108,
+      "kamo": [
+        {
+          "brawler": "chuck",
+          "win_rate": 69.9,
+          "matches": 485
+        },
+        {
+          "brawler": "mandy",
+          "win_rate": 69.1,
+          "matches": 401
+        },
+        {
+          "brawler": "starr nova",
+          "win_rate": 68.7,
+          "matches": 453
+        },
+        {
+          "brawler": "najia",
+          "win_rate": 68.4,
+          "matches": 389
+        },
+        {
+          "brawler": "buzz lightyear",
+          "win_rate": 68.2,
+          "matches": 490
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "sprout",
+          "win_rate": 29.9,
+          "matches": 291
+        },
+        {
+          "brawler": "bull",
+          "win_rate": 30.0,
+          "matches": 10
+        },
+        {
+          "brawler": "damian",
+          "win_rate": 30.1,
+          "matches": 425
+        },
+        {
+          "brawler": "bo",
+          "win_rate": 30.4,
+          "matches": 497
+        },
+        {
+          "brawler": "ash",
+          "win_rate": 30.6,
+          "matches": 372
+        }
+      ]
+    },
+    "frank": {
+      "tier": "C",
+      "score": -0.61,
+      "win_rate": 44.0,
+      "use_rate": 1.18,
+      "total_matches": 3287,
+      "kamo": [
+        {
+          "brawler": "nori",
+          "win_rate": 69.6,
+          "matches": 181
+        },
+        {
+          "brawler": "grom",
+          "win_rate": 68.6,
+          "matches": 271
+        },
+        {
+          "brawler": "lily",
+          "win_rate": 68.2,
+          "matches": 485
+        },
+        {
+          "brawler": "gene",
+          "win_rate": 68.2,
+          "matches": 333
+        },
+        {
+          "brawler": "bibi",
+          "win_rate": 67.9,
+          "matches": 296
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "rosa",
+          "win_rate": 29.3,
+          "matches": 58
+        },
+        {
+          "brawler": "eve",
+          "win_rate": 29.5,
+          "matches": 61
+        },
+        {
+          "brawler": "berry",
+          "win_rate": 29.6,
+          "matches": 71
+        },
+        {
+          "brawler": "spike",
+          "win_rate": 30.0,
+          "matches": 10
+        },
+        {
+          "brawler": "nita",
+          "win_rate": 30.4,
+          "matches": 46
+        }
+      ]
+    },
+    "penny": {
+      "tier": "S",
+      "score": 1.07,
+      "win_rate": 57.3,
+      "use_rate": 1.23,
+      "total_matches": 3416,
+      "kamo": [
+        {
+          "brawler": "pearl",
+          "win_rate": 68.8,
+          "matches": 288
+        },
+        {
+          "brawler": "janet",
+          "win_rate": 68.8,
+          "matches": 455
+        },
+        {
+          "brawler": "poco",
+          "win_rate": 68.6,
+          "matches": 325
+        },
+        {
+          "brawler": "najia",
+          "win_rate": 68.4,
+          "matches": 354
+        },
+        {
+          "brawler": "hank",
+          "win_rate": 68.4,
+          "matches": 212
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "ziggy",
+          "win_rate": 29.4,
+          "matches": 34
+        },
+        {
+          "brawler": "otis",
+          "win_rate": 29.7,
+          "matches": 64
+        },
+        {
+          "brawler": "angelo",
+          "win_rate": 30.8,
+          "matches": 13
+        },
+        {
+          "brawler": "kenji",
+          "win_rate": 31.0,
+          "matches": 313
+        },
+        {
+          "brawler": "belle",
+          "win_rate": 31.3,
+          "matches": 348
+        }
+      ]
+    },
+    "darryl": {
+      "tier": "C",
+      "score": -0.69,
+      "win_rate": 42.3,
+      "use_rate": 1.41,
+      "total_matches": 3914,
+      "kamo": [
+        {
+          "brawler": "sirius",
+          "win_rate": 69.5,
+          "matches": 262
+        },
+        {
+          "brawler": "meeple",
+          "win_rate": 69.1,
+          "matches": 404
+        },
+        {
+          "brawler": "wendy",
+          "win_rate": 68.6,
+          "matches": 229
+        },
+        {
+          "brawler": "el primo",
+          "win_rate": 68.6,
+          "matches": 153
+        },
+        {
+          "brawler": "gigi",
+          "win_rate": 66.1,
+          "matches": 280
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "max",
+          "win_rate": 29.9,
+          "matches": 97
+        },
+        {
+          "brawler": "nori",
+          "win_rate": 30.1,
+          "matches": 299
+        },
+        {
+          "brawler": "amber",
+          "win_rate": 30.3,
+          "matches": 492
+        },
+        {
+          "brawler": "pearl",
+          "win_rate": 30.3,
+          "matches": 185
+        },
+        {
+          "brawler": "otis",
+          "win_rate": 30.4,
+          "matches": 23
+        }
+      ]
+    },
+    "tara": {
+      "tier": "B",
+      "score": 0.08,
+      "win_rate": 48.5,
+      "use_rate": 1.41,
+      "total_matches": 3917,
+      "kamo": [
+        {
+          "brawler": "mandy",
+          "win_rate": 69.4,
+          "matches": 183
+        },
+        {
+          "brawler": "kit",
+          "win_rate": 68.6,
+          "matches": 443
+        },
+        {
+          "brawler": "tick",
+          "win_rate": 68.4,
+          "matches": 244
+        },
+        {
+          "brawler": "stu",
+          "win_rate": 68.3,
+          "matches": 167
+        },
+        {
+          "brawler": "darryl",
+          "win_rate": 67.3,
+          "matches": 495
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "r-t",
+          "win_rate": 28.8,
+          "matches": 59
+        },
+        {
+          "brawler": "eve",
+          "win_rate": 30.1,
+          "matches": 196
+        },
+        {
+          "brawler": "lumi",
+          "win_rate": 31.4,
+          "matches": 35
+        },
+        {
+          "brawler": "buzz lightyear",
+          "win_rate": 31.8,
+          "matches": 409
+        },
+        {
+          "brawler": "surge",
+          "win_rate": 32.1,
+          "matches": 496
+        }
+      ]
+    },
+    "pam": {
+      "tier": "C",
+      "score": -0.79,
+      "win_rate": 44.3,
+      "use_rate": 0.82,
+      "total_matches": 2275,
+      "kamo": [
+        {
+          "brawler": "sandy",
+          "win_rate": 68.9,
+          "matches": 357
+        },
+        {
+          "brawler": "kaze",
+          "win_rate": 68.7,
+          "matches": 492
+        },
+        {
+          "brawler": "moe",
+          "win_rate": 68.5,
+          "matches": 248
+        },
+        {
+          "brawler": "pearl",
+          "win_rate": 68.5,
+          "matches": 216
+        },
+        {
+          "brawler": "gale",
+          "win_rate": 68.3,
+          "matches": 458
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "ruffs",
+          "win_rate": 29.8,
+          "matches": 141
+        },
+        {
+          "brawler": "crow",
+          "win_rate": 30.6,
+          "matches": 196
+        },
+        {
+          "brawler": "alli",
+          "win_rate": 31.0,
+          "matches": 274
+        },
+        {
+          "brawler": "lou",
+          "win_rate": 31.2,
+          "matches": 16
+        },
+        {
+          "brawler": "chuck",
+          "win_rate": 31.3,
+          "matches": 383
+        }
+      ]
+    },
+    "piper": {
+      "tier": "C",
+      "score": -0.79,
+      "win_rate": 40.3,
+      "use_rate": 1.64,
+      "total_matches": 4556,
+      "kamo": [
+        {
+          "brawler": "doug",
+          "win_rate": 69.5,
+          "matches": 154
+        },
+        {
+          "brawler": "penny",
+          "win_rate": 69.5,
+          "matches": 384
+        },
+        {
+          "brawler": "gigi",
+          "win_rate": 68.8,
+          "matches": 378
+        },
+        {
+          "brawler": "frank",
+          "win_rate": 68.2,
+          "matches": 459
+        },
+        {
+          "brawler": "stu",
+          "win_rate": 67.9,
+          "matches": 209
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "el primo",
+          "win_rate": 29.9,
+          "matches": 201
+        },
+        {
+          "brawler": "rosa",
+          "win_rate": 30.7,
+          "matches": 231
+        },
+        {
+          "brawler": "juju",
+          "win_rate": 30.9,
+          "matches": 110
+        },
+        {
+          "brawler": "leon",
+          "win_rate": 31.8,
+          "matches": 179
+        },
+        {
+          "brawler": "meeple",
+          "win_rate": 31.9,
+          "matches": 226
+        }
+      ]
+    },
+    "bo": {
+      "tier": "A",
+      "score": 0.76,
+      "win_rate": 56.5,
+      "use_rate": 0.88,
+      "total_matches": 2437,
+      "kamo": [
+        {
+          "brawler": "starr nova",
+          "win_rate": 69.8,
+          "matches": 398
+        },
+        {
+          "brawler": "gale",
+          "win_rate": 69.5,
+          "matches": 472
+        },
+        {
+          "brawler": "edgar",
+          "win_rate": 68.8,
+          "matches": 112
+        },
+        {
+          "brawler": "ruffs",
+          "win_rate": 68.4,
+          "matches": 136
+        },
+        {
+          "brawler": "janet",
+          "win_rate": 68.1,
+          "matches": 461
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "kaze",
+          "win_rate": 30.1,
+          "matches": 196
+        },
+        {
+          "brawler": "mina",
+          "win_rate": 30.7,
+          "matches": 479
+        },
+        {
+          "brawler": "ziggy",
+          "win_rate": 31.0,
+          "matches": 448
+        },
+        {
+          "brawler": "amber",
+          "win_rate": 31.4,
+          "matches": 220
+        },
+        {
+          "brawler": "barley",
+          "win_rate": 32.0,
+          "matches": 178
+        }
+      ]
+    },
+    "poco": {
+      "tier": "S",
+      "score": 1.41,
+      "win_rate": 58.8,
+      "use_rate": 1.47,
+      "total_matches": 4091,
+      "kamo": [
+        {
+          "brawler": "gale",
+          "win_rate": 69.8,
+          "matches": 162
+        },
+        {
+          "brawler": "ziggy",
+          "win_rate": 69.5,
+          "matches": 410
+        },
+        {
+          "brawler": "tick",
+          "win_rate": 68.0,
+          "matches": 241
+        },
+        {
+          "brawler": "surge",
+          "win_rate": 67.3,
+          "matches": 104
+        },
+        {
+          "brawler": "maisie",
+          "win_rate": 66.4,
+          "matches": 223
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "mortis",
+          "win_rate": 30.2,
+          "matches": 407
+        },
+        {
+          "brawler": "lily",
+          "win_rate": 30.5,
+          "matches": 59
+        },
+        {
+          "brawler": "max",
+          "win_rate": 30.9,
+          "matches": 482
+        },
+        {
+          "brawler": "shelly",
+          "win_rate": 31.3,
+          "matches": 419
+        },
+        {
+          "brawler": "finx",
+          "win_rate": 31.4,
+          "matches": 322
+        }
+      ]
+    },
+    "crow": {
+      "tier": "S",
+      "score": 1.07,
+      "win_rate": 57.9,
+      "use_rate": 1.09,
+      "total_matches": 3022,
+      "kamo": [
+        {
+          "brawler": "belle",
+          "win_rate": 69.4,
+          "matches": 271
+        },
+        {
+          "brawler": "fang",
+          "win_rate": 69.2,
+          "matches": 439
+        },
+        {
+          "brawler": "moe",
+          "win_rate": 68.8,
+          "matches": 388
+        },
+        {
+          "brawler": "eve",
+          "win_rate": 68.3,
+          "matches": 353
+        },
+        {
+          "brawler": "cordelius",
+          "win_rate": 68.1,
+          "matches": 119
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "gale",
+          "win_rate": 29.0,
+          "matches": 31
+        },
+        {
+          "brawler": "gene",
+          "win_rate": 29.7,
+          "matches": 74
+        },
+        {
+          "brawler": "alli",
+          "win_rate": 29.9,
+          "matches": 264
+        },
+        {
+          "brawler": "emz",
+          "win_rate": 30.2,
+          "matches": 411
+        },
+        {
+          "brawler": "surge",
+          "win_rate": 30.2,
+          "matches": 53
+        }
+      ]
+    },
+    "mortis": {
+      "tier": "S",
+      "score": 1.53,
+      "win_rate": 58.8,
+      "use_rate": 1.66,
+      "total_matches": 4619,
+      "kamo": [
+        {
+          "brawler": "pierce",
+          "win_rate": 69.4,
+          "matches": 265
+        },
+        {
+          "brawler": "colette",
+          "win_rate": 68.9,
+          "matches": 228
+        },
+        {
+          "brawler": "gigi",
+          "win_rate": 67.7,
+          "matches": 440
+        },
+        {
+          "brawler": "glowy",
+          "win_rate": 66.0,
+          "matches": 438
+        },
+        {
+          "brawler": "emz",
+          "win_rate": 65.6,
+          "matches": 154
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "jessie",
+          "win_rate": 29.5,
+          "matches": 193
+        },
+        {
+          "brawler": "squeak",
+          "win_rate": 29.7,
+          "matches": 74
+        },
+        {
+          "brawler": "pearl",
+          "win_rate": 30.0,
+          "matches": 10
+        },
+        {
+          "brawler": "buzz lightyear",
+          "win_rate": 30.0,
+          "matches": 313
+        },
+        {
+          "brawler": "sandy",
+          "win_rate": 30.2,
+          "matches": 467
+        }
+      ]
+    },
+    "el primo": {
+      "tier": "B",
+      "score": -0.4,
+      "win_rate": 46.8,
+      "use_rate": 0.96,
+      "total_matches": 2663,
+      "kamo": [
+        {
+          "brawler": "buzz",
+          "win_rate": 69.6,
+          "matches": 204
+        },
+        {
+          "brawler": "otis",
+          "win_rate": 69.2,
+          "matches": 409
+        },
+        {
+          "brawler": "amber",
+          "win_rate": 69.0,
+          "matches": 423
+        },
+        {
+          "brawler": "chester",
+          "win_rate": 67.5,
+          "matches": 163
+        },
+        {
+          "brawler": "buzz lightyear",
+          "win_rate": 67.2,
+          "matches": 64
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "chuck",
+          "win_rate": 30.1,
+          "matches": 362
+        },
+        {
+          "brawler": "carl",
+          "win_rate": 30.2,
+          "matches": 149
+        },
+        {
+          "brawler": "shelly",
+          "win_rate": 30.3,
+          "matches": 165
+        },
+        {
+          "brawler": "bonnie",
+          "win_rate": 30.3,
+          "matches": 221
+        },
+        {
+          "brawler": "sprout",
+          "win_rate": 30.7,
+          "matches": 192
+        }
+      ]
+    },
+    "dynamike": {
+      "tier": "B",
+      "score": -0.48,
+      "win_rate": 47.6,
+      "use_rate": 0.68,
+      "total_matches": 1880,
+      "kamo": [
+        {
+          "brawler": "gale",
+          "win_rate": 68.6,
+          "matches": 360
+        },
+        {
+          "brawler": "sandy",
+          "win_rate": 68.6,
+          "matches": 86
+        },
+        {
+          "brawler": "juju",
+          "win_rate": 67.9,
+          "matches": 162
+        },
+        {
+          "brawler": "surge",
+          "win_rate": 67.5,
+          "matches": 329
+        },
+        {
+          "brawler": "janet",
+          "win_rate": 67.3,
+          "matches": 49
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "mina",
+          "win_rate": 29.3,
+          "matches": 41
+        },
+        {
+          "brawler": "jessie",
+          "win_rate": 30.0,
+          "matches": 220
+        },
+        {
+          "brawler": "rosa",
+          "win_rate": 30.0,
+          "matches": 10
+        },
+        {
+          "brawler": "buzz",
+          "win_rate": 30.2,
+          "matches": 126
+        },
+        {
+          "brawler": "jae-yong",
+          "win_rate": 30.2,
+          "matches": 63
+        }
+      ]
+    },
+    "nita": {
+      "tier": "B",
+      "score": -0.44,
+      "win_rate": 46.3,
+      "use_rate": 0.98,
+      "total_matches": 2730,
+      "kamo": [
+        {
+          "brawler": "barley",
+          "win_rate": 69.9,
+          "matches": 306
+        },
+        {
+          "brawler": "tick",
+          "win_rate": 69.6,
+          "matches": 207
+        },
+        {
+          "brawler": "colt",
+          "win_rate": 68.6,
+          "matches": 456
+        },
+        {
+          "brawler": "lily",
+          "win_rate": 68.4,
+          "matches": 323
+        },
+        {
+          "brawler": "ash",
+          "win_rate": 68.2,
+          "matches": 340
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "bo",
+          "win_rate": 29.2,
+          "matches": 96
+        },
+        {
+          "brawler": "shelly",
+          "win_rate": 30.0,
+          "matches": 240
+        },
+        {
+          "brawler": "kit",
+          "win_rate": 30.1,
+          "matches": 193
+        },
+        {
+          "brawler": "finx",
+          "win_rate": 30.2,
+          "matches": 377
+        },
+        {
+          "brawler": "juju",
+          "win_rate": 30.5,
+          "matches": 472
+        }
+      ]
+    },
+    "jessie": {
+      "tier": "B",
+      "score": 0.29,
+      "win_rate": 52.3,
+      "use_rate": 0.97,
+      "total_matches": 2680,
+      "kamo": [
+        {
+          "brawler": "squeak",
+          "win_rate": 69.3,
+          "matches": 374
+        },
+        {
+          "brawler": "rico",
+          "win_rate": 69.2,
+          "matches": 120
+        },
+        {
+          "brawler": "najia",
+          "win_rate": 68.6,
+          "matches": 437
+        },
+        {
+          "brawler": "sandy",
+          "win_rate": 67.2,
+          "matches": 119
+        },
+        {
+          "brawler": "kit",
+          "win_rate": 66.7,
+          "matches": 93
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "belle",
+          "win_rate": 30.4,
+          "matches": 184
+        },
+        {
+          "brawler": "jacky",
+          "win_rate": 30.6,
+          "matches": 98
+        },
+        {
+          "brawler": "angelo",
+          "win_rate": 30.7,
+          "matches": 456
+        },
+        {
+          "brawler": "otis",
+          "win_rate": 30.8,
+          "matches": 159
+        },
+        {
+          "brawler": "dynamike",
+          "win_rate": 33.0,
+          "matches": 454
+        }
+      ]
+    },
+    "barley": {
+      "tier": "B",
+      "score": -0.11,
+      "win_rate": 51.0,
+      "use_rate": 0.57,
+      "total_matches": 1596,
+      "kamo": [
+        {
+          "brawler": "surge",
+          "win_rate": 69.3,
+          "matches": 322
+        },
+        {
+          "brawler": "griff",
+          "win_rate": 68.8,
+          "matches": 157
+        },
+        {
+          "brawler": "gigi",
+          "win_rate": 68.0,
+          "matches": 419
+        },
+        {
+          "brawler": "pearl",
+          "win_rate": 67.9,
+          "matches": 131
+        },
+        {
+          "brawler": "mr. p",
+          "win_rate": 67.5,
+          "matches": 455
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "nani",
+          "win_rate": 29.9,
+          "matches": 354
+        },
+        {
+          "brawler": "glowy",
+          "win_rate": 30.3,
+          "matches": 294
+        },
+        {
+          "brawler": "bolt",
+          "win_rate": 31.5,
+          "matches": 314
+        },
+        {
+          "brawler": "buzz lightyear",
+          "win_rate": 31.7,
+          "matches": 145
+        },
+        {
+          "brawler": "shade",
+          "win_rate": 32.0,
+          "matches": 437
+        }
+      ]
+    },
+    "spike": {
+      "tier": "C",
+      "score": -0.69,
+      "win_rate": 47.3,
+      "use_rate": 0.37,
+      "total_matches": 1023,
+      "kamo": [
+        {
+          "brawler": "sam",
+          "win_rate": 69.4,
+          "matches": 350
+        },
+        {
+          "brawler": "squeak",
+          "win_rate": 69.4,
+          "matches": 494
+        },
+        {
+          "brawler": "piper",
+          "win_rate": 69.0,
+          "matches": 197
+        },
+        {
+          "brawler": "lumi",
+          "win_rate": 68.9,
+          "matches": 415
+        },
+        {
+          "brawler": "kenji",
+          "win_rate": 68.9,
+          "matches": 235
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "colette",
+          "win_rate": 29.4,
+          "matches": 17
+        },
+        {
+          "brawler": "bo",
+          "win_rate": 29.7,
+          "matches": 182
+        },
+        {
+          "brawler": "starr nova",
+          "win_rate": 29.9,
+          "matches": 328
+        },
+        {
+          "brawler": "grom",
+          "win_rate": 30.2,
+          "matches": 484
+        },
+        {
+          "brawler": "meg",
+          "win_rate": 30.6,
+          "matches": 448
+        }
+      ]
+    },
+    "rico": {
+      "tier": "C",
+      "score": -0.76,
+      "win_rate": 48.1,
+      "use_rate": 0.09,
+      "total_matches": 241,
+      "kamo": [
+        {
+          "brawler": "willow",
+          "win_rate": 69.2,
+          "matches": 357
+        },
+        {
+          "brawler": "mr. p",
+          "win_rate": 68.2,
+          "matches": 242
+        },
+        {
+          "brawler": "pam",
+          "win_rate": 68.0,
+          "matches": 150
+        },
+        {
+          "brawler": "spike",
+          "win_rate": 68.0,
+          "matches": 440
+        },
+        {
+          "brawler": "amber",
+          "win_rate": 67.1,
+          "matches": 164
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "surge",
+          "win_rate": 29.8,
+          "matches": 161
+        },
+        {
+          "brawler": "el primo",
+          "win_rate": 29.9,
+          "matches": 254
+        },
+        {
+          "brawler": "gale",
+          "win_rate": 30.0,
+          "matches": 160
+        },
+        {
+          "brawler": "poco",
+          "win_rate": 30.2,
+          "matches": 199
+        },
+        {
+          "brawler": "piper",
+          "win_rate": 30.4,
+          "matches": 171
+        }
+      ]
+    },
+    "brock": {
+      "tier": "A",
+      "score": 0.41,
+      "win_rate": 53.8,
+      "use_rate": 0.86,
+      "total_matches": 2392,
+      "kamo": [
+        {
+          "brawler": "jae-yong",
+          "win_rate": 69.5,
+          "matches": 154
+        },
+        {
+          "brawler": "dynamike",
+          "win_rate": 69.2,
+          "matches": 117
+        },
+        {
+          "brawler": "lou",
+          "win_rate": 68.6,
+          "matches": 379
+        },
+        {
+          "brawler": "rico",
+          "win_rate": 67.8,
+          "matches": 398
+        },
+        {
+          "brawler": "mandy",
+          "win_rate": 67.2,
+          "matches": 250
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "bo",
+          "win_rate": 30.0,
+          "matches": 327
+        },
+        {
+          "brawler": "byron",
+          "win_rate": 30.7,
+          "matches": 339
+        },
+        {
+          "brawler": "buzz lightyear",
+          "win_rate": 30.8,
+          "matches": 172
+        },
+        {
+          "brawler": "larry & lawrie",
+          "win_rate": 31.4,
+          "matches": 70
+        },
+        {
+          "brawler": "mr. p",
+          "win_rate": 31.8,
+          "matches": 277
+        }
+      ]
+    },
+    "bull": {
+      "tier": "C",
+      "score": -0.98,
+      "win_rate": 41.6,
+      "use_rate": 1.06,
+      "total_matches": 2941,
+      "kamo": [
+        {
+          "brawler": "surge",
+          "win_rate": 69.8,
+          "matches": 348
+        },
+        {
+          "brawler": "janet",
+          "win_rate": 69.4,
+          "matches": 435
+        },
+        {
+          "brawler": "r-t",
+          "win_rate": 67.0,
+          "matches": 106
+        },
+        {
+          "brawler": "bolt",
+          "win_rate": 66.8,
+          "matches": 193
+        },
+        {
+          "brawler": "sam",
+          "win_rate": 66.7,
+          "matches": 69
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "lola",
+          "win_rate": 27.3,
+          "matches": 22
+        },
+        {
+          "brawler": "glowy",
+          "win_rate": 29.8,
+          "matches": 131
+        },
+        {
+          "brawler": "stu",
+          "win_rate": 30.1,
+          "matches": 206
+        },
+        {
+          "brawler": "bonnie",
+          "win_rate": 31.6,
+          "matches": 117
+        },
+        {
+          "brawler": "barley",
+          "win_rate": 32.8,
+          "matches": 195
+        }
+      ]
+    },
+    "colt": {
+      "tier": "C",
+      "score": -1.15,
+      "win_rate": 40.2,
+      "use_rate": 1.06,
+      "total_matches": 2941,
+      "kamo": [
+        {
+          "brawler": "brock",
+          "win_rate": 69.7,
+          "matches": 422
+        },
+        {
+          "brawler": "mortis",
+          "win_rate": 69.4,
+          "matches": 395
+        },
+        {
+          "brawler": "mina",
+          "win_rate": 69.0,
+          "matches": 471
+        },
+        {
+          "brawler": "wendy",
+          "win_rate": 68.3,
+          "matches": 271
+        },
+        {
+          "brawler": "melodie",
+          "win_rate": 68.0,
+          "matches": 25
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "trunk",
+          "win_rate": 29.4,
+          "matches": 68
+        },
+        {
+          "brawler": "sandy",
+          "win_rate": 29.8,
+          "matches": 181
+        },
+        {
+          "brawler": "jessie",
+          "win_rate": 30.1,
+          "matches": 136
+        },
+        {
+          "brawler": "chester",
+          "win_rate": 30.3,
+          "matches": 66
+        },
+        {
+          "brawler": "lumi",
+          "win_rate": 30.4,
+          "matches": 92
+        }
+      ]
+    },
+    "shelly": {
+      "tier": "C",
+      "score": -0.64,
+      "win_rate": 41.8,
+      "use_rate": 1.59,
+      "total_matches": 4426,
+      "kamo": [
+        {
+          "brawler": "sandy",
+          "win_rate": 68.5,
+          "matches": 254
+        },
+        {
+          "brawler": "larry & lawrie",
+          "win_rate": 68.4,
+          "matches": 370
+        },
+        {
+          "brawler": "bea",
+          "win_rate": 68.4,
+          "matches": 193
+        },
+        {
+          "brawler": "bolt",
+          "win_rate": 68.2,
+          "matches": 475
+        },
+        {
+          "brawler": "finx",
+          "win_rate": 68.2,
+          "matches": 374
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "barley",
+          "win_rate": 29.4,
+          "matches": 34
+        },
+        {
+          "brawler": "sprout",
+          "win_rate": 29.8,
+          "matches": 57
+        },
+        {
+          "brawler": "max",
+          "win_rate": 30.6,
+          "matches": 297
+        },
+        {
+          "brawler": "buster",
+          "win_rate": 30.8,
+          "matches": 13
+        },
+        {
+          "brawler": "buzz",
+          "win_rate": 31.2,
+          "matches": 112
+        }
+      ]
+    }
+  },
+  "metrics": {
+    "analyzed_matches": 46261,
+    "mean_win_rate": 50.1
+  }
+}

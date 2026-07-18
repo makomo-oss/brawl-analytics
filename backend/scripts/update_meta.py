@@ -100,6 +100,8 @@ async def main():
         
         stats_global = {"brawlers": {}, "matchups": {}, "total_picks": 0}
         stats_gachi = {"brawlers": {}, "matchups": {}, "total_picks": 0}
+        stats_gachi_modes = {}
+        stats_gachi_maps = {}
         
         analyzed_players = []
         
@@ -177,12 +179,25 @@ async def main():
                 
                 is_win = (result == "victory")
                 
+                mode = event.get("mode")
+                map_name = event.get("map")
+                
                 # 集計対象リスト
                 targets = [stats_global]
                 
                 # ガチバトル (soloRanked, teamRanked) であればガチ用集計にも追加
                 if battle.get("type") in ["soloRanked", "teamRanked"]:
                     targets.append(stats_gachi)
+                    
+                    if mode:
+                        if mode not in stats_gachi_modes:
+                            stats_gachi_modes[mode] = init_stats(all_brawlers)
+                        targets.append(stats_gachi_modes[mode])
+                        
+                    if map_name:
+                        if map_name not in stats_gachi_maps:
+                            stats_gachi_maps[map_name] = init_stats(all_brawlers)
+                        targets.append(stats_gachi_maps[map_name])
                 
                 for target in targets:
                     for mb in my_brawlers:
@@ -292,11 +307,25 @@ async def main():
         
         print("Calculating Gachi Tiers...")
         gachi_meta = calculate_tiers(stats_gachi)
+        
+        print("Calculating Gachi Mode Tiers...")
+        gachi_modes_meta = {}
+        for m, st in stats_gachi_modes.items():
+            if st["total_picks"] > 0:
+                gachi_modes_meta[m] = calculate_tiers(st)
+                
+        print("Calculating Gachi Map Tiers...")
+        gachi_maps_meta = {}
+        for m, st in stats_gachi_maps.items():
+            if st["total_picks"] > 0:
+                gachi_maps_meta[m] = calculate_tiers(st)
             
         meta_data = {
             "updated_at": datetime.now().isoformat(),
             "global": global_meta,
             "gachi": gachi_meta,
+            "gachi_modes": gachi_modes_meta,
+            "gachi_maps": gachi_maps_meta,
             "analyzed_players": analyzed_players
         }
         

@@ -6,10 +6,11 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Trophy, Swords, Info, TrendingUp, TrendingDown, AlertTriangle } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Progress } from "@/components/ui/progress"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { getBrawlerInfo } from "@/lib/brawlers"
+import { translateMode, translateMap } from "@/lib/translations"
 
 const tierConfig = {
   S: { color: "from-pink-500 to-rose-500", label: "環境トップ", bg: "bg-pink-500/10 border-pink-500/30" },
@@ -26,13 +27,42 @@ export default function TierListPage() {
   const [sheetOpen, setSheetOpen] = useState(false)
   
   const [selectedType, setSelectedType] = useState("global")
+  const [subType, setSubType] = useState("all") // all, mode, map
+  const [selectedId, setSelectedId] = useState("")
+  const [categories, setCategories] = useState({ modes: [], maps: [] })
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch("http://localhost:8000/meta/categories")
+        if (res.ok) {
+          const data = await res.json()
+          setCategories(data)
+        }
+      } catch (err) {
+        console.error(err)
+      }
+    }
+    fetchCategories()
+  }, [])
 
   // 選択に応じたTierデータの取得
   useEffect(() => {
     const fetchTierList = async () => {
       setLoading(true)
       try {
-        const res = await fetch(`http://localhost:8000/meta/tier-list?type=${selectedType}`)
+        let url = `http://localhost:8000/meta/tier-list?type=${selectedType}`
+        if (selectedType === "gachi" && subType !== "all" && selectedId) {
+          url += `&sub_type=${subType}&id=${encodeURIComponent(selectedId)}`
+        }
+
+        // gachiでmode/mapが選ばれているのにidがない場合はフェッチ待機
+        if (selectedType === "gachi" && subType !== "all" && !selectedId) {
+          setLoading(false)
+          return
+        }
+
+        const res = await fetch(url)
         if (res.ok) {
           const data = await res.json()
           setTierData(data)
@@ -47,15 +77,26 @@ export default function TierListPage() {
       }
     }
     fetchTierList()
-  }, [selectedType])
+  }, [selectedType, subType, selectedId])
 
   const handleTypeChange = (value: string) => {
     setSelectedType(value)
   }
 
+  const handleSubTypeChange = (value: string) => {
+    setSubType(value)
+    if (value === "mode" && categories.modes.length > 0) setSelectedId(categories.modes[0])
+    else if (value === "map" && categories.maps.length > 0) setSelectedId(categories.maps[0])
+    else setSelectedId("")
+  }
+
   const fetchCharacterDetail = async (charName: string) => {
     try {
-      const res = await fetch(`http://localhost:8000/meta/characters/${charName}?type=${selectedType}`)
+      let url = `http://localhost:8000/meta/characters/${charName}?type=${selectedType}`
+      if (selectedType === "gachi" && subType !== "all" && selectedId) {
+        url += `&sub_type=${subType}&id=${encodeURIComponent(selectedId)}`
+      }
+      const res = await fetch(url)
       const data = await res.json()
       setSelectedChar(data)
       setSheetOpen(true)
@@ -98,6 +139,44 @@ export default function TierListPage() {
             </TabsTrigger>
           </TabsList>
         </div>
+
+        {selectedType === "gachi" && (
+          <div className="flex flex-col sm:flex-row gap-4 items-center bg-secondary/10 p-3 rounded-xl border border-primary/10">
+            <Tabs value={subType} onValueChange={handleSubTypeChange} className="w-full sm:w-auto">
+              <TabsList className="grid grid-cols-3 w-full sm:w-[300px]">
+                <TabsTrigger value="all" className="text-xs">すべて</TabsTrigger>
+                <TabsTrigger value="mode" className="text-xs">モード別</TabsTrigger>
+                <TabsTrigger value="map" className="text-xs">マップ別</TabsTrigger>
+              </TabsList>
+            </Tabs>
+
+            {subType === "mode" && (
+              <Select value={selectedId} onValueChange={setSelectedId}>
+                <SelectTrigger className="w-full sm:w-[250px] bg-background">
+                  <SelectValue placeholder="モードを選択..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.modes.map((m: string) => (
+                    <SelectItem key={m} value={m}>{translateMode(m)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+
+            {subType === "map" && (
+              <Select value={selectedId} onValueChange={setSelectedId}>
+                <SelectTrigger className="w-full sm:w-[250px] bg-background">
+                  <SelectValue placeholder="マップを選択..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.maps.map((m: string) => (
+                    <SelectItem key={m} value={m}>{translateMap(m)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+        )}
 
         <div className="space-y-6">
           {loading ? (

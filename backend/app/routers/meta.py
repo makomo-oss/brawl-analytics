@@ -13,10 +13,12 @@ def load_meta_data():
         return json.load(f)
 
 @router.get("/tier-list")
-def get_tier_list(type: str = "global"):
+def get_tier_list(type: str = "global", sub_type: str = None, id: str = None):
     """
     環境分析ページ（メタレポート）のTier表を返す
     type: 'global', 'gachi'
+    sub_type: 'mode', 'map' (typeがgachiの場合のみ有効)
+    id: モード名やマップ名 (sub_typeがある場合必須)
     """
     meta = load_meta_data()
     if not meta:
@@ -25,7 +27,12 @@ def get_tier_list(type: str = "global"):
     if type == "global":
         target = meta.get("global", {})
     elif type == "gachi":
-        target = meta.get("gachi", {})
+        if sub_type == "mode" and id:
+            target = meta.get("gachi_modes", {}).get(id)
+        elif sub_type == "map" and id:
+            target = meta.get("gachi_maps", {}).get(id)
+        else:
+            target = meta.get("gachi", {})
     else:
         raise HTTPException(status_code=400, detail="Invalid type")
         
@@ -39,9 +46,21 @@ def get_tier_list(type: str = "global"):
         "metrics": target.get("metrics", {})
     }
 
+@router.get("/categories")
+def get_categories():
+    """
+    選択可能なガチバトルのモードとマップのリストを返す
+    """
+    meta = load_meta_data()
+    if not meta:
+        return {"modes": [], "maps": []}
+    return {
+        "modes": list(meta.get("gachi_modes", {}).keys()),
+        "maps": list(meta.get("gachi_maps", {}).keys())
+    }
 
 @router.get("/characters/{character_id}")
-def get_character_detail(character_id: str, type: str = "global"):
+def get_character_detail(character_id: str, type: str = "global", sub_type: str = None, id: str = None):
     """
     特定キャラクターの詳細ビュー（カモ・天敵など）を返す
     """
@@ -52,7 +71,12 @@ def get_character_detail(character_id: str, type: str = "global"):
     if type == "global":
         target = meta.get("global", {})
     elif type == "gachi":
-        target = meta.get("gachi", {})
+        if sub_type == "mode" and id:
+            target = meta.get("gachi_modes", {}).get(id)
+        elif sub_type == "map" and id:
+            target = meta.get("gachi_maps", {}).get(id)
+        else:
+            target = meta.get("gachi", {})
     else:
         target = meta.get("global", {})
         

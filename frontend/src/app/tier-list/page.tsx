@@ -82,6 +82,17 @@ export default function TierListPage() {
                 <Swords className="w-5 h-5 animate-spin" /> データ集計中...
               </span>
             </div>
+          ) : tierData?.metrics?.analyzed_matches === 0 ? (
+            <div className="h-64 flex flex-col items-center justify-center border border-destructive/30 rounded-xl bg-destructive/5 backdrop-blur-sm p-6 text-center space-y-4">
+              <AlertTriangle className="w-12 h-12 text-destructive opacity-80" />
+              <div className="space-y-2">
+                <h3 className="text-xl font-bold text-destructive">分析データが不足しています</h3>
+                <p className="text-muted-foreground text-sm max-w-lg">
+                  ランダムなダミーデータを完全に排除した結果、現在のAPI設定では十分なバトルログ（生データ）を収集できませんでした。<br/>
+                  完全なデータ駆動によるメタ分析を行うには、バックエンド環境に有効な <code>BRAWL_API_TOKEN</code> を設定し、集計バッチを再実行してください。
+                </p>
+              </div>
+            </div>
           ) : (
             <div className="grid gap-6">
               {['S', 'A', 'B', 'C', 'D'].map((tierKey) => {

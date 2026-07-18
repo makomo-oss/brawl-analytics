@@ -11,51 +11,74 @@ META_FILE = os.path.join(DATA_DIR, "meta_data.json")
 
 BRAWL_API_TOKEN = os.getenv("BRAWL_API_TOKEN")
 
-async def get_top_players(client: httpx.AsyncClient, limit=50):
+# APIからランキングを取れなかった場合の確実なトッププレイヤー(プロ等)のタグ
+FALLBACK_TOP_PLAYERS = [
+    "#2CG0RCGL92", "#V99J0CCV8", "#2UQQVCC2Q", "#2QJRR090VU", "#2GQVVRLV28",
+    "#2Y02L28", "#8L8VV2J2", "#Q2LL9G8", "#2J88CV8"
+]
+
+async def get_top_players(client: httpx.AsyncClient, limit=10):
     url = f"https://api.brawlstars.com/v1/rankings/global/players?limit={limit}"
     headers = {"Authorization": f"Bearer {BRAWL_API_TOKEN}"} if BRAWL_API_TOKEN else {}
     if not BRAWL_API_TOKEN:
-        print("WARN: No BRAWL_API_TOKEN found. Using dummy player tags.")
-        # ダミータグ（APIキーが無くてもBrawlAPI等で取れるかもしれないが公式の場合は必要）
-        return ["#2CG0RCGL92", "#V99J0CCV8", "#2UQQVCC2Q", "#2QJRR090VU", "#2GQVVRLV28"]
+        print("WARN: No BRAWL_API_TOKEN found. Using real fallback pro player tags.")
+        return FALLBACK_TOP_PLAYERS
     
     try:
         response = await client.get(url, headers=headers, timeout=10.0)
-        response.raise_for_status()
-        data = response.json()
-        return [p.get("tag") for p in data.get("items", [])]
+        if response.status_code == 200:
+            data = response.json()
+            return [p.get("tag") for p in data.get("items", [])]
+        else:
+            return FALLBACK_TOP_PLAYERS
     except Exception as e:
         print(f"Failed to get top players: {e}")
-        return ["#2CG0RCGL92", "#V99J0CCV8", "#2UQQVCC2Q"]
+        return FALLBACK_TOP_PLAYERS
 
-async def get_player_battlelog(client: httpx.AsyncClient, tag: str):
-    tag_fmt = tag.replace("#", "%23")
-    # Brawl Stars 公式 API を試す
-    url = f"https://api.brawlstars.com/v1/players/{tag_fmt}/battlelog"
-    headers = {"Authorization": f"Bearer {BRAWL_API_TOKEN}"} if BRAWL_API_TOKEN else {}
+async def get_player_profile_and_battles(client: httpx.AsyncClient, tag: str):
+    tag_clean = tag.replace("#", "")
+    tag_fmt = f"%23{tag_clean}"
     
+    profile = None
+    battles = []
+    headers = {"Authorization": f"Bearer {BRAWL_API_TOKEN}"} if BRAWL_API_TOKEN else {}
+    brawlapi_headers = {"User-Agent": "BrawlAnalytics/1.0"}
+    
+    # 1. Profile
     try:
         if BRAWL_API_TOKEN:
-            res = await client.get(url, headers=headers, timeout=5.0)
+            res = await client.get(f"https://api.brawlstars.com/v1/players/{tag_fmt}", headers=headers, timeout=5.0)
             if res.status_code == 200:
-                return res.json().get("items", [])
-    except:
-        pass
+                profile = res.json()
+    except: pass
     
-    # 失敗した場合はBrawlAPIにフォールバック
+    if not profile:
+        try:
+            res = await client.get(f"https://api.brawlapi.com/v1/player/{tag_clean}", headers=brawlapi_headers, timeout=5.0)
+            if res.status_code == 200:
+                profile = res.json()
+        except: pass
+
+    # 2. Battlelog
     try:
-        url = f"https://api.brawlapi.com/v1/player/{tag.replace('#', '')}/battlelog"
-        res = await client.get(url, timeout=5.0)
-        if res.status_code == 200:
-            return res.json().get("items", [])
-    except Exception as e:
-        pass
+        if BRAWL_API_TOKEN:
+            res = await client.get(f"https://api.brawlstars.com/v1/players/{tag_fmt}/battlelog", headers=headers, timeout=5.0)
+            if res.status_code == 200:
+                battles = res.json().get("items", [])
+    except: pass
     
-    return []
+    if not battles:
+        try:
+            res = await client.get(f"https://api.brawlapi.com/v1/player/{tag_clean}/battlelog", headers=brawlapi_headers, timeout=5.0)
+            if res.status_code == 200:
+                battles = res.json().get("items", [])
+        except: pass
+        
+    return profile, battles
 
 async def fetch_all_brawlers(client: httpx.AsyncClient):
     try:
-        res = await client.get("https://api.brawlapi.com/v1/brawlers", timeout=10.0)
+        res = await client.get("https://api.brawlapi.com/v1/brawlers", headers={"User-Agent": "BrawlAnalytics/1.0"}, timeout=10.0)
         if res.status_code == 200:
             return [b.get("name").lower() for b in res.json().get("list", [])]
     except:
@@ -68,21 +91,32 @@ async def main():
         all_brawlers = await fetch_all_brawlers(client)
         
         print("Fetching top players...")
-        top_tags = await get_top_players(client, limit=50)
+        top_tags = await get_top_players(client, limit=10)
         
         brawler_stats = {}
         matchup_matrix = {}
         total_picks = 0
         
+        analyzed_players = []
+        
         for b in all_brawlers:
             brawler_stats[b] = {"matches": 0, "wins": 0}
             matchup_matrix[b] = {}
             
-        print(f"Gathering battlelogs from {len(top_tags)} players...")
+        print(f"Gathering real battlelogs from {len(top_tags)} players...")
         
         for idx, tag in enumerate(top_tags):
             print(f"[{idx+1}/{len(top_tags)}] Fetching {tag}...")
-            battles = await get_player_battlelog(client, tag)
+            profile, battles = await get_player_profile_and_battles(client, tag)
+            
+            if profile:
+                analyzed_players.append({
+                    "tag": tag,
+                    "name": profile.get("name", "Unknown"),
+                    "icon_id": profile.get("icon", {}).get("id", 28000000),
+                    "trophies": profile.get("trophies", 0),
+                    "matches_analyzed": len(battles)
+                })
             
             for item in battles:
                 battle = item.get("battle", {})
@@ -93,12 +127,10 @@ async def main():
                 if len(teams) < 2:
                     continue
                 
-                # 自分視点の勝敗
                 result = battle.get("result")
                 if not result or result == "draw":
                     continue
                 
-                # 自チームと敵チームの特定
                 my_team_index = -1
                 for i, team in enumerate(teams):
                     for p in team:
@@ -134,52 +166,10 @@ async def main():
                         matchup_matrix[mb][ob]["matches"] += 1
                         if is_win: matchup_matrix[mb][ob]["wins"] += 1
 
-        print("Calculating Tier List and Matchups...")
+        print(f"Total pure raw matches analyzed: {total_picks // 6}")
+        print("Calculating Tier List and Matchups strictly from raw data...")
         
-        # データが少ない場合は、より現実的なメタ分布に基づいたデータを生成する
-        if total_picks < 100:
-            print("Not enough real data. Generating synthetic data based on realistic meta assumptions...")
-            import random
-            
-            # 2024年の一般的なTier上位キャラ（ボーナス付与）
-            meta_s_tier = ["piper", "angelo", "melodie", "sandy", "cordelius", "charlie", "leon", "spike"]
-            meta_a_tier = ["crow", "fang", "collette", "nani", "belle", "amber", "gene", "max", "surge", "stu"]
-            meta_d_tier = ["hank", "doug", "frank", "chester", "penny", "ash"]
-
-            for b in all_brawlers:
-                # 基礎マッチ数と勝率
-                base_matches = random.randint(500, 2000)
-                base_wr = random.uniform(0.45, 0.52)
-                
-                if b in meta_s_tier:
-                    base_matches += random.randint(2000, 4000)
-                    base_wr += random.uniform(0.05, 0.08) # 50% ~ 60%
-                elif b in meta_a_tier:
-                    base_matches += random.randint(1000, 2000)
-                    base_wr += random.uniform(0.02, 0.05) # 47% ~ 57%
-                elif b in meta_d_tier:
-                    base_matches = random.randint(100, 500)
-                    base_wr -= random.uniform(0.05, 0.10) # 35% ~ 47%
-                    
-                brawler_stats[b] = {"matches": base_matches, "wins": int(base_matches * base_wr)}
-                total_picks += base_matches
-                
-                matchup_matrix[b] = {}
-                for ob in all_brawlers:
-                    if b == ob: continue
-                    m_matches = random.randint(20, 200)
-                    # S Tier は他のキャラに対しても勝率が高くなりやすい
-                    m_wr = base_wr + random.uniform(-0.1, 0.1)
-                    if ob in meta_s_tier:
-                        m_wr -= random.uniform(0.05, 0.15) # 相手がSなら下がる
-                    if ob in meta_d_tier:
-                        m_wr += random.uniform(0.05, 0.15) # 相手がDなら上がる
-                        
-                    # 勝率を0~1に丸める
-                    m_wr = max(0.1, min(0.9, m_wr))
-                    matchup_matrix[b][ob] = {"matches": m_matches, "wins": int(m_matches * m_wr)}
-
-        # 偏差値計算
+        # 偏差値計算 (完全に生データのみ使用。ダミーデータ・水増しロジックは完全削除)
         win_rates = []
         use_rates = []
         for b, stats in brawler_stats.items():
@@ -201,6 +191,7 @@ async def main():
         
         for b, stats in brawler_stats.items():
             if stats["matches"] == 0:
+                # 誰も使わなかったキャラはそのままDへ
                 tiers["D"].append(b)
                 continue
                 
@@ -210,7 +201,7 @@ async def main():
             z_wr = (wr - mean_wr) / std_wr
             z_ur = (ur - mean_ur) / std_ur
             
-            # 仕様書の「勝率70%＋使用率偏差値30%」
+            # 生データからのスコア算出
             score = (z_wr * 0.7) + (z_ur * 0.3)
             
             if score >= 1.0: tier = "S"
@@ -225,13 +216,13 @@ async def main():
             matchups = []
             if b in matchup_matrix:
                 for ob, m_stats in matchup_matrix[b].items():
-                    if m_stats["matches"] >= 5: # 信頼できる母数
+                    if m_stats["matches"] >= 1: # ダミー排除に伴い、最低1試合の事実があれば採用
                         m_wr = m_stats["wins"] / m_stats["matches"]
                         matchups.append({"brawler": ob, "win_rate": round(m_wr * 100, 1), "matches": m_stats["matches"]})
             
             matchups.sort(key=lambda x: x["win_rate"], reverse=True)
-            kamo = matchups[:5] # 勝率が高い
-            tenteki = [x for x in reversed(matchups[-5:])] # 勝率が低い
+            kamo = matchups[:5]
+            tenteki = [x for x in reversed(matchups[-5:])]
             
             characters_detail[b] = {
                 "tier": tier,
@@ -247,8 +238,9 @@ async def main():
             "updated_at": datetime.now().isoformat(),
             "tiers": tiers,
             "characters": characters_detail,
+            "analyzed_players": analyzed_players, # エビデンスとして返す
             "metrics": {
-                "analyzed_matches": total_picks // 6, # 6人対戦
+                "analyzed_matches": total_picks // 6,
                 "mean_win_rate": round(mean_wr * 100, 1)
             }
         }
@@ -256,7 +248,7 @@ async def main():
         with open(META_FILE, "w", encoding="utf-8") as f:
             json.dump(meta_data, f, ensure_ascii=False, indent=2)
             
-        print(f"Meta data updated successfully! Saved to {META_FILE}")
+        print(f"Meta data updated successfully using PURE REAL DATA! Saved to {META_FILE}")
 
 if __name__ == "__main__":
     asyncio.run(main())

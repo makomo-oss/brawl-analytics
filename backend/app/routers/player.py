@@ -126,6 +126,7 @@ async def get_dashboard(player_tag: str):
                 "name": player_info.get("name", "Unknown"),
                 "trophies": player_info.get("trophies", 0),
                 "highest_trophies": player_info.get("highestTrophies", 0),
+                "highest_rank": player_info.get("highestRank", 1),
                 "level": player_info.get("expLevel", 0),
                 "3v3_victories": player_info.get("3vs3Victories", 0),
                 "club_name": player_info.get("club", {}).get("name", "No Club")

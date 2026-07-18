@@ -10,7 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { getBrawlerInfo } from "@/lib/brawlers"
-import { translateMode, translateMap, getModeIconUrl } from "@/lib/translations"
+import { translateMode, translateMap, getModeIconUrl, getRankIconUrl } from "@/lib/translations"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 function formatBattleTime(timeStr: string) {
@@ -236,7 +236,13 @@ export default function DashboardPage() {
                       
                       let scoreDisplay = null;
                       if (isRanked) {
-                        scoreDisplay = <p className="font-bold text-sm text-purple-400 drop-shadow-sm px-2 py-1 bg-purple-500/10 rounded-md border border-purple-500/20">ランク戦</p>;
+                        const rankIconUrl = getRankIconUrl(data.profile?.highest_rank || 1);
+                        scoreDisplay = (
+                          <div className="flex flex-col items-center justify-center -mt-1">
+                            <img src={rankIconUrl} alt="Rank" className="w-10 h-10 object-contain drop-shadow-md hover:scale-110 transition-transform" />
+                            <span className="text-[9px] font-bold text-purple-400 mt-1 uppercase tracking-widest bg-purple-500/10 px-1.5 rounded-sm">Ranked</span>
+                          </div>
+                        );
                       } else if (isFriendly) {
                         scoreDisplay = <p className="font-bold text-sm text-gray-400 drop-shadow-sm">フレンド</p>;
                       } else {

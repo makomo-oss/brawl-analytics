@@ -114,6 +114,18 @@ export function getModeIconUrl(mode: string) {
   return `https://cdn.brawlify.com/game-modes/regular/${iconId}.png`
 }
 
+export function getRankIconUrl(rankValue: number) {
+  let rankName = "Bronze";
+  if (rankValue >= 4 && rankValue <= 6) rankName = "Silver";
+  else if (rankValue >= 7 && rankValue <= 9) rankName = "Gold";
+  else if (rankValue >= 10 && rankValue <= 12) rankName = "Diamond";
+  else if (rankValue >= 13 && rankValue <= 15) rankName = "Mythic";
+  else if (rankValue >= 16 && rankValue <= 18) rankName = "Legendary";
+  else if (rankValue >= 19) rankName = "Masters";
+  
+  return `https://cdn.brawlify.com/rank/${rankName}.png`;
+}
+
 export function translateMap(mapName: string) {
   if (!mapName) return "不明"
   const normalizedMapName = mapName.replace(/[\s\-_]/g, '').toLowerCase()

@@ -285,9 +285,13 @@ export default function DraftCompanionPage() {
               <div className="space-y-3">
                 <label className="text-sm font-bold">自チーム</label>
                 <Tabs value={myTeam} onValueChange={(val) => setMyTeam(val as Team)}>
-                  <TabsList className="grid w-full grid-cols-2 h-11">
-                    <TabsTrigger value="blue" className="h-full data-[state=active]:bg-blue-600 data-[state=active]:text-white">青チーム</TabsTrigger>
-                    <TabsTrigger value="red" className="h-full data-[state=active]:bg-red-600 data-[state=active]:text-white">赤チーム</TabsTrigger>
+                  <TabsList className="grid w-full grid-cols-2 h-11 bg-secondary/50">
+                    <TabsTrigger value="blue" className="h-full text-blue-600 dark:text-blue-400 data-[state=active]:!bg-blue-600 data-[state=active]:!text-white">
+                      青チーム
+                    </TabsTrigger>
+                    <TabsTrigger value="red" className="h-full text-red-600 dark:text-red-400 data-[state=active]:!bg-red-600 data-[state=active]:!text-white">
+                      赤チーム
+                    </TabsTrigger>
                   </TabsList>
                 </Tabs>
               </div>
@@ -295,9 +299,13 @@ export default function DraftCompanionPage() {
               <div className="space-y-3">
                 <label className="text-sm font-bold">先攻チーム</label>
                 <Tabs value={firstPickTeam} onValueChange={(val) => setFirstPickTeam(val as Team)}>
-                  <TabsList className="grid w-full grid-cols-2 h-11">
-                    <TabsTrigger value="blue" className="h-full data-[state=active]:bg-blue-600 data-[state=active]:text-white">青チーム</TabsTrigger>
-                    <TabsTrigger value="red" className="h-full data-[state=active]:bg-red-600 data-[state=active]:text-white">赤チーム</TabsTrigger>
+                  <TabsList className="grid w-full grid-cols-2 h-11 bg-secondary/50">
+                    <TabsTrigger value="blue" className="h-full text-blue-600 dark:text-blue-400 data-[state=active]:!bg-blue-600 data-[state=active]:!text-white">
+                      青チーム
+                    </TabsTrigger>
+                    <TabsTrigger value="red" className="h-full text-red-600 dark:text-red-400 data-[state=active]:!bg-red-600 data-[state=active]:!text-white">
+                      赤チーム
+                    </TabsTrigger>
                   </TabsList>
                 </Tabs>
               </div>

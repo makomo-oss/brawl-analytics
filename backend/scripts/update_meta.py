@@ -96,7 +96,7 @@ async def main():
         all_brawlers = await fetch_all_brawlers(client)
         
         print("Fetching top players...")
-        top_tags = await get_top_players(client, limit=10)
+        top_tags = await get_top_players(client, limit=100)
         
         brawler_stats = {}
         matchup_matrix = {}
@@ -170,6 +170,9 @@ async def main():
                         
                         matchup_matrix[mb][ob]["matches"] += 1
                         if is_win: matchup_matrix[mb][ob]["wins"] += 1
+            
+            # APIのレート制限（Rate Limit）を回避するためのスリープ
+            await asyncio.sleep(0.1)
 
         real_analyzed_matches = total_picks // 6
         print(f"Total pure raw matches analyzed: {real_analyzed_matches}")

@@ -58,10 +58,11 @@ def get_categories():
     """
     meta = load_meta_data()
     if not meta:
-        return {"modes": [], "maps": []}
+        return {"modes": [], "maps": [], "mode_to_maps": {}}
     return {
         "modes": list(meta.get("gachi_modes", {}).keys()),
-        "maps": list(meta.get("gachi_maps", {}).keys())
+        "maps": list(meta.get("gachi_maps", {}).keys()),
+        "mode_to_maps": meta.get("mode_to_maps", {})
     }
 
 @router.get("/characters/{character_id}")

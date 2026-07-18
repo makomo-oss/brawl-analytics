@@ -25,7 +25,7 @@ const WEIGHTS = [
 
 export default function DraftCompanionPage() {
   const [phase, setPhase] = useState<Phase>("setup")
-  const [categories, setCategories] = useState({ modes: [], maps: [] })
+  const [categories, setCategories] = useState({ modes: [], maps: [], mode_to_maps: {} as Record<string, string[]> })
   
   // Setup State
   const [selectedMode, setSelectedMode] = useState("")
@@ -58,6 +58,21 @@ export default function DraftCompanionPage() {
     }
     fetchCategories()
   }, [])
+
+  // 選択されたモードに属するマップを計算
+  const availableMaps = useMemo(() => {
+    if (!selectedMode || !categories.mode_to_maps || !categories.mode_to_maps[selectedMode]) {
+      return categories.maps
+    }
+    return categories.mode_to_maps[selectedMode]
+  }, [selectedMode, categories])
+
+  // モードが変わった時に、選択中マップが含まれていなければ自動補正する
+  useEffect(() => {
+    if (availableMaps.length > 0 && (!selectedMap || !availableMaps.includes(selectedMap))) {
+      setSelectedMap(availableMaps[0])
+    }
+  }, [availableMaps, selectedMap])
 
   // ドラフト開始時にメタデータをフェッチ
   const handleStartDraft = async () => {
@@ -254,7 +269,7 @@ export default function DraftCompanionPage() {
                     <SelectValue placeholder="マップを選択" />
                   </SelectTrigger>
                   <SelectContent>
-                    {categories.maps.map((m: string) => (
+                    {availableMaps.map((m: string) => (
                       <SelectItem key={m} value={m}>{translateMap(m)}</SelectItem>
                     ))}
                   </SelectContent>

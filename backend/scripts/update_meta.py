@@ -112,6 +112,7 @@ async def main():
                 "stats_gachi": init_stats(all_brawlers),
                 "stats_gachi_modes": {},
                 "stats_gachi_maps": {},
+                "mode_to_maps": {},
                 "analyzed_players_count": 0
             }
             
@@ -123,6 +124,7 @@ async def main():
         stats_gachi = raw_stats["stats_gachi"]
         stats_gachi_modes = raw_stats["stats_gachi_modes"]
         stats_gachi_maps = raw_stats["stats_gachi_maps"]
+        mode_to_maps = raw_stats.get("mode_to_maps", {})
 
         print("Fetching top players to extract clubs...")
         top_tags = await get_top_players(client, limit=100) # 100人から芋づる式に抽出
@@ -214,6 +216,12 @@ async def main():
                 is_win = (result == "victory")
                 mode = event.get("mode")
                 map_name = event.get("map")
+                
+                if mode and map_name:
+                    if mode not in mode_to_maps:
+                        mode_to_maps[mode] = []
+                    if map_name not in mode_to_maps[mode]:
+                        mode_to_maps[mode].append(map_name)
                 
                 targets = [stats_global]
                 if battle.get("type") in ["soloRanked", "teamRanked"]:
@@ -353,6 +361,7 @@ async def main():
             "gachi": gachi_meta,
             "gachi_modes": gachi_modes_meta,
             "gachi_maps": gachi_maps_meta,
+            "mode_to_maps": mode_to_maps,
             "analyzed_players": dummy_players,
             "cumulative_players_count": raw_stats["analyzed_players_count"]
         }

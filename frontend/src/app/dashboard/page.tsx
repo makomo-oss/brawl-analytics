@@ -27,6 +27,7 @@ interface ComponentItem {
 }
 
 interface Brawler {
+  id: number;
   name: string;
   power: number;
   rank: number;
@@ -138,23 +139,23 @@ export default function DashboardPage() {
                     </div>
                   </div>
                   <div className="flex gap-4">
-                    <div className="text-right bg-primary/5 px-4 py-2 rounded-xl">
-                      <div className="text-sm font-semibold text-muted-foreground flex items-center justify-end gap-1">
-                        <Trophy className="w-4 h-4 text-yellow-500" /> Trophies
-                      </div>
-                      <div className="text-2xl font-black text-primary">{data.profile?.trophies.toLocaleString()}</div>
-                      <div className="text-xs text-muted-foreground">Highest: {data.profile?.highest_trophies.toLocaleString()}</div>
-                    </div>
-                    {data.profile?.ranked_elo ? (
-                      <div className="text-right bg-purple-500/5 px-4 py-2 rounded-xl border border-purple-500/10">
-                        <div className="text-sm font-semibold text-purple-600 dark:text-purple-400 flex items-center justify-end gap-1">
-                          <Swords className="w-4 h-4" /> Ranked Elo
-                        </div>
-                        <div className="text-2xl font-black text-purple-600 dark:text-purple-400">{data.profile.ranked_elo.toLocaleString()}</div>
-                        <div className="text-xs text-purple-500/70">Highest: {data.profile.highest_ranked_elo.toLocaleString()}</div>
-                      </div>
-                    ) : null}
+                <div className="text-right bg-primary/5 px-4 py-2 rounded-xl">
+                  <div className="text-sm font-semibold text-muted-foreground flex items-center justify-end gap-1">
+                    <Trophy className="w-4 h-4 text-yellow-500" /> トロフィー
                   </div>
+                  <div className="text-2xl font-black text-primary">{data.profile?.trophies.toLocaleString()}</div>
+                  <div className="text-xs text-muted-foreground">最高: {data.profile?.highest_trophies.toLocaleString()}</div>
+                </div>
+                {data.profile?.ranked_elo ? (
+                  <div className="text-right bg-purple-500/5 px-4 py-2 rounded-xl border border-purple-500/10">
+                    <div className="text-sm font-semibold text-purple-600 dark:text-purple-400 flex items-center justify-end gap-1">
+                      <Swords className="w-4 h-4" /> ガチバトル現在スコア
+                    </div>
+                    <div className="text-2xl font-black text-purple-600 dark:text-purple-400">{data.profile.ranked_elo.toLocaleString()}</div>
+                    <div className="text-xs text-purple-500/70">最高: {data.profile.highest_ranked_elo.toLocaleString()}</div>
+                  </div>
+                ) : null}
+              </div>
                 </div>
               </CardHeader>
             </Card>
@@ -254,20 +255,28 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* 直近のバトル履歴セクション */}
-        {data.recent_battles && data.recent_battles.length > 0 && (
-          <div className="mt-12 space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-700">
+        {/* タブセクション（バトル履歴、分析、キャラクター） */}
+          <Tabs defaultValue="battles" className="w-full mt-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
+          <TabsList className="grid w-full grid-cols-3 mb-6 bg-secondary/50 p-1">
+            <TabsTrigger value="battles" className="rounded-md font-semibold text-md">バトル履歴</TabsTrigger>
+            <TabsTrigger value="analysis" className="rounded-md font-semibold text-md">モード別分析</TabsTrigger>
+            <TabsTrigger value="characters" className="rounded-md font-semibold text-md">キャラクター</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="battles" className="space-y-6">
             <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2 text-primary/80">
               ⚔️ 直近のバトル履歴
             </h2>
-            <Tabs defaultValue="battles" className="w-full" onValueChange={setBattleTab}>
-              <TabsList className="grid w-full grid-cols-3 mb-6 bg-secondary/50 p-1">
-                <TabsTrigger value="battles" className="rounded-md font-semibold text-md">Recent Battles</TabsTrigger>
-                <TabsTrigger value="analysis" className="rounded-md font-semibold text-md">Mode Analysis</TabsTrigger>
-                <TabsTrigger value="characters" className="rounded-md font-semibold text-md">Characters</TabsTrigger>
+            {data.recent_battles && data.recent_battles.length > 0 ? (
+            <Tabs defaultValue="all" value={battleTab} onValueChange={setBattleTab} className="w-full">
+              <TabsList className="mb-4 bg-background/40">
+                <TabsTrigger value="all">すべて</TabsTrigger>
+                <TabsTrigger value="normal">通常マッチ</TabsTrigger>
+                <TabsTrigger value="ranked">ガチバトル</TabsTrigger>
+                <TabsTrigger value="friendly">フレンドバトル</TabsTrigger>
               </TabsList>
             <Card className="bg-card/40 backdrop-blur-md border-primary/20 shadow-xl overflow-hidden p-2">
-              <TabsContent value="battles" className="mt-0 outline-none">
+              <TabsContent value={battleTab} className="mt-0 outline-none">
               <ScrollArea className="h-[600px] pr-4">
                 <div className="space-y-3">
                   {data.recent_battles && (() => {
@@ -410,21 +419,27 @@ export default function DashboardPage() {
               </ScrollArea>
               </TabsContent>
             </Card>
-              <TabsContent value="characters" className="space-y-6">
+            </Tabs>
+            ) : (
+              <div className="py-12 text-center text-muted-foreground bg-secondary/20 rounded-xl border border-dashed">
+                バトル履歴がありません。
+              </div>
+            )}
+          </TabsContent>
+          <TabsContent value="characters" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {data.brawlers?.sort((a, b) => b.trophies - a.trophies).map((brawler, idx) => {
                 const maxPower = 11;
                 const powerRatio = (brawler.power / maxPower) * 100;
-                const brawlerNameUrl = brawler.name.toLowerCase().replace(/ /g, '-');
                 
                 return (
                   <Card key={idx} className="overflow-hidden hover:border-primary/50 transition-colors bg-gradient-to-br from-card to-card/50">
                     <div className="p-3 pb-2 flex gap-3 items-center border-b border-border/50">
                       <div className="relative">
                         <img 
-                          src={`https://cdn.brawlify.com/brawler/${brawlerNameUrl}.png`} 
+                          src={`https://cdn.brawlify.com/brawlers/borders/${brawler.id}.png`} 
                           alt={brawler.name} 
-                          className="w-12 h-12 rounded-lg border-2 border-background shadow-sm bg-secondary/30"
+                          className="w-12 h-12 rounded-lg border-2 border-background shadow-sm bg-secondary/30 object-cover"
                           onError={(e) => { e.currentTarget.src = 'https://cdn.brawlify.com/brawler/shelly.png'; }}
                         />
                         <div className="absolute -bottom-1 -right-1 bg-yellow-500 text-black text-[9px] font-black w-5 h-5 rounded-sm flex items-center justify-center border border-black shadow-sm">
@@ -444,39 +459,49 @@ export default function DashboardPage() {
                     
                     <div className="px-3 py-2.5 bg-secondary/10 flex flex-col gap-2">
                       <div className="flex items-center justify-between text-xs font-medium">
-                        <span className="text-muted-foreground">Power Level</span>
+                        <span className="text-muted-foreground">パワーレベル</span>
                         <span className={brawler.power === 11 ? "text-green-500 font-bold" : ""}>{brawler.power} / {maxPower}</span>
                       </div>
                       <Progress value={powerRatio} className="h-1.5" />
                       
-                      <div className="grid grid-cols-4 gap-1 mt-1 pt-2 border-t border-border/50">
+                      <div className="grid grid-cols-4 gap-2 mt-2 pt-2 border-t border-border/50">
                         {/* Gadgets */}
-                        <div className="flex flex-col items-center p-1 rounded bg-background/50">
-                          <div className={`w-5 h-5 rounded-full flex items-center justify-center mb-1 ${brawler.gadgets.length > 0 ? 'bg-green-500/20 text-green-500' : 'bg-muted text-muted-foreground'}`}>
-                            G
+                        <div className="flex flex-col gap-1 items-center">
+                          <span className="text-[9px] font-bold text-green-500">Gadget</span>
+                          <div className="flex gap-1 justify-center flex-wrap">
+                            {brawler.gadgets.length > 0 ? brawler.gadgets.map((g) => (
+                              <img key={g.id} src={`https://cdn.brawlify.com/gadgets/regular/${g.id}.png`} alt={g.name} className="w-6 h-6 rounded-full border border-green-500/50 shadow-sm" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                            )) : <span className="text-muted-foreground text-[10px]">-</span>}
                           </div>
-                          <span className="text-[10px] font-bold">{brawler.gadgets.length}/2</span>
                         </div>
                         {/* Star Powers */}
-                        <div className="flex flex-col items-center p-1 rounded bg-background/50">
-                          <div className={`w-5 h-5 rounded-full flex items-center justify-center mb-1 ${brawler.starPowers.length > 0 ? 'bg-yellow-500/20 text-yellow-500' : 'bg-muted text-muted-foreground'}`}>
-                            S
+                        <div className="flex flex-col gap-1 items-center">
+                          <span className="text-[9px] font-bold text-yellow-500">StarPower</span>
+                          <div className="flex gap-1 justify-center flex-wrap">
+                            {brawler.starPowers.length > 0 ? brawler.starPowers.map((s) => (
+                              <img key={s.id} src={`https://cdn.brawlify.com/star-powers/regular/${s.id}.png`} alt={s.name} className="w-6 h-6 rounded-full border border-yellow-500/50 shadow-sm" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                            )) : <span className="text-muted-foreground text-[10px]">-</span>}
                           </div>
-                          <span className="text-[10px] font-bold">{brawler.starPowers.length}/2</span>
                         </div>
                         {/* Gears */}
-                        <div className="flex flex-col items-center p-1 rounded bg-background/50">
-                          <div className={`w-5 h-5 rounded-full flex items-center justify-center mb-1 ${brawler.gears.length > 0 ? 'bg-blue-500/20 text-blue-500' : 'bg-muted text-muted-foreground'}`}>
-                            ⚙
+                        <div className="flex flex-col gap-1 items-center">
+                          <span className="text-[9px] font-bold text-blue-500">Gear</span>
+                          <div className="flex gap-1 justify-center flex-wrap">
+                            {brawler.gears.length > 0 ? brawler.gears.map((g) => (
+                              <img key={g.id} src={`https://cdn.brawlify.com/gears/regular/${g.id}.png`} alt={g.name} className="w-6 h-6 rounded-full border border-blue-500/50 shadow-sm" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                            )) : <span className="text-muted-foreground text-[10px]">-</span>}
                           </div>
-                          <span className="text-[10px] font-bold">{brawler.gears.length}/2</span>
                         </div>
                         {/* Hypercharge */}
-                        <div className="flex flex-col items-center p-1 rounded bg-background/50">
-                          <div className={`w-5 h-5 rounded-full flex items-center justify-center mb-1 ${brawler.hyperCharges.length > 0 ? 'bg-purple-500/20 text-purple-500' : 'bg-muted text-muted-foreground'}`}>
-                            H
+                        <div className="flex flex-col gap-1 items-center">
+                          <span className="text-[9px] font-bold text-purple-500">Hyper</span>
+                          <div className="flex gap-1 justify-center flex-wrap">
+                            {brawler.hyperCharges.length > 0 ? brawler.hyperCharges.map((h) => (
+                              <div key={h.id} className="w-6 h-6 rounded border border-purple-500/50 bg-gradient-to-tr from-purple-600 to-fuchsia-500 flex items-center justify-center shadow-sm">
+                                <span className="text-[8px] font-black text-white">HC</span>
+                              </div>
+                            )) : <span className="text-muted-foreground text-[10px]">-</span>}
                           </div>
-                          <span className="text-[10px] font-bold">{brawler.hyperCharges.length}/1</span>
                         </div>
                       </div>
                     </div>
@@ -491,8 +516,6 @@ export default function DashboardPage() {
             </div>
           </TabsContent>
         </Tabs>
-          </div>
-        )}
         </div>
       )}
     </div>

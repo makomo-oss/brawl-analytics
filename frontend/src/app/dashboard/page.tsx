@@ -21,28 +21,20 @@ function formatBattleTime(timeStr: string) {
   return `${d.getMonth() + 1}月${d.getDate()}日 ${d.getHours()}:${d.getMinutes().toString().padStart(2, '0')}`;
 }
 
-function getRankBadge(rankValue: number) {
+function getRankImage(rankValue: number) {
   if (!rankValue || rankValue <= 0) return null;
-  if (rankValue >= 19) return { name: "MASTERS", color: "bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-600", text: "text-white shadow-sm" };
+  if (rankValue >= 19) return { name: "MASTERS", url: "https://cdn.brawlify.com/ranked/regular/Masters.png", tier: "" };
   
-  const tiers = ["BRONZE", "SILVER", "GOLD", "DIAMOND", "MYTHIC", "LEGENDARY"];
-  const colors = [
-    "bg-gradient-to-tr from-amber-800 to-amber-600", // Bronze
-    "bg-gradient-to-tr from-slate-400 to-slate-300", // Silver
-    "bg-gradient-to-tr from-yellow-500 to-yellow-300", // Gold
-    "bg-gradient-to-tr from-cyan-500 to-blue-500",     // Diamond
-    "bg-gradient-to-tr from-purple-600 to-fuchsia-500", // Mythic
-    "bg-gradient-to-tr from-red-600 via-orange-500 to-yellow-500" // Legendary
-  ];
+  const tiers = ["Bronze", "Silver", "Gold", "Diamond", "Mythic", "Legendary"];
   
   const tierIndex = Math.floor((rankValue - 1) / 3);
   const subTier = ((rankValue - 1) % 3) + 1; // 1, 2, 3
   const numerals = ["I", "II", "III"];
   
   return {
-    name: `${tiers[tierIndex]} ${numerals[subTier - 1]}`,
-    color: colors[tierIndex],
-    text: tierIndex === 1 || tierIndex === 2 ? "text-slate-900 shadow-sm" : "text-white shadow-sm"
+    name: `${tiers[tierIndex].toUpperCase()}`,
+    url: `https://cdn.brawlify.com/ranked/regular/${tiers[tierIndex]}.png`,
+    tier: numerals[subTier - 1]
   };
 }
 
@@ -176,16 +168,19 @@ export default function DashboardPage() {
                 {data.profile?.ranked_elo ? (
                   <div className="flex items-center gap-3">
                     {data.profile.ranked_rank > 0 && (() => {
-                      const badge = getRankBadge(data.profile.ranked_rank);
-                      if (!badge) return null;
+                      const rankInfo = getRankImage(data.profile.ranked_rank);
+                      if (!rankInfo) return null;
                       return (
-                        <div className={`w-16 h-16 rounded-xl flex flex-col items-center justify-center ${badge.color} border-2 border-white/20 shadow-lg transform hover:scale-105 transition-transform`}>
-                          <div className={`text-[10px] font-black uppercase tracking-tighter ${badge.text} leading-tight text-center`}>
-                            {badge.name.split(' ')[0]}
-                          </div>
-                          {badge.name.split(' ')[1] && (
-                            <div className={`text-xl font-black ${badge.text} leading-none mt-0.5`}>
-                              {badge.name.split(' ')[1]}
+                        <div className="relative w-16 h-16 drop-shadow-md flex items-center justify-center transform hover:scale-105 transition-transform">
+                          <img 
+                            src={rankInfo.url} 
+                            alt={rankInfo.name} 
+                            className="w-full h-full object-contain" 
+                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                          />
+                          {rankInfo.tier && (
+                            <div className="absolute -bottom-1 -right-1 bg-slate-900/90 backdrop-blur-md px-1.5 py-0.5 rounded text-[11px] font-black text-white border border-white/20 shadow-md leading-none">
+                              {rankInfo.tier}
                             </div>
                           )}
                         </div>

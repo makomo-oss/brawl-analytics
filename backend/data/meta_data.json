@@ -1,1090 +1,3375 @@
 {
-  "updated_at": "2026-07-19T03:44:58.325785",
+  "updated_at": "2026-07-19T04:19:11.426128",
   "tiers": {
     "S": [
-      "angelo",
-      "melodie",
-      "charlie",
-      "cordelius",
-      "fang",
-      "belle",
-      "stu",
-      "amber",
-      "surge",
-      "nani",
-      "max",
-      "sandy",
-      "leon",
-      "gene",
-      "piper",
-      "crow",
-      "spike"
+      "otis",
+      "surge"
     ],
-    "A": [],
-    "B": [
-      "wendy",
+    "A": [
       "nori",
       "bolt",
       "starr nova",
+      "kaze",
+      "berry",
+      "maisie",
+      "willow",
+      "mandy",
+      "meg",
+      "griff",
+      "grom",
+      "squeak",
+      "edgar",
+      "lou",
+      "colette",
+      "nani",
+      "max",
+      "bea",
+      "rosa",
+      "tick",
+      "darryl",
+      "tara",
+      "poco",
+      "crow",
+      "mortis",
+      "spike"
+    ],
+    "B": [
       "damian",
+      "lumi",
+      "cordelius",
+      "gray",
+      "chester",
+      "sam",
+      "bonnie",
+      "fang",
+      "amber",
+      "emz",
+      "8-bit",
+      "bibi",
+      "piper",
+      "el primo",
+      "jessie"
+    ],
+    "C": [
+      "pierce",
+      "moe",
+      "charlie",
+      "ash",
+      "ruffs",
+      "mr. p",
+      "gene",
+      "bo",
+      "brock"
+    ],
+    "D": [
+      "wendy",
       "najia",
       "sirius",
       "glowy",
       "gigi",
-      "pierce",
       "ziggy",
       "mina",
       "trunk",
       "alli",
-      "kaze",
       "jae-yong",
       "finx",
-      "lumi",
       "ollie",
       "meeple",
       "buzz lightyear",
       "juju",
       "shade",
       "kenji",
-      "moe",
       "clancy",
-      "berry",
       "lily",
       "draco",
+      "angelo",
+      "melodie",
       "larry & lawrie",
       "kit",
       "mico",
       "chuck",
       "pearl",
-      "maisie",
-      "willow",
+      "doug",
+      "hank",
       "r-t",
-      "mandy",
-      "gray",
       "buster",
       "gus",
-      "sam",
-      "otis",
-      "bonnie",
       "janet",
       "eve",
       "lola",
-      "meg",
-      "griff",
       "buzz",
-      "grom",
-      "squeak",
-      "ruffs",
-      "edgar",
+      "belle",
+      "stu",
       "byron",
-      "lou",
-      "colette",
       "sprout",
       "gale",
       "jacky",
-      "mr. p",
-      "emz",
-      "bea",
-      "8-bit",
-      "bibi",
+      "sandy",
       "carl",
-      "rosa",
-      "tick",
-      "darryl",
-      "tara",
+      "leon",
+      "frank",
+      "penny",
       "pam",
-      "bo",
-      "poco",
-      "mortis",
-      "el primo",
       "dynamike",
       "nita",
-      "jessie",
       "barley",
       "rico",
-      "brock",
       "bull",
       "colt",
       "shelly"
-    ],
-    "C": [],
-    "D": [
-      "doug",
-      "hank",
-      "chester",
-      "ash",
-      "frank",
-      "penny"
     ]
   },
   "characters": {
-    "wendy": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
-    },
     "nori": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
+      "tier": "A",
+      "score": 0.43,
+      "win_rate": 84.6,
+      "use_rate": 3.36,
+      "total_matches": 26,
+      "kamo": [
+        {
+          "brawler": "mortis",
+          "win_rate": 100.0,
+          "matches": 8
+        },
+        {
+          "brawler": "edgar",
+          "win_rate": 100.0,
+          "matches": 2
+        },
+        {
+          "brawler": "sirius",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "stu",
+          "win_rate": 100.0,
+          "matches": 2
+        },
+        {
+          "brawler": "ollie",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "crow",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "nori",
+          "win_rate": 33.3,
+          "matches": 3
+        },
+        {
+          "brawler": "chester",
+          "win_rate": 33.3,
+          "matches": 3
+        },
+        {
+          "brawler": "rico",
+          "win_rate": 50.0,
+          "matches": 2
+        },
+        {
+          "brawler": "maisie",
+          "win_rate": 66.7,
+          "matches": 3
+        }
+      ]
     },
     "bolt": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
+      "tier": "A",
+      "score": 0.55,
+      "win_rate": 88.5,
+      "use_rate": 3.36,
+      "total_matches": 26,
+      "kamo": [
+        {
+          "brawler": "mortis",
+          "win_rate": 100.0,
+          "matches": 8
+        },
+        {
+          "brawler": "colette",
+          "win_rate": 100.0,
+          "matches": 3
+        },
+        {
+          "brawler": "edgar",
+          "win_rate": 100.0,
+          "matches": 2
+        },
+        {
+          "brawler": "sirius",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "stu",
+          "win_rate": 100.0,
+          "matches": 2
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "crow",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "chester",
+          "win_rate": 33.3,
+          "matches": 3
+        },
+        {
+          "brawler": "nori",
+          "win_rate": 50.0,
+          "matches": 2
+        },
+        {
+          "brawler": "rico",
+          "win_rate": 50.0,
+          "matches": 2
+        },
+        {
+          "brawler": "maisie",
+          "win_rate": 66.7,
+          "matches": 3
+        }
+      ]
     },
     "starr nova": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
+      "tier": "A",
+      "score": 0.49,
+      "win_rate": 76.9,
+      "use_rate": 5.04,
+      "total_matches": 39,
+      "kamo": [
+        {
+          "brawler": "pierce",
+          "win_rate": 100.0,
+          "matches": 2
+        },
+        {
+          "brawler": "bibi",
+          "win_rate": 100.0,
+          "matches": 3
+        },
+        {
+          "brawler": "buzz",
+          "win_rate": 100.0,
+          "matches": 5
+        },
+        {
+          "brawler": "chester",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "lily",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "meeple",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "sandy",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "8-bit",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "bull",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "griff",
+          "win_rate": 33.3,
+          "matches": 3
+        }
+      ]
     },
     "damian": {
       "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "najia": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "sirius": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "glowy": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "gigi": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
+      "score": 0.28,
+      "win_rate": 87.5,
+      "use_rate": 2.07,
+      "total_matches": 16,
+      "kamo": [
+        {
+          "brawler": "colt",
+          "win_rate": 100.0,
+          "matches": 3
+        },
+        {
+          "brawler": "crow",
+          "win_rate": 100.0,
+          "matches": 2
+        },
+        {
+          "brawler": "spike",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "leon",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "trunk",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "8-bit",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "bull",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "stu",
+          "win_rate": 50.0,
+          "matches": 2
+        },
+        {
+          "brawler": "lumi",
+          "win_rate": 50.0,
+          "matches": 2
+        },
+        {
+          "brawler": "surge",
+          "win_rate": 75.0,
+          "matches": 8
+        }
+      ]
     },
     "pierce": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "ziggy": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "mina": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "trunk": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "alli": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
+      "tier": "C",
+      "score": -0.67,
+      "win_rate": 62.5,
+      "use_rate": 1.03,
+      "total_matches": 8,
+      "kamo": [
+        {
+          "brawler": "8-bit",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "lumi",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "bibi",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "kit",
+          "win_rate": 100.0,
+          "matches": 3
+        },
+        {
+          "brawler": "surge",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "emz",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "mico",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "starr nova",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "colt",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "crow",
+          "win_rate": 0.0,
+          "matches": 2
+        }
+      ]
     },
     "kaze": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "jae-yong": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "finx": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
+      "tier": "A",
+      "score": 0.32,
+      "win_rate": 100.0,
+      "use_rate": 0.13,
+      "total_matches": 1,
+      "kamo": [
+        {
+          "brawler": "shelly",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "griff",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "rico",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "rico",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "griff",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "shelly",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ]
     },
     "lumi": {
       "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "ollie": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "meeple": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "buzz lightyear": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "juju": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "shade": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
+      "score": 0.06,
+      "win_rate": 83.3,
+      "use_rate": 1.55,
+      "total_matches": 12,
+      "kamo": [
+        {
+          "brawler": "starr nova",
+          "win_rate": 100.0,
+          "matches": 4
+        },
+        {
+          "brawler": "pierce",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "gray",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "ash",
+          "win_rate": 100.0,
+          "matches": 2
+        },
+        {
+          "brawler": "carl",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "darryl",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "bonnie",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "lily",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "colette",
+          "win_rate": 40.0,
+          "matches": 5
+        },
+        {
+          "brawler": "mina",
+          "win_rate": 50.0,
+          "matches": 2
+        }
+      ]
     },
     "kenji": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
+      "tier": "D",
+      "score": -2.76,
+      "win_rate": 0.0,
+      "use_rate": 0.13,
+      "total_matches": 1,
+      "kamo": [
+        {
+          "brawler": "belle",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "shade",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "colette",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "rosa",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "gray",
+          "win_rate": 0.0,
+          "matches": 1
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "gray",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "rosa",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "colette",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "shade",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "belle",
+          "win_rate": 0.0,
+          "matches": 1
+        }
+      ]
     },
     "moe": {
-      "tier": "B",
-      "score": -0.21,
+      "tier": "C",
+      "score": -1.06,
       "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "clancy": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
+      "use_rate": 1.03,
+      "total_matches": 8,
+      "kamo": [
+        {
+          "brawler": "pierce",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "colette",
+          "win_rate": 100.0,
+          "matches": 2
+        },
+        {
+          "brawler": "colt",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "nori",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "edgar",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "griff",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "starr nova",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "sandy",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "bea",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "crow",
+          "win_rate": 0.0,
+          "matches": 2
+        }
+      ]
     },
     "berry": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "lily": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "draco": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "angelo": {
-      "tier": "S",
-      "score": 2.61,
-      "win_rate": 60.0,
-      "use_rate": 2.33,
-      "total_matches": 3000,
-      "kamo": [],
-      "tenteki": []
+      "tier": "A",
+      "score": 0.32,
+      "win_rate": 100.0,
+      "use_rate": 0.13,
+      "total_matches": 1,
+      "kamo": [
+        {
+          "brawler": "shelly",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "griff",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "rico",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "rico",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "griff",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "shelly",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ]
     },
     "melodie": {
-      "tier": "S",
-      "score": 2.61,
-      "win_rate": 60.0,
-      "use_rate": 2.33,
-      "total_matches": 3000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "larry & lawrie": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "kit": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "mico": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
+      "tier": "D",
+      "score": -2.76,
+      "win_rate": 0.0,
+      "use_rate": 0.13,
+      "total_matches": 1,
+      "kamo": [
+        {
+          "brawler": "damian",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "surge",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "lumi",
+          "win_rate": 0.0,
+          "matches": 1
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "lumi",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "surge",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "damian",
+          "win_rate": 0.0,
+          "matches": 1
+        }
+      ]
     },
     "charlie": {
-      "tier": "S",
-      "score": 2.61,
-      "win_rate": 60.0,
-      "use_rate": 2.33,
-      "total_matches": 3000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "chuck": {
-      "tier": "B",
-      "score": -0.21,
+      "tier": "C",
+      "score": -1.2,
       "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "pearl": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "doug": {
-      "tier": "D",
-      "score": -2.28,
-      "win_rate": 40.0,
-      "use_rate": 0.39,
-      "total_matches": 500,
-      "kamo": [],
-      "tenteki": []
+      "use_rate": 0.26,
+      "total_matches": 2,
+      "kamo": [
+        {
+          "brawler": "surge",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "starr nova",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "damian",
+          "win_rate": 50.0,
+          "matches": 2
+        },
+        {
+          "brawler": "kit",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "brock",
+          "win_rate": 0.0,
+          "matches": 1
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "brock",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "kit",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "damian",
+          "win_rate": 50.0,
+          "matches": 2
+        },
+        {
+          "brawler": "starr nova",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "surge",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ]
     },
     "cordelius": {
-      "tier": "S",
-      "score": 2.61,
-      "win_rate": 60.0,
-      "use_rate": 2.33,
-      "total_matches": 3000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "hank": {
-      "tier": "D",
-      "score": -2.28,
-      "win_rate": 40.0,
-      "use_rate": 0.39,
-      "total_matches": 500,
-      "kamo": [],
-      "tenteki": []
+      "tier": "B",
+      "score": 0.06,
+      "win_rate": 83.3,
+      "use_rate": 1.55,
+      "total_matches": 12,
+      "kamo": [
+        {
+          "brawler": "pearl",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "spike",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "shelly",
+          "win_rate": 100.0,
+          "matches": 2
+        },
+        {
+          "brawler": "griff",
+          "win_rate": 100.0,
+          "matches": 2
+        },
+        {
+          "brawler": "tara",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "crow",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "8-bit",
+          "win_rate": 0.0,
+          "matches": 2
+        },
+        {
+          "brawler": "max",
+          "win_rate": 50.0,
+          "matches": 2
+        },
+        {
+          "brawler": "surge",
+          "win_rate": 50.0,
+          "matches": 4
+        },
+        {
+          "brawler": "mandy",
+          "win_rate": 50.0,
+          "matches": 2
+        }
+      ]
     },
     "maisie": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
+      "tier": "A",
+      "score": 0.97,
+      "win_rate": 97.0,
+      "use_rate": 4.26,
+      "total_matches": 33,
+      "kamo": [
+        {
+          "brawler": "nori",
+          "win_rate": 100.0,
+          "matches": 3
+        },
+        {
+          "brawler": "starr nova",
+          "win_rate": 100.0,
+          "matches": 6
+        },
+        {
+          "brawler": "pierce",
+          "win_rate": 100.0,
+          "matches": 3
+        },
+        {
+          "brawler": "shade",
+          "win_rate": 100.0,
+          "matches": 2
+        },
+        {
+          "brawler": "griff",
+          "win_rate": 100.0,
+          "matches": 4
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "max",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "meg",
+          "win_rate": 50.0,
+          "matches": 2
+        },
+        {
+          "brawler": "colt",
+          "win_rate": 83.3,
+          "matches": 6
+        },
+        {
+          "brawler": "lumi",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "bea",
+          "win_rate": 100.0,
+          "matches": 2
+        }
+      ]
     },
     "willow": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "r-t": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
+      "tier": "A",
+      "score": 0.32,
+      "win_rate": 100.0,
+      "use_rate": 0.13,
+      "total_matches": 1,
+      "kamo": [
+        {
+          "brawler": "spike",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "larry & lawrie",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "rico",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "rico",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "larry & lawrie",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "spike",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ]
     },
     "mandy": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
+      "tier": "A",
+      "score": 0.32,
+      "win_rate": 100.0,
+      "use_rate": 0.13,
+      "total_matches": 1,
+      "kamo": [
+        {
+          "brawler": "mortis",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "kit",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "piper",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "piper",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "kit",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "mortis",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ]
     },
     "gray": {
       "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
+      "score": 0.25,
+      "win_rate": 81.8,
+      "use_rate": 2.84,
+      "total_matches": 22,
+      "kamo": [
+        {
+          "brawler": "starr nova",
+          "win_rate": 100.0,
+          "matches": 5
+        },
+        {
+          "brawler": "pierce",
+          "win_rate": 100.0,
+          "matches": 2
+        },
+        {
+          "brawler": "ash",
+          "win_rate": 100.0,
+          "matches": 3
+        },
+        {
+          "brawler": "carl",
+          "win_rate": 100.0,
+          "matches": 2
+        },
+        {
+          "brawler": "berry",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "mr. p",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "kenji",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "kaze",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "8-bit",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "grom",
+          "win_rate": 0.0,
+          "matches": 1
+        }
+      ]
     },
     "chester": {
-      "tier": "D",
-      "score": -2.28,
-      "win_rate": 40.0,
-      "use_rate": 0.39,
-      "total_matches": 500,
-      "kamo": [],
-      "tenteki": []
-    },
-    "buster": {
       "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "gus": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
+      "score": -0.09,
+      "win_rate": 80.0,
+      "use_rate": 1.29,
+      "total_matches": 10,
+      "kamo": [
+        {
+          "brawler": "starr nova",
+          "win_rate": 100.0,
+          "matches": 4
+        },
+        {
+          "brawler": "pierce",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "gray",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "ash",
+          "win_rate": 100.0,
+          "matches": 2
+        },
+        {
+          "brawler": "carl",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "lily",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "lumi",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "surge",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "colette",
+          "win_rate": 40.0,
+          "matches": 5
+        },
+        {
+          "brawler": "colt",
+          "win_rate": 66.7,
+          "matches": 3
+        }
+      ]
     },
     "sam": {
       "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
+      "score": 0.28,
+      "win_rate": 87.5,
+      "use_rate": 2.07,
+      "total_matches": 16,
+      "kamo": [
+        {
+          "brawler": "colt",
+          "win_rate": 100.0,
+          "matches": 3
+        },
+        {
+          "brawler": "crow",
+          "win_rate": 100.0,
+          "matches": 2
+        },
+        {
+          "brawler": "spike",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "leon",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "trunk",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "8-bit",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "bull",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "stu",
+          "win_rate": 50.0,
+          "matches": 2
+        },
+        {
+          "brawler": "lumi",
+          "win_rate": 50.0,
+          "matches": 2
+        },
+        {
+          "brawler": "surge",
+          "win_rate": 75.0,
+          "matches": 8
+        }
+      ]
     },
     "otis": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
+      "tier": "S",
+      "score": 1.02,
+      "win_rate": 97.1,
+      "use_rate": 4.52,
+      "total_matches": 35,
+      "kamo": [
+        {
+          "brawler": "shade",
+          "win_rate": 100.0,
+          "matches": 3
+        },
+        {
+          "brawler": "griff",
+          "win_rate": 100.0,
+          "matches": 3
+        },
+        {
+          "brawler": "mina",
+          "win_rate": 100.0,
+          "matches": 4
+        },
+        {
+          "brawler": "shelly",
+          "win_rate": 100.0,
+          "matches": 6
+        },
+        {
+          "brawler": "mortis",
+          "win_rate": 100.0,
+          "matches": 14
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "willow",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "bull",
+          "win_rate": 50.0,
+          "matches": 2
+        },
+        {
+          "brawler": "darryl",
+          "win_rate": 50.0,
+          "matches": 2
+        },
+        {
+          "brawler": "colette",
+          "win_rate": 75.0,
+          "matches": 4
+        },
+        {
+          "brawler": "colt",
+          "win_rate": 83.3,
+          "matches": 6
+        }
+      ]
     },
     "bonnie": {
       "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "janet": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "eve": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
+      "score": 0.27,
+      "win_rate": 90.9,
+      "use_rate": 1.42,
+      "total_matches": 11,
+      "kamo": [
+        {
+          "brawler": "pearl",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "spike",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "shelly",
+          "win_rate": 100.0,
+          "matches": 2
+        },
+        {
+          "brawler": "griff",
+          "win_rate": 100.0,
+          "matches": 2
+        },
+        {
+          "brawler": "tara",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "8-bit",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "max",
+          "win_rate": 50.0,
+          "matches": 2
+        },
+        {
+          "brawler": "mandy",
+          "win_rate": 50.0,
+          "matches": 2
+        },
+        {
+          "brawler": "surge",
+          "win_rate": 66.7,
+          "matches": 3
+        },
+        {
+          "brawler": "mortis",
+          "win_rate": 83.3,
+          "matches": 6
+        }
+      ]
     },
     "fang": {
-      "tier": "S",
-      "score": 1.2,
-      "win_rate": 55.0,
-      "use_rate": 1.55,
-      "total_matches": 2000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "lola": {
       "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
+      "score": -0.18,
+      "win_rate": 77.8,
+      "use_rate": 1.16,
+      "total_matches": 9,
+      "kamo": [
+        {
+          "brawler": "starr nova",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "chester",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "8-bit",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "mina",
+          "win_rate": 100.0,
+          "matches": 2
+        },
+        {
+          "brawler": "edgar",
+          "win_rate": 100.0,
+          "matches": 2
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "carl",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "colette",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "lou",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "crow",
+          "win_rate": 50.0,
+          "matches": 2
+        },
+        {
+          "brawler": "mortis",
+          "win_rate": 50.0,
+          "matches": 2
+        }
+      ]
     },
     "meg": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
+      "tier": "A",
+      "score": 0.37,
+      "win_rate": 100.0,
+      "use_rate": 0.39,
+      "total_matches": 3,
+      "kamo": [
+        {
+          "brawler": "mortis",
+          "win_rate": 100.0,
+          "matches": 2
+        },
+        {
+          "brawler": "kit",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "piper",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "edgar",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "mandy",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "meg",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "meeple",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "chester",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "mandy",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "edgar",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ]
     },
     "ash": {
-      "tier": "D",
-      "score": -2.28,
-      "win_rate": 40.0,
-      "use_rate": 0.39,
-      "total_matches": 500,
-      "kamo": [],
-      "tenteki": []
+      "tier": "C",
+      "score": -0.52,
+      "win_rate": 66.7,
+      "use_rate": 1.16,
+      "total_matches": 9,
+      "kamo": [
+        {
+          "brawler": "dynamike",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "carl",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "sirius",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "crow",
+          "win_rate": 100.0,
+          "matches": 2
+        },
+        {
+          "brawler": "edgar",
+          "win_rate": 100.0,
+          "matches": 2
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "mr. p",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "kenji",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "kaze",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "8-bit",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "grom",
+          "win_rate": 0.0,
+          "matches": 1
+        }
+      ]
     },
     "griff": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "buzz": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
+      "tier": "A",
+      "score": 0.42,
+      "win_rate": 80.6,
+      "use_rate": 4.01,
+      "total_matches": 31,
+      "kamo": [
+        {
+          "brawler": "brock",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "bea",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "spike",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "kit",
+          "win_rate": 100.0,
+          "matches": 2
+        },
+        {
+          "brawler": "colt",
+          "win_rate": 100.0,
+          "matches": 5
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "moe",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "meeple",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "meg",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "chester",
+          "win_rate": 25.0,
+          "matches": 4
+        },
+        {
+          "brawler": "frank",
+          "win_rate": 33.3,
+          "matches": 3
+        }
+      ]
     },
     "grom": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
+      "tier": "A",
+      "score": 0.32,
+      "win_rate": 100.0,
+      "use_rate": 0.13,
+      "total_matches": 1,
+      "kamo": [
+        {
+          "brawler": "berry",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "byron",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "mandy",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "mandy",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "byron",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "berry",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ]
     },
     "squeak": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "belle": {
-      "tier": "S",
-      "score": 1.2,
-      "win_rate": 55.0,
-      "use_rate": 1.55,
-      "total_matches": 2000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "stu": {
-      "tier": "S",
-      "score": 1.2,
-      "win_rate": 55.0,
-      "use_rate": 1.55,
-      "total_matches": 2000,
-      "kamo": [],
-      "tenteki": []
+      "tier": "A",
+      "score": 0.38,
+      "win_rate": 84.0,
+      "use_rate": 3.23,
+      "total_matches": 25,
+      "kamo": [
+        {
+          "brawler": "brock",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "bea",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "griff",
+          "win_rate": 100.0,
+          "matches": 5
+        },
+        {
+          "brawler": "melodie",
+          "win_rate": 100.0,
+          "matches": 2
+        },
+        {
+          "brawler": "spike",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "chester",
+          "win_rate": 25.0,
+          "matches": 4
+        },
+        {
+          "brawler": "frank",
+          "win_rate": 33.3,
+          "matches": 3
+        },
+        {
+          "brawler": "crow",
+          "win_rate": 50.0,
+          "matches": 2
+        },
+        {
+          "brawler": "bull",
+          "win_rate": 50.0,
+          "matches": 2
+        },
+        {
+          "brawler": "edgar",
+          "win_rate": 66.7,
+          "matches": 3
+        }
+      ]
     },
     "ruffs": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
+      "tier": "C",
+      "score": -0.86,
+      "win_rate": 55.6,
+      "use_rate": 1.16,
+      "total_matches": 9,
+      "kamo": [
+        {
+          "brawler": "carl",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "griff",
+          "win_rate": 100.0,
+          "matches": 3
+        },
+        {
+          "brawler": "meg",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "lumi",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "buzz",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "crow",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "emz",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "nori",
+          "win_rate": 0.0,
+          "matches": 2
+        },
+        {
+          "brawler": "bolt",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "surge",
+          "win_rate": 33.3,
+          "matches": 3
+        }
+      ]
     },
     "edgar": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "byron": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
+      "tier": "A",
+      "score": 0.32,
+      "win_rate": 100.0,
+      "use_rate": 0.13,
+      "total_matches": 1,
+      "kamo": [
+        {
+          "brawler": "edgar",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "mandy",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "chester",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "chester",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "mandy",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "edgar",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ]
     },
     "lou": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
+      "tier": "A",
+      "score": 0.66,
+      "win_rate": 92.3,
+      "use_rate": 3.36,
+      "total_matches": 26,
+      "kamo": [
+        {
+          "brawler": "shade",
+          "win_rate": 100.0,
+          "matches": 2
+        },
+        {
+          "brawler": "sirius",
+          "win_rate": 100.0,
+          "matches": 2
+        },
+        {
+          "brawler": "jessie",
+          "win_rate": 100.0,
+          "matches": 3
+        },
+        {
+          "brawler": "colt",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "grom",
+          "win_rate": 100.0,
+          "matches": 2
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "bea",
+          "win_rate": 50.0,
+          "matches": 2
+        },
+        {
+          "brawler": "surge",
+          "win_rate": 66.7,
+          "matches": 6
+        },
+        {
+          "brawler": "crow",
+          "win_rate": 66.7,
+          "matches": 3
+        },
+        {
+          "brawler": "colette",
+          "win_rate": 75.0,
+          "matches": 4
+        },
+        {
+          "brawler": "nori",
+          "win_rate": 75.0,
+          "matches": 4
+        }
+      ]
     },
     "amber": {
-      "tier": "S",
-      "score": 1.2,
-      "win_rate": 55.0,
-      "use_rate": 1.55,
-      "total_matches": 2000,
-      "kamo": [],
-      "tenteki": []
+      "tier": "B",
+      "score": -0.29,
+      "win_rate": 72.7,
+      "use_rate": 1.42,
+      "total_matches": 11,
+      "kamo": [
+        {
+          "brawler": "mortis",
+          "win_rate": 100.0,
+          "matches": 3
+        },
+        {
+          "brawler": "buzz",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "lily",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "kit",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "pierce",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "bonnie",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "willow",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "colette",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "darryl",
+          "win_rate": 0.0,
+          "matches": 2
+        },
+        {
+          "brawler": "lumi",
+          "win_rate": 0.0,
+          "matches": 1
+        }
+      ]
     },
     "colette": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
+      "tier": "A",
+      "score": 0.47,
+      "win_rate": 85.2,
+      "use_rate": 3.49,
+      "total_matches": 27,
+      "kamo": [
+        {
+          "brawler": "mortis",
+          "win_rate": 100.0,
+          "matches": 3
+        },
+        {
+          "brawler": "bull",
+          "win_rate": 100.0,
+          "matches": 2
+        },
+        {
+          "brawler": "buzz",
+          "win_rate": 100.0,
+          "matches": 2
+        },
+        {
+          "brawler": "lily",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "kit",
+          "win_rate": 100.0,
+          "matches": 2
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "mr. p",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "kenji",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "kaze",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "grom",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "lou",
+          "win_rate": 0.0,
+          "matches": 1
+        }
+      ]
     },
     "surge": {
       "tier": "S",
-      "score": 1.2,
-      "win_rate": 55.0,
-      "use_rate": 1.55,
-      "total_matches": 2000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "sprout": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
+      "score": 1.16,
+      "win_rate": 79.7,
+      "use_rate": 8.27,
+      "total_matches": 64,
+      "kamo": [
+        {
+          "brawler": "pearl",
+          "win_rate": 100.0,
+          "matches": 2
+        },
+        {
+          "brawler": "spike",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "shelly",
+          "win_rate": 100.0,
+          "matches": 9
+        },
+        {
+          "brawler": "tara",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "fang",
+          "win_rate": 100.0,
+          "matches": 6
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "sandy",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "lou",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "emz",
+          "win_rate": 33.3,
+          "matches": 3
+        },
+        {
+          "brawler": "max",
+          "win_rate": 33.3,
+          "matches": 3
+        },
+        {
+          "brawler": "piper",
+          "win_rate": 50.0,
+          "matches": 2
+        }
+      ]
     },
     "nani": {
-      "tier": "S",
-      "score": 1.2,
-      "win_rate": 55.0,
-      "use_rate": 1.55,
-      "total_matches": 2000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "gale": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "jacky": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
+      "tier": "A",
+      "score": 0.48,
+      "win_rate": 100.0,
+      "use_rate": 1.03,
+      "total_matches": 8,
+      "kamo": [
+        {
+          "brawler": "grom",
+          "win_rate": 100.0,
+          "matches": 2
+        },
+        {
+          "brawler": "piper",
+          "win_rate": 100.0,
+          "matches": 3
+        },
+        {
+          "brawler": "edgar",
+          "win_rate": 100.0,
+          "matches": 2
+        },
+        {
+          "brawler": "nori",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "mortis",
+          "win_rate": 100.0,
+          "matches": 2
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "gene",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "penny",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "chester",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "meeple",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "jessie",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ]
     },
     "max": {
-      "tier": "S",
-      "score": 1.2,
-      "win_rate": 55.0,
-      "use_rate": 1.55,
-      "total_matches": 2000,
-      "kamo": [],
-      "tenteki": []
+      "tier": "A",
+      "score": 0.78,
+      "win_rate": 90.9,
+      "use_rate": 4.26,
+      "total_matches": 33,
+      "kamo": [
+        {
+          "brawler": "shade",
+          "win_rate": 100.0,
+          "matches": 2
+        },
+        {
+          "brawler": "griff",
+          "win_rate": 100.0,
+          "matches": 6
+        },
+        {
+          "brawler": "mina",
+          "win_rate": 100.0,
+          "matches": 4
+        },
+        {
+          "brawler": "shelly",
+          "win_rate": 100.0,
+          "matches": 6
+        },
+        {
+          "brawler": "mortis",
+          "win_rate": 100.0,
+          "matches": 12
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "nori",
+          "win_rate": 33.3,
+          "matches": 3
+        },
+        {
+          "brawler": "emz",
+          "win_rate": 50.0,
+          "matches": 2
+        },
+        {
+          "brawler": "damian",
+          "win_rate": 71.4,
+          "matches": 7
+        },
+        {
+          "brawler": "surge",
+          "win_rate": 77.8,
+          "matches": 9
+        },
+        {
+          "brawler": "bolt",
+          "win_rate": 80.0,
+          "matches": 5
+        }
+      ]
     },
     "mr. p": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
+      "tier": "C",
+      "score": -0.65,
+      "win_rate": 55.6,
+      "use_rate": 2.33,
+      "total_matches": 18,
+      "kamo": [
+        {
+          "brawler": "dynamike",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "carl",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "sirius",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "crow",
+          "win_rate": 100.0,
+          "matches": 2
+        },
+        {
+          "brawler": "edgar",
+          "win_rate": 100.0,
+          "matches": 4
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "moe",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "melodie",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "meeple",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "meg",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "griff",
+          "win_rate": 0.0,
+          "matches": 1
+        }
+      ]
     },
     "emz": {
       "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
+      "score": 0.22,
+      "win_rate": 90.0,
+      "use_rate": 1.29,
+      "total_matches": 10,
+      "kamo": [
+        {
+          "brawler": "shade",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "sirius",
+          "win_rate": 100.0,
+          "matches": 2
+        },
+        {
+          "brawler": "jessie",
+          "win_rate": 100.0,
+          "matches": 2
+        },
+        {
+          "brawler": "colt",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "grom",
+          "win_rate": 100.0,
+          "matches": 2
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "8-bit",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "surge",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "crow",
+          "win_rate": 50.0,
+          "matches": 2
+        },
+        {
+          "brawler": "gene",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "penny",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ]
     },
     "bea": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "sandy": {
-      "tier": "S",
-      "score": 2.61,
-      "win_rate": 60.0,
-      "use_rate": 2.33,
-      "total_matches": 3000,
-      "kamo": [],
-      "tenteki": []
+      "tier": "A",
+      "score": 0.49,
+      "win_rate": 78.4,
+      "use_rate": 4.78,
+      "total_matches": 37,
+      "kamo": [
+        {
+          "brawler": "nori",
+          "win_rate": 100.0,
+          "matches": 4
+        },
+        {
+          "brawler": "starr nova",
+          "win_rate": 100.0,
+          "matches": 2
+        },
+        {
+          "brawler": "pierce",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "brock",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "bea",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "carl",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "colette",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "lou",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "damian",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "frank",
+          "win_rate": 33.3,
+          "matches": 3
+        }
+      ]
     },
     "8-bit": {
       "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
+      "score": 0.27,
+      "win_rate": 90.9,
+      "use_rate": 1.42,
+      "total_matches": 11,
+      "kamo": [
+        {
+          "brawler": "pearl",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "spike",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "shelly",
+          "win_rate": 100.0,
+          "matches": 2
+        },
+        {
+          "brawler": "griff",
+          "win_rate": 100.0,
+          "matches": 2
+        },
+        {
+          "brawler": "tara",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "8-bit",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "max",
+          "win_rate": 50.0,
+          "matches": 2
+        },
+        {
+          "brawler": "mandy",
+          "win_rate": 50.0,
+          "matches": 2
+        },
+        {
+          "brawler": "surge",
+          "win_rate": 66.7,
+          "matches": 3
+        },
+        {
+          "brawler": "mortis",
+          "win_rate": 83.3,
+          "matches": 6
+        }
+      ]
     },
     "bibi": {
       "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "carl": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
+      "score": -0.38,
+      "win_rate": 75.0,
+      "use_rate": 0.52,
+      "total_matches": 4,
+      "kamo": [
+        {
+          "brawler": "8-bit",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "lumi",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "bibi",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "kit",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "surge",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "starr nova",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "colt",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "stu",
+          "win_rate": 50.0,
+          "matches": 2
+        },
+        {
+          "brawler": "rico",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "larry & lawrie",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ]
     },
     "rosa": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "leon": {
-      "tier": "S",
-      "score": 2.61,
-      "win_rate": 60.0,
-      "use_rate": 2.33,
-      "total_matches": 3000,
-      "kamo": [],
-      "tenteki": []
+      "tier": "A",
+      "score": 0.51,
+      "win_rate": 88.0,
+      "use_rate": 3.23,
+      "total_matches": 25,
+      "kamo": [
+        {
+          "brawler": "starr nova",
+          "win_rate": 100.0,
+          "matches": 5
+        },
+        {
+          "brawler": "pierce",
+          "win_rate": 100.0,
+          "matches": 2
+        },
+        {
+          "brawler": "gray",
+          "win_rate": 100.0,
+          "matches": 2
+        },
+        {
+          "brawler": "ash",
+          "win_rate": 100.0,
+          "matches": 3
+        },
+        {
+          "brawler": "carl",
+          "win_rate": 100.0,
+          "matches": 2
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "darryl",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "lumi",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "lou",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "colette",
+          "win_rate": 42.9,
+          "matches": 7
+        },
+        {
+          "brawler": "otis",
+          "win_rate": 50.0,
+          "matches": 2
+        }
+      ]
     },
     "tick": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
+      "tier": "A",
+      "score": 0.32,
+      "win_rate": 100.0,
+      "use_rate": 0.13,
+      "total_matches": 1,
+      "kamo": [
+        {
+          "brawler": "crow",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "shade",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "sirius",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "jessie",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "colt",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "colt",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "jessie",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "sirius",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "shade",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "crow",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ]
     },
     "gene": {
-      "tier": "S",
-      "score": 1.2,
-      "win_rate": 55.0,
-      "use_rate": 1.55,
-      "total_matches": 2000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "frank": {
-      "tier": "D",
-      "score": -2.28,
-      "win_rate": 40.0,
-      "use_rate": 0.39,
-      "total_matches": 500,
-      "kamo": [],
-      "tenteki": []
-    },
-    "penny": {
-      "tier": "D",
-      "score": -2.28,
-      "win_rate": 40.0,
-      "use_rate": 0.39,
-      "total_matches": 500,
-      "kamo": [],
-      "tenteki": []
+      "tier": "C",
+      "score": -1.2,
+      "win_rate": 50.0,
+      "use_rate": 0.26,
+      "total_matches": 2,
+      "kamo": [
+        {
+          "brawler": "surge",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "starr nova",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "damian",
+          "win_rate": 50.0,
+          "matches": 2
+        },
+        {
+          "brawler": "kit",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "brock",
+          "win_rate": 0.0,
+          "matches": 1
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "brock",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "kit",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "damian",
+          "win_rate": 50.0,
+          "matches": 2
+        },
+        {
+          "brawler": "starr nova",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "surge",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ]
     },
     "darryl": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
+      "tier": "A",
+      "score": 0.85,
+      "win_rate": 100.0,
+      "use_rate": 3.1,
+      "total_matches": 24,
+      "kamo": [
+        {
+          "brawler": "shade",
+          "win_rate": 100.0,
+          "matches": 2
+        },
+        {
+          "brawler": "griff",
+          "win_rate": 100.0,
+          "matches": 3
+        },
+        {
+          "brawler": "mina",
+          "win_rate": 100.0,
+          "matches": 3
+        },
+        {
+          "brawler": "shelly",
+          "win_rate": 100.0,
+          "matches": 6
+        },
+        {
+          "brawler": "mortis",
+          "win_rate": 100.0,
+          "matches": 12
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "gale",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "brock",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "carl",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "bo",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "nita",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ]
     },
     "tara": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "pam": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
+      "tier": "A",
+      "score": 0.32,
+      "win_rate": 100.0,
+      "use_rate": 0.13,
+      "total_matches": 1,
+      "kamo": [
+        {
+          "brawler": "barley",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "surge",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "damian",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "damian",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "surge",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "barley",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ]
     },
     "piper": {
-      "tier": "S",
-      "score": 2.61,
-      "win_rate": 60.0,
-      "use_rate": 2.33,
-      "total_matches": 3000,
-      "kamo": [],
-      "tenteki": []
+      "tier": "B",
+      "score": 0.27,
+      "win_rate": 90.9,
+      "use_rate": 1.42,
+      "total_matches": 11,
+      "kamo": [
+        {
+          "brawler": "pearl",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "spike",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "shelly",
+          "win_rate": 100.0,
+          "matches": 2
+        },
+        {
+          "brawler": "griff",
+          "win_rate": 100.0,
+          "matches": 2
+        },
+        {
+          "brawler": "tara",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "8-bit",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "max",
+          "win_rate": 50.0,
+          "matches": 2
+        },
+        {
+          "brawler": "mandy",
+          "win_rate": 50.0,
+          "matches": 2
+        },
+        {
+          "brawler": "surge",
+          "win_rate": 66.7,
+          "matches": 3
+        },
+        {
+          "brawler": "mortis",
+          "win_rate": 83.3,
+          "matches": 6
+        }
+      ]
     },
     "bo": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
+      "tier": "C",
+      "score": -0.52,
+      "win_rate": 66.7,
+      "use_rate": 1.16,
+      "total_matches": 9,
+      "kamo": [
+        {
+          "brawler": "dynamike",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "carl",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "sirius",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "crow",
+          "win_rate": 100.0,
+          "matches": 2
+        },
+        {
+          "brawler": "edgar",
+          "win_rate": 100.0,
+          "matches": 2
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "mr. p",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "kenji",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "kaze",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "8-bit",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "grom",
+          "win_rate": 0.0,
+          "matches": 1
+        }
+      ]
     },
     "poco": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
+      "tier": "A",
+      "score": 0.32,
+      "win_rate": 100.0,
+      "use_rate": 0.13,
+      "total_matches": 1,
+      "kamo": [
+        {
+          "brawler": "meeple",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "meg",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "mortis",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "mortis",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "meg",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "meeple",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ]
     },
     "crow": {
-      "tier": "S",
-      "score": 1.2,
-      "win_rate": 55.0,
-      "use_rate": 1.55,
-      "total_matches": 2000,
-      "kamo": [],
-      "tenteki": []
+      "tier": "A",
+      "score": 0.41,
+      "win_rate": 89.5,
+      "use_rate": 2.45,
+      "total_matches": 19,
+      "kamo": [
+        {
+          "brawler": "lumi",
+          "win_rate": 100.0,
+          "matches": 3
+        },
+        {
+          "brawler": "starr nova",
+          "win_rate": 100.0,
+          "matches": 5
+        },
+        {
+          "brawler": "fang",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "jessie",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "bibi",
+          "win_rate": 100.0,
+          "matches": 2
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "crow",
+          "win_rate": 50.0,
+          "matches": 2
+        },
+        {
+          "brawler": "colette",
+          "win_rate": 50.0,
+          "matches": 2
+        },
+        {
+          "brawler": "nori",
+          "win_rate": 50.0,
+          "matches": 2
+        },
+        {
+          "brawler": "bea",
+          "win_rate": 75.0,
+          "matches": 4
+        },
+        {
+          "brawler": "surge",
+          "win_rate": 75.0,
+          "matches": 8
+        }
+      ]
     },
     "mortis": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
+      "tier": "A",
+      "score": 0.44,
+      "win_rate": 100.0,
       "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
+      "total_matches": 6,
+      "kamo": [
+        {
+          "brawler": "spike",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "larry & lawrie",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "rico",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "mortis",
+          "win_rate": 100.0,
+          "matches": 2
+        },
+        {
+          "brawler": "kit",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "meg",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "meeple",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "colt",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "emz",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "dynamike",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ]
     },
     "el primo": {
       "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "dynamike": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "nita": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
+      "score": 0.09,
+      "win_rate": 81.2,
+      "use_rate": 2.07,
+      "total_matches": 16,
+      "kamo": [
+        {
+          "brawler": "starr nova",
+          "win_rate": 100.0,
+          "matches": 5
+        },
+        {
+          "brawler": "pierce",
+          "win_rate": 100.0,
+          "matches": 2
+        },
+        {
+          "brawler": "gray",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "ash",
+          "win_rate": 100.0,
+          "matches": 2
+        },
+        {
+          "brawler": "carl",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "darryl",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "otis",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "lumi",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "lou",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "colette",
+          "win_rate": 33.3,
+          "matches": 6
+        }
+      ]
     },
     "jessie": {
       "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "barley": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
+      "score": -0.04,
+      "win_rate": 78.6,
+      "use_rate": 1.81,
+      "total_matches": 14,
+      "kamo": [
+        {
+          "brawler": "surge",
+          "win_rate": 100.0,
+          "matches": 3
+        },
+        {
+          "brawler": "edgar",
+          "win_rate": 100.0,
+          "matches": 3
+        },
+        {
+          "brawler": "sirius",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "stu",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "starr nova",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "carl",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "lou",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "crow",
+          "win_rate": 50.0,
+          "matches": 2
+        },
+        {
+          "brawler": "maisie",
+          "win_rate": 50.0,
+          "matches": 2
+        },
+        {
+          "brawler": "colette",
+          "win_rate": 50.0,
+          "matches": 2
+        }
+      ]
     },
     "spike": {
-      "tier": "S",
-      "score": 2.61,
-      "win_rate": 60.0,
-      "use_rate": 2.33,
-      "total_matches": 3000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "rico": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
+      "tier": "A",
+      "score": 0.45,
+      "win_rate": 90.0,
+      "use_rate": 2.58,
+      "total_matches": 20,
+      "kamo": [
+        {
+          "brawler": "ollie",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "colette",
+          "win_rate": 100.0,
+          "matches": 2
+        },
+        {
+          "brawler": "bibi",
+          "win_rate": 100.0,
+          "matches": 2
+        },
+        {
+          "brawler": "gale",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "mortis",
+          "win_rate": 100.0,
+          "matches": 6
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "crow",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "chester",
+          "win_rate": 33.3,
+          "matches": 3
+        },
+        {
+          "brawler": "nori",
+          "win_rate": 50.0,
+          "matches": 2
+        },
+        {
+          "brawler": "rico",
+          "win_rate": 50.0,
+          "matches": 2
+        },
+        {
+          "brawler": "surge",
+          "win_rate": 66.7,
+          "matches": 3
+        }
+      ]
     },
     "brock": {
-      "tier": "B",
-      "score": -0.21,
+      "tier": "C",
+      "score": -1.2,
       "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "bull": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
+      "use_rate": 0.26,
+      "total_matches": 2,
+      "kamo": [
+        {
+          "brawler": "mortis",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "grom",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "kit",
+          "win_rate": 50.0,
+          "matches": 2
+        },
+        {
+          "brawler": "damian",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "brock",
+          "win_rate": 0.0,
+          "matches": 1
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "brock",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "damian",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "kit",
+          "win_rate": 50.0,
+          "matches": 2
+        },
+        {
+          "brawler": "grom",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "mortis",
+          "win_rate": 100.0,
+          "matches": 1
+        }
+      ]
     },
     "colt": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
-    },
-    "shelly": {
-      "tier": "B",
-      "score": -0.21,
-      "win_rate": 50.0,
-      "use_rate": 0.78,
-      "total_matches": 1000,
-      "kamo": [],
-      "tenteki": []
+      "tier": "D",
+      "score": -1.92,
+      "win_rate": 25.0,
+      "use_rate": 0.52,
+      "total_matches": 4,
+      "kamo": [
+        {
+          "brawler": "damian",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "bull",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "willow",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "glowy",
+          "win_rate": 100.0,
+          "matches": 1
+        },
+        {
+          "brawler": "colette",
+          "win_rate": 25.0,
+          "matches": 4
+        }
+      ],
+      "tenteki": [
+        {
+          "brawler": "crow",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "emz",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "mico",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "nori",
+          "win_rate": 0.0,
+          "matches": 1
+        },
+        {
+          "brawler": "bea",
+          "win_rate": 0.0,
+          "matches": 1
+        }
+      ]
     }
   },
-  "analyzed_players": [],
+  "analyzed_players": [
+    {
+      "tag": "#LGVY0QGP9",
+      "name": "SLC|Elox",
+      "icon_id": 28000498,
+      "trophies": 303438,
+      "matches_analyzed": 25
+    },
+    {
+      "tag": "#JGCCGY80",
+      "name": "prostislavv",
+      "icon_id": 28000042,
+      "trophies": 301998,
+      "matches_analyzed": 25
+    },
+    {
+      "tag": "#2V0LYPV9L8",
+      "name": "СПИДРАН 500К",
+      "icon_id": 28001318,
+      "trophies": 290147,
+      "matches_analyzed": 25
+    },
+    {
+      "tag": "#QVLRCJQ00",
+      "name": "Netty",
+      "icon_id": 28000000,
+      "trophies": 288156,
+      "matches_analyzed": 25
+    },
+    {
+      "tag": "#2V0UL0GQV8",
+      "name": "СПИДРАН 500К",
+      "icon_id": 28001314,
+      "trophies": 286599,
+      "matches_analyzed": 25
+    },
+    {
+      "tag": "#8LQCUYPYL",
+      "name": "Mikee",
+      "icon_id": 28000290,
+      "trophies": 282107,
+      "matches_analyzed": 25
+    },
+    {
+      "tag": "#29C8PULJ9",
+      "name": "『火|Tɪᴇs🥀』",
+      "icon_id": 28000403,
+      "trophies": 277791,
+      "matches_analyzed": 25
+    },
+    {
+      "tag": "#9PVU00U2P",
+      "name": "Kaso95",
+      "icon_id": 28000039,
+      "trophies": 269440,
+      "matches_analyzed": 25
+    },
+    {
+      "tag": "#YPP02G9L",
+      "name": "𑣲mxrf76",
+      "icon_id": 28001066,
+      "trophies": 264899,
+      "matches_analyzed": 25
+    },
+    {
+      "tag": "#9CCLU0UJC",
+      "name": "RedeX",
+      "icon_id": 28001227,
+      "trophies": 264019,
+      "matches_analyzed": 25
+    }
+  ],
   "metrics": {
-    "analyzed_matches": 0,
-    "mean_win_rate": 50.6
+    "analyzed_matches": 129,
+    "mean_win_rate": 79.7
   }
 }

@@ -234,16 +234,16 @@ export default function DashboardPage() {
                               const bInfo = getBrawlerInfo(p.brawler);
                               const isMe = p.brawler.toLowerCase() === battle.hero.toLowerCase(); // 簡易判定
                               return (
-                                <div key={idx} className={`flex items-center gap-3 p-1.5 rounded-lg transition-colors ${isMe ? 'bg-primary/10 border border-primary/20' : 'hover:bg-white/5'}`}>
-                                  <Avatar className={`w-10 h-10 shadow-md ${isMe ? 'border-2 border-primary ring-2 ring-primary/30 ring-offset-1 ring-offset-background' : 'border border-primary/30'}`}>
+                                <div key={idx} className={`flex items-center gap-3 p-1.5 rounded-xl transition-colors group ${isMe ? 'bg-primary/10 border border-primary/20' : 'hover:bg-white/5'}`}>
+                                  <Avatar className={`w-10 h-10 shadow-sm transition-transform group-hover:scale-105 ${isMe ? 'border border-primary ring-2 ring-primary/30 ring-offset-1 ring-offset-background' : 'border border-primary/20'}`}>
                                     <AvatarImage src={bInfo.imageUrl} />
                                     <AvatarFallback>{bInfo.nameJa.charAt(0)}</AvatarFallback>
                                   </Avatar>
                                   <div className="flex flex-col overflow-hidden">
-                                    <span className={`text-sm truncate max-w-[120px] font-semibold ${isMe ? 'text-primary' : 'text-foreground/90'}`} title={p.name}>
+                                    <span className={`text-sm truncate max-w-[120px] font-bold tracking-wide ${isMe ? 'text-primary' : 'text-foreground/90'}`} title={p.name}>
                                       {p.name}
                                     </span>
-                                    <span className="text-[11px] text-muted-foreground">{bInfo.nameJa}</span>
+                                    <span className="text-[10px] text-muted-foreground/40 group-hover:text-muted-foreground/80 transition-colors font-medium tracking-wider">{bInfo.nameJa}</span>
                                   </div>
                                 </div>
                               )
@@ -263,14 +263,14 @@ export default function DashboardPage() {
                                 {team.map((p: any, idx: number) => {
                                   const bInfo = getBrawlerInfo(p.brawler);
                                   return (
-                                    <div key={`${t_idx}-${idx}`} className="flex items-center gap-3 p-1.5 rounded-lg hover:bg-white/5 transition-colors">
-                                      <Avatar className="w-10 h-10 border border-destructive/40 shadow-md">
+                                    <div key={`${t_idx}-${idx}`} className="flex items-center gap-3 p-1.5 rounded-xl hover:bg-white/5 transition-colors group">
+                                      <Avatar className="w-10 h-10 border border-destructive/30 shadow-sm transition-transform group-hover:scale-105">
                                         <AvatarImage src={bInfo.imageUrl} />
                                         <AvatarFallback>{bInfo.nameJa.charAt(0)}</AvatarFallback>
                                       </Avatar>
                                       <div className="flex flex-col overflow-hidden">
-                                        <span className="text-sm truncate max-w-[120px] font-semibold text-foreground/90" title={p.name}>{p.name}</span>
-                                        <span className="text-[11px] text-muted-foreground">{bInfo.nameJa}</span>
+                                        <span className="text-sm truncate max-w-[120px] font-bold tracking-wide text-foreground/90" title={p.name}>{p.name}</span>
+                                        <span className="text-[10px] text-muted-foreground/40 group-hover:text-muted-foreground/80 transition-colors font-medium tracking-wider">{bInfo.nameJa}</span>
                                       </div>
                                     </div>
                                   )

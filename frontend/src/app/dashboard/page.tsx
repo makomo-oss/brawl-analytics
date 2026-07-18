@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { getBrawlerInfo } from "@/lib/brawlers"
 import { translateMode, translateMap, getModeIconUrl } from "@/lib/translations"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { formatBattleTime } from "@/lib/utils"
 
 export default function DashboardPage() {
   const [playerTag, setPlayerTag] = useState("")
@@ -222,9 +223,12 @@ export default function DashboardPage() {
                         <div className="flex items-center gap-3">
                            <div className={`w-1.5 h-10 rounded-full ${battle.result === 'victory' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]' : battle.result === 'defeat' ? 'bg-destructive shadow-[0_0_10px_rgba(239,68,68,0.5)]' : 'bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)]'}`} />
                            <div>
-                             <Badge variant={battle.result === 'victory' ? 'default' : battle.result === 'defeat' ? 'destructive' : 'outline'} className="uppercase text-[10px] mb-1 px-2 font-bold tracking-wider">
-                               {battle.result === 'victory' ? '勝利' : battle.result === 'defeat' ? '敗北' : '引き分け'}
-                             </Badge>
+                             <div className="flex items-center gap-2 mb-1">
+                               <Badge variant={battle.result === 'victory' ? 'default' : battle.result === 'defeat' ? 'destructive' : 'outline'} className="uppercase text-[10px] px-2 font-bold tracking-wider">
+                                 {battle.result === 'victory' ? '勝利' : battle.result === 'defeat' ? '敗北' : '引き分け'}
+                               </Badge>
+                               <span className="text-[10px] text-muted-foreground/60">{formatBattleTime(battle.time)}</span>
+                             </div>
                              <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
                                <img src={getModeIconUrl(battle.mode)} alt={battle.mode} className="w-4 h-4 object-contain drop-shadow-md" />
                                <span className="font-medium text-foreground/80">{translateMode(battle.mode)}</span>
@@ -238,10 +242,16 @@ export default function DashboardPage() {
                             <AvatarImage src={mainBInfo.imageUrl} />
                             <AvatarFallback>{mainBInfo.nameJa.charAt(0)}</AvatarFallback>
                           </Avatar>
-                          <div className="w-16 text-right">
-                            <p className={`font-bold text-xl drop-shadow-sm ${battle.trophy_change > 0 ? 'text-green-500' : battle.trophy_change < 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
-                              {battle.trophy_change > 0 ? '+' : ''}{battle.trophy_change} 🏆
-                            </p>
+                          <div className="w-20 text-right">
+                            {(battle.type === 'soloRanked' || battle.type === 'teamRanked') ? (
+                              <p className={`font-bold text-lg drop-shadow-sm ${battle.result === 'victory' ? 'text-green-500' : battle.result === 'defeat' ? 'text-destructive' : 'text-muted-foreground'}`}>
+                                {battle.result === 'victory' ? '+' : battle.result === 'defeat' ? '-' : ''}{Math.abs(battle.trophy_change * 8)} <span className="text-xs">Pt</span>
+                              </p>
+                            ) : (
+                              <p className={`font-bold text-xl drop-shadow-sm ${battle.trophy_change > 0 ? 'text-green-500' : battle.trophy_change < 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                                {battle.trophy_change > 0 ? '+' : ''}{battle.trophy_change} <span className="text-sm">🏆</span>
+                              </p>
+                            )}
                           </div>
                         </div>
                       </div>

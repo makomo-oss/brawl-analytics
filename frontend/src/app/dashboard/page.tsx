@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Search, TrendingUp, AlertTriangle, Lightbulb } from "lucide-react"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Separator } from "@/components/ui/separator"
 
 export default function DashboardPage() {
   const [playerTag, setPlayerTag] = useState("")
@@ -152,6 +154,43 @@ export default function DashboardPage() {
             </Card>
           </div>
         </div>
+
+        {/* 直近のバトル履歴セクション */}
+        {data.recent_battles && data.recent_battles.length > 0 && (
+          <div className="mt-12 space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-700">
+            <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2 text-primary/80">
+              ⚔️ 直近のバトル履歴
+            </h2>
+            <Card className="bg-card/40 backdrop-blur-md border-primary/20 shadow-xl overflow-hidden">
+              <ScrollArea className="h-[400px]">
+                <div className="p-4 space-y-2">
+                  {data.recent_battles.map((battle: any, i: number) => (
+                    <div key={i}>
+                      <div className="flex items-center justify-between group hover:bg-primary/5 p-3 rounded-lg transition-all duration-300 cursor-default">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-2 h-12 rounded-full ${battle.result === 'victory' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]' : battle.result === 'defeat' ? 'bg-destructive shadow-[0_0_10px_rgba(239,68,68,0.5)]' : 'bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)]'}`} />
+                          <div>
+                            <p className="font-bold text-lg capitalize tracking-wide">{battle.hero}</p>
+                            <p className="text-sm text-muted-foreground">{battle.mode} <span className="opacity-50">|</span> {battle.map}</p>
+                          </div>
+                        </div>
+                        <div className="text-right flex flex-col items-end justify-center">
+                          <Badge variant={battle.result === 'victory' ? 'default' : battle.result === 'defeat' ? 'destructive' : 'outline'} className="mb-1 uppercase shadow-sm text-xs font-bold tracking-wider">
+                            {battle.result}
+                          </Badge>
+                          <p className={`font-semibold text-sm ${battle.trophy_change > 0 ? 'text-green-500' : battle.trophy_change < 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                            {battle.trophy_change > 0 ? '+' : ''}{battle.trophy_change} 🏆
+                          </p>
+                        </div>
+                      </div>
+                      {i < data.recent_battles.length - 1 && <Separator className="my-2 bg-primary/10" />}
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            </Card>
+          </div>
+        )}
         </div>
       )}
     </div>

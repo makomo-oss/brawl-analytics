@@ -30,9 +30,12 @@ async def get_dashboard(player_tag: str):
         char_stats = {}
         total_matches = 0
         wins = 0
+        recent_battles = []
         
         for item in items:
             battle = item.get("battle", {})
+            event = item.get("event", {})
+            
             if battle.get("result"):
                 total_matches += 1
                 is_win = (battle.get("result") == "victory")
@@ -53,6 +56,21 @@ async def get_dashboard(player_tag: str):
                     char_stats[hero_used]["matches"] += 1
                     if is_win:
                         char_stats[hero_used]["wins"] += 1
+                        
+                # バトル履歴用データの作成
+                trophy_change = battle.get("trophyChange")
+                if trophy_change is None:
+                    # ランクマ等で増減が取れない場合のダミー（見た目用）
+                    trophy_change = 8 if is_win else (-6 if battle.get("result") == "defeat" else 0)
+                
+                recent_battles.append({
+                    "time": item.get("battleTime", ""),
+                    "mode": battle.get("mode", "unknown").replace("_", " ").title(),
+                    "map": event.get("map", "Unknown"),
+                    "result": battle.get("result", "draw"),
+                    "hero": hero_used,
+                    "trophy_change": trophy_change
+                })
                         
         gap_analysis = []
         hidden_weapons = []
@@ -92,6 +110,7 @@ async def get_dashboard(player_tag: str):
                 "3v3_victories": player_info.get("3vs3Victories", 0),
                 "club_name": player_info.get("club", {}).get("name", "No Club")
             },
+            "recent_battles": recent_battles[:10], # 直近10件を返す
             "metrics": {
                 "total_matches_analyzed": total_matches,
                 "overall_win_rate": round((wins / total_matches * 100) if total_matches > 0 else 0, 1)

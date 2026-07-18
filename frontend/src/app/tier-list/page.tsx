@@ -211,14 +211,10 @@ export default function TierListPage() {
                 )
               })}
             </div>
+              })}
+            </div>
           )}
-              <div className="h-48 border-dashed border-2 rounded-xl flex items-center justify-center text-muted-foreground bg-secondary/10">
-                <Swords className="w-8 h-8 opacity-50 mr-2" />
-                <span>データ集計中...</span>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+        </div>
       </Tabs>
 
       {/* キャラクター詳細モーダル (Sheet) */}

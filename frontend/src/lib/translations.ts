@@ -30,7 +30,8 @@ export const modeTranslations: Record<string, string> = {
   "bigGame": "ビッグゲーム",
   "pumpkinPlunder": "パンプキン泥棒",
   "unknown": "不明",
-  "airHockey": "エアーホッケー"
+  "airHockey": "エアーホッケー",
+  "brawlArena": "ブロウルアリーナ"
 };
 
 export function translateMode(modeName: string): string {
@@ -84,7 +85,30 @@ export const mapTranslations: Record<string, string> = {
   "Rockwall Brawl": "ロックウォール対決",
   "Safety Center": "安全センター",
   "Acid Lakes": "酸の湖",
-  "Double Trouble": "ダブルトラブル"
+  "Double Trouble": "ダブルトラブル",
+  // APIから取得される未登録のマップを追加
+  "Rustic Arcade": "ラスティックアーケード",
+  "Triple Dribble": "トリプルドリブル",
+  "Safe(r) Zone": "より安全な地帯",
+  "New Horizons": "ニューホライズン",
+  "Undermine": "アンダーマイン",
+  "Gem Fort": "エメラルドの砦",
+  "Pinball Dreams": "ピンボールドリーム",
+  "Open Business": "オープンビジネス",
+  "Lilygear Lake": "リリーギアの湖",
+  "Flooded Mine": "水没した鉱山",
+  "No Excuses": "言い訳無用",
+  "Crystal Clearing": "クリスタルクリアリング",
+  "Nullscapes": "ナルスケープ",
+  "Slippery Slap": "スリッパリースラップ",
+  "Bouncy Bowl": "バウンシーボウル",
+  "Controller Chaos": "コントローラーカオス",
+  "Abracadabra": "アブラカダブラ",
+  "Knockout Grounds": "ノックアウトグラウンド",
+  "Triple-Double": "トリプルダブル",
+  "Deep End": "ディープエンド",
+  "Crescendo": "クレッシェンド",
+  "Nutmeg": "ナツメグ"
 };
 
 export function translateMap(mapName: string): string {

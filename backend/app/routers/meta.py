@@ -42,6 +42,7 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None):
     return {
         "updated_at": meta.get("updated_at"),
         "tiers": target.get("tiers", {}),
+        "characters": target.get("characters", {}),
         "type": type,
         "metrics": target.get("metrics", {})
     }

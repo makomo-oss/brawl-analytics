@@ -211,8 +211,6 @@ export default function TierListPage() {
                 )
               })}
             </div>
-              })}
-            </div>
           )}
         </div>
       </Tabs>

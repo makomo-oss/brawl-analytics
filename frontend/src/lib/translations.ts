@@ -37,8 +37,60 @@ export function translateMode(modeName: string): string {
   return modeTranslations[modeName] || modeName;
 }
 
+export const mapTranslations: Record<string, string> = {
+  // ガチバトル・汎用マップの代表例
+  "Hard Rock Mine": "ごつごつ坑道",
+  "Double Swoosh": "ダブルレール",
+  "Minecart Madness": "トロッコ狂気",
+  "Center Stage": "センターステージ",
+  "Safe Zone": "安全地帯",
+  "Hot Potato": "ホットポテト",
+  "Kaboom Canyon": "どんぱち谷",
+  "Shooting Star": "シューティングスター",
+  "Canal Grande": "グランドカナル",
+  "Excel": "エクセル",
+  "Flaring Phoenix": "燃える不死鳥",
+  "Hideout": "隠れ家",
+  "Out in the Open": "開けた空き地",
+  "Belle's Rock": "ベルの岩",
+  "Dueling Beetles": "ビートルバトル",
+  "Parallel Plays": "パラレルプレイ",
+  "Ring of Fire": "炎のリング",
+  "Open Zone": "オープンゾーン",
+  "Center Control": "センターコントロール",
+  "Backyard Bowl": "バックヤードボウル",
+  "Sneaky Fields": "スニーキーフィールド",
+  "Pinhole Punt": "ピンホールパント",
+  "Super Beach": "スーパービーチ",
+  "Beach Ball": "ビーチボール",
+  "Goalkeeper's Dream": "キーパーの夢",
+  "Retina": "網膜",
+  "Bouncing Diner": "バウンシングダイナー",
+  "Goldarm Gulch": "ゴールドアーム渓谷",
+  "Split": "スプリット",
+  "Pit Stop": "ピットストップ",
+  "Bridge Too Far": "遠すぎる橋",
+  "Gg Mortuary": "GGモチュアリー",
+  "Crimson Water": "クリムゾンウォーター",
+  "Layer Cake": "レイヤーケーキ",
+  "Dry Season": "ドライシーズン",
+  "Deadeye Derby": "デッドアイダービー",
+  "Outlaw Camp": "アウトローキャンプ",
+  "Snake Prairie": "スネーク草原",
+  "Cavern Churn": "激動の洞窟",
+  "Feast or Famine": "飢餓の盛宴",
+  "Skull Creek": "スカル川",
+  "Stormy Plains": "嵐の平野",
+  "Rockwall Brawl": "ロックウォール対決",
+  "Safety Center": "安全センター",
+  "Acid Lakes": "酸の湖",
+  "Double Trouble": "ダブルトラブル"
+};
+
 export function translateMap(mapName: string): string {
-  return mapName;
+  if (!mapName) return "";
+  // 厳密一致がない場合、toLowerCaseや一部削除でマッチさせるなどの工夫も可能ですが、まずは直接マッチ
+  return mapTranslations[mapName] || mapTranslations[mapName.trim()] || mapName;
 }
 
 export function getModeIconUrl(mode: string) {

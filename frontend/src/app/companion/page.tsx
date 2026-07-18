@@ -419,7 +419,7 @@ export default function DraftCompanionPage() {
                             <span className="font-bold">{getBrawlerInfo(charName).nameJa}</span>
                           </>
                         ) : (
-                          <span className="text-muted-foreground text-sm mx-auto">Pick {i+1}</span>
+                          <span className="text-muted-foreground text-sm mx-auto">ピック {i+1}</span>
                         )}
                       </div>
                     )
@@ -444,7 +444,7 @@ export default function DraftCompanionPage() {
                             <span className="font-bold">{getBrawlerInfo(charName).nameJa}</span>
                           </>
                         ) : (
-                          <span className="text-muted-foreground text-sm mx-auto">Pick {i+1}</span>
+                          <span className="text-muted-foreground text-sm mx-auto">ピック {i+1}</span>
                         )}
                       </div>
                     )

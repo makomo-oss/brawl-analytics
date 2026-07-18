@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { translateMode, translateMap, getModeIconUrl } from "@/lib/translations"
 import { getBrawlerInfo, BRAWLER_MAP } from "@/lib/brawlers"
 import { Swords, Ban, Check, RefreshCw, Trophy, Target } from "lucide-react"
@@ -283,46 +284,22 @@ export default function DraftCompanionPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-3">
                 <label className="text-sm font-bold">自チーム</label>
-                <div className="flex gap-4">
-                  <Button 
-                    type="button"
-                    variant={myTeam === "blue" ? "default" : "outline"} 
-                    className={myTeam === "blue" ? "w-full bg-blue-600 hover:bg-blue-700 text-white" : "w-full"}
-                    onClick={(e) => { e.preventDefault(); setMyTeam("blue"); }}
-                  >
-                    青チーム
-                  </Button>
-                  <Button 
-                    type="button"
-                    variant={myTeam === "red" ? "default" : "outline"} 
-                    className={myTeam === "red" ? "w-full bg-red-600 hover:bg-red-700 text-white" : "w-full"}
-                    onClick={(e) => { e.preventDefault(); setMyTeam("red"); }}
-                  >
-                    赤チーム
-                  </Button>
-                </div>
+                <Tabs value={myTeam} onValueChange={(val) => setMyTeam(val as Team)}>
+                  <TabsList className="grid w-full grid-cols-2 h-11">
+                    <TabsTrigger value="blue" className="h-full data-[state=active]:bg-blue-600 data-[state=active]:text-white">青チーム</TabsTrigger>
+                    <TabsTrigger value="red" className="h-full data-[state=active]:bg-red-600 data-[state=active]:text-white">赤チーム</TabsTrigger>
+                  </TabsList>
+                </Tabs>
               </div>
 
               <div className="space-y-3">
                 <label className="text-sm font-bold">先攻チーム</label>
-                <div className="flex gap-4">
-                  <Button 
-                    type="button"
-                    variant={firstPickTeam === "blue" ? "default" : "outline"} 
-                    className={firstPickTeam === "blue" ? "w-full bg-blue-600 hover:bg-blue-700 text-white" : "w-full"}
-                    onClick={(e) => { e.preventDefault(); setFirstPickTeam("blue"); }}
-                  >
-                    青チーム
-                  </Button>
-                  <Button 
-                    type="button"
-                    variant={firstPickTeam === "red" ? "default" : "outline"} 
-                    className={firstPickTeam === "red" ? "w-full bg-red-600 hover:bg-red-700 text-white" : "w-full"}
-                    onClick={(e) => { e.preventDefault(); setFirstPickTeam("red"); }}
-                  >
-                    赤チーム
-                  </Button>
-                </div>
+                <Tabs value={firstPickTeam} onValueChange={(val) => setFirstPickTeam(val as Team)}>
+                  <TabsList className="grid w-full grid-cols-2 h-11">
+                    <TabsTrigger value="blue" className="h-full data-[state=active]:bg-blue-600 data-[state=active]:text-white">青チーム</TabsTrigger>
+                    <TabsTrigger value="red" className="h-full data-[state=active]:bg-red-600 data-[state=active]:text-white">赤チーム</TabsTrigger>
+                  </TabsList>
+                </Tabs>
               </div>
             </div>
 

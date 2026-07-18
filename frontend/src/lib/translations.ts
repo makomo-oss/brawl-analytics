@@ -125,7 +125,7 @@ export function getRankInfo(rankValue: number) {
   
   return {
     name: rankName,
-    url: `https://media.brawltime.ninja/ranks/${rankValue}.png`
+    url: `/images/ranks/${rankValue}.png`
   };
 }
 

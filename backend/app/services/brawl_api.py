@@ -51,6 +51,8 @@ async def get_player(player_tag: str):
             "tag": player_tag,
             "trophies": 35420,
             "highestTrophies": 38000,
+            "rankedRank": 16,
+            "highestAllTimeRankedRank": 16,
             "expLevel": 150,
             "3vs3Victories": 4500,
             "club": {"name": "Brawl Masters"}

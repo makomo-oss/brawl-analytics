@@ -54,7 +54,8 @@ async def get_dashboard(player_tag: str):
                     for p in team:
                         team_data.append({
                             "name": p.get("name", "Unknown"),
-                            "brawler": p.get("brawler", {}).get("name", "unknown").lower()
+                            "brawler": p.get("brawler", {}).get("name", "unknown").lower(),
+                            "tag": p.get("tag", "").replace("#", "")
                         })
                         if p.get("tag") == player_tag_fmt:
                             is_my_team = True
@@ -82,6 +83,7 @@ async def get_dashboard(player_tag: str):
                     "time": item.get("battleTime", ""),
                     "mode": battle.get("mode", "unknown").replace("_", " ").title(),
                     "map": event.get("map", "Unknown"),
+                    "type": battle.get("type", "unknown"),
                     "result": battle.get("result", "draw"),
                     "hero": hero_used,
                     "trophy_change": trophy_change,

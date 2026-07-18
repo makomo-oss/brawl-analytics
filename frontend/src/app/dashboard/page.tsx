@@ -11,19 +11,24 @@ import { Separator } from "@/components/ui/separator"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { getBrawlerInfo } from "@/lib/brawlers"
 import { translateMode, translateMap, getModeIconUrl } from "@/lib/translations"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function DashboardPage() {
   const [playerTag, setPlayerTag] = useState("")
   const [loading, setLoading] = useState(false)
   const [data, setData] = useState<any>(null)
+  const [battleTab, setBattleTab] = useState("all")
 
-  const handleSync = async () => {
-    if (!playerTag) return
+  const handleSync = async (overrideTag?: string) => {
+    const tagToFetch = overrideTag || playerTag
+    if (!tagToFetch) return
+    if (overrideTag) setPlayerTag(overrideTag)
     setLoading(true)
     try {
-      const res = await fetch(`http://localhost:8000/player/${playerTag.replace("#", "")}/dashboard`)
+      const res = await fetch(`http://localhost:8000/player/${tagToFetch.replace("#", "")}/dashboard`)
       const result = await res.json()
       setData(result)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
     } catch (error) {
       console.error("Fetch error", error)
     } finally {
@@ -55,7 +60,7 @@ export default function DashboardPage() {
               onChange={(e) => setPlayerTag(e.target.value)}
               className="bg-background/80"
             />
-            <Button onClick={handleSync} disabled={loading} className="px-8 shadow-lg shadow-primary/20">
+            <Button onClick={() => handleSync()} disabled={loading} className="px-8 shadow-lg shadow-primary/20">
               {loading ? "同期中..." : (
                 <>
                   <Search className="w-4 h-4 mr-2" />
@@ -184,13 +189,34 @@ export default function DashboardPage() {
             <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2 text-primary/80">
               ⚔️ 直近のバトル履歴
             </h2>
+            <Tabs defaultValue="all" value={battleTab} onValueChange={setBattleTab} className="w-full">
+              <TabsList className="mb-4 bg-background/40">
+                <TabsTrigger value="all">すべて</TabsTrigger>
+                <TabsTrigger value="normal">通常マッチ</TabsTrigger>
+                <TabsTrigger value="ranked">ガチバトル</TabsTrigger>
+                <TabsTrigger value="friendly">フレンドバトル</TabsTrigger>
+              </TabsList>
             <Card className="bg-card/40 backdrop-blur-md border-primary/20 shadow-xl overflow-hidden p-2">
+              <TabsContent value={battleTab} className="mt-0 outline-none">
               <ScrollArea className="h-[600px] pr-4">
                 <div className="space-y-3">
-                  {data.recent_battles.map((battle: any, i: number) => {
-                    const mainBInfo = getBrawlerInfo(battle.hero);
-                    return (
-                    <Card key={i} className="bg-background/40 border border-primary/10 overflow-hidden hover:bg-primary/5 transition-colors">
+                  {data.recent_battles && (() => {
+                    const filteredBattles = data.recent_battles.filter((b: any) => {
+                      if (battleTab === "all") return true;
+                      if (battleTab === "ranked") return b.type === "soloRanked" || b.type === "teamRanked";
+                      if (battleTab === "friendly") return b.type === "friendly";
+                      if (battleTab === "normal") return b.type !== "friendly" && b.type !== "soloRanked" && b.type !== "teamRanked";
+                      return true;
+                    });
+                    
+                    if (filteredBattles.length === 0) {
+                      return <p className="text-center text-muted-foreground p-8">このカテゴリーのバトル履歴はありません。</p>
+                    }
+                    
+                    return filteredBattles.map((battle: any, i: number) => {
+                      const mainBInfo = getBrawlerInfo(battle.hero);
+                      return (
+                        <Card key={i} className="bg-background/40 border border-primary/10 overflow-hidden hover:bg-primary/5 transition-colors">
                       {/* Header section */}
                       <div className="p-3 border-b border-primary/10 flex justify-between items-center bg-card/60">
                         <div className="flex items-center gap-3">
@@ -234,7 +260,11 @@ export default function DashboardPage() {
                               const bInfo = getBrawlerInfo(p.brawler);
                               const isMe = p.brawler.toLowerCase() === battle.hero.toLowerCase(); // 簡易判定
                               return (
-                                <div key={idx} className={`flex items-center gap-3 p-1.5 rounded-xl transition-colors group ${isMe ? 'bg-primary/10 border border-primary/20' : 'hover:bg-white/5'}`}>
+                                <div 
+                                  key={idx} 
+                                  onClick={() => handleSync(p.tag)}
+                                  className={`flex items-center gap-3 p-1.5 rounded-xl transition-colors group cursor-pointer ${isMe ? 'bg-primary/10 border border-primary/20' : 'hover:bg-white/5 border border-transparent'}`}
+                                >
                                   <Avatar className={`w-10 h-10 shadow-sm transition-transform group-hover:scale-105 ${isMe ? 'border border-primary ring-2 ring-primary/30 ring-offset-1 ring-offset-background' : 'border border-primary/20'}`}>
                                     <AvatarImage src={bInfo.imageUrl} />
                                     <AvatarFallback>{bInfo.nameJa.charAt(0)}</AvatarFallback>
@@ -263,7 +293,11 @@ export default function DashboardPage() {
                                 {team.map((p: any, idx: number) => {
                                   const bInfo = getBrawlerInfo(p.brawler);
                                   return (
-                                    <div key={`${t_idx}-${idx}`} className="flex items-center gap-3 p-1.5 rounded-xl hover:bg-white/5 transition-colors group">
+                                    <div 
+                                      key={`${t_idx}-${idx}`} 
+                                      onClick={() => handleSync(p.tag)}
+                                      className="flex items-center gap-3 p-1.5 rounded-xl hover:bg-white/5 transition-colors group cursor-pointer border border-transparent"
+                                    >
                                       <Avatar className="w-10 h-10 border border-destructive/30 shadow-sm transition-transform group-hover:scale-105">
                                         <AvatarImage src={bInfo.imageUrl} />
                                         <AvatarFallback>{bInfo.nameJa.charAt(0)}</AvatarFallback>
@@ -281,11 +315,15 @@ export default function DashboardPage() {
                           </div>
                         </div>
                       </div>
-                    </Card>
-                  )})}
+                        </Card>
+                      )
+                    })
+                  })()}
                 </div>
               </ScrollArea>
+              </TabsContent>
             </Card>
+            </Tabs>
           </div>
         )}
         </div>

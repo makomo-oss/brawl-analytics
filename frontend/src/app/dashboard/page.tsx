@@ -10,6 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { getBrawlerInfo } from "@/lib/brawlers"
+import { translateMode, translateMap } from "@/lib/translations"
 
 export default function DashboardPage() {
   const [playerTag, setPlayerTag] = useState("")
@@ -196,9 +197,9 @@ export default function DashboardPage() {
                            <div className={`w-1.5 h-10 rounded-full ${battle.result === 'victory' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]' : battle.result === 'defeat' ? 'bg-destructive shadow-[0_0_10px_rgba(239,68,68,0.5)]' : 'bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)]'}`} />
                            <div>
                              <Badge variant={battle.result === 'victory' ? 'default' : battle.result === 'defeat' ? 'destructive' : 'outline'} className="uppercase text-[10px] mb-1 px-2 font-bold tracking-wider">
-                               {battle.result}
+                               {battle.result === 'victory' ? '勝利' : battle.result === 'defeat' ? '敗北' : '引き分け'}
                              </Badge>
-                             <p className="text-xs text-muted-foreground">{battle.mode} <span className="opacity-50">|</span> {battle.map}</p>
+                             <p className="text-xs text-muted-foreground">{translateMode(battle.mode)} <span className="opacity-50">|</span> {translateMap(battle.map)}</p>
                            </div>
                         </div>
                         <div className="text-right flex items-center gap-3">

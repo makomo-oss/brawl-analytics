@@ -1,0 +1,430 @@
+{
+  "wendy": {
+    "id": "Wendy",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000108.png"
+  },
+  "nori": {
+    "id": "Nori",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000107.png"
+  },
+  "bolt": {
+    "id": "Bolt",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000106.png"
+  },
+  "starr nova": {
+    "id": "Starr Nova",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000105.png"
+  },
+  "damian": {
+    "id": "Damian",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000104.png"
+  },
+  "najia": {
+    "id": "Najia",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000103.png"
+  },
+  "sirius": {
+    "id": "Sirius",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000102.png"
+  },
+  "glowy": {
+    "id": "Glowy",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000101.png"
+  },
+  "gigi": {
+    "id": "Gigi",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000100.png"
+  },
+  "pierce": {
+    "id": "Pierce",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000099.png"
+  },
+  "ziggy": {
+    "id": "Ziggy",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000098.png"
+  },
+  "mina": {
+    "id": "Mina",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000097.png"
+  },
+  "trunk": {
+    "id": "Trunk",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000096.png"
+  },
+  "alli": {
+    "id": "Alli",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000095.png"
+  },
+  "kaze": {
+    "id": "Kaze",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000094.png"
+  },
+  "jae-yong": {
+    "id": "Jae-Yong",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000093.png"
+  },
+  "finx": {
+    "id": "Finx",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000092.png"
+  },
+  "lumi": {
+    "id": "Lumi",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000091.png"
+  },
+  "ollie": {
+    "id": "Ollie",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000090.png"
+  },
+  "meeple": {
+    "id": "Meeple",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000089.png"
+  },
+  "buzz lightyear": {
+    "id": "Buzz Lightyear",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000088.png"
+  },
+  "juju": {
+    "id": "Juju",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000087.png"
+  },
+  "shade": {
+    "id": "Shade",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000086.png"
+  },
+  "kenji": {
+    "id": "Kenji",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000085.png"
+  },
+  "moe": {
+    "id": "Moe",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000084.png"
+  },
+  "clancy": {
+    "id": "Clancy",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000083.png"
+  },
+  "berry": {
+    "id": "Berry",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000082.png"
+  },
+  "lily": {
+    "id": "Lily",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000081.png"
+  },
+  "draco": {
+    "id": "Draco",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000080.png"
+  },
+  "angelo": {
+    "id": "Angelo",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000079.png"
+  },
+  "melodie": {
+    "id": "Melodie",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000078.png"
+  },
+  "larry & lawrie": {
+    "id": "Larry & Lawrie",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000077.png"
+  },
+  "kit": {
+    "id": "Kit",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000076.png"
+  },
+  "mico": {
+    "id": "Mico",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000075.png"
+  },
+  "charlie": {
+    "id": "Charlie",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000074.png"
+  },
+  "chuck": {
+    "id": "Chuck",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000073.png"
+  },
+  "pearl": {
+    "id": "Pearl",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000072.png"
+  },
+  "doug": {
+    "id": "Doug",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000071.png"
+  },
+  "cordelius": {
+    "id": "Cordelius",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000070.png"
+  },
+  "hank": {
+    "id": "Hank",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000069.png"
+  },
+  "maisie": {
+    "id": "Maisie",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000068.png"
+  },
+  "willow": {
+    "id": "Willow",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000067.png"
+  },
+  "r-t": {
+    "id": "R-T",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000066.png"
+  },
+  "mandy": {
+    "id": "Mandy",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000065.png"
+  },
+  "gray": {
+    "id": "Gray",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000064.png"
+  },
+  "chester": {
+    "id": "Chester",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000063.png"
+  },
+  "buster": {
+    "id": "Buster",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000062.png"
+  },
+  "gus": {
+    "id": "Gus",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000061.png"
+  },
+  "sam": {
+    "id": "Sam",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000060.png"
+  },
+  "otis": {
+    "id": "Otis",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000059.png"
+  },
+  "bonnie": {
+    "id": "Bonnie",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000058.png"
+  },
+  "janet": {
+    "id": "Janet",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000057.png"
+  },
+  "eve": {
+    "id": "Eve",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000056.png"
+  },
+  "fang": {
+    "id": "Fang",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000054.png"
+  },
+  "lola": {
+    "id": "Lola",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000053.png"
+  },
+  "meg": {
+    "id": "Meg",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000052.png"
+  },
+  "ash": {
+    "id": "Ash",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000051.png"
+  },
+  "griff": {
+    "id": "Griff",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000050.png"
+  },
+  "buzz": {
+    "id": "Buzz",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000049.png"
+  },
+  "grom": {
+    "id": "Grom",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000048.png"
+  },
+  "squeak": {
+    "id": "Squeak",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000047.png"
+  },
+  "belle": {
+    "id": "Belle",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000046.png"
+  },
+  "stu": {
+    "id": "Stu",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000045.png"
+  },
+  "ruffs": {
+    "id": "Ruffs",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000044.png"
+  },
+  "edgar": {
+    "id": "Edgar",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000043.png"
+  },
+  "byron": {
+    "id": "Byron",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000042.png"
+  },
+  "lou": {
+    "id": "Lou",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000041.png"
+  },
+  "amber": {
+    "id": "Amber",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000040.png"
+  },
+  "colette": {
+    "id": "Colette",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000039.png"
+  },
+  "surge": {
+    "id": "Surge",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000038.png"
+  },
+  "sprout": {
+    "id": "Sprout",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000037.png"
+  },
+  "nani": {
+    "id": "Nani",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000036.png"
+  },
+  "gale": {
+    "id": "Gale",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000035.png"
+  },
+  "jacky": {
+    "id": "Jacky",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000034.png"
+  },
+  "max": {
+    "id": "Max",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000032.png"
+  },
+  "mr. p": {
+    "id": "Mr. P",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000031.png"
+  },
+  "emz": {
+    "id": "Emz",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000030.png"
+  },
+  "bea": {
+    "id": "Bea",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000029.png"
+  },
+  "sandy": {
+    "id": "Sandy",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000028.png"
+  },
+  "8-bit": {
+    "id": "8-Bit",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000027.png"
+  },
+  "bibi": {
+    "id": "Bibi",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000026.png"
+  },
+  "carl": {
+    "id": "Carl",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000025.png"
+  },
+  "rosa": {
+    "id": "Rosa",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000024.png"
+  },
+  "leon": {
+    "id": "Leon",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000023.png"
+  },
+  "tick": {
+    "id": "Tick",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000022.png"
+  },
+  "gene": {
+    "id": "Gene",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000021.png"
+  },
+  "frank": {
+    "id": "Frank",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000020.png"
+  },
+  "penny": {
+    "id": "Penny",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000019.png"
+  },
+  "darryl": {
+    "id": "Darryl",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000018.png"
+  },
+  "tara": {
+    "id": "Tara",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000017.png"
+  },
+  "pam": {
+    "id": "Pam",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000016.png"
+  },
+  "piper": {
+    "id": "Piper",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000015.png"
+  },
+  "bo": {
+    "id": "Bo",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000014.png"
+  },
+  "poco": {
+    "id": "Poco",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000013.png"
+  },
+  "crow": {
+    "id": "Crow",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000012.png"
+  },
+  "mortis": {
+    "id": "Mortis",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000011.png"
+  },
+  "el primo": {
+    "id": "El Primo",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000010.png"
+  },
+  "dynamike": {
+    "id": "Dynamike",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000009.png"
+  },
+  "nita": {
+    "id": "Nita",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000008.png"
+  },
+  "jessie": {
+    "id": "Jessie",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000007.png"
+  },
+  "barley": {
+    "id": "Barley",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000006.png"
+  },
+  "spike": {
+    "id": "Spike",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000005.png"
+  },
+  "rico": {
+    "id": "Rico",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000004.png"
+  },
+  "brock": {
+    "id": "Brock",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000003.png"
+  },
+  "bull": {
+    "id": "Bull",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000002.png"
+  },
+  "colt": {
+    "id": "Colt",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000001.png"
+  },
+  "shelly": {
+    "id": "Shelly",
+    "image": "https://cdn.brawlify.com/brawlers/borders/16000000.png"
+  }
+}

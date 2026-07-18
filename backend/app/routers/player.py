@@ -51,7 +51,7 @@ async def get_dashboard(player_tag: str):
                 opponent_teams = []
                 
                 # スタープレイヤーの判定
-                star_player_tag = battle.get("starPlayer", {}).get("tag", "").replace("#", "")
+                star_player_tag = (battle.get("starPlayer") or {}).get("tag", "").replace("#", "")
                 is_star_player = (star_player_tag == player_tag_fmt.replace("#", ""))
                 
                 for team in battle.get("teams", []):
@@ -60,12 +60,12 @@ async def get_dashboard(player_tag: str):
                     for p in team:
                         team_data.append({
                             "name": p.get("name", "Unknown"),
-                            "brawler": p.get("brawler", {}).get("name", "unknown").lower(),
+                            "brawler": (p.get("brawler") or {}).get("name", "unknown").lower(),
                             "tag": p.get("tag", "").replace("#", "")
                         })
                         if p.get("tag") == player_tag_fmt:
                             is_my_team = True
-                            hero_used = p.get("brawler", {}).get("name", "unknown").lower()
+                            hero_used = (p.get("brawler") or {}).get("name", "unknown").lower()
                     
                     if is_my_team:
                         my_team = team_data
@@ -168,7 +168,7 @@ async def get_dashboard(player_tag: str):
             "player_tag": player_tag,
             "profile": {
                 "name": player_info.get("name", "Unknown"),
-                "icon_id": player_info.get("icon", {}).get("id", 28000000),
+                "icon_id": (player_info.get("icon") or {}).get("id", 28000000),
                 "trophies": player_info.get("trophies", 0),
                 "highest_trophies": player_info.get("highestTrophies", 0),
                 "highest_rank": highest_rank,
@@ -178,7 +178,7 @@ async def get_dashboard(player_tag: str):
                 "highest_ranked_rank": player_info.get("highestAllTimeRankedRank", 0),
                 "level": player_info.get("expLevel", 0),
                 "3v3_victories": player_info.get("3vs3Victories", 0),
-                "club_name": player_info.get("club", {}).get("name", "No Club")
+                "club_name": (player_info.get("club") or {}).get("name", "No Club")
             },
             "brawlers": player_info.get("brawlers", []),
             "recent_battles": recent_battles,

@@ -13,6 +13,7 @@ import { getBrawlerInfo } from "@/lib/brawlers"
 import { translateMode, translateMap, getModeIconUrl } from "@/lib/translations"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
+import { API_URL } from "@/lib/config"
 
 function formatBattleTime(timeStr: string) {
   if (!timeStr) return "";
@@ -118,7 +119,7 @@ export default function DashboardPage() {
     if (overrideTag) setPlayerTag(overrideTag)
     setLoading(true)
     try {
-      const res = await fetch(`http://localhost:8000/player/${tagToFetch.replace("#", "")}/dashboard`)
+      const res = await fetch(`${API_URL}/player/${tagToFetch.replace("#", "")}/dashboard`)
       const result = await res.json()
       setData(result)
       window.scrollTo({ top: 0, behavior: 'smooth' })

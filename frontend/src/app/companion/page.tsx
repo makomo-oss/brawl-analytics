@@ -11,6 +11,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { translateMode, translateMap, getModeIconUrl } from "@/lib/translations"
 import { getBrawlerInfo, BRAWLER_MAP } from "@/lib/brawlers"
 import { Swords, Ban, Check, RefreshCw, Trophy, Target } from "lucide-react"
+import { API_URL } from "@/lib/config"
 
 type Phase = "setup" | "ban" | "pick" | "done"
 type Team = "blue" | "red"
@@ -48,7 +49,7 @@ export default function DraftCompanionPage() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await fetch("http://localhost:8000/meta/categories")
+        const res = await fetch(`${API_URL}/meta/categories`)
         if (res.ok) {
           const data = await res.json()
           setCategories(data)
@@ -81,7 +82,7 @@ export default function DraftCompanionPage() {
   const handleStartDraft = async () => {
     setLoading(true)
     try {
-      const url = `http://localhost:8000/meta/tier-list?type=gachi&sub_type=map&id=${encodeURIComponent(selectedMap)}&include_details=true`
+      const url = `${API_URL}/meta/tier-list?type=gachi&sub_type=map&id=${encodeURIComponent(selectedMap)}&include_details=true`
       const res = await fetch(url)
       if (res.ok) {
         const data = await res.json()

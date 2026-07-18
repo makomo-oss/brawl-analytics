@@ -12,6 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { getBrawlerInfo } from "@/lib/brawlers"
 import { translateMode, translateMap } from "@/lib/translations"
+import { API_URL } from "@/lib/config"
 
 const tierConfig = {
   S: { color: "from-pink-500 to-rose-500", label: "環境トップ", bg: "bg-pink-500/10 border-pink-500/30" },
@@ -35,7 +36,7 @@ export default function TierListPage() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await fetch("http://localhost:8000/meta/categories")
+        const res = await fetch(`${API_URL}/meta/categories`)
         if (res.ok) {
           const data = await res.json()
           setCategories(data)
@@ -52,7 +53,7 @@ export default function TierListPage() {
     const fetchTierList = async () => {
       setLoading(true)
       try {
-        let url = `http://localhost:8000/meta/tier-list?type=${selectedType}`
+        let url = `${API_URL}/meta/tier-list?type=${selectedType}`
         if (selectedType === "gachi" && subType !== "all" && selectedId) {
           url += `&sub_type=${subType}&id=${encodeURIComponent(selectedId)}`
         }
@@ -93,7 +94,7 @@ export default function TierListPage() {
 
   const fetchCharacterDetail = async (charName: string) => {
     try {
-      let url = `http://localhost:8000/meta/characters/${charName}?type=${selectedType}`
+      let url = `${API_URL}/meta/characters/${charName}?type=${selectedType}`
       if (selectedType === "gachi" && subType !== "all" && selectedId) {
         url += `&sub_type=${subType}&id=${encodeURIComponent(selectedId)}`
       }

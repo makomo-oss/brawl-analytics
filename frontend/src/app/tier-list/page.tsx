@@ -4,11 +4,12 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Trophy, Swords, Map, Info, TrendingUp, TrendingDown, AlertTriangle } from "lucide-react"
+import { Trophy, Swords, Map, Info, TrendingUp, TrendingDown, AlertTriangle, Filter } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Progress } from "@/components/ui/progress"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { getBrawlerInfo } from "@/lib/brawlers"
 
 const tierConfig = {
@@ -24,21 +25,67 @@ export default function TierListPage() {
   const [loading, setLoading] = useState(true)
   const [selectedChar, setSelectedChar] = useState<any>(null)
   const [sheetOpen, setSheetOpen] = useState(false)
+  
+  const [categories, setCategories] = useState({ modes: [], maps: [] })
+  const [selectedType, setSelectedType] = useState("global")
+  const [selectedId, setSelectedId] = useState("")
 
+  // カテゴリ一覧の取得
   useEffect(() => {
-    const fetchTierList = async () => {
+    const fetchCategories = async () => {
       try {
-        const res = await fetch("http://localhost:8000/meta/tier-list")
+        const res = await fetch("http://localhost:8000/meta/categories")
         const data = await res.json()
-        setTierData(data)
+        setCategories(data)
+        // 初期選択値を設定（リストが空でなければ最初の要素をセットしておく）
+        if (selectedType === "mode" && !selectedId && data.modes.length > 0) setSelectedId(data.modes[0])
+        if (selectedType === "map" && !selectedId && data.maps.length > 0) setSelectedId(data.maps[0])
       } catch (err) {
         console.error(err)
+      }
+    }
+    fetchCategories()
+  }, [])
+
+  // 選択に応じたTierデータの取得
+  useEffect(() => {
+    const fetchTierList = async () => {
+      setLoading(true)
+      try {
+        let url = `http://localhost:8000/meta/tier-list?type=${selectedType}`
+        if ((selectedType === "mode" || selectedType === "map") && selectedId) {
+          url += `&id=${encodeURIComponent(selectedId)}`
+        }
+        
+        // typeがmode/mapなのにidが未選択の場合はフェッチしない
+        if (selectedType !== "global" && !selectedId) {
+          setLoading(false)
+          return
+        }
+
+        const res = await fetch(url)
+        if (res.ok) {
+          const data = await res.json()
+          setTierData(data)
+        } else {
+          setTierData(null) // Not found
+        }
+      } catch (err) {
+        console.error(err)
+        setTierData(null)
       } finally {
         setLoading(false)
       }
     }
     fetchTierList()
-  }, [])
+  }, [selectedType, selectedId])
+
+  const handleTypeChange = (value: string) => {
+    setSelectedType(value)
+    if (value === "mode" && categories.modes.length > 0) setSelectedId(categories.modes[0])
+    else if (value === "map" && categories.maps.length > 0) setSelectedId(categories.maps[0])
+    else setSelectedId("")
+  }
 
   const fetchCharacterDetail = async (charName: string) => {
     try {
@@ -72,19 +119,51 @@ export default function TierListPage() {
         )}
       </div>
 
-      <Tabs defaultValue="global" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 lg:w-[400px] bg-secondary/50 p-1">
-          <TabsTrigger value="global" className="font-bold">
-            <Trophy className="w-4 h-4 mr-2" />
-            グローバルTier
-          </TabsTrigger>
-          <TabsTrigger value="map" className="font-bold">
-            <Map className="w-4 h-4 mr-2" />
-            マップ別
-          </TabsTrigger>
-        </TabsList>
+      <Tabs value={selectedType} onValueChange={handleTypeChange} className="space-y-6">
+        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between bg-secondary/30 p-4 rounded-xl border">
+          <TabsList className="grid w-full md:w-[450px] grid-cols-3 bg-secondary/50 p-1">
+            <TabsTrigger value="global" className="font-bold">
+              <Trophy className="w-4 h-4 mr-2" />
+              グローバル
+            </TabsTrigger>
+            <TabsTrigger value="mode" className="font-bold">
+              <Filter className="w-4 h-4 mr-2" />
+              モード別
+            </TabsTrigger>
+            <TabsTrigger value="map" className="font-bold">
+              <Map className="w-4 h-4 mr-2" />
+              マップ別
+            </TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="global" className="space-y-6">
+          {selectedType === "mode" && (
+            <Select value={selectedId} onValueChange={setSelectedId}>
+              <SelectTrigger className="w-full md:w-[250px] bg-background border-primary/20">
+                <SelectValue placeholder="モードを選択..." />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.modes.map((m: string) => (
+                  <SelectItem key={m} value={m}>{m}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
+          {selectedType === "map" && (
+            <Select value={selectedId} onValueChange={setSelectedId}>
+              <SelectTrigger className="w-full md:w-[250px] bg-background border-primary/20">
+                <SelectValue placeholder="マップを選択..." />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.maps.map((m: string) => (
+                  <SelectItem key={m} value={m}>{m}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
+
+        <div className="space-y-6">
           {loading ? (
             <div className="h-64 flex items-center justify-center border rounded-xl bg-card/50 backdrop-blur-sm">
               <span className="text-primary font-medium animate-pulse flex items-center gap-2">
@@ -133,14 +212,6 @@ export default function TierListPage() {
               })}
             </div>
           )}
-        </TabsContent>
-        <TabsContent value="map">
-          <Card className="bg-card/50 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle>マップ別分析</CardTitle>
-              <CardDescription>特定のマップに絞った勝率データ（順次実装予定）</CardDescription>
-            </CardHeader>
-            <CardContent>
               <div className="h-48 border-dashed border-2 rounded-xl flex items-center justify-center text-muted-foreground bg-secondary/10">
                 <Swords className="w-8 h-8 opacity-50 mr-2" />
                 <span>データ集計中...</span>

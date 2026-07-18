@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu";
+import { NavigationMenu, NavigationMenuItem, NavigationMenuList, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu";
 
 export function MainNav() {
   return (
@@ -13,24 +13,18 @@ export function MainNav() {
         <NavigationMenu>
           <NavigationMenuList className="gap-2">
             <NavigationMenuItem>
-              <Link href="/companion" legacyBehavior passHref>
-                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                  BAN/Pick支援
-                </NavigationMenuLink>
+              <Link href="/companion" className={navigationMenuTriggerStyle()}>
+                BAN/Pick支援
               </Link>
             </NavigationMenuItem>
             <NavigationMenuItem>
-              <Link href="/tier-list" legacyBehavior passHref>
-                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                  環境分析
-                </NavigationMenuLink>
+              <Link href="/tier-list" className={navigationMenuTriggerStyle()}>
+                環境分析
               </Link>
             </NavigationMenuItem>
             <NavigationMenuItem>
-              <Link href="/dashboard" legacyBehavior passHref>
-                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                  ダッシュボード
-                </NavigationMenuLink>
+              <Link href="/dashboard" className={navigationMenuTriggerStyle()}>
+                ダッシュボード
               </Link>
             </NavigationMenuItem>
           </NavigationMenuList>

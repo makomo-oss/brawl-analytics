@@ -18,19 +18,7 @@ export default function DashboardPage() {
     try {
       const res = await fetch(`http://localhost:8000/player/${playerTag.replace("#", "")}/dashboard`)
       const result = await res.json()
-      // モックデータとして、ギャップ分析やインサイトのダミーデータを付与する
-      setData({
-        ...result,
-        insights: {
-          hidden_weapons: ["dynamike", "barley"],
-          needs_practice: ["piper", "leon"]
-        },
-        gap_analysis: [
-          { char: "piper", global_win_rate: 58.2, personal_win_rate: 45.0 },
-          { char: "dynamike", global_win_rate: 49.5, personal_win_rate: 62.1 },
-          { char: "spike", global_win_rate: 54.0, personal_win_rate: 53.5 }
-        ]
-      })
+      setData(result)
     } catch (error) {
       console.error("Fetch error", error)
     } finally {

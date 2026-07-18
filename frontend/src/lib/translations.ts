@@ -64,10 +64,69 @@ export const MAP_MAP: Record<string, string> = {
 
 export function translateMode(mode: string) {
   if (!mode) return "不明"
-  return MODE_MAP[mode] || MODE_MAP[mode.toLowerCase()] || mode
+  // ハイフンやアンダースコア、空白を削除して小文字にしてから比較
+  const normalizedMode = mode.replace(/[\s\-_]/g, '').toLowerCase()
+  
+  // normalized map
+  const NORMALIZED_MODE_MAP: Record<string, string> = {
+    "gemgrab": "エメラルドハント",
+    "brawlball": "ブロストライカー",
+    "bounty": "バウンティ",
+    "heist": "強奪",
+    "hotzone": "ホットゾーン",
+    "knockout": "ノックアウト",
+    "wipeout": "ワイプアウト",
+    "soloshowdown": "ソロ・バトルロイヤル",
+    "duoshowdown": "デュオ・バトルロイヤル",
+    "duels": "デュエル",
+    "basketbrawl": "バスケバスケット",
+    "volleybrawl": "バレーブロウル",
+    "payload": "ペイロード",
+    "hunters": "ハンター",
+    "snowtelthieves": "スノーテル泥棒",
+  }
+  
+  return NORMALIZED_MODE_MAP[normalizedMode] || mode
 }
 
 export function translateMap(mapName: string) {
   if (!mapName) return "不明"
-  return MAP_MAP[mapName] || mapName
+  const normalizedMapName = mapName.replace(/[\s\-_]/g, '').toLowerCase()
+  
+  const NORMALIZED_MAP_MAP: Record<string, string> = {
+    "hardrockmine": "ごつごつ坑道",
+    "crystalarcade": "クリスタルアーケード",
+    "undermine": "アンダーマイン",
+    "doubleswoosh": "ダブルスウッシュ",
+    "deepdiner": "ディープダイナー",
+    "sneakyfields": "スニーキーフィールド",
+    "backyardbowl": "バックヤードボウル",
+    "centerstage": "センターステージ",
+    "superstadium": "スーパースタジアム",
+    "pinballdreams": "ピンボールドリーム",
+    "shootingstar": "シューティングスター",
+    "canalgrande": "グランドカナル",
+    "snakeprairie": "スネーク草原",
+    "excel": "エクセル",
+    "safezone": "安全地帯",
+    "hotpotato": "ホットポテト",
+    "kaboomcanyon": "カブームキャニオン",
+    "pitstop": "ピットストップ",
+    "ringoffire": "リング・オブ・ファイア",
+    "duelingbeetles": "ビートルバトル",
+    "parallelplays": "パラレルプレイ",
+    "openzone": "オープンゾーン",
+    "split": "スプリット",
+    "goldarmgulch": "ゴールドアーム・ガルチ",
+    "flaringphoenix": "燃える不死鳥",
+    "outintheopen": "オープンフィールド",
+    "bellesrock": "ベルの岩",
+    "xmarksthespot": "Xマーク",
+    "skullcreek": "ガイコツ川",
+    "feastorfamine": "天国と地獄",
+    "doubletrouble": "ダブルトラブル",
+    "rockwallbrawl": "ロックウォール・ブロウル"
+  }
+  
+  return NORMALIZED_MAP_MAP[normalizedMapName] || mapName
 }

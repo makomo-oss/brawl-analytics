@@ -4,14 +4,12 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Trophy, Swords, Map, Info, TrendingUp, TrendingDown, AlertTriangle, Filter } from "lucide-react"
+import { Trophy, Swords, Info, TrendingUp, TrendingDown, AlertTriangle } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Progress } from "@/components/ui/progress"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { getBrawlerInfo } from "@/lib/brawlers"
-import { translateMode, translateMap } from "@/lib/translations"
 
 const tierConfig = {
   S: { color: "from-pink-500 to-rose-500", label: "環境トップ", bg: "bg-pink-500/10 border-pink-500/30" },
@@ -27,44 +25,14 @@ export default function TierListPage() {
   const [selectedChar, setSelectedChar] = useState<any>(null)
   const [sheetOpen, setSheetOpen] = useState(false)
   
-  const [categories, setCategories] = useState({ modes: [], maps: [] })
   const [selectedType, setSelectedType] = useState("global")
-  const [selectedId, setSelectedId] = useState("")
-
-  // カテゴリ一覧の取得
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const res = await fetch("http://localhost:8000/meta/categories")
-        const data = await res.json()
-        setCategories(data)
-        // 初期選択値を設定（リストが空でなければ最初の要素をセットしておく）
-        if (selectedType === "mode" && !selectedId && data.modes.length > 0) setSelectedId(data.modes[0])
-        if (selectedType === "map" && !selectedId && data.maps.length > 0) setSelectedId(data.maps[0])
-      } catch (err) {
-        console.error(err)
-      }
-    }
-    fetchCategories()
-  }, [])
 
   // 選択に応じたTierデータの取得
   useEffect(() => {
     const fetchTierList = async () => {
       setLoading(true)
       try {
-        let url = `http://localhost:8000/meta/tier-list?type=${selectedType}`
-        if ((selectedType === "mode" || selectedType === "map") && selectedId) {
-          url += `&id=${encodeURIComponent(selectedId)}`
-        }
-        
-        // typeがmode/mapなのにidが未選択の場合はフェッチしない
-        if (selectedType !== "global" && !selectedId) {
-          setLoading(false)
-          return
-        }
-
-        const res = await fetch(url)
+        const res = await fetch(`http://localhost:8000/meta/tier-list?type=${selectedType}`)
         if (res.ok) {
           const data = await res.json()
           setTierData(data)
@@ -79,22 +47,15 @@ export default function TierListPage() {
       }
     }
     fetchTierList()
-  }, [selectedType, selectedId])
+  }, [selectedType])
 
   const handleTypeChange = (value: string) => {
     setSelectedType(value)
-    if (value === "mode" && categories.modes.length > 0) setSelectedId(categories.modes[0])
-    else if (value === "map" && categories.maps.length > 0) setSelectedId(categories.maps[0])
-    else setSelectedId("")
   }
 
   const fetchCharacterDetail = async (charName: string) => {
     try {
-      let url = `http://localhost:8000/meta/characters/${charName}?type=${selectedType}`
-      if ((selectedType === "mode" || selectedType === "map") && selectedId) {
-        url += `&id=${encodeURIComponent(selectedId)}`
-      }
-      const res = await fetch(url)
+      const res = await fetch(`http://localhost:8000/meta/characters/${charName}?type=${selectedType}`)
       const data = await res.json()
       setSelectedChar(data)
       setSheetOpen(true)
@@ -126,46 +87,16 @@ export default function TierListPage() {
 
       <Tabs value={selectedType} onValueChange={handleTypeChange} className="space-y-6">
         <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between bg-secondary/30 p-4 rounded-xl border">
-          <TabsList className="grid w-full md:w-[450px] grid-cols-3 bg-secondary/50 p-1">
+          <TabsList className="grid w-full md:w-[400px] grid-cols-2 bg-secondary/50 p-1">
             <TabsTrigger value="global" className="font-bold">
               <Trophy className="w-4 h-4 mr-2" />
               グローバル
             </TabsTrigger>
-            <TabsTrigger value="mode" className="font-bold">
-              <Filter className="w-4 h-4 mr-2" />
-              モード別
-            </TabsTrigger>
-            <TabsTrigger value="map" className="font-bold">
-              <Map className="w-4 h-4 mr-2" />
-              マップ別
+            <TabsTrigger value="gachi" className="font-bold">
+              <Swords className="w-4 h-4 mr-2 text-primary" />
+              ガチバトル
             </TabsTrigger>
           </TabsList>
-
-          {selectedType === "mode" && (
-            <Select value={selectedId} onValueChange={setSelectedId}>
-              <SelectTrigger className="w-full md:w-[250px] bg-background border-primary/20">
-                <SelectValue placeholder="モードを選択..." />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.modes.map((m: string) => (
-                  <SelectItem key={m} value={m}>{translateMode(m)}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-
-          {selectedType === "map" && (
-            <Select value={selectedId} onValueChange={setSelectedId}>
-              <SelectTrigger className="w-full md:w-[250px] bg-background border-primary/20">
-                <SelectValue placeholder="マップを選択..." />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.maps.map((m: string) => (
-                  <SelectItem key={m} value={m}>{translateMap(m)}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
         </div>
 
         <div className="space-y-6">

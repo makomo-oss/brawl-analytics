@@ -99,8 +99,7 @@ async def main():
         top_tags = await get_top_players(client, limit=1000)
         
         stats_global = {"brawlers": {}, "matchups": {}, "total_picks": 0}
-        stats_modes = {}
-        stats_maps = {}
+        stats_gachi = {"brawlers": {}, "matchups": {}, "total_picks": 0}
         
         analyzed_players = []
         
@@ -113,6 +112,7 @@ async def main():
             return {"brawlers": brawlers, "matchups": matchups, "total_picks": 0}
 
         stats_global = init_stats(all_brawlers)
+        stats_gachi = init_stats(all_brawlers)
             
         print(f"Gathering real battlelogs from {len(top_tags)} players (this may take a minute)...")
         
@@ -177,19 +177,12 @@ async def main():
                 
                 is_win = (result == "victory")
                 
-                mode = event.get("mode")
-                map_name = event.get("map")
-                
-                # モード・マップの初期化
-                if mode and mode not in stats_modes:
-                    stats_modes[mode] = init_stats(all_brawlers)
-                if map_name and map_name not in stats_maps:
-                    stats_maps[map_name] = init_stats(all_brawlers)
-                
                 # 集計対象リスト
                 targets = [stats_global]
-                if mode: targets.append(stats_modes[mode])
-                if map_name: targets.append(stats_maps[map_name])
+                
+                # ガチバトル (soloRanked, teamRanked) であればガチ用集計にも追加
+                if battle.get("type") in ["soloRanked", "teamRanked"]:
+                    targets.append(stats_gachi)
                 
                 for target in targets:
                     for mb in my_brawlers:
@@ -293,27 +286,17 @@ async def main():
                 }
             }
 
-        # グローバルと各カテゴリのTier表を算出
+        # グローバルとガチバトルのTier表を算出
         print("Calculating Global Tiers...")
         global_meta = calculate_tiers(stats_global)
         
-        print("Calculating Mode Tiers...")
-        modes_meta = {}
-        for m, st in stats_modes.items():
-            if st["total_picks"] > 0:
-                modes_meta[m] = calculate_tiers(st)
-                
-        print("Calculating Map Tiers...")
-        maps_meta = {}
-        for m, st in stats_maps.items():
-            if st["total_picks"] > 0:
-                maps_meta[m] = calculate_tiers(st)
+        print("Calculating Gachi Tiers...")
+        gachi_meta = calculate_tiers(stats_gachi)
             
         meta_data = {
             "updated_at": datetime.now().isoformat(),
             "global": global_meta,
-            "modes": modes_meta,
-            "maps": maps_meta,
+            "gachi": gachi_meta,
             "analyzed_players": analyzed_players
         }
         

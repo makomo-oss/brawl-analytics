@@ -35,7 +35,8 @@ export default function DraftCompanionPage() {
   const [firstPickTeam, setFirstPickTeam] = useState<Team>("blue")
   
   // Draft State
-  const [bans, setBans] = useState<string[]>([])
+  const [allyBans, setAllyBans] = useState<string[]>([])
+  const [enemyBans, setEnemyBans] = useState<string[]>([])
   const [bluePicks, setBluePicks] = useState<string[]>([])
   const [redPicks, setRedPicks] = useState<string[]>([])
   
@@ -96,16 +97,16 @@ export default function DraftCompanionPage() {
 
   const handleReset = () => {
     setPhase("setup")
-    setBans([])
+    setAllyBans([])
+    setEnemyBans([])
     setBluePicks([])
     setRedPicks([])
     setMetaData(null)
   }
 
   // ドラフトロジック：現在どちらのターンか？
-  // BANフェーズ: 全6枠。交互。
+  // BANフェーズ: 先に味方が3枠、そのあとに敵が3枠（ブラインドBANをシミュレート）
   // Pickフェーズ: 全6枠。1-2-2-1方式。
-  const totalBans = bans.length
   const totalPicks = bluePicks.length + redPicks.length
   
   let currentTurnTeam: Team = "blue"
@@ -113,8 +114,11 @@ export default function DraftCompanionPage() {
   
   if (phase === "ban") {
     turnType = "ban"
-    const isFirstPickTurn = totalBans % 2 === 0
-    currentTurnTeam = isFirstPickTurn ? firstPickTeam : (firstPickTeam === "blue" ? "red" : "blue")
+    if (allyBans.length < 3) {
+      currentTurnTeam = myTeam
+    } else {
+      currentTurnTeam = myTeam === "blue" ? "red" : "blue"
+    }
   } else if (phase === "pick") {
     turnType = "pick"
     const pickOrder = ["first", "second", "second", "first", "first", "second"]
@@ -127,10 +131,15 @@ export default function DraftCompanionPage() {
   // キャラクターを選択したときの処理
   const handleSelectCharacter = (charName: string) => {
     if (phase === "ban") {
-      const newBans = [...bans, charName]
-      setBans(newBans)
-      if (newBans.length >= 6) {
-        setPhase("pick")
+      if (currentTurnTeam === myTeam) {
+        const newBans = [...allyBans, charName]
+        setAllyBans(newBans)
+      } else {
+        const newBans = [...enemyBans, charName]
+        setEnemyBans(newBans)
+        if (newBans.length >= 3) {
+          setPhase("pick")
+        }
       }
     } else if (phase === "pick") {
       if (currentTurnTeam === "blue") {
@@ -147,7 +156,15 @@ export default function DraftCompanionPage() {
 
   // 除外判定
   const isExcluded = (charName: string) => {
-    return bans.includes(charName) || bluePicks.includes(charName) || redPicks.includes(charName)
+    if (phase === "ban") {
+      if (currentTurnTeam === myTeam) {
+        return allyBans.includes(charName)
+      } else {
+        return enemyBans.includes(charName)
+      }
+    }
+    // Pickフェーズでは、BANされたキャラとPickされたキャラすべてを除外
+    return allyBans.includes(charName) || enemyBans.includes(charName) || bluePicks.includes(charName) || redPicks.includes(charName)
   }
 
   // 自分のチームのピック、敵のチームのピックを取得
@@ -230,7 +247,7 @@ export default function DraftCompanionPage() {
     }
     
     return []
-  }, [phase, bans, bluePicks, redPicks, metaData, enemyPicks])
+  }, [phase, allyBans, enemyBans, bluePicks, redPicks, metaData, enemyPicks])
 
   // ================= UI Components =================
 
@@ -425,25 +442,55 @@ export default function DraftCompanionPage() {
                 <h3 className="font-bold text-slate-500 flex items-center justify-center gap-2 bg-slate-500/10 p-2 rounded-lg">
                   <Ban className="w-4 h-4" /> BANS
                 </h3>
-                <div className="grid grid-cols-2 gap-2">
-                  {[0, 1, 2, 3, 4, 5].map(i => {
-                    const charName = bans[i]
-                    const isActive = phase === "ban" && bans.length === i
-                    return (
-                      <div key={`ban-${i}`} className={`h-16 rounded-lg border-2 flex items-center justify-center relative overflow-hidden ${isActive ? 'border-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.5)] animate-pulse' : 'border-secondary bg-slate-900/50'}`}>
-                        {charName ? (
-                          <>
-                            <Avatar className="w-10 h-10 opacity-50 grayscale"><AvatarImage src={getBrawlerInfo(charName).imageUrl} /></Avatar>
-                            <div className="absolute inset-0 bg-red-500/20 flex items-center justify-center">
-                              <div className="w-full h-0.5 bg-red-500 rotate-45 absolute" />
-                            </div>
-                          </>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">BAN</span>
-                        )}
-                      </div>
-                    )
-                  })}
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Ally Bans */}
+                  <div className="space-y-2">
+                    <div className="text-xs text-center font-bold text-muted-foreground">味方 BAN</div>
+                    <div className="flex flex-col gap-2">
+                      {[0, 1, 2].map(i => {
+                        const charName = allyBans[i]
+                        const isActive = phase === "ban" && currentTurnTeam === myTeam && allyBans.length === i
+                        return (
+                          <div key={`allyban-${i}`} className={`h-12 rounded-lg border-2 flex items-center justify-center relative overflow-hidden ${isActive ? 'border-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)] animate-pulse' : 'border-secondary bg-slate-900/50'}`}>
+                            {charName ? (
+                              <>
+                                <Avatar className="w-8 h-8 opacity-50 grayscale"><AvatarImage src={getBrawlerInfo(charName).imageUrl} /></Avatar>
+                                <div className="absolute inset-0 bg-red-500/20 flex items-center justify-center">
+                                  <div className="w-full h-0.5 bg-red-500 rotate-45 absolute" />
+                                </div>
+                              </>
+                            ) : (
+                              <span className="text-[10px] text-muted-foreground">BAN {i+1}</span>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                  {/* Enemy Bans */}
+                  <div className="space-y-2">
+                    <div className="text-xs text-center font-bold text-muted-foreground">相手 BAN</div>
+                    <div className="flex flex-col gap-2">
+                      {[0, 1, 2].map(i => {
+                        const charName = enemyBans[i]
+                        const isActive = phase === "ban" && currentTurnTeam !== myTeam && enemyBans.length === i
+                        return (
+                          <div key={`enemyban-${i}`} className={`h-12 rounded-lg border-2 flex items-center justify-center relative overflow-hidden ${isActive ? 'border-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)] animate-pulse' : 'border-secondary bg-slate-900/50'}`}>
+                            {charName ? (
+                              <>
+                                <Avatar className="w-8 h-8 opacity-50 grayscale"><AvatarImage src={getBrawlerInfo(charName).imageUrl} /></Avatar>
+                                <div className="absolute inset-0 bg-red-500/20 flex items-center justify-center">
+                                  <div className="w-full h-0.5 bg-red-500 rotate-45 absolute" />
+                                </div>
+                              </>
+                            ) : (
+                              <span className="text-[10px] text-muted-foreground">BAN {i+1}</span>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
                 </div>
               </div>
 

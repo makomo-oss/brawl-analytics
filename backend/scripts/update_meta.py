@@ -98,15 +98,21 @@ async def main():
         print("Fetching top players...")
         top_tags = await get_top_players(client, limit=1000)
         
-        brawler_stats = {}
-        matchup_matrix = {}
-        total_picks = 0
+        stats_global = {"brawlers": {}, "matchups": {}, "total_picks": 0}
+        stats_modes = {}
+        stats_maps = {}
         
         analyzed_players = []
         
-        for b in all_brawlers:
-            brawler_stats[b] = {"matches": 0, "wins": 0}
-            matchup_matrix[b] = {}
+        def init_stats(all_brawlers):
+            brawlers = {}
+            matchups = {}
+            for b in all_brawlers:
+                brawlers[b] = {"matches": 0, "wins": 0}
+                matchups[b] = {}
+            return {"brawlers": brawlers, "matchups": matchups, "total_picks": 0}
+
+        stats_global = init_stats(all_brawlers)
             
         print(f"Gathering real battlelogs from {len(top_tags)} players (this may take a minute)...")
         
@@ -139,6 +145,7 @@ async def main():
             
             for item in battles:
                 battle = item.get("battle", {})
+                event = item.get("event", {})
                 if not battle or battle.get("type") not in ["ranked", "soloRanked", "teamRanked"]:
                     continue # ランクマッチを中心に集計
                 
@@ -170,130 +177,144 @@ async def main():
                 
                 is_win = (result == "victory")
                 
-                for mb in my_brawlers:
-                    if mb == "unknown": continue
-                    if mb not in brawler_stats: brawler_stats[mb] = {"matches": 0, "wins": 0}
-                    brawler_stats[mb]["matches"] += 1
-                    if is_win: brawler_stats[mb]["wins"] += 1
-                    total_picks += 1
-                    
-                    for ob in opp_brawlers:
-                        if ob == "unknown": continue
-                        if mb not in matchup_matrix: matchup_matrix[mb] = {}
-                        if ob not in matchup_matrix[mb]: matchup_matrix[mb][ob] = {"matches": 0, "wins": 0}
+                mode = event.get("mode")
+                map_name = event.get("map")
+                
+                # モード・マップの初期化
+                if mode and mode not in stats_modes:
+                    stats_modes[mode] = init_stats(all_brawlers)
+                if map_name and map_name not in stats_maps:
+                    stats_maps[map_name] = init_stats(all_brawlers)
+                
+                # 集計対象リスト
+                targets = [stats_global]
+                if mode: targets.append(stats_modes[mode])
+                if map_name: targets.append(stats_maps[map_name])
+                
+                for target in targets:
+                    for mb in my_brawlers:
+                        if mb == "unknown": continue
+                        if mb not in target["brawlers"]: target["brawlers"][mb] = {"matches": 0, "wins": 0}
+                        target["brawlers"][mb]["matches"] += 1
+                        if is_win: target["brawlers"][mb]["wins"] += 1
+                        target["total_picks"] += 1
                         
-                        matchup_matrix[mb][ob]["matches"] += 1
-                        if is_win: matchup_matrix[mb][ob]["wins"] += 1
+                        for ob in opp_brawlers:
+                            if ob == "unknown": continue
+                            if mb not in target["matchups"]: target["matchups"][mb] = {}
+                            if ob not in target["matchups"][mb]: target["matchups"][mb][ob] = {"matches": 0, "wins": 0}
+                            
+                            target["matchups"][mb][ob]["matches"] += 1
+                            if is_win: target["matchups"][mb][ob]["wins"] += 1
 
-        real_analyzed_matches = total_picks // 6
-        print(f"Total pure raw matches analyzed: {real_analyzed_matches}")
-        print("Calculating Tier List and Matchups strictly from raw data...")
-        
-        # データが全く取れなかった場合の固定ベースライン（ランダムデータは絶対に使わない）
-        if total_picks == 0:
-            print("No battlelogs fetched. Applying fixed baseline meta...")
-            meta_s_tier = ["piper", "angelo", "melodie", "sandy", "cordelius", "charlie", "leon", "spike"]
-            meta_a_tier = ["crow", "fang", "collette", "nani", "belle", "amber", "gene", "max", "surge", "stu"]
-            meta_d_tier = ["hank", "doug", "frank", "chester", "penny", "ash"]
+        # Tier算出用関数
+        def calculate_tiers(stats):
+            brawler_stats = stats["brawlers"]
+            matchup_matrix = stats["matchups"]
+            total_picks = stats["total_picks"]
+            real_analyzed_matches = total_picks // 6
             
-            for b in all_brawlers:
-                if b in meta_s_tier:
-                    brawler_stats[b] = {"matches": 3000, "wins": 1800} # 60% win rate
-                elif b in meta_a_tier:
-                    brawler_stats[b] = {"matches": 2000, "wins": 1100} # 55% win rate
-                elif b in meta_d_tier:
-                    brawler_stats[b] = {"matches": 500, "wins": 200} # 40% win rate
-                else:
-                    brawler_stats[b] = {"matches": 1000, "wins": 500} # 50% win rate
-                total_picks += brawler_stats[b]["matches"]
+            raw_win_rates = []
+            use_rates = []
+            for b, s in brawler_stats.items():
+                if s["matches"] > 0:
+                    raw_win_rates.append(s["wins"] / s["matches"])
+                    use_rates.append(s["matches"] / (total_picks or 1))
+                    
+            mean_wr = sum(raw_win_rates) / len(raw_win_rates) if raw_win_rates else 0.5
+            mean_ur = sum(use_rates) / len(use_rates) if use_rates else 1.0/len(all_brawlers)
+            
+            SMOOTHING_FACTOR = 10
+            smoothed_win_rates = []
+            for b, s in brawler_stats.items():
+                if s["matches"] > 0:
+                    bayesian_wr = (s["wins"] + (mean_wr * SMOOTHING_FACTOR)) / (s["matches"] + SMOOTHING_FACTOR)
+                    smoothed_win_rates.append(bayesian_wr)
+                    
+            std_wr = math.sqrt(sum((x - mean_wr)**2 for x in smoothed_win_rates) / len(smoothed_win_rates)) if len(smoothed_win_rates) > 1 else 0.01
+            std_ur = math.sqrt(sum((x - mean_ur)**2 for x in use_rates) / len(use_rates)) if len(use_rates) > 1 else 0.001
+            
+            if std_wr == 0: std_wr = 0.01
+            if std_ur == 0: std_ur = 0.001
 
-        # 偏差値計算 (生データ、もしくは固定ベースラインを使用。ダミーの乱数は使用しない)
-        raw_win_rates = []
-        use_rates = []
-        for b, stats in brawler_stats.items():
-            if stats["matches"] > 0:
-                raw_win_rates.append(stats["wins"] / stats["matches"])
-                use_rates.append(stats["matches"] / (total_picks or 1))
+            tiers = {"S": [], "A": [], "B": [], "C": [], "D": []}
+            characters_detail = {}
+            
+            for b, s in brawler_stats.items():
+                if s["matches"] == 0:
+                    tiers["D"].append(b)
+                    continue
+                    
+                raw_wr = s["wins"] / s["matches"]
+                ur = s["matches"] / (total_picks or 1)
                 
-        mean_wr = sum(raw_win_rates) / len(raw_win_rates) if raw_win_rates else 0.5
-        mean_ur = sum(use_rates) / len(use_rates) if use_rates else 1.0/len(all_brawlers)
-        
-        # 勝率にベイズ推定（スムージング）をかける（N試合未満のノイズを平均に近づける）
-        # 架空の「10試合分の平均勝率」を足し合わせることで、1勝0敗(100%)が54%程度に落ち着く
-        SMOOTHING_FACTOR = 10
-        smoothed_win_rates = []
-        for b, stats in brawler_stats.items():
-            if stats["matches"] > 0:
-                bayesian_wr = (stats["wins"] + (mean_wr * SMOOTHING_FACTOR)) / (stats["matches"] + SMOOTHING_FACTOR)
-                smoothed_win_rates.append(bayesian_wr)
+                bayesian_wr = (s["wins"] + (mean_wr * SMOOTHING_FACTOR)) / (s["matches"] + SMOOTHING_FACTOR)
+                z_wr = (bayesian_wr - mean_wr) / std_wr
+                z_ur = (ur - mean_ur) / std_ur
                 
-        std_wr = math.sqrt(sum((x - mean_wr)**2 for x in smoothed_win_rates) / len(smoothed_win_rates)) if len(smoothed_win_rates) > 1 else 0.01
-        std_ur = math.sqrt(sum((x - mean_ur)**2 for x in use_rates) / len(use_rates)) if len(use_rates) > 1 else 0.001
-        
-        if std_wr == 0: std_wr = 0.01
-        if std_ur == 0: std_ur = 0.001
-
-        tiers = {"S": [], "A": [], "B": [], "C": [], "D": []}
-        characters_detail = {}
-        
-        for b, stats in brawler_stats.items():
-            if stats["matches"] == 0:
-                # 誰も使わなかったキャラはそのままDへ
-                tiers["D"].append(b)
-                continue
+                score = (z_wr * 0.7) + (z_ur * 0.3)
                 
-            raw_wr = stats["wins"] / stats["matches"]
-            ur = stats["matches"] / (total_picks or 1)
-            
-            # 評価にはスムージングされた勝率を使う
-            bayesian_wr = (stats["wins"] + (mean_wr * SMOOTHING_FACTOR)) / (stats["matches"] + SMOOTHING_FACTOR)
-            
-            z_wr = (bayesian_wr - mean_wr) / std_wr
-            z_ur = (ur - mean_ur) / std_ur
-            
-            # 生データからのスコア算出
-            score = (z_wr * 0.7) + (z_ur * 0.3)
-            
-            if score >= 1.0: tier = "S"
-            elif score >= 0.3: tier = "A"
-            elif score >= -0.5: tier = "B"
-            elif score >= -1.2: tier = "C"
-            else: tier = "D"
-            
-            tiers[tier].append(b)
-            
-            # カモと天敵の計算
-            matchups = []
-            if b in matchup_matrix:
-                for ob, m_stats in matchup_matrix[b].items():
-                    if m_stats["matches"] >= 1: # ダミー排除に伴い、最低1試合の事実があれば採用
-                        m_wr = m_stats["wins"] / m_stats["matches"]
-                        matchups.append({"brawler": ob, "win_rate": round(m_wr * 100, 1), "matches": m_stats["matches"]})
-            
-            matchups.sort(key=lambda x: x["win_rate"], reverse=True)
-            kamo = matchups[:5]
-            tenteki = [x for x in reversed(matchups[-5:])]
-            
-            characters_detail[b] = {
-                "tier": tier,
-                "score": round(score, 2),
-                "win_rate": round(raw_wr * 100, 1), # 表示用には生の勝率を見せる
-                "adjusted_win_rate": round(bayesian_wr * 100, 1), # 評価用に使った補正勝率
-                "use_rate": round(ur * 100, 2),
-                "total_matches": stats["matches"],
-                "kamo": kamo,
-                "tenteki": tenteki
+                if score >= 1.0: tier = "S"
+                elif score >= 0.3: tier = "A"
+                elif score >= -0.5: tier = "B"
+                elif score >= -1.2: tier = "C"
+                else: tier = "D"
+                
+                tiers[tier].append(b)
+                
+                matchups = []
+                if b in matchup_matrix:
+                    for ob, m_stats in matchup_matrix[b].items():
+                        if m_stats["matches"] >= 1:
+                            m_wr = m_stats["wins"] / m_stats["matches"]
+                            matchups.append({"brawler": ob, "win_rate": round(m_wr * 100, 1), "matches": m_stats["matches"]})
+                
+                matchups.sort(key=lambda x: x["win_rate"], reverse=True)
+                kamo = matchups[:5]
+                tenteki = [x for x in reversed(matchups[-5:])]
+                
+                characters_detail[b] = {
+                    "tier": tier,
+                    "score": round(score, 2),
+                    "win_rate": round(raw_wr * 100, 1),
+                    "adjusted_win_rate": round(bayesian_wr * 100, 1),
+                    "use_rate": round(ur * 100, 2),
+                    "total_matches": s["matches"],
+                    "kamo": kamo,
+                    "tenteki": tenteki
+                }
+                
+            return {
+                "tiers": tiers,
+                "characters": characters_detail,
+                "metrics": {
+                    "analyzed_matches": real_analyzed_matches,
+                    "mean_win_rate": round(mean_wr * 100, 1)
+                }
             }
+
+        # グローバルと各カテゴリのTier表を算出
+        print("Calculating Global Tiers...")
+        global_meta = calculate_tiers(stats_global)
+        
+        print("Calculating Mode Tiers...")
+        modes_meta = {}
+        for m, st in stats_modes.items():
+            if st["total_picks"] > 0:
+                modes_meta[m] = calculate_tiers(st)
+                
+        print("Calculating Map Tiers...")
+        maps_meta = {}
+        for m, st in stats_maps.items():
+            if st["total_picks"] > 0:
+                maps_meta[m] = calculate_tiers(st)
             
         meta_data = {
             "updated_at": datetime.now().isoformat(),
-            "tiers": tiers,
-            "characters": characters_detail,
-            "analyzed_players": analyzed_players, # エビデンスとして返す
-            "metrics": {
-                "analyzed_matches": real_analyzed_matches,
-                "mean_win_rate": round(mean_wr * 100, 1)
-            }
+            "global": global_meta,
+            "modes": modes_meta,
+            "maps": maps_meta,
+            "analyzed_players": analyzed_players
         }
         
         with open(META_FILE, "w", encoding="utf-8") as f:

@@ -13,20 +13,47 @@ def load_meta_data():
         return json.load(f)
 
 @router.get("/tier-list")
-def get_tier_list(map_id: str = None, mode: str = None):
+def get_tier_list(type: str = "global", id: str = None):
     """
     環境分析ページ（メタレポート）のTier表を返す
+    type: 'global', 'mode', 'map'
+    id: モード名やマップ名 (typeがmodeかmapの場合必須)
     """
     meta = load_meta_data()
     if not meta:
         raise HTTPException(status_code=503, detail="Meta data not ready yet")
         
+    if type == "global":
+        target = meta.get("global", {})
+    elif type == "mode" and id:
+        target = meta.get("modes", {}).get(id)
+    elif type == "map" and id:
+        target = meta.get("maps", {}).get(id)
+    else:
+        raise HTTPException(status_code=400, detail="Invalid type or missing id")
+        
+    if not target:
+        raise HTTPException(status_code=404, detail=f"Data for {type} '{id}' not found")
+        
     return {
         "updated_at": meta.get("updated_at"),
-        "tiers": meta.get("tiers", {}),
-        "map_id": map_id,
-        "mode": mode,
-        "metrics": meta.get("metrics", {})
+        "tiers": target.get("tiers", {}),
+        "type": type,
+        "id": id,
+        "metrics": target.get("metrics", {})
+    }
+
+@router.get("/categories")
+def get_categories():
+    """
+    選択可能なモードとマップのリストを返す
+    """
+    meta = load_meta_data()
+    if not meta:
+        return {"modes": [], "maps": []}
+    return {
+        "modes": list(meta.get("modes", {}).keys()),
+        "maps": list(meta.get("maps", {}).keys())
     }
 
 @router.get("/characters/{character_id}")

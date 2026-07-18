@@ -120,16 +120,16 @@ async def get_dashboard(player_tag: str):
         if not hidden_weapons: hidden_weapons = ["dynamike", "barley"]
         if not needs_practice: needs_practice = ["piper", "leon"]
         
-        highest_rank = player_info.get("highestRank")
+        highest_rank = player_info.get("rankedRank") or player_info.get("highestAllTimeRankedRank") or player_info.get("highestRank")
         if not highest_rank:
             # APIにランク情報が含まれていない場合のフォールバック（最高トロフィーから推定してUI用ランクを設定）
             highest_trophies = player_info.get("highestTrophies", 0)
-            if highest_trophies >= 50000: highest_rank = 19
-            elif highest_trophies >= 40000: highest_rank = 16
-            elif highest_trophies >= 30000: highest_rank = 13
-            elif highest_trophies >= 20000: highest_rank = 10
-            elif highest_trophies >= 10000: highest_rank = 7
-            elif highest_trophies >= 5000: highest_rank = 4
+            if highest_trophies >= 80000: highest_rank = 19
+            elif highest_trophies >= 60000: highest_rank = 16
+            elif highest_trophies >= 45000: highest_rank = 13
+            elif highest_trophies >= 30000: highest_rank = 10
+            elif highest_trophies >= 20000: highest_rank = 7
+            elif highest_trophies >= 10000: highest_rank = 4
             else: highest_rank = 1
         
         return {

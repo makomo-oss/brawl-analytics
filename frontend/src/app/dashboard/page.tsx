@@ -10,7 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { getBrawlerInfo } from "@/lib/brawlers"
-import { translateMode, translateMap, getModeIconUrl } from "@/lib/translations"
+import { translateMode, translateMap, getModeIconUrl, getRankInfo } from "@/lib/translations"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 function formatBattleTime(timeStr: string) {
@@ -237,12 +237,12 @@ export default function DashboardPage() {
                       let scoreDisplay = null;
                       if (isRanked) {
                         const rankVal = data.profile?.highest_rank || 1;
-                        const rankIconUrl = `https://media.brawltime.ninja/ranks/${rankVal}.png`;
+                        const rankInfo = getRankInfo(rankVal);
 
                         scoreDisplay = (
                           <div className="flex flex-col items-center justify-center -mt-1 group-hover:scale-110 transition-transform">
-                            <img src={rankIconUrl} alt="Rank" className="w-12 h-12 object-contain drop-shadow-[0_0_8px_rgba(168,85,247,0.4)]" />
-                            <span className="text-[9px] font-bold text-purple-400 uppercase tracking-widest bg-purple-500/10 px-1.5 rounded-sm">Ranked</span>
+                            <img src={rankInfo.url} alt={rankInfo.name} className="w-12 h-12 object-contain drop-shadow-[0_0_8px_rgba(168,85,247,0.4)]" />
+                            <span className="text-[9px] font-bold text-purple-400 uppercase tracking-widest bg-purple-500/10 px-1.5 rounded-sm">{rankInfo.name}</span>
                           </div>
                         );
                       } else if (isFriendly) {

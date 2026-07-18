@@ -114,7 +114,7 @@ export function getModeIconUrl(mode: string) {
   return `https://cdn.brawlify.com/game-modes/regular/${iconId}.png`
 }
 
-export function getRankIconUrl(rankValue: number) {
+export function getRankInfo(rankValue: number) {
   let rankName = "Bronze";
   if (rankValue >= 4 && rankValue <= 6) rankName = "Silver";
   else if (rankValue >= 7 && rankValue <= 9) rankName = "Gold";
@@ -123,7 +123,10 @@ export function getRankIconUrl(rankValue: number) {
   else if (rankValue >= 16 && rankValue <= 18) rankName = "Legendary";
   else if (rankValue >= 19) rankName = "Masters";
   
-  return `https://cdn.brawlify.com/rank/${rankName}.png`;
+  return {
+    name: rankName,
+    url: `https://media.brawltime.ninja/ranks/${rankValue}.png`
+  };
 }
 
 export function translateMap(mapName: string) {

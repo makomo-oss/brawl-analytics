@@ -12,7 +12,7 @@ import { getBrawlerInfo, BRAWLER_MAP } from "@/lib/brawlers"
 import { Swords, Ban, Check, RefreshCw, Trophy, Target } from "lucide-react"
 
 type Phase = "setup" | "ban" | "pick" | "done"
-type Team = "ally" | "enemy"
+type Team = "blue" | "red"
 
 // フェーズ進行と動的ウェイト定義
 // 敵確定数 = enemyPicks.length
@@ -30,12 +30,12 @@ export default function DraftCompanionPage() {
   // Setup State
   const [selectedMode, setSelectedMode] = useState("")
   const [selectedMap, setSelectedMap] = useState("")
-  const [firstPick, setFirstPick] = useState<Team>("ally")
+  const [myTeam, setMyTeam] = useState<Team>("blue")
   
   // Draft State
   const [bans, setBans] = useState<string[]>([])
-  const [allyPicks, setAllyPicks] = useState<string[]>([])
-  const [enemyPicks, setEnemyPicks] = useState<string[]>([])
+  const [bluePicks, setBluePicks] = useState<string[]>([])
+  const [redPicks, setRedPicks] = useState<string[]>([])
   
   // Data State
   const [metaData, setMetaData] = useState<any>(null)
@@ -95,32 +95,28 @@ export default function DraftCompanionPage() {
   const handleReset = () => {
     setPhase("setup")
     setBans([])
-    setAllyPicks([])
-    setEnemyPicks([])
+    setBluePicks([])
+    setRedPicks([])
     setMetaData(null)
   }
 
   // ドラフトロジック：現在どちらのターンか？
-  // BANフェーズ: 全6枠。交互。先攻からBAN開始。
-  // Pickフェーズ: 全6枠。1-2-2-1 方式。先攻が1手目。
+  // BANフェーズ: 全6枠。青(先) -> 赤(後) -> 青 -> 赤 -> 青 -> 赤
+  // Pickフェーズ: 全6枠。1-2-2-1方式。青1 -> 赤2 -> 青2 -> 赤1
   const totalBans = bans.length
-  const totalPicks = allyPicks.length + enemyPicks.length
+  const totalPicks = bluePicks.length + redPicks.length
   
-  let currentTurnTeam: Team = "ally"
+  let currentTurnTeam: Team = "blue"
   let turnType: "ban" | "pick" = "ban"
   
   if (phase === "ban") {
     turnType = "ban"
-    // BANは交互 (0: 先攻, 1: 後攻, 2: 先攻, 3: 後攻, 4: 先攻, 5: 後攻)
-    const isFirstPickTurn = totalBans % 2 === 0
-    currentTurnTeam = isFirstPickTurn ? firstPick : (firstPick === "ally" ? "enemy" : "ally")
+    currentTurnTeam = totalBans % 2 === 0 ? "blue" : "red"
   } else if (phase === "pick") {
     turnType = "pick"
-    // Pickは 1-2-2-1 (0:先攻, 1:後攻, 2:後攻, 3:先攻, 4:先攻, 5:後攻)
-    const pickOrder = ["first", "second", "second", "first", "first", "second"]
+    const pickOrder: Team[] = ["blue", "red", "red", "blue", "blue", "red"]
     if (totalPicks < 6) {
-      const currentOrder = pickOrder[totalPicks]
-      currentTurnTeam = currentOrder === "first" ? firstPick : (firstPick === "ally" ? "enemy" : "ally")
+      currentTurnTeam = pickOrder[totalPicks]
     }
   }
 
@@ -133,22 +129,26 @@ export default function DraftCompanionPage() {
         setPhase("pick")
       }
     } else if (phase === "pick") {
-      if (currentTurnTeam === "ally") {
-        const newAlly = [...allyPicks, charName]
-        setAllyPicks(newAlly)
-        if (newAlly.length >= 3 && enemyPicks.length >= 3) setPhase("done")
+      if (currentTurnTeam === "blue") {
+        const newBlue = [...bluePicks, charName]
+        setBluePicks(newBlue)
+        if (newBlue.length >= 3 && redPicks.length >= 3) setPhase("done")
       } else {
-        const newEnemy = [...enemyPicks, charName]
-        setEnemyPicks(newEnemy)
-        if (allyPicks.length >= 3 && newEnemy.length >= 3) setPhase("done")
+        const newRed = [...redPicks, charName]
+        setRedPicks(newRed)
+        if (bluePicks.length >= 3 && newRed.length >= 3) setPhase("done")
       }
     }
   }
 
-  // 除外判定（BANされた、またはPickされたキャラ）
+  // 除外判定
   const isExcluded = (charName: string) => {
-    return bans.includes(charName) || allyPicks.includes(charName) || enemyPicks.includes(charName)
+    return bans.includes(charName) || bluePicks.includes(charName) || redPicks.includes(charName)
   }
+
+  // 自分のチームのピック、敵のチームのピックを取得
+  const allyPicks = myTeam === "blue" ? bluePicks : redPicks
+  const enemyPicks = myTeam === "blue" ? redPicks : bluePicks
 
   // サジェスト計算ロジック
   const suggestions = useMemo(() => {
@@ -226,7 +226,7 @@ export default function DraftCompanionPage() {
     }
     
     return []
-  }, [phase, bans, allyPicks, enemyPicks, metaData])
+  }, [phase, bans, bluePicks, redPicks, metaData, enemyPicks])
 
   // ================= UI Components =================
 
@@ -278,21 +278,23 @@ export default function DraftCompanionPage() {
             </div>
 
             <div className="space-y-3">
-              <label className="text-sm font-bold">自チームの順番</label>
+              <label className="text-sm font-bold">自チーム（自分が所属するチーム）</label>
               <div className="flex gap-4">
                 <Button 
-                  variant={firstPick === "ally" ? "default" : "outline"} 
-                  className="w-full"
-                  onClick={() => setFirstPick("ally")}
+                  type="button"
+                  variant={myTeam === "blue" ? "default" : "outline"} 
+                  className={`w-full ${myTeam === "blue" ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
+                  onClick={() => setMyTeam("blue")}
                 >
-                  先攻 (First Pick)
+                  青チーム (先攻)
                 </Button>
                 <Button 
-                  variant={firstPick === "enemy" ? "default" : "outline"} 
-                  className="w-full"
-                  onClick={() => setFirstPick("enemy")}
+                  type="button"
+                  variant={myTeam === "red" ? "default" : "outline"} 
+                  className={`w-full ${myTeam === "red" ? 'bg-red-600 hover:bg-red-700' : ''}`}
+                  onClick={() => setMyTeam("red")}
                 >
-                  後攻 (Second Pick)
+                  赤チーム (後攻)
                 </Button>
               </div>
             </div>
@@ -323,15 +325,17 @@ export default function DraftCompanionPage() {
           </h2>
           <p className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
             {translateMode(selectedMode)} - {translateMap(selectedMap)}
-            <Badge variant="outline">{firstPick === "ally" ? "自チーム先攻" : "自チーム後攻"}</Badge>
+            <Badge variant="outline" className={myTeam === "blue" ? "text-blue-500 border-blue-200" : "text-red-500 border-red-200"}>
+              自チーム: {myTeam === "blue" ? "青チーム (先攻)" : "赤チーム (後攻)"}
+            </Badge>
           </p>
         </div>
         
         {phase !== "done" && (
           <div className="flex items-center gap-3">
             <span className="text-sm font-bold">
-              現在: <span className={currentTurnTeam === "ally" ? "text-blue-500" : "text-red-500"}>
-                {currentTurnTeam === "ally" ? "味方のターン" : "敵のターン"}
+              現在: <span className={currentTurnTeam === "blue" ? "text-blue-500" : "text-red-500"}>
+                {currentTurnTeam === "blue" ? "青チームのターン" : "赤チームのターン"}
               </span>
             </span>
             <Button variant="outline" size="sm" onClick={handleReset}>
@@ -351,17 +355,17 @@ export default function DraftCompanionPage() {
             </CardHeader>
             <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
               
-              {/* Ally Area */}
+              {/* Blue Team Area */}
               <div className="space-y-3">
                 <h3 className="font-bold text-blue-500 flex items-center justify-center gap-2 bg-blue-500/10 p-2 rounded-lg">
-                  味方チーム (ALLY)
+                  青チーム (先攻) {myTeam === "blue" && "(味方)"}
                 </h3>
                 <div className="flex flex-col gap-3">
                   {[0, 1, 2].map(i => {
-                    const charName = allyPicks[i]
-                    const isActive = phase === "pick" && currentTurnTeam === "ally" && allyPicks.length === i
+                    const charName = bluePicks[i]
+                    const isActive = phase === "pick" && currentTurnTeam === "blue" && bluePicks.length === i
                     return (
-                      <div key={`ally-${i}`} className={`h-16 rounded-lg border-2 flex items-center p-2 gap-3 transition-all ${isActive ? 'border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)] animate-pulse' : 'border-secondary bg-secondary/20'}`}>
+                      <div key={`blue-${i}`} className={`h-16 rounded-lg border-2 flex items-center p-2 gap-3 transition-all ${isActive ? 'border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)] animate-pulse' : 'border-secondary bg-secondary/20'}`}>
                         {charName ? (
                           <>
                             <Avatar className="w-10 h-10 border border-blue-500/50"><AvatarImage src={getBrawlerInfo(charName).imageUrl} /></Avatar>
@@ -376,17 +380,17 @@ export default function DraftCompanionPage() {
                 </div>
               </div>
 
-              {/* Enemy Area */}
+              {/* Red Team Area */}
               <div className="space-y-3">
                 <h3 className="font-bold text-red-500 flex items-center justify-center gap-2 bg-red-500/10 p-2 rounded-lg">
-                  敵チーム (ENEMY)
+                  赤チーム (後攻) {myTeam === "red" && "(味方)"}
                 </h3>
                 <div className="flex flex-col gap-3">
                   {[0, 1, 2].map(i => {
-                    const charName = enemyPicks[i]
-                    const isActive = phase === "pick" && currentTurnTeam === "enemy" && enemyPicks.length === i
+                    const charName = redPicks[i]
+                    const isActive = phase === "pick" && currentTurnTeam === "red" && redPicks.length === i
                     return (
-                      <div key={`enemy-${i}`} className={`h-16 rounded-lg border-2 flex items-center p-2 gap-3 transition-all ${isActive ? 'border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.5)] animate-pulse' : 'border-secondary bg-secondary/20'}`}>
+                      <div key={`red-${i}`} className={`h-16 rounded-lg border-2 flex items-center p-2 gap-3 transition-all ${isActive ? 'border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.5)] animate-pulse' : 'border-secondary bg-secondary/20'}`}>
                         {charName ? (
                           <>
                             <Avatar className="w-10 h-10 border border-red-500/50"><AvatarImage src={getBrawlerInfo(charName).imageUrl} /></Avatar>

@@ -9,19 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Progress } from "@/components/ui/progress"
 import { ScrollArea } from "@/components/ui/scroll-area"
-
-// キャラクター名からIDや日本語名を取得する簡易ヘルパー（本来はutilsにまとめるべき）
-function getBrawlerInfo(name: string) {
-  const normalized = name.toLowerCase().replace(/[^a-z0-string]/g, "");
-  // 特定のキャラ名マッピング (例: el_primo -> el-primo)
-  let cid = name.toLowerCase().replace(/_/g, "-");
-  
-  return {
-    id: cid,
-    nameJa: name.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase()),
-    imageUrl: `https://cdn.brawlify.com/brawler/${cid}.png`
-  }
-}
+import { getBrawlerInfo } from "@/lib/brawlers"
 
 const tierConfig = {
   S: { color: "from-pink-500 to-rose-500", label: "環境トップ", bg: "bg-pink-500/10 border-pink-500/30" },
@@ -168,9 +156,9 @@ export default function TierListPage() {
                     <SheetTitle className="text-3xl font-black capitalize">{getBrawlerInfo(selectedChar.character_id).nameJa}</SheetTitle>
                     <SheetDescription className="flex items-center gap-2 mt-1">
                       <Badge variant="outline" className={`font-black text-sm bg-gradient-to-r ${tierConfig[selectedChar.tier as keyof typeof tierConfig]?.color || 'from-gray-500 to-gray-600'} text-white border-none`}>
-                        Tier {selectedChar.tier}
+                        環境Tier {selectedChar.tier}
                       </Badge>
-                      <span className="text-xs font-mono text-muted-foreground">Score: {selectedChar.score}</span>
+                      <span className="text-xs font-mono text-muted-foreground">スコア: {selectedChar.score}</span>
                     </SheetDescription>
                   </div>
                 </div>

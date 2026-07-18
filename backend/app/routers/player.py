@@ -88,7 +88,8 @@ async def get_dashboard(player_tag: str):
                     "hero": hero_used,
                     "trophy_change": trophy_change,
                     "my_team": my_team,
-                    "opponent_teams": opponent_teams
+                    "opponent_teams": opponent_teams,
+                    "raw_battle": battle
                 })
                         
         gap_analysis = []

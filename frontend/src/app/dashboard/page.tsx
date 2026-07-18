@@ -12,7 +12,22 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { getBrawlerInfo } from "@/lib/brawlers"
 import { translateMode, translateMap, getModeIconUrl } from "@/lib/translations"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { formatBattleTime } from "@/lib/utils"
+
+function formatBattleTime(timeStr: string) {
+  if (!timeStr) return "";
+  try {
+    const year = timeStr.substring(0, 4);
+    const month = timeStr.substring(4, 6);
+    const day = timeStr.substring(6, 8);
+    const hour = timeStr.substring(9, 11);
+    const min = timeStr.substring(11, 13);
+    const sec = timeStr.substring(13, 15);
+    const date = new Date(Date.UTC(parseInt(year), parseInt(month)-1, parseInt(day), parseInt(hour), parseInt(min), parseInt(sec)));
+    return `${date.getMonth() + 1}月${date.getDate()}日 ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+  } catch (e) {
+    return timeStr;
+  }
+}
 
 export default function DashboardPage() {
   const [playerTag, setPlayerTag] = useState("")
@@ -216,18 +231,34 @@ export default function DashboardPage() {
                     
                     return filteredBattles.map((battle: any, i: number) => {
                       const mainBInfo = getBrawlerInfo(battle.hero);
+                      const isRanked = battle.type === "soloRanked" || battle.type === "teamRanked" || battle.type === "ranked";
+                      const isFriendly = battle.type === "friendly";
+                      
+                      let scoreDisplay = null;
+                      if (isRanked) {
+                        scoreDisplay = <p className="font-bold text-sm text-purple-400 drop-shadow-sm px-2 py-1 bg-purple-500/10 rounded-md border border-purple-500/20">ランク戦</p>;
+                      } else if (isFriendly) {
+                        scoreDisplay = <p className="font-bold text-sm text-gray-400 drop-shadow-sm">フレンド</p>;
+                      } else {
+                        scoreDisplay = (
+                          <p className={`font-bold text-xl drop-shadow-sm ${battle.trophy_change > 0 ? 'text-green-500' : battle.trophy_change < 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                            {battle.trophy_change > 0 ? '+' : ''}{battle.trophy_change} 🏆
+                          </p>
+                        );
+                      }
+
                       return (
                         <Card key={i} className="bg-background/40 border border-primary/10 overflow-hidden hover:bg-primary/5 transition-colors">
                       {/* Header section */}
-                      <div className="p-3 border-b border-primary/10 flex justify-between items-center bg-card/60">
-                        <div className="flex items-center gap-3">
-                           <div className={`w-1.5 h-10 rounded-full ${battle.result === 'victory' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]' : battle.result === 'defeat' ? 'bg-destructive shadow-[0_0_10px_rgba(239,68,68,0.5)]' : 'bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)]'}`} />
+                       <div className="p-3 border-b border-primary/10 flex justify-between items-center bg-card/60">
+                         <div className="flex items-center gap-3">
+                           <div className={`w-1.5 h-11 rounded-full ${battle.result === 'victory' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]' : battle.result === 'defeat' ? 'bg-destructive shadow-[0_0_10px_rgba(239,68,68,0.5)]' : 'bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)]'}`} />
                            <div>
                              <div className="flex items-center gap-2 mb-1">
                                <Badge variant={battle.result === 'victory' ? 'default' : battle.result === 'defeat' ? 'destructive' : 'outline'} className="uppercase text-[10px] px-2 font-bold tracking-wider">
                                  {battle.result === 'victory' ? '勝利' : battle.result === 'defeat' ? '敗北' : '引き分け'}
                                </Badge>
-                               <span className="text-[10px] text-muted-foreground/60">{formatBattleTime(battle.time)}</span>
+                               <span className="text-[10px] text-muted-foreground/60 font-medium tracking-wide">{formatBattleTime(battle.time)}</span>
                              </div>
                              <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
                                <img src={getModeIconUrl(battle.mode)} alt={battle.mode} className="w-4 h-4 object-contain drop-shadow-md" />
@@ -237,21 +268,13 @@ export default function DashboardPage() {
                              </div>
                            </div>
                         </div>
-                        <div className="text-right flex items-center gap-3">
+                        <div className="text-right flex items-center gap-4">
                           <Avatar className="w-12 h-12 border-2 border-primary/30 shadow-[0_0_15px_rgba(var(--primary),0.2)]">
                             <AvatarImage src={mainBInfo.imageUrl} />
                             <AvatarFallback>{mainBInfo.nameJa.charAt(0)}</AvatarFallback>
                           </Avatar>
-                          <div className="w-20 text-right">
-                            {(battle.type === 'soloRanked' || battle.type === 'teamRanked') ? (
-                              <p className={`font-bold text-lg drop-shadow-sm ${battle.result === 'victory' ? 'text-green-500' : battle.result === 'defeat' ? 'text-destructive' : 'text-muted-foreground'}`}>
-                                {battle.result === 'victory' ? '+' : battle.result === 'defeat' ? '-' : ''}{Math.abs(battle.trophy_change * 8)} <span className="text-xs">Pt</span>
-                              </p>
-                            ) : (
-                              <p className={`font-bold text-xl drop-shadow-sm ${battle.trophy_change > 0 ? 'text-green-500' : battle.trophy_change < 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
-                                {battle.trophy_change > 0 ? '+' : ''}{battle.trophy_change} <span className="text-sm">🏆</span>
-                              </p>
-                            )}
+                          <div className="w-20 text-right flex justify-end">
+                            {scoreDisplay}
                           </div>
                         </div>
                       </div>

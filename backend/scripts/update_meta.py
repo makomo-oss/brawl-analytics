@@ -79,7 +79,7 @@ async def get_player_profile_and_battles(client: httpx.AsyncClient, tag: str):
                 battles = res.json().get("items", [])
         except: pass
         
-    return profile, battles
+    return profile, battles, tag
 
 async def fetch_all_brawlers(client: httpx.AsyncClient):
     try:
@@ -96,7 +96,7 @@ async def main():
         all_brawlers = await fetch_all_brawlers(client)
         
         print("Fetching top players...")
-        top_tags = await get_top_players(client, limit=100)
+        top_tags = await get_top_players(client, limit=1000)
         
         brawler_stats = {}
         matchup_matrix = {}
@@ -108,11 +108,25 @@ async def main():
             brawler_stats[b] = {"matches": 0, "wins": 0}
             matchup_matrix[b] = {}
             
-        print(f"Gathering real battlelogs from {len(top_tags)} players...")
+        print(f"Gathering real battlelogs from {len(top_tags)} players (this may take a minute)...")
         
-        for idx, tag in enumerate(top_tags):
-            print(f"[{idx+1}/{len(top_tags)}] Fetching {tag}...")
-            profile, battles = await get_player_profile_and_battles(client, tag)
+        # セマフォを使って同時リクエスト数を制限し、APIのレートリミットを回避しつつ高速化
+        semaphore = asyncio.Semaphore(15)
+        
+        async def fetch_with_semaphore(t_tag):
+            async with semaphore:
+                # わずかなスリープを入れてバーストを防ぐ
+                await asyncio.sleep(0.05)
+                return await get_player_profile_and_battles(client, t_tag)
+
+        tasks = [fetch_with_semaphore(tag) for tag in top_tags]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        for idx, res in enumerate(results):
+            if isinstance(res, Exception) or not res:
+                continue
+            
+            profile, battles, tag = res
             
             if profile:
                 analyzed_players.append({
@@ -170,9 +184,6 @@ async def main():
                         
                         matchup_matrix[mb][ob]["matches"] += 1
                         if is_win: matchup_matrix[mb][ob]["wins"] += 1
-            
-            # APIのレート制限（Rate Limit）を回避するためのスリープ
-            await asyncio.sleep(0.1)
 
         real_analyzed_matches = total_picks // 6
         print(f"Total pure raw matches analyzed: {real_analyzed_matches}")

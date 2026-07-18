@@ -12,15 +12,10 @@ async def get_player_battlelog(player_tag: str):
         "Accept": "application/json"
     }
     
-    # プロキシ設定。Royale APIのプロキシを利用する。
-    proxies = {
-        "http://": BRAWL_API_PROXY,
-        "https://": BRAWL_API_PROXY
-    } if BRAWL_API_PROXY else None
-
     try:
         # verify=False はプロキシ経由時のSSLエラー回避用（本番環境では証明書を正しく設定推奨）
-        async with httpx.AsyncClient(proxies=proxies, verify=False, timeout=10.0) as client:
+        proxy = BRAWL_API_PROXY if BRAWL_API_PROXY else None
+        async with httpx.AsyncClient(proxy=proxy, verify=False, timeout=10.0) as client:
             response = await client.get(url, headers=headers)
             response.raise_for_status()
             return response.json()
@@ -38,10 +33,9 @@ async def get_player(player_tag: str):
         "Authorization": f"Bearer {BRAWL_API_TOKEN}",
         "Accept": "application/json"
     }
-    proxies = {"http://": BRAWL_API_PROXY, "https://": BRAWL_API_PROXY} if BRAWL_API_PROXY else None
-
     try:
-        async with httpx.AsyncClient(proxies=proxies, verify=False, timeout=10.0) as client:
+        proxy = BRAWL_API_PROXY if BRAWL_API_PROXY else None
+        async with httpx.AsyncClient(proxy=proxy, verify=False, timeout=10.0) as client:
             response = await client.get(url, headers=headers)
             response.raise_for_status()
             return response.json()

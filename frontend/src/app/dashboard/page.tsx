@@ -111,6 +111,7 @@ export default function DashboardPage() {
   const [playerTag, setPlayerTag] = useState("")
   const [loading, setLoading] = useState(false)
   const [data, setData] = useState<DashboardData | null>(null)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [battleTab, setBattleTab] = useState("battles")
 
   const handleSync = async (overrideTag?: string) => {
@@ -118,13 +119,28 @@ export default function DashboardPage() {
     if (!tagToFetch) return
     if (overrideTag) setPlayerTag(overrideTag)
     setLoading(true)
+    setErrorMsg(null)
+    setData(null)
     try {
       const res = await fetch(`${API_URL}/player/${tagToFetch.replace("#", "")}/dashboard`)
+      if (!res.ok) {
+        if (res.status === 404) {
+          setErrorMsg("そのプレイヤーIDは存在しません。")
+        } else {
+          setErrorMsg("データの取得に失敗しました。")
+        }
+        return
+      }
       const result = await res.json()
+      if (result.error) {
+        setErrorMsg(result.error)
+        return
+      }
       setData(result)
       window.scrollTo({ top: 0, behavior: 'smooth' })
     } catch (error) {
       console.error("Fetch error", error)
+      setErrorMsg("ネットワークエラーが発生しました。")
     } finally {
       setLoading(false)
     }
@@ -155,7 +171,7 @@ export default function DashboardPage() {
               className="bg-background/80"
             />
             <Button onClick={() => handleSync()} disabled={loading} className="px-8 shadow-lg shadow-primary/20">
-              {loading ? "同期中..." : (
+              {loading ? "取得中..." : (
                 <>
                   <Search className="w-4 h-4 mr-2" />
                   同期
@@ -166,7 +182,13 @@ export default function DashboardPage() {
         </CardContent>
       </Card>
 
-      {data && (
+      {errorMsg && (
+        <div className="p-4 rounded-md bg-destructive/15 text-destructive font-medium border border-destructive/20 animate-in fade-in zoom-in duration-300">
+          {errorMsg}
+        </div>
+      )}
+
+      {data && !errorMsg && (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 mt-8">
           {data.profile && (
             /* Profile Card */

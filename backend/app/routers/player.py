@@ -13,6 +13,10 @@ async def sync_player(player_tag: str):
     try:
         player_info = await get_player(player_tag)
         return {"player_tag": player_tag, "status": "synced", "name": player_info.get("name")}
+    except ValueError as e:
+        if str(e) == "Player not found":
+            raise HTTPException(status_code=404, detail="Player not found")
+        raise HTTPException(status_code=500, detail="Failed to sync player")
     except Exception as e:
         logger.error(f"Sync error: {e}")
         raise HTTPException(status_code=500, detail="Failed to sync player")
@@ -193,6 +197,10 @@ async def get_dashboard(player_tag: str):
                 "mode_analysis": mode_analysis
             }
         }
+    except ValueError as e:
+        if str(e) == "Player not found":
+            raise HTTPException(status_code=404, detail="Player not found")
+        return {"error": "Failed to generate dashboard"}
     except Exception as e:
         logger.error(f"Dashboard error: {e}")
         return {"error": "Failed to generate dashboard"}

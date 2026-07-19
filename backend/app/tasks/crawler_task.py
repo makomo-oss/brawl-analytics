@@ -18,6 +18,13 @@ async def run_crawler_task():
     db = get_db()
     
     try:
+        # 重複して保存されてしまった古い「#付き」の不正データを自動削除（クリーニング）
+        db.table("match_raw_history").delete().like("match_id", "#%").execute()
+        db.table("players").delete().like("player_tag", "#%").execute()
+    except Exception as e:
+        logger.warning(f"Cleanup failed (might be ok if empty): {e}")
+
+    try:
         # 常に更新日時が古い（またはまだクロールされていない）プレイヤーを5人だけシードとして取得
         response = db.table("players").select("player_tag").order("updated_at", desc=False).limit(5).execute()
         base_player_tags = set(row["player_tag"].replace("#", "") for row in response.data)
@@ -38,13 +45,16 @@ async def run_crawler_task():
     found_clubs = set()
 
     async def fetch_player_and_matches(tag: str):
+        clean_tag = tag.replace("#", "")
+        raw_tag = f"#{clean_tag}"
+        
         async with semaphore:
             try:
                 # 1. プレイヤー情報の取得
-                player_info = await get_player(tag)
+                player_info = await get_player(clean_tag)
                 
                 player_data = {
-                    "player_tag": tag.replace("#", ""), # URL等の不具合防止のためDB上は#抜きで統一か、#ありか。仕様に合わせてそのまま
+                    "player_tag": clean_tag, # URL等の不具合防止のためDB上は#抜きで統一か、#ありか。仕様に合わせてそのまま
                     "name": player_info.get("name", "Unknown"),
                     "trophies": player_info.get("trophies", 0),
                     "highest_trophies": player_info.get("highestTrophies", 0),
@@ -52,21 +62,18 @@ async def run_crawler_task():
                     "updated_at": datetime.now(timezone.utc).isoformat()
                 }
                 
-                # モックエラーの場合は保存しないか、エラー名を入れるか（現状はそのまま上書き）
-                player_data["player_tag"] = tag.replace("#", "")
-                
                 club_tag = player_info.get("club", {}).get("tag")
                 
                 # 2. バトルログの取得
                 battle_log_data = []
                 try:
-                    logs = await get_player_battlelog(tag)
+                    logs = await get_player_battlelog(clean_tag)
                     items = logs.get("items", [])
                     for item in items:
                         battle = item.get("battle", {})
                         if battle.get("type") == "ranked" and battle.get("result"):
                             battle_time = item.get("battleTime")
-                            match_id = f"{tag}_{battle_time}"
+                            match_id = f"{clean_tag}_{battle_time}"
                             
                             # モックやAPIから取得したチームメンバーを味方/敵に分類
                             hero_used = "unknown"
@@ -77,12 +84,12 @@ async def run_crawler_task():
                             # 自チームと敵チームの判定ロジック (簡易版)
                             # 本来は自分のタグが含まれるチームが自チーム
                             for team in teams:
-                                is_my_team = any(p.get("tag", "").replace("%23", "#") == tag for p in team)
+                                is_my_team = any(p.get("tag", "").replace("%23", "#") == raw_tag for p in team)
                                 team_brawlers = [p.get("brawler", {}).get("name", "unknown") for p in team]
                                 
                                 if is_my_team:
                                     for p in team:
-                                        if p.get("tag", "").replace("%23", "#") == tag:
+                                        if p.get("tag", "").replace("%23", "#") == raw_tag:
                                             hero_used = p.get("brawler", {}).get("name", "unknown")
                                         else:
                                             allies.append(p.get("brawler", {}).get("name", "unknown"))
@@ -91,7 +98,7 @@ async def run_crawler_task():
 
                             battle_log_data.append({
                                 "match_id": match_id,
-                                "player_tag": tag,
+                                "player_tag": clean_tag,
                                 "match_at": datetime.strptime(battle_time, "%Y%m%dT%H%M%S.%fZ").isoformat() if "T" in battle_time else datetime.now(timezone.utc).isoformat(),
                                 "mode": battle.get("mode", "unknown"),
                                 "map_id": item.get("event", {}).get("map", "unknown"),

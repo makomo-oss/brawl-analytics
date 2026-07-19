@@ -58,7 +58,7 @@ async def get_player(player_tag: str):
             "highestAllTimeRankedElo": 6650,
             "expLevel": 150,
             "3vs3Victories": 4500,
-            "club": {"name": "Brawl Masters"},
+            "club": {"name": "Brawl Masters", "tag": "#CLUB123"},
             "brawlers": [
                 {
                     "name": "SHELLY", "power": 11, "rank": 25, "trophies": 750, "highestTrophies": 800,
@@ -81,5 +81,31 @@ async def get_player(player_tag: str):
                     "gears": [{"id":1,"name":"DAMAGE","level":3}, {"id":2,"name":"MYTHIC","level":3}],
                     "hyperCharges": [{"id":1,"name":"LIMBO"}]
                 }
+            ]
+        }
+
+async def get_club_members(club_tag: str):
+    """
+    指定したクラブに所属するメンバーの一覧を取得する
+    """
+    clean_tag = club_tag.replace("#", "")
+    tag = f"%23{clean_tag}"
+    url = f"{BRAWL_API_BASE_URL}/clubs/{tag}/members"
+    headers = {
+        "Authorization": f"Bearer {BRAWL_API_TOKEN}",
+        "Accept": "application/json"
+    }
+    try:
+        proxy = BRAWL_API_PROXY if BRAWL_API_PROXY else None
+        async with httpx.AsyncClient(proxy=proxy, verify=False, timeout=10.0) as client:
+            response = await client.get(url, headers=headers)
+            response.raise_for_status()
+            return response.json()
+    except Exception as exc:
+        logger.warning(f"Failed to fetch club members from API, using fallback mock: {exc}")
+        return {
+            "items": [
+                {"tag": "#Q2LL9G8", "name": "Player 1", "role": "member", "trophies": 35000},
+                {"tag": "#R8G2P9Y", "name": "Player 2", "role": "president", "trophies": 38000}
             ]
         }

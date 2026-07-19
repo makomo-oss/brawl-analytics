@@ -47,7 +47,7 @@ async def get_player(player_tag: str):
     except Exception as exc:
         logger.warning(f"Failed to fetch player info from API, using fallback mock: {exc}")
         return {
-            "name": "Makomo (Mock)",
+            "name": f"Mock (Error: {str(exc)[:20]}...)",
             "tag": player_tag,
             "icon": {"id": 28000013},
             "trophies": 35420,

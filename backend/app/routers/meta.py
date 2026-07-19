@@ -49,7 +49,7 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, in
     for row in data:
         # 大文字と小文字のデータが混在している場合の重複を防ぐため小文字に統一
         cid = row.get("character_id", "").lower()
-        if not cid:
+        if not cid or cid == "unknown":
             continue
             
         if cid not in char_stats:

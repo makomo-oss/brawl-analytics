@@ -52,6 +52,9 @@ def calc_macro_map_stats(df: pd.DataFrame):
     # キャラクターIDを小文字に正規化（APIは大文字で返すため）
     df["hero_used"] = df["hero_used"].str.lower()
     
+    # "unknown" のデータは集計対象外
+    df = df[df["hero_used"] != "unknown"]
+    
     # マップ × ヒーローで集計
     grouped = df.groupby(["map_id", "hero_used"]).agg(
         total_matches=("match_id", "count"),
@@ -145,9 +148,13 @@ def calc_dynamic_counters(df: pd.DataFrame):
         m_count = int(row["match_count"])
         w_count = int(row["win_count"])
         
+        # "unknown" は除外
+        if char_a == "unknown" or char_b == "unknown":
+            continue
+            
         # 相性係数の計算
-        # 50試合未満は0.0 (仕様に基づく)
-        if m_count < 50:
+        # サービス開始直後はデータが少ないため、閾値を50から3試合に緩和
+        if m_count < 3:
             coef = 0.0
         else:
             base_wr = global_win_rates.get(char_a, 0.5)

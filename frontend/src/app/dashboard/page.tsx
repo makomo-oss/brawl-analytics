@@ -193,36 +193,36 @@ export default function DashboardPage() {
           {data.profile && (
             /* Profile Card */
             <Card className="border-t-4 border-t-blue-500 shadow-md mb-8">
-              <CardHeader className="pb-4">
-                <div className="flex items-center gap-6">
-                  <Avatar className="w-20 h-20 border-2 border-primary/20 shadow-sm">
+              <CardHeader className="pb-8">
+                <div className="flex flex-col md:flex-row items-center md:items-start gap-6 text-center md:text-left">
+                  <Avatar className="w-20 h-20 md:w-24 md:h-24 border-4 border-background shadow-xl">
                     <AvatarImage src={`https://cdn.brawlify.com/profile-icons/regular/${data.profile?.icon_id || 28000000}.png`} />
                     <AvatarFallback className="bg-primary/10 text-2xl font-bold">{data.profile?.name?.[0]}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
                     <CardTitle className="text-3xl font-extrabold tracking-tight">{data.profile?.name}</CardTitle>
-                    <div className="flex items-center gap-2 mt-1 text-muted-foreground">
+                    <div className="flex flex-wrap justify-center md:justify-start items-center gap-2 mt-2 text-muted-foreground">
                       <span className="font-medium">{data.player_tag}</span>
                       <span className="text-xs px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground font-semibold">
                         {data.profile?.club_name || "No Club"}
                       </span>
                     </div>
                   </div>
-                  <div className="flex gap-4">
-                <div className="text-right bg-primary/5 px-4 py-2 rounded-xl">
-                  <div className="text-sm font-semibold text-muted-foreground flex items-center justify-end gap-1">
+                  <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto mt-4 md:mt-0">
+                <div className="text-center md:text-right bg-primary/5 px-4 py-3 rounded-xl w-full sm:w-auto">
+                  <div className="text-sm font-semibold text-muted-foreground flex items-center justify-center md:justify-end gap-1">
                     <Trophy className="w-4 h-4 text-yellow-500" /> トロフィー
                   </div>
-                  <div className="text-2xl font-black text-primary">{data.profile?.trophies.toLocaleString()}</div>
+                  <div className="text-2xl font-black text-primary mt-1">{data.profile?.trophies.toLocaleString()}</div>
                   <div className="text-xs text-muted-foreground">最高: {data.profile?.highest_trophies.toLocaleString()}</div>
                 </div>
                 {data.profile?.ranked_elo ? (
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center w-full sm:w-auto gap-3">
                     {data.profile.ranked_rank > 0 && (() => {
                       const rankInfo = getRankImage(data.profile.ranked_rank);
                       if (!rankInfo) return null;
                       return (
-                        <div className="relative w-16 h-16 drop-shadow-md flex items-center justify-center transform hover:scale-105 transition-transform">
+                        <div className="relative w-14 h-14 md:w-16 md:h-16 drop-shadow-md flex items-center justify-center transform hover:scale-105 transition-transform">
                           <img 
                             src={rankInfo.url} 
                             alt={rankInfo.name} 
@@ -237,11 +237,11 @@ export default function DashboardPage() {
                         </div>
                       )
                     })()}
-                    <div className="text-right bg-purple-500/5 px-4 py-2 rounded-xl border border-purple-500/10">
-                      <div className="text-sm font-semibold text-purple-600 dark:text-purple-400 flex items-center justify-end gap-1">
-                        <Swords className="w-4 h-4" /> ガチバトル現在スコア
+                    <div className="flex-1 text-center md:text-right bg-purple-500/5 px-4 py-3 rounded-xl border border-purple-500/10">
+                      <div className="text-sm font-semibold text-purple-600 dark:text-purple-400 flex items-center justify-center md:justify-end gap-1">
+                        <Swords className="w-4 h-4" /> 現在スコア
                       </div>
-                      <div className="text-2xl font-black text-purple-600 dark:text-purple-400">{data.profile.ranked_elo.toLocaleString()}</div>
+                      <div className="text-2xl font-black text-purple-600 dark:text-purple-400 mt-1">{data.profile.ranked_elo.toLocaleString()}</div>
                       <div className="text-xs text-purple-500/70">最高: {data.profile.highest_ranked_elo.toLocaleString()}</div>
                     </div>
                   </div>

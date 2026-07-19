@@ -129,8 +129,8 @@ export default function TierListPage() {
       </div>
 
       <Tabs value={selectedType} onValueChange={handleTypeChange} className="space-y-6">
-        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between bg-secondary/30 p-4 rounded-xl border">
-          <TabsList className="grid w-full md:w-[400px] grid-cols-2 bg-secondary/50 p-1">
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between bg-secondary/30 p-4 rounded-xl border">
+          <TabsList className="grid w-full sm:w-[400px] grid-cols-2 bg-secondary/50 p-1">
             <TabsTrigger value="global" className="font-bold">
               <Trophy className="w-4 h-4 mr-2" />
               グローバル
@@ -147,14 +147,14 @@ export default function TierListPage() {
             <Tabs value={subType} onValueChange={handleSubTypeChange} className="w-full sm:w-auto">
               <TabsList className="grid grid-cols-3 w-full sm:w-[300px]">
                 <TabsTrigger value="all" className="text-xs">すべて</TabsTrigger>
-                <TabsTrigger value="mode" className="text-xs">モード別</TabsTrigger>
-                <TabsTrigger value="map" className="text-xs">マップ別</TabsTrigger>
+                <TabsTrigger value="mode" className="text-xs sm:text-sm">モード別</TabsTrigger>
+                <TabsTrigger value="map" className="text-xs sm:text-sm">マップ別</TabsTrigger>
               </TabsList>
             </Tabs>
 
             {subType === "mode" && (
               <Select value={selectedId} onValueChange={(val) => setSelectedId(val || "")}>
-                <SelectTrigger className="w-full sm:w-[250px] bg-background">
+                <SelectTrigger className="w-full sm:w-[220px] bg-background">
                   <SelectValue placeholder="モードを選択..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -166,8 +166,8 @@ export default function TierListPage() {
             )}
 
             {subType === "map" && (
-              <Select value={selectedId} onValueChange={(val) => setSelectedId(val || "")}>
-                <SelectTrigger className="w-full sm:w-[250px] bg-background">
+              <Select value={selectedId} onValueChange={setSelectedId}>
+                <SelectTrigger className="w-full sm:w-[220px] bg-background">
                   <SelectValue placeholder="マップを選択..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -205,20 +205,20 @@ export default function TierListPage() {
                       </div>
                       
                       {/* Characters Area */}
-                      <CardContent className="flex-1 p-4 md:p-6 flex flex-wrap gap-3">
-                        {chars.map((char: string) => {
-                          const info = getBrawlerInfo(char);
+                      <CardContent className="flex-1 p-4 md:p-6 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3 sm:gap-4">
+                        {chars.map((charId: string) => {
+                          const info = getBrawlerInfo(charId);
                           return (
                             <div 
-                              key={char} 
-                              onClick={() => fetchCharacterDetail(char)}
-                              className="group relative flex flex-col items-center justify-center p-2 w-20 h-24 rounded-xl bg-background/60 hover:bg-background/90 border border-primary/10 hover:border-primary/50 transition-all hover:-translate-y-1 cursor-pointer shadow-sm"
+                              key={charId} 
+                              onClick={() => fetchCharacterDetail(charId)}
+                              className="group relative flex flex-col items-center justify-center p-2 rounded-xl bg-background/60 hover:bg-background/90 border border-primary/10 hover:border-primary/50 transition-all hover:-translate-y-1 cursor-pointer shadow-sm"
                             >
-                              <Avatar className="w-12 h-12 border-2 border-transparent group-hover:border-primary/50 transition-colors shadow-sm">
+                              <Avatar className="w-14 h-14 sm:w-16 sm:h-16 border-2 border-black/20 dark:border-white/10 group-hover:border-primary transition-colors shadow-sm">
                                 <AvatarImage src={info.imageUrl} />
                                 <AvatarFallback className="bg-primary/10 text-primary font-bold">{info.nameJa.charAt(0)}</AvatarFallback>
                               </Avatar>
-                              <span className="mt-2 font-bold text-[10px] truncate w-full text-center text-foreground/80 group-hover:text-primary transition-colors">{info.nameJa}</span>
+                              <span className="text-xs font-medium text-center truncate w-full px-1 mt-2">{info.nameJa}</span>
                             </div>
                           )
                         })}

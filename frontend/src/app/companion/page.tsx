@@ -401,26 +401,27 @@ export default function DraftCompanionPage() {
             <CardHeader className="pb-3 border-b bg-secondary/10">
               <CardTitle className="text-lg">ドラフトボード</CardTitle>
             </CardHeader>
-            <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <CardContent className="pt-4 grid grid-cols-3 gap-2 sm:gap-6">
               
               {/* Blue Team Area */}
               <div className="space-y-3">
-                <h3 className="font-bold text-blue-500 flex items-center justify-center gap-2 bg-blue-500/10 p-2 rounded-lg">
-                  青チーム {firstPickTeam === "blue" ? "(先攻)" : "(後攻)"} {myTeam === "blue" && "(味方)"}
+                <h3 className="font-bold text-blue-500 flex flex-col items-center justify-center bg-blue-500/10 p-1 sm:p-2 rounded-lg text-[10px] sm:text-base leading-tight">
+                  <span>青チーム</span>
+                  <span className="font-normal">{firstPickTeam === "blue" ? "(先攻)" : "(後攻)"}</span>
                 </h3>
                 <div className="flex flex-col gap-3">
                   {[0, 1, 2].map(i => {
                     const charName = bluePicks[i]
                     const isActive = phase === "pick" && currentTurnTeam === "blue" && bluePicks.length === i
                     return (
-                      <div key={`blue-${i}`} className={`h-16 rounded-lg border-2 flex items-center p-2 gap-3 transition-all ${isActive ? 'border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)] animate-pulse' : 'border-secondary bg-secondary/20'}`}>
+                      <div key={`blue-${i}`} className={`h-12 sm:h-16 rounded-lg border-2 flex flex-col sm:flex-row items-center justify-center sm:justify-start p-1 sm:p-2 gap-1 sm:gap-3 transition-all ${isActive ? 'border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)] animate-pulse' : 'border-secondary bg-secondary/20'}`}>
                         {charName ? (
                           <>
-                            <Avatar className="w-10 h-10 border border-blue-500/50"><AvatarImage src={getBrawlerInfo(charName).imageUrl} /></Avatar>
-                            <span className="font-bold">{getBrawlerInfo(charName).nameJa}</span>
+                            <Avatar className="w-6 h-6 sm:w-10 sm:h-10 border border-blue-500/50"><AvatarImage src={getBrawlerInfo(charName).imageUrl} /></Avatar>
+                            <span className="font-bold text-[8px] sm:text-sm truncate w-full text-center sm:text-left">{getBrawlerInfo(charName).nameJa}</span>
                           </>
                         ) : (
-                          <span className="text-muted-foreground text-sm mx-auto">ピック {i+1}</span>
+                          <span className="text-muted-foreground text-[10px] sm:text-sm mx-auto">Pick {i+1}</span>
                         )}
                       </div>
                     )
@@ -430,22 +431,23 @@ export default function DraftCompanionPage() {
 
               {/* Red Team Area */}
               <div className="space-y-3">
-                <h3 className="font-bold text-red-500 flex items-center justify-center gap-2 bg-red-500/10 p-2 rounded-lg">
-                  赤チーム {firstPickTeam === "red" ? "(先攻)" : "(後攻)"} {myTeam === "red" && "(味方)"}
+                <h3 className="font-bold text-red-500 flex flex-col items-center justify-center bg-red-500/10 p-1 sm:p-2 rounded-lg text-[10px] sm:text-base leading-tight">
+                  <span>赤チーム</span>
+                  <span className="font-normal">{firstPickTeam === "red" ? "(先攻)" : "(後攻)"}</span>
                 </h3>
                 <div className="flex flex-col gap-3">
                   {[0, 1, 2].map(i => {
                     const charName = redPicks[i]
                     const isActive = phase === "pick" && currentTurnTeam === "red" && redPicks.length === i
                     return (
-                      <div key={`red-${i}`} className={`h-16 rounded-lg border-2 flex items-center p-2 gap-3 transition-all ${isActive ? 'border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.5)] animate-pulse' : 'border-secondary bg-secondary/20'}`}>
+                      <div key={`red-${i}`} className={`h-12 sm:h-16 rounded-lg border-2 flex flex-col sm:flex-row items-center justify-center sm:justify-start p-1 sm:p-2 gap-1 sm:gap-3 transition-all ${isActive ? 'border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.5)] animate-pulse' : 'border-secondary bg-secondary/20'}`}>
                         {charName ? (
                           <>
-                            <Avatar className="w-10 h-10 border border-red-500/50"><AvatarImage src={getBrawlerInfo(charName).imageUrl} /></Avatar>
-                            <span className="font-bold">{getBrawlerInfo(charName).nameJa}</span>
+                            <Avatar className="w-6 h-6 sm:w-10 sm:h-10 border border-red-500/50"><AvatarImage src={getBrawlerInfo(charName).imageUrl} /></Avatar>
+                            <span className="font-bold text-[8px] sm:text-sm truncate w-full text-center sm:text-left">{getBrawlerInfo(charName).nameJa}</span>
                           </>
                         ) : (
-                          <span className="text-muted-foreground text-sm mx-auto">ピック {i+1}</span>
+                          <span className="text-muted-foreground text-[10px] sm:text-sm mx-auto">Pick {i+1}</span>
                         )}
                       </div>
                     )
@@ -455,8 +457,9 @@ export default function DraftCompanionPage() {
 
               {/* Bans Area */}
               <div className="space-y-3">
-                <h3 className="font-bold text-slate-500 flex items-center justify-center gap-2 bg-slate-500/10 p-2 rounded-lg">
-                  <Ban className="w-4 h-4" /> BANS
+                <h3 className="font-bold text-slate-500 flex flex-col items-center justify-center bg-slate-500/10 p-1 sm:p-2 rounded-lg text-[10px] sm:text-base leading-tight">
+                  <span className="flex items-center gap-1"><Ban className="w-3 h-3 sm:w-4 sm:h-4" /> BANS</span>
+                  <span className="font-normal opacity-0">.</span>
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                   {/* Ally Bans */}
@@ -467,16 +470,17 @@ export default function DraftCompanionPage() {
                         const charName = allyBans[i]
                         const isActive = phase === "ban" && currentTurnTeam === myTeam && allyBans.length === i
                         return (
-                          <div key={`allyban-${i}`} className={`h-12 rounded-lg border-2 flex items-center justify-center relative overflow-hidden ${isActive ? 'border-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)] animate-pulse' : 'border-secondary bg-slate-900/50'}`}>
+                          <div key={`allyban-${i}`} className={`h-12 sm:h-16 rounded-lg border-2 flex flex-col sm:flex-row items-center justify-center sm:justify-start p-1 sm:p-2 gap-1 sm:gap-3 relative overflow-hidden ${isActive ? 'border-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)] animate-pulse' : 'border-secondary bg-slate-900/50'}`}>
                             {charName ? (
                               <>
-                                <Avatar className="w-8 h-8 opacity-50 grayscale"><AvatarImage src={getBrawlerInfo(charName).imageUrl} /></Avatar>
-                                <div className="absolute inset-0 bg-red-500/20 flex items-center justify-center">
+                                <Avatar className="w-6 h-6 sm:w-10 sm:h-10 opacity-50 grayscale"><AvatarImage src={getBrawlerInfo(charName).imageUrl} /></Avatar>
+                                <div className="absolute inset-0 bg-red-500/20 flex items-center justify-center pointer-events-none">
                                   <div className="w-full h-0.5 bg-red-500 rotate-45 absolute" />
                                 </div>
+                                <span className="font-bold text-[8px] sm:text-sm truncate w-full text-center sm:text-left z-10 hidden sm:block">{getBrawlerInfo(charName).nameJa}</span>
                               </>
                             ) : (
-                              <span className="text-[10px] text-muted-foreground">BAN {i+1}</span>
+                              <span className="text-[10px] sm:text-sm text-muted-foreground mx-auto">BAN</span>
                             )}
                           </div>
                         )
@@ -491,16 +495,17 @@ export default function DraftCompanionPage() {
                         const charName = enemyBans[i]
                         const isActive = phase === "ban" && currentTurnTeam !== myTeam && enemyBans.length === i
                         return (
-                          <div key={`enemyban-${i}`} className={`h-12 rounded-lg border-2 flex items-center justify-center relative overflow-hidden ${isActive ? 'border-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)] animate-pulse' : 'border-secondary bg-slate-900/50'}`}>
+                          <div key={`enemyban-${i}`} className={`h-12 sm:h-16 rounded-lg border-2 flex flex-col sm:flex-row items-center justify-center sm:justify-start p-1 sm:p-2 gap-1 sm:gap-3 relative overflow-hidden ${isActive ? 'border-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)] animate-pulse' : 'border-secondary bg-slate-900/50'}`}>
                             {charName ? (
                               <>
-                                <Avatar className="w-8 h-8 opacity-50 grayscale"><AvatarImage src={getBrawlerInfo(charName).imageUrl} /></Avatar>
-                                <div className="absolute inset-0 bg-red-500/20 flex items-center justify-center">
+                                <Avatar className="w-6 h-6 sm:w-10 sm:h-10 opacity-50 grayscale"><AvatarImage src={getBrawlerInfo(charName).imageUrl} /></Avatar>
+                                <div className="absolute inset-0 bg-red-500/20 flex items-center justify-center pointer-events-none">
                                   <div className="w-full h-0.5 bg-red-500 rotate-45 absolute" />
                                 </div>
+                                <span className="font-bold text-[8px] sm:text-sm truncate w-full text-center sm:text-left z-10 hidden sm:block">{getBrawlerInfo(charName).nameJa}</span>
                               </>
                             ) : (
-                              <span className="text-[10px] text-muted-foreground">BAN {i+1}</span>
+                              <span className="text-[10px] sm:text-sm text-muted-foreground mx-auto">BAN</span>
                             )}
                           </div>
                         )

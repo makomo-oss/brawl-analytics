@@ -1,3 +1,4 @@
+import urllib.request
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -23,3 +24,9 @@ app.include_router(meta_router)
 @app.get("/")
 def read_root():
     return {"message": "Welcome to BrawlAnalytics API"}
+
+# RenderのIPアドレスを確認するための追加コード
+@app.get("/my-ip")
+def get_my_ip():
+    ip = urllib.request.urlopen("https://api.ipify.org").read().decode("utf-8")
+    return {"render_ip": ip}

@@ -25,9 +25,7 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, in
     # macro_map_statsからデータを取得
     try:
         query = db.table("macro_map_stats").select("*")
-        if type == "gachi" and sub_type == "map" and id:
-            query = query.eq("map_id", id)
-        
+        # query.eq などの事前絞り込みは行わず、Python側で柔軟にフィルタリングする
         # ※本来は上限があるためページネーションが必要ですが、キャラ数×マップ数なら数千件なので一括取得
         res = query.limit(10000).execute()
         data = res.data
@@ -44,21 +42,40 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, in
             "characters": {} if include_details else None
         }
         
+    # モード別のマップ一覧が必要な場合
+    valid_map_ids = None
+    if sub_type == "mode" and id:
+        try:
+            mode_res = db.table("match_raw_history").select("map_id").eq("mode", id).execute()
+            valid_map_ids = set([r["map_id"] for r in mode_res.data])
+        except:
+            valid_map_ids = set()
+            
     # フィルタリング
     filtered_data = []
     for row in data:
         map_id = str(row.get("map_id", ""))
         is_gachi_match = map_id.startswith("gachi_")
         
+        # ガチバトル指定の場合
         if type == "gachi" and not is_gachi_match:
             continue
             
-        # グローバルの場合はすべてのデータを許可（フィルタなし）
+        real_map_id = map_id.replace("gachi_", "") if is_gachi_match else map_id
         
+        # マップ別フィルタ
+        if sub_type == "map" and id:
+            if real_map_id != id:
+                continue
+                
+        # モード別フィルタ
+        if sub_type == "mode" and id and valid_map_ids is not None:
+            # 通常版とガチ版のどちらかのmap_idでプレイされていればOK
+            if real_map_id not in valid_map_ids and f"gachi_{real_map_id}" not in valid_map_ids:
+                continue
+                
         # フロントエンドの画像表示等が壊れないようにプレフィックスを削除
-        if is_gachi_match:
-            row["map_id"] = map_id.replace("gachi_", "")
-            
+        row["map_id"] = real_map_id
         filtered_data.append(row)
         
     data = filtered_data

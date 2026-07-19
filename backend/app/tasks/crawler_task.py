@@ -66,6 +66,7 @@ async def run_crawler_task():
                 
                 # 2. バトルログの取得
                 battle_log_data = []
+                encountered_players = set()
                 try:
                     logs = await get_player_battlelog(clean_tag)
                     items = logs.get("items", [])
@@ -81,11 +82,15 @@ async def run_crawler_task():
                             opponents = []
                             teams = battle.get("teams", [])
                             
-                            # 自チームと敵チームの判定ロジック (簡易版)
-                            # 本来は自分のタグが含まれるチームが自チーム
+                            # 自チームと敵チームの判定ロジック
                             for team in teams:
                                 is_my_team = any(p.get("tag", "").replace("%23", "#") == raw_tag for p in team)
                                 team_brawlers = [p.get("brawler", {}).get("name", "unknown") for p in team]
+                                
+                                for p in team:
+                                    ptag = p.get("tag", "")
+                                    if ptag:
+                                        encountered_players.add(ptag.replace("#", ""))
                                 
                                 if is_my_team:
                                     for p in team:
@@ -108,24 +113,28 @@ async def run_crawler_task():
                                 "opponents": opponents
                             })
                 except Exception as e:
-                    logger.warning(f"Failed to fetch battlelog for {tag}: {e}")
+                    logger.warning(f"Failed to fetch battlelog for {clean_tag}: {e}")
                 
-                return player_data, battle_log_data, club_tag
+                return player_data, battle_log_data, club_tag, encountered_players
             except Exception as e:
-                logger.warning(f"Failed to fetch data for player {tag}: {e}")
-                return None, [], None
+                logger.warning(f"Failed to fetch data for player {clean_tag}: {e}")
+                return None, [], None, set()
 
     # フェーズ1: 既存プレイヤーのデータと所属クラブを取得
     tasks = [fetch_player_and_matches(tag) for tag in base_player_tags]
     results = await asyncio.gather(*tasks)
     
-    for p_data, m_data, c_tag in results:
+    encountered_in_battles = set()
+    
+    for p_data, m_data, c_tag, e_players in results:
         if p_data:
             upsert_players.append(p_data)
         if m_data:
             upsert_matches.extend(m_data)
         if c_tag:
             found_clubs.add(c_tag)
+        if e_players:
+            encountered_in_battles.update(e_players)
             
     # フェーズ2: クラブから新メンバーを抽出 (芋づる式クローリング制限：最大10クラブ)
     new_player_tags = set()
@@ -150,14 +159,21 @@ async def run_crawler_task():
                     m_clean = m.replace("#", "")
                     if m_clean not in base_player_tags:
                         new_player_tags.add(m_clean)
+                        
+    # バトルで遭遇したプレイヤーも新規取得リストに加える（クラブ抽出と並行）
+    for m_clean in encountered_in_battles:
+        if m_clean not in base_player_tags:
+            new_player_tags.add(m_clean)
                     
     # フェーズ3: 新規プレイヤーのデータを取得
     if new_player_tags:
-        logger.info(f"Found {len(new_player_tags)} new players. Fetching their data...")
-        new_tasks = [fetch_player_and_matches(tag) for tag in list(new_player_tags)[:50]] # 制限: 1バッチにつき最大50人まで
+        logger.info(f"Found {len(new_player_tags)} new players (from clubs & battles). Fetching their data...")
+        # ランダム性を持たせるため、今回は順序を保持しつつ上限50人に制限 (本来はランダムサンプリングがベスト)
+        target_new_players = list(new_player_tags)[:50]
+        new_tasks = [fetch_player_and_matches(tag) for tag in target_new_players] # 制限: 1バッチにつき最大50人まで
         new_results = await asyncio.gather(*new_tasks)
         
-        for p_data, m_data, _ in new_results:
+        for p_data, m_data, _, _ in new_results:
             if p_data:
                 upsert_players.append(p_data)
             if m_data:

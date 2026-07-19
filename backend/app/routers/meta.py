@@ -214,9 +214,12 @@ def get_character_detail(character_id: str, type: str = "global", sub_type: str 
         counters.sort(key=lambda x: x.get("counter_coefficient", 0.0), reverse=True)
         
         # カモ (有利: 係数が高いトップ5)
-        for c in counters[:5]:
+        for c in counters:
+            if len(kamo) >= 5: break
+            enemy_id = c["char_b"]
+            if enemy_id == "unknown":
+                continue
             if c.get("counter_coefficient", 0.0) > 0:
-                enemy_id = c["char_b"]
                 kamo.append({
                     "id": enemy_id,
                     "name": format_char_name(enemy_id),
@@ -224,9 +227,12 @@ def get_character_detail(character_id: str, type: str = "global", sub_type: str 
                 })
                 
         # 天敵 (不利: 係数が低いボトム5)
-        for c in reversed(counters[-5:]):
+        for c in reversed(counters):
+            if len(tenteki) >= 5: break
+            enemy_id = c["char_b"]
+            if enemy_id == "unknown":
+                continue
             if c.get("counter_coefficient", 0.0) < 0:
-                enemy_id = c["char_b"]
                 tenteki.append({
                     "id": enemy_id,
                     "name": format_char_name(enemy_id),

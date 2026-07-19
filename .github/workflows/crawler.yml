@@ -26,7 +26,6 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-          REDIS_URL: ${{ secrets.REDIS_URL }}
           BRAWL_API_TOKEN: ${{ secrets.BRAWL_API_TOKEN }}
         run: |
           cd backend

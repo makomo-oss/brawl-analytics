@@ -5,7 +5,6 @@ load_dotenv()
 
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
-REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 
 # Brawl Stars API Config
 BRAWL_API_TOKEN = os.getenv("BRAWL_API_TOKEN", "mock_token_for_tests")

@@ -20,8 +20,8 @@ async def run_crawler_task():
     # 1. プレイヤータグ一覧の取得
     # 仕様: playersテーブルからタグを取得。もしテーブルが空の場合はシードタグを使う
     try:
-        response = db.table("players").select("tag").execute()
-        player_tags = [row["tag"] for row in response.data]
+        response = db.table("players").select("player_tag").execute()
+        player_tags = [row["player_tag"] for row in response.data]
     except Exception as e:
         logger.error(f"Failed to fetch player tags from DB: {e}")
         return
@@ -46,10 +46,11 @@ async def run_crawler_task():
                 
                 # バルクアップサート用のデータ整形
                 return {
-                    "tag": tag,
+                    "player_tag": tag,
                     "name": player_info.get("name", "Unknown"),
                     "trophies": player_info.get("trophies", 0),
                     "highest_trophies": player_info.get("highestTrophies", 0),
+                    "unlocked_characters": {}, # FIXME: 将来的にBrawl APIからアンロック情報をパースする
                     "updated_at": datetime.now(timezone.utc).isoformat()
                 }
             except Exception as e:

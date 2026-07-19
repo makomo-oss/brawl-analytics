@@ -18,8 +18,9 @@ async def run_crawler_task():
     db = get_db()
     
     try:
-        response = db.table("players").select("player_tag").execute()
-        base_player_tags = set(row["player_tag"] for row in response.data)
+        # 常に更新日時が古い（またはまだクロールされていない）プレイヤーを5人だけシードとして取得
+        response = db.table("players").select("player_tag").order("updated_at", desc=False).limit(5).execute()
+        base_player_tags = set(row["player_tag"].replace("#", "") for row in response.data)
     except Exception as e:
         logger.error(f"Failed to fetch player tags from DB: {e}")
         return
@@ -52,7 +53,7 @@ async def run_crawler_task():
                 }
                 
                 # モックエラーの場合は保存しないか、エラー名を入れるか（現状はそのまま上書き）
-                player_data["player_tag"] = tag
+                player_data["player_tag"] = tag.replace("#", "")
                 
                 club_tag = player_info.get("club", {}).get("tag")
                 
@@ -138,8 +139,10 @@ async def run_crawler_task():
         club_results = await asyncio.gather(*club_tasks)
         for members in club_results:
             for m in members:
-                if m and m not in base_player_tags:
-                    new_player_tags.add(m)
+                if m:
+                    m_clean = m.replace("#", "")
+                    if m_clean not in base_player_tags:
+                        new_player_tags.add(m_clean)
                     
     # フェーズ3: 新規プレイヤーのデータを取得
     if new_player_tags:

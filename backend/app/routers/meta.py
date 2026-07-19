@@ -44,6 +44,25 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, in
             "characters": {} if include_details else None
         }
         
+    # フィルタリング
+    filtered_data = []
+    for row in data:
+        map_id = str(row.get("map_id", ""))
+        is_gachi_match = map_id.startswith("gachi_")
+        
+        if type == "gachi" and not is_gachi_match:
+            continue
+            
+        # グローバルの場合はすべてのデータを許可（フィルタなし）
+        
+        # フロントエンドの画像表示等が壊れないようにプレフィックスを削除
+        if is_gachi_match:
+            row["map_id"] = map_id.replace("gachi_", "")
+            
+        filtered_data.append(row)
+        
+    data = filtered_data
+
     # キャラクターごとに集計
     char_stats = {}
     for row in data:

@@ -153,8 +153,8 @@ def calc_dynamic_counters(df: pd.DataFrame):
             continue
             
         # 相性係数の計算
-        # サービス開始直後はデータが少ないため、閾値を50から3試合に緩和
-        if m_count < 3:
+        # サービス開始直後はデータが少ないため、閾値を50から1試合に緩和
+        if m_count < 1:
             coef = 0.0
         else:
             base_wr = global_win_rates.get(char_a, 0.5)

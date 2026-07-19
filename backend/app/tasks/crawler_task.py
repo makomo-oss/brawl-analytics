@@ -72,9 +72,18 @@ async def run_crawler_task():
                     items = logs.get("items", [])
                     for item in items:
                         battle = item.get("battle", {})
-                        if battle.get("type") == "ranked" and battle.get("result"):
+                        b_type = battle.get("type")
+                        
+                        # ranked=トロフィーマッチ、soloRanked/teamRanked=ガチバトル
+                        if b_type in ["ranked", "soloRanked", "teamRanked"] and battle.get("result"):
                             battle_time = item.get("battleTime")
                             match_id = f"{clean_tag}_{battle_time}"
+                            
+                            original_map_id = item.get("event", {}).get("map", "unknown")
+                            if b_type in ["soloRanked", "teamRanked"]:
+                                map_id = f"gachi_{original_map_id}"
+                            else:
+                                map_id = original_map_id
                             
                             # モックやAPIから取得したチームメンバーを味方/敵に分類
                             hero_used = "unknown"
@@ -106,7 +115,7 @@ async def run_crawler_task():
                                 "player_tag": clean_tag,
                                 "match_at": datetime.strptime(battle_time, "%Y%m%dT%H%M%S.%fZ").isoformat() if "T" in battle_time else datetime.now(timezone.utc).isoformat(),
                                 "mode": battle.get("mode", "unknown"),
-                                "map_id": item.get("event", {}).get("map", "unknown"),
+                                "map_id": map_id,
                                 "result": battle.get("result"),
                                 "hero_used": hero_used,
                                 "allies": allies,

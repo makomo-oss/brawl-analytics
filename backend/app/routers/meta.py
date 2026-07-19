@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 import json
 import os
+from app.database import get_db
 
 router = APIRouter(prefix="/meta", tags=["Meta"])
 
@@ -39,11 +40,25 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, in
     if not target:
         raise HTTPException(status_code=404, detail=f"Data for {type} not found")
         
+    # Supabaseから実際の総試合数をカウントして上書きする
+    actual_matches = target.get("metrics", {}).get("analyzed_matches", 0)
+    try:
+        db = get_db()
+        # match_raw_historyの総レコード数をカウント (Headメソッドで件数のみ取得)
+        res = db.table("match_raw_history").select("match_id", count="exact").limit(1).execute()
+        if res.count is not None:
+            actual_matches = res.count
+    except Exception as e:
+        print(f"Failed to fetch match count from DB: {e}")
+        
+    metrics = target.get("metrics", {})
+    metrics["analyzed_matches"] = actual_matches
+        
     response_data = {
         "updated_at": meta.get("updated_at"),
         "tiers": target.get("tiers", {}),
         "type": type,
-        "metrics": target.get("metrics", {})
+        "metrics": metrics
     }
     
     if include_details:

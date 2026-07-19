@@ -49,6 +49,9 @@ def calc_macro_map_stats(df: pd.DataFrame):
     # 勝利フラグを数値化
     df["is_win"] = (df["result"] == "victory").astype(int)
     
+    # キャラクターIDを小文字に正規化（APIは大文字で返すため）
+    df["hero_used"] = df["hero_used"].str.lower()
+    
     # マップ × ヒーローで集計
     grouped = df.groupby(["map_id", "hero_used"]).agg(
         total_matches=("match_id", "count"),
@@ -94,6 +97,7 @@ def calc_dynamic_counters(df: pd.DataFrame):
         
     # 全体のヒーロー別平均勝率を計算
     df["is_win"] = (df["result"] == "victory").astype(int)
+    df["hero_used"] = df["hero_used"].str.lower()
     global_win_rates = df.groupby("hero_used")["is_win"].mean().to_dict()
     
     # hero_used (char_a) と opponents (char_b) のペアを展開
@@ -112,6 +116,7 @@ def calc_dynamic_counters(df: pd.DataFrame):
                 opponents = []
                 
         for char_b in opponents:
+            char_b = str(char_b).lower()
             records.append({
                 "char_a": char_a,
                 "char_b": char_b,

@@ -47,7 +47,11 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, in
     # キャラクターごとに集計
     char_stats = {}
     for row in data:
-        cid = row["character_id"]
+        # 大文字と小文字のデータが混在している場合の重複を防ぐため小文字に統一
+        cid = row.get("character_id", "").lower()
+        if not cid:
+            continue
+            
         if cid not in char_stats:
             char_stats[cid] = {
                 "total_wins": 0,

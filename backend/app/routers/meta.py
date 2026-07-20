@@ -10,12 +10,20 @@ def format_char_name(char_id: str) -> str:
     return char_id.replace("_", " ").title()
 
 def wilson_lower_bound(wins: int, total: int, z: float = 1.96) -> float:
-    if total == 0:
+    if total <= 0 or wins < 0:
         return 0.0
+    # 異常データ対策: 勝利数は最大でも試合数と同じにする
+    wins = min(wins, total)
     p = wins / total
     denominator = 1 + z**2 / total
     center = p + z**2 / (2 * total)
-    spread = z * math.sqrt((p * (1 - p) / total) + (z**2 / (4 * total**2)))
+    
+    # 浮動小数点演算誤差による極微小な負の数を防ぐ
+    inner_val = (p * (1 - p) / total) + (z**2 / (4 * total**2))
+    if inner_val < 0:
+        inner_val = 0.0
+        
+    spread = z * math.sqrt(inner_val)
     return (center - spread) / denominator
 
 @router.get("/tier-list")

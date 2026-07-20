@@ -202,7 +202,7 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      <Card className="bg-card/50 backdrop-blur-sm border-primary/20 shadow-sm">
+      <Card className="bg-card/50 backdrop-blur-sm border-primary/20 shadow-sm overflow-visible">
         <CardHeader>
           <CardTitle>プレイヤー同期</CardTitle>
           <CardDescription>Brawl Starsのプレイヤータグを入力して最新のデータを取得します。</CardDescription>

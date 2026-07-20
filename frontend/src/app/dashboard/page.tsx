@@ -241,20 +241,29 @@ export default function DashboardPage() {
                       {suggestions.map((p, idx) => (
                         <li 
                           key={idx} 
-                          className="px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground cursor-pointer flex justify-between items-center transition-colors"
+                          className="px-4 py-3 text-sm hover:bg-accent hover:text-accent-foreground cursor-pointer flex justify-between items-center transition-colors border-b last:border-b-0"
                           onClick={() => {
                             setPlayerTag(p.player_tag)
                             setShowSuggestions(false)
                             handleSync(p.player_tag)
                           }}
                         >
-                          <div className="flex flex-col">
-                            <span className="font-bold truncate max-w-[150px]">{p.name}</span>
-                            <span className="text-xs text-muted-foreground opacity-80">#{p.player_tag}</span>
-                          </div>
-                          <div className="flex items-center gap-1 text-xs font-medium text-yellow-600 dark:text-yellow-400">
-                            <Trophy className="w-3 h-3" />
-                            {p.trophies.toLocaleString()}
+                          <div className="flex flex-col gap-1.5 w-full">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold truncate max-w-[150px] text-base">{p.name}</span>
+                              <Badge variant="secondary" className="text-[10px] font-mono bg-primary/10 text-primary border-primary/20">#{p.player_tag}</Badge>
+                            </div>
+                            <div className="flex items-center gap-4 text-xs font-medium">
+                              <span className="flex items-center gap-1 text-yellow-600 dark:text-yellow-500 font-bold">
+                                <Trophy className="w-3.5 h-3.5" />
+                                {p.trophies ? p.trophies.toLocaleString() : 0}
+                              </span>
+                              {p.highest_trophies > 0 && (
+                                <span className="flex items-center gap-1 text-muted-foreground opacity-80">
+                                  最高: {p.highest_trophies.toLocaleString()}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </li>
                       ))}

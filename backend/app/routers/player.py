@@ -19,7 +19,7 @@ async def search_players(q: str = Query(..., min_length=1, description="Player t
     try:
         db = get_db()
         # Supabaseのilike検索
-        res = db.table("players").select("player_tag, name, trophies").ilike("name", f"%{q}%").order("trophies", desc=True).limit(10).execute()
+        res = db.table("players").select("player_tag, name, trophies, highest_trophies").ilike("name", f"%{q}%").order("trophies", desc=True).limit(10).execute()
         return res.data
     except Exception as e:
         logger.error(f"Failed to search players by name: {e}")

@@ -253,9 +253,10 @@ def get_character_detail(character_id: str, type: str = "global", sub_type: str 
                 continue
             if c.get("counter_coefficient", 0.0) > 0:
                 kamo.append({
-                    "id": enemy_id,
+                    "brawler": enemy_id,
                     "name": format_char_name(enemy_id),
-                    "win_rate": round( (c["win_count"] / c["match_count"] * 100) if c["match_count"] > 0 else 50.0, 1 )
+                    "win_rate": round( (c["win_count"] / c["match_count"] * 100) if c["match_count"] > 0 else 50.0, 1 ),
+                    "matches": c.get("match_count", 0)
                 })
                 
         # 天敵 (不利: 係数が低いボトム5)
@@ -266,9 +267,10 @@ def get_character_detail(character_id: str, type: str = "global", sub_type: str 
                 continue
             if c.get("counter_coefficient", 0.0) < 0:
                 tenteki.append({
-                    "id": enemy_id,
+                    "brawler": enemy_id,
                     "name": format_char_name(enemy_id),
-                    "win_rate": round( (c["win_count"] / c["match_count"] * 100) if c["match_count"] > 0 else 50.0, 1 )
+                    "win_rate": round( (c["win_count"] / c["match_count"] * 100) if c["match_count"] > 0 else 50.0, 1 ),
+                    "matches": c.get("match_count", 0)
                 })
     except Exception as e:
         print(f"Failed to fetch counters: {e}")

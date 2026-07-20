@@ -112,9 +112,9 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, in
                 "sum_pick_dev": 0.0,
                 "count": 0
             }
-        char_stats[cid]["total_wins"] += row.get("total_wins", 0)
-        char_stats[cid]["total_matches"] += row.get("total_matches", 0)
-        char_stats[cid]["sum_pick_dev"] += row.get("pick_rate_deviation", 50.0)
+        char_stats[cid]["total_wins"] += (row.get("total_wins") or 0)
+        char_stats[cid]["total_matches"] += (row.get("total_matches") or 0)
+        char_stats[cid]["sum_pick_dev"] += (row.get("pick_rate_deviation") or 50.0)
         char_stats[cid]["count"] += 1
         
     # スコア計算と詳細データの作成
@@ -252,8 +252,8 @@ def get_character_detail(character_id: str, type: str = "global", sub_type: str 
         
         # 各対面について、ウィルソン・スコア（有利スコアと不利スコア）を計算
         for c in counters:
-            m = c.get("match_count", 0)
-            w = c.get("win_count", 0)
+            m = c.get("match_count") or 0
+            w = c.get("win_count") or 0
             losses = m - w
             
             # 有利スコア: 「確実にこれ以上は勝てる」確率の下限

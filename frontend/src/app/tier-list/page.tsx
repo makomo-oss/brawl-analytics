@@ -185,13 +185,23 @@ export default function TierListPage() {
             </div>
           ) : (
             <div className="grid gap-6">
-              {['S', 'A', 'B', 'C', 'D'].map((tierKey) => {
-                const config = tierConfig[tierKey as keyof typeof tierConfig];
-                const chars = tierData?.tiers?.[tierKey] || [];
-                
-                if (chars.length === 0) return null;
+              {tierData?.tiers && Object.values(tierData.tiers).every((arr: any) => arr.length === 0) ? (
+                <div className="flex flex-col items-center justify-center p-12 text-center border-2 border-dashed rounded-xl bg-card/50">
+                  <AlertTriangle className="w-12 h-12 text-muted-foreground mb-4 opacity-50" />
+                  <h3 className="text-xl font-bold text-foreground">まだデータがありません</h3>
+                  <p className="text-muted-foreground mt-2 max-w-md">
+                    指定された条件（ガチバトル・モード・マップ等）の分析データがまだ十分に集まっていません。<br/>
+                    今後のプレイヤーデータの集計をお待ちください。
+                  </p>
+                </div>
+              ) : (
+                ['S', 'A', 'B', 'C', 'D'].map((tierKey) => {
+                  const config = tierConfig[tierKey as keyof typeof tierConfig];
+                  const chars = tierData?.tiers?.[tierKey] || [];
+                  
+                  if (chars.length === 0) return null;
 
-                return (
+                  return (
                   <Card key={tierKey} className={`overflow-hidden backdrop-blur-sm shadow-lg border ${config.bg} transition-all hover:shadow-xl`}>
                     <div className="flex flex-col md:flex-row">
                       {/* Tier Label Column */}
@@ -222,7 +232,8 @@ export default function TierListPage() {
                     </div>
                   </Card>
                 )
-              })}
+              })
+              )}
             </div>
           )}
         </div>

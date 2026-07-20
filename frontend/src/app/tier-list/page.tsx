@@ -283,10 +283,10 @@ export default function TierListPage() {
               </div>
 
               <div className="space-y-6 mt-8">
-                {/* カモ (有利対面) */}
+                {/* 有利な対面 */}
                 <div className="space-y-3 relative p-4 rounded-xl bg-green-500/5 border border-green-500/20">
                   <h3 className="font-extrabold text-sm flex items-center gap-2 text-green-600 dark:text-green-400">
-                    <TrendingUp className="w-5 h-5" /> カモ (有利な対面) TOP5
+                    <TrendingUp className="w-5 h-5" /> 有利な対面 TOP5
                   </h3>
                   {selectedChar.kamo && selectedChar.kamo.length > 0 ? (
                     <div className="space-y-2">
@@ -314,10 +314,10 @@ export default function TierListPage() {
                   )}
                 </div>
 
-                {/* 天敵 (不利対面) */}
+                {/* 不利な対面 */}
                 <div className="space-y-3 relative p-4 rounded-xl bg-red-500/5 border border-red-500/20">
                   <h3 className="font-extrabold text-sm flex items-center gap-2 text-red-600 dark:text-red-400">
-                    <TrendingDown className="w-5 h-5" /> 天敵 (不利な対面) TOP5
+                    <TrendingDown className="w-5 h-5" /> 不利な対面 TOP5
                   </h3>
                   {selectedChar.tenteki && selectedChar.tenteki.length > 0 ? (
                     <div className="space-y-2">

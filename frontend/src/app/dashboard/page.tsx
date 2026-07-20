@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -114,6 +114,51 @@ export default function DashboardPage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [battleTab, setBattleTab] = useState("battles")
 
+  // プレイヤー名検索サジェスト用ステート
+  const [suggestions, setSuggestions] = useState<any[]>([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [isSearching, setIsSearching] = useState(false)
+  const searchContainerRef = useRef<HTMLDivElement>(null)
+
+  // 外部クリックでサジェストを閉じる
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
+  // プレイヤー検索のデバウンス処理
+  useEffect(() => {
+    const searchPlayers = async () => {
+      if (!playerTag || playerTag.length < 2) {
+        setSuggestions([])
+        setShowSuggestions(false)
+        return
+      }
+
+      setIsSearching(true)
+      try {
+        const res = await fetch(`${API_URL}/player/search?q=${encodeURIComponent(playerTag)}`)
+        if (res.ok) {
+          const result = await res.json()
+          setSuggestions(result)
+          setShowSuggestions(true)
+        }
+      } catch (error) {
+        console.error("Failed to search players", error)
+      } finally {
+        setIsSearching(false)
+      }
+    }
+
+    const timeoutId = setTimeout(searchPlayers, 300)
+    return () => clearTimeout(timeoutId)
+  }, [playerTag])
+
   const handleSync = async (overrideTag?: string) => {
     const tagToFetch = overrideTag || playerTag
     if (!tagToFetch) return
@@ -163,21 +208,63 @@ export default function DashboardPage() {
           <CardDescription>Brawl Starsのプレイヤータグを入力して最新のデータを取得します。</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-4 max-w-md">
-            <Input 
-              placeholder="#Q2LL9G8" 
-              value={playerTag}
-              onChange={(e) => setPlayerTag(e.target.value)}
-              className="bg-background/80"
-            />
-            <Button onClick={() => handleSync()} disabled={loading} className="px-8 shadow-lg shadow-primary/20">
-              {loading ? "取得中..." : (
-                <>
-                  <Search className="w-4 h-4 mr-2" />
-                  同期
-                </>
+          <div className="flex flex-col gap-4 max-w-md" ref={searchContainerRef}>
+            <div className="relative flex gap-4">
+              <Input 
+                placeholder="プレイヤー名 または タグ(#Q2LL9G8)" 
+                value={playerTag}
+                onChange={(e) => {
+                  setPlayerTag(e.target.value)
+                  if (!showSuggestions) setShowSuggestions(true)
+                }}
+                onFocus={() => {
+                  if (playerTag.length >= 2 && suggestions.length > 0) setShowSuggestions(true)
+                }}
+                className="bg-background/80"
+              />
+              <Button onClick={() => handleSync()} disabled={loading} className="px-8 shadow-lg shadow-primary/20">
+                {loading ? "取得中..." : (
+                  <>
+                    <Search className="w-4 h-4 mr-2" />
+                    同期
+                  </>
+                )}
+              </Button>
+              
+              {/* サジェストドロップダウン */}
+              {showSuggestions && (playerTag.length >= 2 || isSearching) && (
+                <div className="absolute top-full left-0 right-[112px] mt-1 bg-popover text-popover-foreground border rounded-md shadow-md z-50 max-h-64 overflow-y-auto">
+                  {isSearching ? (
+                    <div className="p-3 text-sm text-muted-foreground text-center animate-pulse">検索中...</div>
+                  ) : suggestions.length > 0 ? (
+                    <ul className="py-1">
+                      {suggestions.map((p, idx) => (
+                        <li 
+                          key={idx} 
+                          className="px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground cursor-pointer flex justify-between items-center transition-colors"
+                          onClick={() => {
+                            setPlayerTag(p.player_tag)
+                            setShowSuggestions(false)
+                            handleSync(p.player_tag)
+                          }}
+                        >
+                          <div className="flex flex-col">
+                            <span className="font-bold truncate max-w-[150px]">{p.name}</span>
+                            <span className="text-xs text-muted-foreground opacity-80">#{p.player_tag}</span>
+                          </div>
+                          <div className="flex items-center gap-1 text-xs font-medium text-yellow-600 dark:text-yellow-400">
+                            <Trophy className="w-3 h-3" />
+                            {p.trophies.toLocaleString()}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <div className="p-3 text-sm text-muted-foreground text-center">見つかりませんでした</div>
+                  )}
+                </div>
               )}
-            </Button>
+            </div>
           </div>
         </CardContent>
       </Card>

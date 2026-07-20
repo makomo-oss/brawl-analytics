@@ -1,9 +1,29 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from app.services.brawl_api import get_player_battlelog, get_player
+from app.database import get_db
 import logging
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/player", tags=["Player"])
+
+@router.get("/search")
+async def search_players(q: str = Query(..., min_length=1, description="Player tag or name to search")):
+    """
+    プレイヤーを名前で部分一致検索する
+    クエリが '#' で始まる場合はそのままタグとして返す
+    """
+    if q.startswith("#"):
+        # タグ検索の場合は、APIから直接取得するか、あるいはタグをそのまま返す
+        return [{"player_tag": q.replace("#", ""), "name": f"Tag Search: {q}", "trophies": 0, "icon_id": 28000000}]
+        
+    try:
+        db = get_db()
+        # Supabaseのilike検索
+        res = db.table("players").select("player_tag, name, trophies").ilike("name", f"%{q}%").order("trophies", desc=True).limit(10).execute()
+        return res.data
+    except Exception as e:
+        logger.error(f"Failed to search players by name: {e}")
+        return []
 
 @router.get("/{player_tag}/sync")
 async def sync_player(player_tag: str):

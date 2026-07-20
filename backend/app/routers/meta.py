@@ -9,6 +9,15 @@ def format_char_name(char_id: str) -> str:
     if not char_id: return "Unknown"
     return char_id.replace("_", " ").title()
 
+def wilson_lower_bound(wins: int, total: int, z: float = 1.96) -> float:
+    if total == 0:
+        return 0.0
+    p = wins / total
+    denominator = 1 + z**2 / total
+    center = p + z**2 / (2 * total)
+    spread = z * math.sqrt((p * (1 - p) / total) + (z**2 / (4 * total**2)))
+    return (center - spread) / denominator
+
 @router.get("/tier-list")
 def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, include_details: bool = False):
     db = get_db()
@@ -111,12 +120,18 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, in
     for cid, stats in char_stats.items():
         tm = stats["total_matches"]
         tw = stats["total_wins"]
-        wr = (tw / tm * 100) if tm > 0 else 50.0
+        
+        # 表示用の実勝率
+        actual_wr = (tw / tm * 100) if tm > 0 else 50.0
+        
+        # ランク付け用の信頼勝率（ウィルソンスコア下限）
+        ranking_wr = wilson_lower_bound(tw, tm) * 100
+        
         avg_dev = stats["sum_pick_dev"] / stats["count"]
         
-        # スコア計算: 勝率(70%) + ピック率偏差値(30%)
-        # ※ win_rate はそのまま 0~100 程度の値、devも 30~70 程度なので直接加算でもスケールが合う
-        score = (wr * 0.7) + (avg_dev * 0.3)
+        # スコア計算: ウィルソン信頼勝率(70%) + ピック率偏差値(30%)
+        # ※ ranking_wr は 0~100 程度の値、devも 30~70 程度
+        score = (ranking_wr * 0.7) + (avg_dev * 0.3)
         
         # 0〜100の範囲に収める簡易正規化
         score = min(max(score, 0.0), 100.0)
@@ -128,7 +143,7 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, in
         if include_details:
             characters_detail[cid] = {
                 "score": round(score, 1),
-                "win_rate": round(wr, 1),
+                "win_rate": round(actual_wr, 1),
                 "use_rate": round(use_rate, 2),
                 "total_matches": tm
             }

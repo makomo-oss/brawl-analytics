@@ -26,8 +26,8 @@ async def get_player_battlelog(player_tag: str):
         return {
             "items": [
                 {"battleTime": "20240101T000000.000Z", "event": {"map": "map_1"}, "battle": {"mode": "bounty", "type": "ranked", "result": "victory", "teams": [[{"tag": f"#{player_tag.replace('%23', '')}", "brawler": {"name": "PIPER"}}]]}},
-                {"battleTime": "20240101T000500.000Z", "event": {"map": "map_2"}, "battle": {"mode": "brawl_ball", "type": "ranked", "result": "defeat", "teams": [[{"tag": f"#{player_tag.replace('%23', '')}", "brawler": {"name": "LEON"}}]]}},
-                {"battleTime": "20240101T001000.000Z", "event": {"map": "map_1"}, "battle": {"mode": "gem_grab", "type": "ranked", "result": "victory", "teams": [[{"tag": f"#{player_tag.replace('%23', '')}", "brawler": {"name": "PIPER"}}]]}}
+                {"battleTime": "20240101T000500.000Z", "event": {"map": "map_2"}, "battle": {"mode": "brawl_ball", "type": "soloRanked", "result": "defeat", "teams": [[{"tag": f"#{player_tag.replace('%23', '')}", "brawler": {"name": "LEON"}}]]}},
+                {"battleTime": "20240101T001000.000Z", "event": {"map": "map_1"}, "battle": {"mode": "gem_grab", "type": "teamRanked", "result": "victory", "teams": [[{"tag": f"#{player_tag.replace('%23', '')}", "brawler": {"name": "PIPER"}}]]}}
             ]
         }
     except Exception as exc:
@@ -35,8 +35,8 @@ async def get_player_battlelog(player_tag: str):
         return {
             "items": [
                 {"battleTime": "20240101T000000.000Z", "event": {"map": "map_1"}, "battle": {"mode": "bounty", "type": "ranked", "result": "victory", "teams": [[{"tag": f"#{player_tag.replace('%23', '')}", "brawler": {"name": "PIPER"}}]]}},
-                {"battleTime": "20240101T000500.000Z", "event": {"map": "map_2"}, "battle": {"mode": "brawl_ball", "type": "ranked", "result": "defeat", "teams": [[{"tag": f"#{player_tag.replace('%23', '')}", "brawler": {"name": "LEON"}}]]}},
-                {"battleTime": "20240101T001000.000Z", "event": {"map": "map_1"}, "battle": {"mode": "gem_grab", "type": "ranked", "result": "victory", "teams": [[{"tag": f"#{player_tag.replace('%23', '')}", "brawler": {"name": "PIPER"}}]]}}
+                {"battleTime": "20240101T000500.000Z", "event": {"map": "map_2"}, "battle": {"mode": "brawl_ball", "type": "soloRanked", "result": "defeat", "teams": [[{"tag": f"#{player_tag.replace('%23', '')}", "brawler": {"name": "LEON"}}]]}},
+                {"battleTime": "20240101T001000.000Z", "event": {"map": "map_1"}, "battle": {"mode": "gem_grab", "type": "teamRanked", "result": "victory", "teams": [[{"tag": f"#{player_tag.replace('%23', '')}", "brawler": {"name": "PIPER"}}]]}}
             ]
         }
 

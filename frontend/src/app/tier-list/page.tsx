@@ -130,14 +130,10 @@ export default function TierListPage() {
 
       <Tabs value={selectedType} onValueChange={handleTypeChange} className="space-y-6">
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between bg-secondary/30 p-4 rounded-xl border">
-          <TabsList className="grid w-full sm:w-[400px] grid-cols-2 bg-secondary/50 p-1">
-            <TabsTrigger value="global" className="font-bold">
-              <Trophy className="w-4 h-4 mr-2" />
-              グローバル
-            </TabsTrigger>
-            <TabsTrigger value="gachi" className="font-bold">
-              <Swords className="w-4 h-4 mr-2 text-primary" />
-              ガチバトル
+          <TabsList className="grid w-full grid-cols-2 bg-card/80 backdrop-blur-md border shadow-sm rounded-xl p-1 mb-2">
+            <TabsTrigger value="global" className="text-sm sm:text-base font-bold py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all rounded-lg">全体Tier</TabsTrigger>
+            <TabsTrigger value="gachi" className="text-sm sm:text-base font-bold py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all rounded-lg flex items-center justify-center gap-2">
+              <Trophy className="w-4 h-4" /> ガチバトルTier
             </TabsTrigger>
           </TabsList>
         </div>

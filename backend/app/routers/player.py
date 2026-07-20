@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Query
 from app.services.brawl_api import get_player_battlelog, get_player
 from app.database import get_db
 import logging
+import asyncio
 from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
@@ -21,7 +22,24 @@ async def search_players(q: str = Query(..., min_length=1, description="Player t
         db = get_db()
         # Supabaseのilike検索
         res = db.table("players").select("player_tag, name, trophies, highest_trophies").ilike("name", f"%{q}%").order("trophies", desc=True).limit(10).execute()
-        return res.data
+        
+        players = res.data
+        if not players:
+            return []
+            
+        # APIで追加情報（アイコン、ガチバトルランク）を取得
+        async def fetch_extra(p):
+            try:
+                info = await get_player(p["player_tag"])
+                p["icon_id"] = (info.get("icon") or {}).get("id", 28000000)
+                p["highest_ranked_rank"] = info.get("highestAllTimeRankedRank", 0)
+            except Exception:
+                p["icon_id"] = 28000000
+                p["highest_ranked_rank"] = 0
+            return p
+            
+        enriched_players = await asyncio.gather(*(fetch_extra(p) for p in players))
+        return enriched_players
     except Exception as e:
         logger.error(f"Failed to search players by name: {e}")
         return []

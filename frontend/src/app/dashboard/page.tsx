@@ -241,30 +241,43 @@ export default function DashboardPage() {
                       {suggestions.map((p, idx) => (
                         <li 
                           key={idx} 
-                          className="px-4 py-3 text-sm hover:bg-accent hover:text-accent-foreground cursor-pointer flex justify-between items-center transition-colors border-b last:border-b-0"
+                          className="px-4 py-3 text-sm hover:bg-accent hover:text-accent-foreground cursor-pointer flex gap-4 items-center transition-colors border-b last:border-b-0"
                           onClick={() => {
                             setPlayerTag(p.player_tag)
                             setShowSuggestions(false)
                             handleSync(p.player_tag)
                           }}
                         >
-                          <div className="flex flex-col gap-1.5 w-full">
+                          <Avatar className="w-10 h-10 border-2 border-primary/20 shrink-0 shadow-sm">
+                            <AvatarImage src={`https://cdn.brawlify.com/profile-icons/regular/${p.icon_id || 28000000}.png`} />
+                            <AvatarFallback className="bg-primary/10">{p.name?.[0]}</AvatarFallback>
+                          </Avatar>
+                          <div className="flex flex-col gap-1.5 w-full overflow-hidden">
                             <div className="flex items-center gap-2">
-                              <span className="font-bold truncate max-w-[150px] text-base">{p.name}</span>
-                              <Badge variant="secondary" className="text-[10px] font-mono bg-primary/10 text-primary border-primary/20">#{p.player_tag}</Badge>
+                              <span className="font-bold truncate text-base">{p.name}</span>
+                              <Badge variant="secondary" className="text-[10px] font-mono bg-primary/10 text-primary border-primary/20 shrink-0">#{p.player_tag}</Badge>
                             </div>
-                            <div className="flex items-center gap-4 text-xs font-medium">
+                            <div className="flex items-center gap-3 text-xs font-medium">
                               <span className="flex items-center gap-1 text-yellow-600 dark:text-yellow-500 font-bold">
                                 <Trophy className="w-3.5 h-3.5" />
                                 {p.trophies ? p.trophies.toLocaleString() : 0}
                               </span>
                               {p.highest_trophies > 0 && (
-                                <span className="flex items-center gap-1 text-muted-foreground opacity-80">
+                                <span className="flex items-center gap-1 text-muted-foreground opacity-80 whitespace-nowrap">
                                   最高: {p.highest_trophies.toLocaleString()}
                                 </span>
                               )}
                             </div>
                           </div>
+                          {p.highest_ranked_rank > 0 && (
+                            <div className="shrink-0 flex items-center justify-center bg-black/5 dark:bg-white/5 rounded-full p-1" title={getRankImage(p.highest_ranked_rank)?.name || ""}>
+                              <img 
+                                src={getRankImage(p.highest_ranked_rank)?.url} 
+                                alt="Rank" 
+                                className="w-8 h-8 object-contain drop-shadow-md"
+                              />
+                            </div>
+                          )}
                         </li>
                       ))}
                     </ul>

@@ -202,14 +202,14 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      <Card className="bg-card/50 backdrop-blur-sm border-primary/20 shadow-sm overflow-visible">
+      <Card className="relative z-50 bg-card/50 backdrop-blur-sm border-primary/20 shadow-sm overflow-visible">
         <CardHeader>
           <CardTitle>プレイヤー同期</CardTitle>
           <CardDescription>Brawl Starsのプレイヤータグを入力して最新のデータを取得します。</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col gap-4 max-w-md" ref={searchContainerRef}>
-            <div className="relative flex gap-4">
+          <div className="flex flex-col gap-4 max-w-md relative z-50" ref={searchContainerRef}>
+            <div className="relative flex gap-4 w-full">
               <Input 
                 placeholder="プレイヤー名 または タグ(#Q2LL9G8)" 
                 value={playerTag}
@@ -233,7 +233,7 @@ export default function DashboardPage() {
               
               {/* サジェストドロップダウン */}
               {showSuggestions && (playerTag.length >= 2 || isSearching) && (
-                <div className="absolute top-full left-0 right-[112px] mt-1 bg-popover text-popover-foreground border rounded-md shadow-md z-50 max-h-64 overflow-y-auto">
+                <div className="absolute top-full left-0 w-full min-w-[320px] max-w-full mt-2 bg-popover text-popover-foreground border rounded-md shadow-xl z-[100] max-h-64 overflow-y-auto">
                   {isSearching ? (
                     <div className="p-3 text-sm text-muted-foreground text-center animate-pulse">検索中...</div>
                   ) : suggestions.length > 0 ? (

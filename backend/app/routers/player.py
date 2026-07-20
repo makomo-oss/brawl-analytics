@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Query
 from app.services.brawl_api import get_player_battlelog, get_player
 from app.database import get_db
 import logging
+from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/player", tags=["Player"])
@@ -32,6 +33,23 @@ async def sync_player(player_tag: str):
     """
     try:
         player_info = await get_player(player_tag)
+        
+        # データベースにプレイヤー情報を保存（Upsert）して名前検索の候補に追加する
+        try:
+            db = get_db()
+            clean_tag = player_tag.replace("#", "").upper()
+            player_data = {
+                "player_tag": clean_tag,
+                "name": player_info.get("name", "Unknown"),
+                "trophies": player_info.get("trophies", 0),
+                "highest_trophies": player_info.get("highestTrophies", 0),
+                "unlocked_characters": {},
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+            db.table("players").upsert(player_data).execute()
+        except Exception as db_err:
+            logger.warning(f"Failed to upsert player data during sync: {db_err}")
+
         return {"player_tag": player_tag, "status": "synced", "name": player_info.get("name")}
     except ValueError as e:
         if str(e) == "Player not found":
@@ -48,6 +66,23 @@ async def get_dashboard(player_tag: str):
     """
     try:
         player_info = await get_player(player_tag)
+        
+        # データベースにプレイヤー情報を保存（Upsert）して名前検索の候補に追加する
+        try:
+            db = get_db()
+            clean_tag = player_tag.replace("#", "").upper()
+            player_data = {
+                "player_tag": clean_tag,
+                "name": player_info.get("name", "Unknown"),
+                "trophies": player_info.get("trophies", 0),
+                "highest_trophies": player_info.get("highestTrophies", 0),
+                "unlocked_characters": {},
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+            db.table("players").upsert(player_data).execute()
+        except Exception as db_err:
+            logger.warning(f"Failed to upsert player data during dashboard fetch: {db_err}")
+
         battlelog = await get_player_battlelog(player_tag)
         items = battlelog.get("items", [])
         

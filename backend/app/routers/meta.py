@@ -242,36 +242,44 @@ def get_character_detail(character_id: str, type: str = "global", sub_type: str 
         res = db.table("dynamic_counters").select("*").eq("char_a", char_id_lower).execute()
         counters = res.data
         
-        # 相性係数でソート (高い順)
-        counters.sort(key=lambda x: x.get("counter_coefficient", 0.0), reverse=True)
-        
-        # カモ (有利: 係数が高いトップ5)
+        # 各対面について、ウィルソン・スコア（有利スコアと不利スコア）を計算
+        for c in counters:
+            m = c.get("match_count", 0)
+            w = c.get("win_count", 0)
+            losses = m - w
+            
+            # 有利スコア: 「確実にこれ以上は勝てる」確率の下限
+            c["advantage_score"] = wilson_lower_bound(w, m)
+            # 不利スコア: 「確実にこれ以上は負ける」確率の下限
+            c["disadvantage_score"] = wilson_lower_bound(losses, m)
+
+        # カモ (有利な対面: 有利スコアが高い順)
+        counters.sort(key=lambda x: x.get("advantage_score", 0.0), reverse=True)
         for c in counters:
             if len(kamo) >= 5: break
             enemy_id = c["char_b"]
-            if enemy_id == "unknown":
+            if enemy_id == "unknown" or c["advantage_score"] == 0:
                 continue
-            if c.get("counter_coefficient", 0.0) > 0:
-                kamo.append({
-                    "brawler": enemy_id,
-                    "name": format_char_name(enemy_id),
-                    "win_rate": round( (c["win_count"] / c["match_count"] * 100) if c["match_count"] > 0 else 50.0, 1 ),
-                    "matches": c.get("match_count", 0)
-                })
+            kamo.append({
+                "brawler": enemy_id,
+                "name": format_char_name(enemy_id),
+                "win_rate": round( (c["win_count"] / c["match_count"] * 100) if c["match_count"] > 0 else 50.0, 1 ),
+                "matches": c.get("match_count", 0)
+            })
                 
-        # 天敵 (不利: 係数が低いボトム5)
-        for c in reversed(counters):
+        # 天敵 (不利な対面: 不利スコアが高い順)
+        counters.sort(key=lambda x: x.get("disadvantage_score", 0.0), reverse=True)
+        for c in counters:
             if len(tenteki) >= 5: break
             enemy_id = c["char_b"]
-            if enemy_id == "unknown":
+            if enemy_id == "unknown" or c["disadvantage_score"] == 0:
                 continue
-            if c.get("counter_coefficient", 0.0) < 0:
-                tenteki.append({
-                    "brawler": enemy_id,
-                    "name": format_char_name(enemy_id),
-                    "win_rate": round( (c["win_count"] / c["match_count"] * 100) if c["match_count"] > 0 else 50.0, 1 ),
-                    "matches": c.get("match_count", 0)
-                })
+            tenteki.append({
+                "brawler": enemy_id,
+                "name": format_char_name(enemy_id),
+                "win_rate": round( (c["win_count"] / c["match_count"] * 100) if c["match_count"] > 0 else 50.0, 1 ),
+                "matches": c.get("match_count", 0)
+            })
     except Exception as e:
         print(f"Failed to fetch counters: {e}")
         

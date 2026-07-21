@@ -111,10 +111,21 @@ export const mapTranslations: Record<string, string> = {
   "Nutmeg": "ナツメグ"
 };
 
+const lowerCaseMapTranslations: Record<string, string> = {};
+for (const [key, value] of Object.entries(mapTranslations)) {
+  lowerCaseMapTranslations[key.toLowerCase()] = value;
+}
+
 export function translateMap(mapName: string): string {
   if (!mapName) return "";
-  // 厳密一致がない場合、toLowerCaseや一部削除でマッチさせるなどの工夫も可能ですが、まずは直接マッチ
-  return mapTranslations[mapName] || mapTranslations[mapName.trim()] || mapName;
+  const name = mapName.trim();
+  
+  if (mapTranslations[name]) return mapTranslations[name];
+  
+  const lowerName = name.toLowerCase();
+  if (lowerCaseMapTranslations[lowerName]) return lowerCaseMapTranslations[lowerName];
+  
+  return name;
 }
 
 export function getModeIconUrl(mode: string) {

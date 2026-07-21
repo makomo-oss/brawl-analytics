@@ -290,7 +290,9 @@ export default function DraftCompanionPage() {
                 <label className="text-sm font-bold">モード</label>
                 <Select value={selectedMode} onValueChange={(val) => setSelectedMode(val || "")}>
                   <SelectTrigger className="bg-secondary/50">
-                    <SelectValue placeholder="モードを選択" />
+                    <SelectValue placeholder="モードを選択">
+                      {selectedMode ? translateMode(selectedMode) : "モードを選択"}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {categories.modes.map((m: string) => (
@@ -303,7 +305,9 @@ export default function DraftCompanionPage() {
                 <label className="text-sm font-bold">マップ</label>
                 <Select value={selectedMap} onValueChange={(val) => setSelectedMap(val || "")}>
                   <SelectTrigger className="bg-secondary/50">
-                    <SelectValue placeholder="マップを選択" />
+                    <SelectValue placeholder="マップを選択">
+                      {selectedMap ? translateMap(selectedMap) : "マップを選択"}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {availableMaps.map((m: string) => (

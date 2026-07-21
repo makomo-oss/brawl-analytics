@@ -108,7 +108,8 @@ export const mapTranslations: Record<string, string> = {
   "Triple-Double": "トリプルダブル",
   "Deep End": "ディープエンド",
   "Crescendo": "クレッシェンド",
-  "Nutmeg": "ナツメグ"
+  "Nutmeg": "ナツメグ",
+  "Snake Pit": "スネークピット"
 };
 
 const lowerCaseMapTranslations: Record<string, string> = {};

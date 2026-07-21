@@ -115,17 +115,19 @@ export default function TierListPage() {
           <Trophy className="w-8 h-8 text-yellow-500" />
           環境分析 (Tier表)
         </h1>
-        {tierData?.metrics?.analyzed_matches > 0 ? (
-          <p className="text-muted-foreground text-lg flex items-center gap-2">
-            上位プレイヤーの最新バトルログ（{tierData.metrics.analyzed_matches.toLocaleString()} 試合）から完全データ駆動で算出した最強ランキング。
-          </p>
-        ) : (
-          <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 flex items-start gap-3 mt-2">
-            <Info className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
-            <p className="text-sm text-yellow-700 dark:text-yellow-400">
-              <strong>生データ0件 (ベースライン表示中):</strong> 現在有効なAPIキーが設定されていないため、バトルログの収集ができていません。代わりに2024年の一般的なTier環境（定石）を表示しています。生データに基づく完全自動算出を行うには <code>BRAWL_API_TOKEN</code> の設定が必要です。
+        {!loading && (
+          tierData?.metrics?.analyzed_matches > 0 ? (
+            <p className="text-muted-foreground text-lg flex items-center gap-2">
+              上位プレイヤーの最新バトルログ（{tierData.metrics.analyzed_matches.toLocaleString()} 試合）から完全データ駆動で算出した最強ランキング。
             </p>
-          </div>
+          ) : (
+            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 flex items-start gap-3 mt-2">
+              <Info className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+              <p className="text-sm text-yellow-700 dark:text-yellow-400">
+                <strong>生データ0件 (ベースライン表示中):</strong> 現在有効なAPIキーが設定されていないため、バトルログの収集ができていません。代わりに2024年の一般的なTier環境（定石）を表示しています。生データに基づく完全自動算出を行うには <code>BRAWL_API_TOKEN</code> の設定が必要です。
+              </p>
+            </div>
+          )
         )}
       </div>
 

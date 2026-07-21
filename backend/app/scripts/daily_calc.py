@@ -46,6 +46,14 @@ def calc_macro_map_stats(df: pd.DataFrame):
     if df.empty:
         return []
     
+    # マイグレーション互換性: match_type カラムが無い場合は追加
+    if "match_type" not in df.columns:
+        df["match_type"] = "unknown"
+        
+    # 古いデータの gachi_ プレフィックスから match_type を復元するフォールバック
+    df.loc[(df["match_type"] == "unknown") & (df["map_id"].str.startswith("gachi_")), "match_type"] = "soloRanked"
+    df["map_id"] = df["map_id"].str.replace(r"^gachi_", "", regex=True)
+
     # 勝利フラグを数値化
     df["is_win"] = (df["result"] == "victory").astype(int)
     
@@ -55,8 +63,8 @@ def calc_macro_map_stats(df: pd.DataFrame):
     # "unknown" のデータは集計対象外
     df = df[df["hero_used"] != "unknown"]
     
-    # マップ × ヒーローで集計
-    grouped = df.groupby(["map_id", "hero_used"]).agg(
+    # match_type × マップ × ヒーローで集計
+    grouped = df.groupby(["match_type", "map_id", "hero_used"]).agg(
         total_matches=("match_id", "count"),
         total_wins=("is_win", "sum")
     ).reset_index()
@@ -74,13 +82,14 @@ def calc_macro_map_stats(df: pd.DataFrame):
             group["pick_rate_deviation"] = 50.0 + 10.0 * (group["total_matches"] - mean) / std
         return group
 
-    grouped = grouped.groupby("map_id").apply(calc_deviation).reset_index(drop=True)
+    grouped = grouped.groupby(["match_type", "map_id"]).apply(calc_deviation).reset_index(drop=True)
     
     now_str = datetime.now(timezone.utc).isoformat()
     
     stats_list = []
     for _, row in grouped.iterrows():
         stats_list.append({
+            "match_type": row.get("match_type", "unknown"),
             "map_id": row["map_id"],
             "character_id": row["hero_used"],
             "total_wins": int(row["total_wins"]),

@@ -72,27 +72,26 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, in
     filtered_data = []
     for row in data:
         map_id = str(row.get("map_id", ""))
-        is_gachi_match = map_id.startswith("gachi_")
+        match_type = str(row.get("match_type", "unknown"))
+        is_gachi_match = match_type in ["soloRanked", "teamRanked"]
         
         # ガチバトル指定の場合
         if type == "gachi" and not is_gachi_match:
             continue
+        # 通常マッチ指定の場合 (オプショナル。もし必要なら)
+        # elif type != "gachi" and is_gachi_match:
+        #     continue
             
-        real_map_id = map_id.replace("gachi_", "") if is_gachi_match else map_id
-        
         # マップ別フィルタ
         if sub_type == "map" and id:
-            if real_map_id != id:
+            if map_id != id:
                 continue
                 
         # モード別フィルタ
         if sub_type == "mode" and id and valid_map_ids is not None:
-            # 通常版とガチ版のどちらかのmap_idでプレイされていればOK
-            if real_map_id not in valid_map_ids and f"gachi_{real_map_id}" not in valid_map_ids:
+            if map_id not in valid_map_ids:
                 continue
                 
-        # フロントエンドの画像表示等が壊れないようにプレフィックスを削除
-        row["map_id"] = real_map_id
         filtered_data.append(row)
         
     data = filtered_data

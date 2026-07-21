@@ -56,20 +56,24 @@ def calc_macro_map_stats(df: pd.DataFrame):
 
     # 勝利フラグを数値化
     df["is_win"] = (df["result"] == "victory").astype(int)
+
+    # null(NaN)を空配列や空文字列に置換して安全にする
+    df["match_type"] = df["match_type"].fillna("unknown")
+    df["map_id"] = df["map_id"].fillna("")
     
     # 試合データを展開して、試合に参加した全プレイヤー(自分、味方、敵)のデータを集計する
     expanded_records = []
     
     import ast
     for _, row in df.iterrows():
-        match_type = row.get("match_type", "unknown")
-        map_id = row.get("map_id", "")
-        match_id = row.get("match_id", "")
+        match_type = str(row["match_type"])
+        map_id = str(row["map_id"])
+        match_id = str(row.get("match_id", ""))
         is_win = row["is_win"]
         
         # 自分
         hero_used = str(row.get("hero_used", "unknown")).lower()
-        if hero_used != "unknown":
+        if hero_used != "unknown" and hero_used != "nan":
             expanded_records.append({
                 "match_id": match_id,
                 "match_type": match_type,
@@ -79,34 +83,42 @@ def calc_macro_map_stats(df: pd.DataFrame):
             })
             
         # 味方
-        allies = row.get("allies", [])
-        if isinstance(allies, str):
+        allies = row.get("allies")
+        if pd.isna(allies) if not isinstance(allies, (list, pd.Series, __import__('numpy').ndarray)) else False:
+            allies = []
+        elif isinstance(allies, str):
             try: allies = ast.literal_eval(allies)
             except: allies = []
+        if not isinstance(allies, list): allies = []
+        
         for ally in allies:
-            ally = str(ally).lower()
-            if ally != "unknown":
+            ally_str = str(ally).lower()
+            if ally_str != "unknown" and ally_str != "nan":
                 expanded_records.append({
                     "match_id": match_id,
                     "match_type": match_type,
                     "map_id": map_id,
-                    "hero_used": ally,
+                    "hero_used": ally_str,
                     "is_win": is_win
                 })
                 
         # 敵 (is_winを反転)
-        opponents = row.get("opponents", [])
-        if isinstance(opponents, str):
+        opponents = row.get("opponents")
+        if pd.isna(opponents) if not isinstance(opponents, (list, pd.Series, __import__('numpy').ndarray)) else False:
+            opponents = []
+        elif isinstance(opponents, str):
             try: opponents = ast.literal_eval(opponents)
             except: opponents = []
+        if not isinstance(opponents, list): opponents = []
+        
         for opponent in opponents:
-            opponent = str(opponent).lower()
-            if opponent != "unknown":
+            opp_str = str(opponent).lower()
+            if opp_str != "unknown" and opp_str != "nan":
                 expanded_records.append({
                     "match_id": match_id,
                     "match_type": match_type,
                     "map_id": map_id,
-                    "hero_used": opponent,
+                    "hero_used": opp_str,
                     "is_win": 1 - is_win
                 })
                 

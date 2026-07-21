@@ -233,10 +233,11 @@ export default function TierListPage() {
                               onClick={() => fetchCharacterDetail(charId)}
                               className="group relative flex flex-col items-center justify-center p-2 rounded-xl bg-background/60 hover:bg-background/90 border border-primary/10 hover:border-primary/50 transition-all hover:-translate-y-1 cursor-pointer shadow-sm"
                             >
-                              <Avatar className="w-14 h-14 sm:w-16 sm:h-16 shrink-0 border-2 border-black/20 dark:border-white/10 group-hover:border-primary transition-colors shadow-sm">
-                                <AvatarImage src={info.imageUrl} className="object-cover w-full h-full" />
-                                <AvatarFallback className="bg-primary/10 text-primary font-bold flex items-center justify-center w-full h-full">{info.nameJa.charAt(0)}</AvatarFallback>
-                              </Avatar>
+                              <div className="w-14 h-14 sm:w-16 sm:h-16 shrink-0 border-2 border-black/20 dark:border-white/10 group-hover:border-primary transition-colors shadow-sm rounded-full overflow-hidden flex items-center justify-center bg-primary/10 relative">
+                                <span className="text-primary font-bold absolute z-0">{info.nameJa.charAt(0)}</span>
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={info.imageUrl} alt={info.nameJa} className="object-cover w-full h-full relative z-10" loading="lazy" />
+                              </div>
                               <span className="text-xs font-medium text-center truncate w-full px-1 mt-2">{info.nameJa}</span>
                             </div>
                           )
@@ -259,10 +260,11 @@ export default function TierListPage() {
             <div className="space-y-6 pb-8">
               <SheetHeader className="text-left">
                 <div className="flex items-center gap-4 mb-2">
-                  <Avatar className="w-20 h-20 shrink-0 border-4 shadow-xl ring-2 ring-primary/20 ring-offset-2 ring-offset-background">
-                    <AvatarImage src={getBrawlerInfo(selectedChar.character_id).imageUrl} className="object-cover w-full h-full" />
-                    <AvatarFallback className="flex items-center justify-center w-full h-full">{selectedChar.character_id.charAt(0).toUpperCase()}</AvatarFallback>
-                  </Avatar>
+                  <div className="w-20 h-20 shrink-0 border-4 shadow-xl ring-2 ring-primary/20 ring-offset-2 ring-offset-background rounded-full overflow-hidden flex items-center justify-center bg-primary/10 relative">
+                    <span className="text-primary font-bold text-2xl absolute z-0">{selectedChar.character_id.charAt(0).toUpperCase()}</span>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={getBrawlerInfo(selectedChar.character_id).imageUrl} alt={selectedChar.character_id} className="object-cover w-full h-full relative z-10" loading="lazy" />
+                  </div>
                   <div>
                     <SheetTitle className="text-3xl font-black capitalize">{getBrawlerInfo(selectedChar.character_id).nameJa}</SheetTitle>
                     <SheetDescription className="flex items-center gap-2 mt-1">

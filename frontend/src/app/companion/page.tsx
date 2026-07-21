@@ -421,7 +421,10 @@ export default function DraftCompanionPage() {
                       <div key={`blue-${i}`} className={`h-12 sm:h-16 rounded-lg border-2 flex flex-col sm:flex-row items-center justify-center sm:justify-start p-1 sm:p-2 gap-1 sm:gap-3 transition-all ${isActive ? 'border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)] animate-pulse' : 'border-secondary bg-secondary/20'}`}>
                         {charName ? (
                           <>
-                            <Avatar className="w-6 h-6 sm:w-10 sm:h-10 border border-blue-500/50"><AvatarImage src={getBrawlerInfo(charName).imageUrl} /></Avatar>
+                            <div className="w-6 h-6 sm:w-10 sm:h-10 border border-blue-500/50 rounded-full overflow-hidden shrink-0 bg-primary/10 relative">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src={getBrawlerInfo(charName).imageUrl} alt={charName} className="object-cover w-full h-full absolute inset-0" loading="lazy" />
+                            </div>
                             <span className="font-bold text-[8px] sm:text-sm truncate w-full text-center sm:text-left">{getBrawlerInfo(charName).nameJa}</span>
                           </>
                         ) : (
@@ -447,7 +450,10 @@ export default function DraftCompanionPage() {
                       <div key={`red-${i}`} className={`h-12 sm:h-16 rounded-lg border-2 flex flex-col sm:flex-row items-center justify-center sm:justify-start p-1 sm:p-2 gap-1 sm:gap-3 transition-all ${isActive ? 'border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.5)] animate-pulse' : 'border-secondary bg-secondary/20'}`}>
                         {charName ? (
                           <>
-                            <Avatar className="w-6 h-6 sm:w-10 sm:h-10 border border-red-500/50"><AvatarImage src={getBrawlerInfo(charName).imageUrl} /></Avatar>
+                            <div className="w-6 h-6 sm:w-10 sm:h-10 border border-red-500/50 rounded-full overflow-hidden shrink-0 bg-primary/10 relative">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src={getBrawlerInfo(charName).imageUrl} alt={charName} className="object-cover w-full h-full absolute inset-0" loading="lazy" />
+                            </div>
                             <span className="font-bold text-[8px] sm:text-sm truncate w-full text-center sm:text-left">{getBrawlerInfo(charName).nameJa}</span>
                           </>
                         ) : (
@@ -477,7 +483,10 @@ export default function DraftCompanionPage() {
                           <div key={`allyban-${i}`} className={`h-12 sm:h-16 rounded-lg border-2 flex flex-col sm:flex-row items-center justify-center sm:justify-start p-1 sm:p-2 gap-1 sm:gap-3 relative overflow-hidden ${isActive ? 'border-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)] animate-pulse' : 'border-secondary bg-slate-900/50'}`}>
                             {charName ? (
                               <>
-                                <Avatar className="w-6 h-6 sm:w-10 sm:h-10 opacity-50 grayscale"><AvatarImage src={getBrawlerInfo(charName).imageUrl} /></Avatar>
+                                <div className="w-6 h-6 sm:w-10 sm:h-10 opacity-50 grayscale rounded-full overflow-hidden shrink-0 bg-primary/10 relative">
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img src={getBrawlerInfo(charName).imageUrl} alt={charName} className="object-cover w-full h-full absolute inset-0" loading="lazy" />
+                                </div>
                                 <div className="absolute inset-0 bg-red-500/20 flex items-center justify-center pointer-events-none">
                                   <div className="w-full h-0.5 bg-red-500 rotate-45 absolute" />
                                 </div>
@@ -502,7 +511,10 @@ export default function DraftCompanionPage() {
                           <div key={`enemyban-${i}`} className={`h-12 sm:h-16 rounded-lg border-2 flex flex-col sm:flex-row items-center justify-center sm:justify-start p-1 sm:p-2 gap-1 sm:gap-3 relative overflow-hidden ${isActive ? 'border-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)] animate-pulse' : 'border-secondary bg-slate-900/50'}`}>
                             {charName ? (
                               <>
-                                <Avatar className="w-6 h-6 sm:w-10 sm:h-10 opacity-50 grayscale"><AvatarImage src={getBrawlerInfo(charName).imageUrl} /></Avatar>
+                                <div className="w-6 h-6 sm:w-10 sm:h-10 opacity-50 grayscale rounded-full overflow-hidden shrink-0 bg-primary/10 relative">
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img src={getBrawlerInfo(charName).imageUrl} alt={charName} className="object-cover w-full h-full absolute inset-0" loading="lazy" />
+                                </div>
                                 <div className="absolute inset-0 bg-red-500/20 flex items-center justify-center pointer-events-none">
                                   <div className="w-full h-0.5 bg-red-500 rotate-45 absolute" />
                                 </div>
@@ -572,10 +584,11 @@ export default function DraftCompanionPage() {
                           onClick={() => !excluded && handleSelectCharacter(charName)}
                           className={`flex flex-col items-center gap-1 cursor-pointer transition-transform hover:scale-105 ${excluded ? 'opacity-20 cursor-not-allowed grayscale' : ''}`}
                         >
-                          <Avatar className={`w-12 h-12 border-2 ${excluded ? 'border-transparent' : 'border-primary/20 hover:border-primary'}`}>
-                            <AvatarImage src={info.imageUrl} />
-                            <AvatarFallback>{info.nameJa[0]}</AvatarFallback>
-                          </Avatar>
+                          <div className="w-8 h-8 sm:w-12 sm:h-12 border-2 border-black/20 dark:border-white/10 group-hover:border-primary transition-colors shrink-0 rounded-full overflow-hidden bg-primary/10 relative flex items-center justify-center">
+                            <span className="text-[10px] font-bold text-primary absolute z-0">{info.nameJa.charAt(0)}</span>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={info.imageUrl} alt={info.nameJa} className="object-cover w-full h-full relative z-10" loading="lazy" />
+                          </div>
                           <span className="text-[10px] truncate w-full text-center">{info.nameJa}</span>
                         </div>
                       )
@@ -621,9 +634,10 @@ export default function DraftCompanionPage() {
                           <div className="font-black text-lg w-6 text-center text-muted-foreground">
                             {index + 1}
                           </div>
-                          <Avatar className="w-10 h-10 border border-primary/20">
-                            <AvatarImage src={info.imageUrl} />
-                          </Avatar>
+                          <div className="w-8 h-8 sm:w-10 sm:h-10 border-2 border-black/20 dark:border-white/10 transition-colors shrink-0 rounded-full overflow-hidden bg-primary/10 relative flex items-center justify-center">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={info.imageUrl} alt={info.nameJa} className="object-cover w-full h-full relative z-10" loading="lazy" />
+                          </div>
                           <div className="flex-1 min-w-0">
                             <div className="font-bold truncate">{info.nameJa}</div>
                             <div className="text-xs text-primary font-medium truncate">{sug.reason}</div>

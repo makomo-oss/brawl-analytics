@@ -192,12 +192,22 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, in
     return response_data
 
 @router.get("/categories")
-def get_categories():
+def get_categories(type: str = "global"):
     db = get_db()
     # マップ一覧を動的取得
     try:
-        res = db.table("macro_map_stats").select("map_id").execute()
-        maps = list(set([row["map_id"] for row in res.data if row.get("map_id")]))
+        res = db.table("macro_map_stats").select("map_id, match_type").execute()
+        maps = set()
+        for row in res.data:
+            m_id = row.get("map_id")
+            if not m_id:
+                continue
+            if type == "gachi":
+                if row.get("match_type") in ["soloRanked", "teamRanked"]:
+                    maps.add(m_id)
+            else:
+                maps.add(m_id)
+        maps = list(maps)
     except:
         maps = []
         

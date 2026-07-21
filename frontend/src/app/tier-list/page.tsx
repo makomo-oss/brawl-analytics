@@ -37,17 +37,28 @@ export default function TierListPage() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await fetch(`${API_URL}/meta/categories`)
+        const res = await fetch(`${API_URL}/meta/categories?type=${selectedType}`)
         if (res.ok) {
           const data = await res.json()
           setCategories(data)
+          
+          // 選択中のマップが新しいカテゴリ一覧に存在しない場合（例: GlobalからGachiに切り替えた際にデータがないマップが除外された場合など）
+          setSubType((prevSubType) => {
+            setSelectedId((prevSelectedId) => {
+              if (prevSubType === "map" && !data.maps.includes(prevSelectedId)) {
+                return data.maps.length > 0 ? data.maps[0] : ""
+              }
+              return prevSelectedId
+            })
+            return prevSubType
+          })
         }
       } catch (err) {
         console.error(err)
       }
     }
     fetchCategories()
-  }, [])
+  }, [selectedType])
 
   // 選択に応じたTierデータの取得
   useEffect(() => {

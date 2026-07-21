@@ -236,7 +236,7 @@ export default function TierListPage() {
                               <div className="w-14 h-14 sm:w-16 sm:h-16 shrink-0 border-2 border-black/20 dark:border-white/10 group-hover:border-primary transition-colors shadow-sm rounded-md flex items-center justify-center bg-primary/10 relative">
                                 <span className="text-primary font-bold absolute z-0">{info.nameJa.charAt(0)}</span>
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img src={info.imageUrl} alt={info.nameJa} className="object-cover w-full h-full rounded-sm relative z-10" />
+                                <img src={info.imageUrl} alt={info.nameJa} className="object-cover w-full h-full rounded-sm relative z-10" referrerPolicy="no-referrer" />
                               </div>
                               <span className="text-xs font-medium text-center truncate w-full px-1 mt-2">{info.nameJa}</span>
                             </div>
@@ -263,7 +263,7 @@ export default function TierListPage() {
                   <div className="w-20 h-20 shrink-0 border-4 shadow-xl ring-2 ring-primary/20 ring-offset-2 ring-offset-background rounded-md flex items-center justify-center bg-primary/10 relative">
                     <span className="text-primary font-bold text-2xl absolute z-0">{selectedChar.character_id.charAt(0).toUpperCase()}</span>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={getBrawlerInfo(selectedChar.character_id).imageUrl} alt={selectedChar.character_id} className="object-cover w-full h-full rounded-sm relative z-10" />
+                    <img src={getBrawlerInfo(selectedChar.character_id).imageUrl} alt={selectedChar.character_id} className="object-cover w-full h-full rounded-sm relative z-10" referrerPolicy="no-referrer" />
                   </div>
                   <div>
                     <SheetTitle className="text-3xl font-black capitalize">{getBrawlerInfo(selectedChar.character_id).nameJa}</SheetTitle>

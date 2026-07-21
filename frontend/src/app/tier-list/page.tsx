@@ -10,7 +10,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { Progress } from "@/components/ui/progress"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { getBrawlerInfo } from "@/lib/brawlers"
+import { getBrawlerInfo, BRAWLER_MAP } from "@/lib/brawlers"
 import { translateMode, translateMap } from "@/lib/translations"
 import { API_URL } from "@/lib/config"
 
@@ -19,7 +19,8 @@ const tierConfig = {
   A: { color: "from-orange-500 to-amber-500", label: "優秀な選択肢", bg: "bg-orange-500/10 border-orange-500/30" },
   B: { color: "from-yellow-500 to-lime-500", label: "平均的", bg: "bg-yellow-500/10 border-yellow-500/30" },
   C: { color: "from-blue-500 to-cyan-500", label: "状況を選ぶ", bg: "bg-blue-500/10 border-blue-500/30" },
-  D: { color: "from-slate-500 to-gray-500", label: "現環境では厳しい", bg: "bg-slate-500/10 border-slate-500/30" }
+  D: { color: "from-slate-500 to-gray-500", label: "現環境では厳しい", bg: "bg-slate-500/10 border-slate-500/30" },
+  "N/A": { color: "from-zinc-500 to-stone-500", label: "データ不足", bg: "bg-zinc-500/10 border-zinc-500/30 border-dashed" }
 }
 
 export default function TierListPage() {
@@ -195,9 +196,15 @@ export default function TierListPage() {
                   </p>
                 </div>
               ) : (
-                ['S', 'A', 'B', 'C', 'D'].map((tierKey) => {
+                ['S', 'A', 'B', 'C', 'D', 'N/A'].map((tierKey) => {
                   const config = tierConfig[tierKey as keyof typeof tierConfig];
-                  const chars = tierData?.tiers?.[tierKey] || [];
+                  let chars = tierData?.tiers?.[tierKey] || [];
+                  
+                  if (tierKey === 'N/A' && tierData?.tiers) {
+                    const allDefined = Object.keys(BRAWLER_MAP);
+                    const present = new Set(['S', 'A', 'B', 'C', 'D'].flatMap(k => tierData.tiers[k] || []));
+                    chars = allDefined.filter(c => !present.has(c));
+                  }
                   
                   if (chars.length === 0) return null;
 

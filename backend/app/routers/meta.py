@@ -64,32 +64,42 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, in
     if sub_type == "mode" and id:
         try:
             mode_res = db.table("match_raw_history").select("map_id").eq("mode", id).execute()
-            valid_map_ids = set([r["map_id"] for r in mode_res.data])
+            valid_map_ids = set()
+            for r in mode_res.data:
+                m_id = r.get("map_id", "")
+                if m_id.startswith("gachi_"):
+                    valid_map_ids.add(m_id.replace("gachi_", ""))
+                else:
+                    valid_map_ids.add(m_id)
         except:
             valid_map_ids = set()
             
     # フィルタリング
     filtered_data = []
+    
+    # 比較用にIDを正規化
+    normalized_id = (id or "").strip().lower()
+    # valid_map_ids も正規化して保持
+    normalized_valid_maps = {m.strip().lower() for m in valid_map_ids} if valid_map_ids is not None else None
+    
     for row in data:
         map_id = str(row.get("map_id", ""))
+        normalized_map_id = map_id.strip().lower()
         match_type = str(row.get("match_type", "unknown"))
         is_gachi_match = match_type in ["soloRanked", "teamRanked"]
         
         # ガチバトル指定の場合
         if type == "gachi" and not is_gachi_match:
             continue
-        # 通常マッチ指定の場合 (オプショナル。もし必要なら)
-        # elif type != "gachi" and is_gachi_match:
-        #     continue
             
         # マップ別フィルタ
         if sub_type == "map" and id:
-            if map_id != id:
+            if normalized_map_id != normalized_id:
                 continue
                 
         # モード別フィルタ
-        if sub_type == "mode" and id and valid_map_ids is not None:
-            if map_id not in valid_map_ids:
+        if sub_type == "mode" and id and normalized_valid_maps is not None:
+            if normalized_map_id not in normalized_valid_maps:
                 continue
                 
         filtered_data.append(row)

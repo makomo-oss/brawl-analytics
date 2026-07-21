@@ -423,7 +423,7 @@ export default function DraftCompanionPage() {
                           <>
                             <div className="w-6 h-6 sm:w-10 sm:h-10 border border-blue-500/50 rounded-md shrink-0 bg-primary/10 relative">
                               {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img src={getBrawlerInfo(charName).imageUrl} alt={charName} className="object-cover w-full h-full rounded-sm absolute inset-0" referrerPolicy="no-referrer" />
+                              <img src={getBrawlerInfo(charName).imageUrl} alt={charName} className="object-cover w-full h-full rounded-sm absolute inset-0 z-10" />
                             </div>
                             <span className="font-bold text-[8px] sm:text-sm truncate w-full text-center sm:text-left">{getBrawlerInfo(charName).nameJa}</span>
                           </>
@@ -452,7 +452,7 @@ export default function DraftCompanionPage() {
                           <>
                             <div className="w-6 h-6 sm:w-10 sm:h-10 border border-red-500/50 rounded-md shrink-0 bg-primary/10 relative">
                               {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img src={getBrawlerInfo(charName).imageUrl} alt={charName} className="object-cover w-full h-full rounded-sm absolute inset-0" referrerPolicy="no-referrer" />
+                              <img src={getBrawlerInfo(charName).imageUrl} alt={charName} className="object-cover w-full h-full rounded-sm absolute inset-0 z-10" />
                             </div>
                             <span className="font-bold text-[8px] sm:text-sm truncate w-full text-center sm:text-left">{getBrawlerInfo(charName).nameJa}</span>
                           </>
@@ -485,7 +485,7 @@ export default function DraftCompanionPage() {
                               <>
                                 <div className="w-6 h-6 sm:w-10 sm:h-10 opacity-50 grayscale rounded-md shrink-0 bg-primary/10 relative">
                                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                                  <img src={getBrawlerInfo(charName).imageUrl} alt={charName} className="object-cover w-full h-full rounded-sm absolute inset-0" referrerPolicy="no-referrer" />
+                                  <img src={getBrawlerInfo(charName).imageUrl} alt={charName} className="object-cover w-full h-full rounded-sm absolute inset-0 z-10" />
                                 </div>
                                 <div className="absolute inset-0 bg-red-500/20 flex items-center justify-center pointer-events-none">
                                   <div className="w-full h-0.5 bg-red-500 rotate-45 absolute" />
@@ -513,7 +513,7 @@ export default function DraftCompanionPage() {
                               <>
                                 <div className="w-6 h-6 sm:w-10 sm:h-10 opacity-50 grayscale rounded-md shrink-0 bg-primary/10 relative">
                                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                                  <img src={getBrawlerInfo(charName).imageUrl} alt={charName} className="object-cover w-full h-full rounded-sm absolute inset-0" referrerPolicy="no-referrer" />
+                                  <img src={getBrawlerInfo(charName).imageUrl} alt={charName} className="object-cover w-full h-full rounded-sm absolute inset-0 z-10" />
                                 </div>
                                 <div className="absolute inset-0 bg-red-500/20 flex items-center justify-center pointer-events-none">
                                   <div className="w-full h-0.5 bg-red-500 rotate-45 absolute" />
@@ -584,10 +584,12 @@ export default function DraftCompanionPage() {
                           onClick={() => !excluded && handleSelectCharacter(charName)}
                           className={`flex flex-col items-center gap-1 cursor-pointer transition-transform hover:scale-105 ${excluded ? 'opacity-20 cursor-not-allowed grayscale' : ''}`}
                         >
-                          <div className="w-8 h-8 sm:w-12 sm:h-12 border-2 border-black/20 dark:border-white/10 group-hover:border-primary transition-colors shrink-0 rounded-md bg-primary/10 relative flex items-center justify-center">
-                            <span className="text-[10px] font-bold text-primary absolute z-0">{info.nameJa.charAt(0)}</span>
+                          <div className="w-8 h-8 sm:w-12 sm:h-12 border-2 border-black/20 dark:border-white/10 group-hover:border-primary transition-colors shrink-0 rounded-md bg-primary/10 relative">
+                            <div className="absolute inset-0 flex items-center justify-center z-0">
+                              <span className="text-[10px] font-bold text-primary">{info.nameJa.charAt(0)}</span>
+                            </div>
                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={info.imageUrl} alt={info.nameJa} className="object-cover w-full h-full rounded-sm relative z-10" referrerPolicy="no-referrer" />
+                            <img src={info.imageUrl} alt={info.nameJa} className="object-cover w-full h-full rounded-sm absolute inset-0 z-10" />
                           </div>
                           <span className="text-[10px] truncate w-full text-center">{info.nameJa}</span>
                         </div>
@@ -634,9 +636,9 @@ export default function DraftCompanionPage() {
                           <div className="font-black text-lg w-6 text-center text-muted-foreground">
                             {index + 1}
                           </div>
-                          <div className="w-8 h-8 sm:w-10 sm:h-10 border-2 border-black/20 dark:border-white/10 transition-colors shrink-0 rounded-md bg-primary/10 relative flex items-center justify-center">
+                          <div className="w-8 h-8 sm:w-10 sm:h-10 border-2 border-black/20 dark:border-white/10 transition-colors shrink-0 rounded-md bg-primary/10 relative">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={info.imageUrl} alt={info.nameJa} className="object-cover w-full h-full rounded-sm relative z-10" referrerPolicy="no-referrer" />
+                            <img src={info.imageUrl} alt={info.nameJa} className="object-cover w-full h-full rounded-sm absolute inset-0 z-10" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="font-bold truncate">{info.nameJa}</div>

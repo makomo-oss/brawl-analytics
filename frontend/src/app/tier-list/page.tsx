@@ -233,10 +233,12 @@ export default function TierListPage() {
                               onClick={() => fetchCharacterDetail(charId)}
                               className="group relative flex flex-col items-center justify-center p-2 rounded-xl bg-background/60 hover:bg-background/90 border border-primary/10 hover:border-primary/50 transition-all hover:-translate-y-1 cursor-pointer shadow-sm"
                             >
-                              <div className="w-14 h-14 sm:w-16 sm:h-16 shrink-0 border-2 border-black/20 dark:border-white/10 group-hover:border-primary transition-colors shadow-sm rounded-md flex items-center justify-center bg-primary/10 relative">
-                                <span className="text-primary font-bold absolute z-0">{info.nameJa.charAt(0)}</span>
+                              <div className="w-14 h-14 sm:w-16 sm:h-16 shrink-0 border-2 border-black/20 dark:border-white/10 group-hover:border-primary transition-colors shadow-sm rounded-md bg-primary/10 relative">
+                                <div className="absolute inset-0 flex items-center justify-center z-0">
+                                  <span className="text-primary font-bold">{info.nameJa.charAt(0)}</span>
+                                </div>
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img src={info.imageUrl} alt={info.nameJa} className="object-cover w-full h-full rounded-sm relative z-10" referrerPolicy="no-referrer" />
+                                <img src={info.imageUrl} alt={info.nameJa} className="object-cover w-full h-full rounded-sm absolute inset-0 z-10" />
                               </div>
                               <span className="text-xs font-medium text-center truncate w-full px-1 mt-2">{info.nameJa}</span>
                             </div>
@@ -260,10 +262,12 @@ export default function TierListPage() {
             <div className="space-y-6 pb-8">
               <SheetHeader className="text-left">
                 <div className="flex items-center gap-4 mb-2">
-                  <div className="w-20 h-20 shrink-0 border-4 shadow-xl ring-2 ring-primary/20 ring-offset-2 ring-offset-background rounded-md flex items-center justify-center bg-primary/10 relative">
-                    <span className="text-primary font-bold text-2xl absolute z-0">{selectedChar.character_id.charAt(0).toUpperCase()}</span>
+                  <div className="w-20 h-20 shrink-0 border-4 shadow-xl ring-2 ring-primary/20 ring-offset-2 ring-offset-background rounded-md bg-primary/10 relative">
+                    <div className="absolute inset-0 flex items-center justify-center z-0">
+                      <span className="text-primary font-bold text-2xl">{selectedChar.character_id.charAt(0).toUpperCase()}</span>
+                    </div>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={getBrawlerInfo(selectedChar.character_id).imageUrl} alt={selectedChar.character_id} className="object-cover w-full h-full rounded-sm relative z-10" referrerPolicy="no-referrer" />
+                    <img src={getBrawlerInfo(selectedChar.character_id).imageUrl} alt={selectedChar.character_id} className="object-cover w-full h-full rounded-sm absolute inset-0 z-10" />
                   </div>
                   <div>
                     <SheetTitle className="text-3xl font-black capitalize">{getBrawlerInfo(selectedChar.character_id).nameJa}</SheetTitle>

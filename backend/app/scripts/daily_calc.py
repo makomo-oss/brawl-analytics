@@ -49,17 +49,17 @@ def calc_macro_map_stats(df: pd.DataFrame):
     # マイグレーション互換性: match_type カラムが無い場合は追加
     if "match_type" not in df.columns:
         df["match_type"] = "unknown"
-        
+
+    # null(NaN)を空配列や空文字列に置換して安全にする
+    df["match_type"] = df["match_type"].fillna("unknown")
+    df["map_id"] = df["map_id"].fillna("")
+
     # 古いデータの gachi_ プレフィックスから match_type を復元するフォールバック
     df.loc[(df["match_type"] == "unknown") & (df["map_id"].str.startswith("gachi_")), "match_type"] = "soloRanked"
     df["map_id"] = df["map_id"].str.replace(r"^gachi_", "", regex=True)
 
     # 勝利フラグを数値化
     df["is_win"] = (df["result"] == "victory").astype(int)
-
-    # null(NaN)を空配列や空文字列に置換して安全にする
-    df["match_type"] = df["match_type"].fillna("unknown")
-    df["map_id"] = df["map_id"].fillna("")
     
     # 試合データを展開して、試合に参加した全プレイヤー(自分、味方、敵)のデータを集計する
     expanded_records = []

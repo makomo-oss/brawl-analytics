@@ -61,74 +61,14 @@ def calc_macro_map_stats(df: pd.DataFrame):
     # 勝利フラグを数値化
     df["is_win"] = (df["result"] == "victory").astype(int)
     
-    # 試合データを展開して、試合に参加した全プレイヤー(自分、味方、敵)のデータを集計する
-    expanded_records = []
+    # キャラクターIDを小文字に正規化（APIは大文字で返すため）
+    df["hero_used"] = df["hero_used"].str.lower()
     
-    import ast
-    for _, row in df.iterrows():
-        match_type = str(row["match_type"])
-        map_id = str(row["map_id"])
-        match_id = str(row.get("match_id", ""))
-        is_win = row["is_win"]
-        
-        # 自分
-        hero_used = str(row.get("hero_used", "unknown")).lower()
-        if hero_used != "unknown" and hero_used != "nan":
-            expanded_records.append({
-                "match_id": match_id,
-                "match_type": match_type,
-                "map_id": map_id,
-                "hero_used": hero_used,
-                "is_win": is_win
-            })
-            
-        # 味方
-        allies = row.get("allies")
-        if pd.isna(allies) if not isinstance(allies, (list, pd.Series, __import__('numpy').ndarray)) else False:
-            allies = []
-        elif isinstance(allies, str):
-            try: allies = ast.literal_eval(allies)
-            except: allies = []
-        if not isinstance(allies, list): allies = []
-        
-        for ally in allies:
-            ally_str = str(ally).lower()
-            if ally_str != "unknown" and ally_str != "nan":
-                expanded_records.append({
-                    "match_id": match_id,
-                    "match_type": match_type,
-                    "map_id": map_id,
-                    "hero_used": ally_str,
-                    "is_win": is_win
-                })
-                
-        # 敵 (is_winを反転)
-        opponents = row.get("opponents")
-        if pd.isna(opponents) if not isinstance(opponents, (list, pd.Series, __import__('numpy').ndarray)) else False:
-            opponents = []
-        elif isinstance(opponents, str):
-            try: opponents = ast.literal_eval(opponents)
-            except: opponents = []
-        if not isinstance(opponents, list): opponents = []
-        
-        for opponent in opponents:
-            opp_str = str(opponent).lower()
-            if opp_str != "unknown" and opp_str != "nan":
-                expanded_records.append({
-                    "match_id": match_id,
-                    "match_type": match_type,
-                    "map_id": map_id,
-                    "hero_used": opp_str,
-                    "is_win": 1 - is_win
-                })
-                
-    if not expanded_records:
-        return []
-        
-    expanded_df = pd.DataFrame(expanded_records)
+    # "unknown" または "nan" のデータは集計対象外
+    df = df[(df["hero_used"] != "unknown") & (df["hero_used"] != "nan")]
     
     # match_type × マップ × ヒーローで集計
-    grouped = expanded_df.groupby(["match_type", "map_id", "hero_used"]).agg(
+    grouped = df.groupby(["match_type", "map_id", "hero_used"]).agg(
         total_matches=("match_id", "count"),
         total_wins=("is_win", "sum")
     ).reset_index()

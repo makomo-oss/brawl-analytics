@@ -238,26 +238,35 @@ def get_character_detail(character_id: str, type: str = "global", sub_type: str 
     chars = tier_data.get("characters", {})
     
     if char_id_lower not in chars:
-        return {
-            "character_id": char_id_lower,
-            "tier": "Unknown",
-            "score": 0,
-            "win_rate": 50.0,
-            "use_rate": 0,
-            "total_matches": 0,
-            "kamo": [],
-            "tenteki": []
-        }
-        
-    detail = chars[char_id_lower]
-    
-    # 所属Tierの検索
-    my_tier = "Unknown"
-    for t_name, char_list in tier_data.get("tiers", {}).items():
-        if char_id_lower in char_list:
-            my_tier = t_name
-            break
+        # 基本データ(macro_map_stats)にない場合は、dynamic_countersから逆算して補完を試みる
+        fallback_matches = 0
+        fallback_wins = 0
+        try:
+            fallback_res = db.table("dynamic_counters").select("match_count,win_count").eq("char_a", char_id_lower).execute()
+            for r in fallback_res.data:
+                fallback_matches += r.get("match_count", 0)
+                fallback_wins += r.get("win_count", 0)
+        except:
+            pass
             
+        fallback_win_rate = round((fallback_wins / fallback_matches * 100), 1) if fallback_matches > 0 else 50.0
+        
+        detail = {
+            "score": 0,
+            "win_rate": fallback_win_rate,
+            "use_rate": 0.0,
+            "total_matches": fallback_matches
+        }
+        my_tier = "Unknown"
+    else:
+        detail = chars[char_id_lower]
+        # 所属Tierの検索
+        my_tier = "Unknown"
+        for t_name, char_list in tier_data.get("tiers", {}).items():
+            if char_id_lower in char_list:
+                my_tier = t_name
+                break
+                
     detail["tier"] = my_tier
     detail["character_id"] = char_id_lower
     

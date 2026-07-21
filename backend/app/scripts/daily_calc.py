@@ -57,14 +57,66 @@ def calc_macro_map_stats(df: pd.DataFrame):
     # 勝利フラグを数値化
     df["is_win"] = (df["result"] == "victory").astype(int)
     
-    # キャラクターIDを小文字に正規化（APIは大文字で返すため）
-    df["hero_used"] = df["hero_used"].str.lower()
+    # 試合データを展開して、試合に参加した全プレイヤー(自分、味方、敵)のデータを集計する
+    expanded_records = []
     
-    # "unknown" のデータは集計対象外
-    df = df[df["hero_used"] != "unknown"]
+    import ast
+    for _, row in df.iterrows():
+        match_type = row.get("match_type", "unknown")
+        map_id = row.get("map_id", "")
+        match_id = row.get("match_id", "")
+        is_win = row["is_win"]
+        
+        # 自分
+        hero_used = str(row.get("hero_used", "unknown")).lower()
+        if hero_used != "unknown":
+            expanded_records.append({
+                "match_id": match_id,
+                "match_type": match_type,
+                "map_id": map_id,
+                "hero_used": hero_used,
+                "is_win": is_win
+            })
+            
+        # 味方
+        allies = row.get("allies", [])
+        if isinstance(allies, str):
+            try: allies = ast.literal_eval(allies)
+            except: allies = []
+        for ally in allies:
+            ally = str(ally).lower()
+            if ally != "unknown":
+                expanded_records.append({
+                    "match_id": match_id,
+                    "match_type": match_type,
+                    "map_id": map_id,
+                    "hero_used": ally,
+                    "is_win": is_win
+                })
+                
+        # 敵 (is_winを反転)
+        opponents = row.get("opponents", [])
+        if isinstance(opponents, str):
+            try: opponents = ast.literal_eval(opponents)
+            except: opponents = []
+        for opponent in opponents:
+            opponent = str(opponent).lower()
+            if opponent != "unknown":
+                expanded_records.append({
+                    "match_id": match_id,
+                    "match_type": match_type,
+                    "map_id": map_id,
+                    "hero_used": opponent,
+                    "is_win": 1 - is_win
+                })
+                
+    if not expanded_records:
+        return []
+        
+    expanded_df = pd.DataFrame(expanded_records)
     
     # match_type × マップ × ヒーローで集計
-    grouped = df.groupby(["match_type", "map_id", "hero_used"]).agg(
+    grouped = expanded_df.groupby(["match_type", "map_id", "hero_used"]).agg(
         total_matches=("match_id", "count"),
         total_wins=("is_win", "sum")
     ).reset_index()

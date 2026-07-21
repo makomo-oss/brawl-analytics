@@ -131,10 +131,10 @@ export default function TierListPage() {
 
       <Tabs value={selectedType} onValueChange={handleTypeChange} className="space-y-6">
         <div className="flex justify-center mb-8">
-          <TabsList className="grid w-full max-w-[500px] grid-cols-2 bg-card/80 backdrop-blur-md border shadow-sm rounded-xl p-1 h-14">
-            <TabsTrigger value="global" className="text-sm sm:text-base font-bold h-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all rounded-lg">全体Tier</TabsTrigger>
-            <TabsTrigger value="gachi" className="text-sm sm:text-base font-bold h-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all rounded-lg flex items-center justify-center gap-2">
-              <Trophy className="w-4 h-4" /> ガチバトルTier
+          <TabsList className="grid w-full max-w-[600px] grid-cols-2 bg-card/80 backdrop-blur-md border shadow-sm rounded-xl p-1.5 h-auto">
+            <TabsTrigger value="global" className="text-base sm:text-lg font-bold h-auto py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all rounded-lg">全体Tier</TabsTrigger>
+            <TabsTrigger value="gachi" className="text-base sm:text-lg font-bold h-auto py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all rounded-lg flex items-center justify-center gap-2">
+              <Trophy className="w-5 h-5" /> ガチバトルTier
             </TabsTrigger>
           </TabsList>
         </div>
@@ -142,10 +142,10 @@ export default function TierListPage() {
         {selectedType === "gachi" && (
           <div className="flex flex-col sm:flex-row gap-4 items-center justify-center bg-secondary/10 p-3 rounded-xl border border-primary/10 max-w-3xl mx-auto mb-6">
             <Tabs value={subType} onValueChange={handleSubTypeChange} className="w-full sm:w-auto">
-              <TabsList className="grid grid-cols-3 w-full sm:w-[300px] h-10">
-                <TabsTrigger value="all" className="text-xs h-full">すべて</TabsTrigger>
-                <TabsTrigger value="mode" className="text-xs sm:text-sm h-full">モード別</TabsTrigger>
-                <TabsTrigger value="map" className="text-xs sm:text-sm h-full">マップ別</TabsTrigger>
+              <TabsList className="grid grid-cols-3 w-full sm:w-[320px] h-auto p-1.5 rounded-lg bg-background/50">
+                <TabsTrigger value="all" className="text-sm font-semibold h-auto py-2 rounded-md">すべて</TabsTrigger>
+                <TabsTrigger value="mode" className="text-sm font-semibold h-auto py-2 rounded-md">モード別</TabsTrigger>
+                <TabsTrigger value="map" className="text-sm font-semibold h-auto py-2 rounded-md">マップ別</TabsTrigger>
               </TabsList>
             </Tabs>
 

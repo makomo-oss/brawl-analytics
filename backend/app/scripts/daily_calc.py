@@ -200,8 +200,12 @@ def main():
         logger.info(f"Upserting {len(macro_stats)} macro_map_stats records...")
         # 1000件ずつ分割してUpsert
         for i in range(0, len(macro_stats), 1000):
-            batch = macro_stats[i:i+1000]
-            supabase.table("macro_map_stats").upsert(batch).execute()
+            try:
+                supabase.table("macro_map_stats").upsert(batch).execute()
+            except Exception as e:
+                logger.warning(f"Upsert macro_map_stats failed, trying fallback without match_type: {e}")
+                fallback_batch = [{k: v for k, v in item.items() if k != "match_type"} for item in batch]
+                supabase.table("macro_map_stats").upsert(fallback_batch).execute()
             
     # Upsert dynamic_counters
     if dynamic_counters:

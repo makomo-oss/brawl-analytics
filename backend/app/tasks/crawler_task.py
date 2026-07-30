@@ -230,7 +230,13 @@ async def run_crawler_task():
             logger.info(f"Bulk upserting {len(upsert_matches)} matches...")
             db.table("match_raw_history").upsert(upsert_matches).execute()
         except Exception as e:
-            logger.error(f"Failed to upsert matches: {e}")
+            logger.warning(f"Failed to upsert matches directly, trying fallback without match_type: {e}")
+            try:
+                fallback_matches = [{k: v for k, v in m.items() if k != "match_type"} for m in upsert_matches]
+                db.table("match_raw_history").upsert(fallback_matches).execute()
+                logger.info(f"Successfully upserted {len(fallback_matches)} matches via fallback")
+            except Exception as fallback_err:
+                logger.error(f"Failed fallback match upsert: {fallback_err}")
             
     logger.info("Crawler task completed successfully.")
 

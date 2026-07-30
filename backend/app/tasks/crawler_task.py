@@ -3,7 +3,7 @@ import logging
 import random
 from datetime import datetime, timezone
 from app.database import get_db
-from app.services.brawl_api import get_player_battlelog, get_player, get_club_members
+from app.services.brawl_api import get_player_battlelog, get_player, get_club_members, get_club
 
 logger = logging.getLogger(__name__)
 
@@ -150,24 +150,39 @@ async def run_crawler_task():
         if e_players:
             encountered_in_battles.update(e_players)
             
-    # フェーズ2: クラブから新メンバーを抽出 (芋づる式クローリング制限：最大10クラブ)
+    # フェーズ2: クラブから新メンバーを抽出 & クラブ情報を保存 (芋づる式クローリング制限：最大10クラブ)
     new_player_tags = set()
+    upsert_clubs = []
     clubs_to_crawl = list(found_clubs)[:10]
     
-    async def fetch_club_members_task(ctag):
+    async def fetch_club_details_task(ctag):
         async with semaphore:
             try:
+                c_details = await get_club(ctag)
+                clean_ctag = ctag.replace("#", "")
+                club_record = {
+                    "club_tag": clean_ctag,
+                    "name": c_details.get("name", "Unknown"),
+                    "description": c_details.get("description", ""),
+                    "trophies": c_details.get("trophies", 0),
+                    "required_trophies": c_details.get("requiredTrophies", 0),
+                    "badge_id": c_details.get("badgeId", 0),
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }
                 c_data = await get_club_members(ctag)
-                return [m.get("tag") for m in c_data.get("items", []) if m.get("tag")]
+                members = [m.get("tag") for m in c_data.get("items", []) if m.get("tag")]
+                return club_record, members
             except Exception as e:
                 logger.warning(f"Failed to fetch club {ctag}: {e}")
-                return []
+                return None, []
                 
     if clubs_to_crawl:
-        logger.info(f"Crawling {len(clubs_to_crawl)} clubs to find new players...")
-        club_tasks = [fetch_club_members_task(ctag) for ctag in clubs_to_crawl]
+        logger.info(f"Crawling {len(clubs_to_crawl)} clubs to find new players and store club details...")
+        club_tasks = [fetch_club_details_task(ctag) for ctag in clubs_to_crawl]
         club_results = await asyncio.gather(*club_tasks)
-        for members in club_results:
+        for club_rec, members in club_results:
+            if club_rec:
+                upsert_clubs.append(club_rec)
             for m in members:
                 if m:
                     m_clean = m.replace("#", "")
@@ -202,6 +217,13 @@ async def run_crawler_task():
             db.table("players").upsert(upsert_players).execute()
         except Exception as e:
             logger.error(f"Failed to upsert players: {e}")
+
+    if upsert_clubs:
+        try:
+            logger.info(f"Bulk upserting {len(upsert_clubs)} clubs...")
+            db.table("clubs").upsert(upsert_clubs).execute()
+        except Exception as e:
+            logger.error(f"Failed to upsert clubs: {e}")
             
     if upsert_matches:
         try:
@@ -211,3 +233,4 @@ async def run_crawler_task():
             logger.error(f"Failed to upsert matches: {e}")
             
     logger.info("Crawler task completed successfully.")
+

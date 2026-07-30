@@ -146,3 +146,37 @@ async def get_club_members(club_tag: str):
                 {"tag": "#R8G2P9Y", "name": "Player 2", "role": "president", "trophies": 38000}
             ]
         }
+
+async def get_club(club_tag: str):
+    """
+    指定したクラブの詳細情報を取得する
+    """
+    clean_tag = club_tag.replace("#", "")
+    tag = f"%23{clean_tag}"
+    url = f"{BRAWL_API_BASE_URL}/clubs/{tag}"
+    headers = {
+        "Authorization": f"Bearer {BRAWL_API_TOKEN}",
+        "Accept": "application/json"
+    }
+    try:
+        proxy = BRAWL_API_PROXY if BRAWL_API_PROXY else None
+        async with httpx.AsyncClient(proxy=proxy, verify=False, timeout=10.0) as client:
+            response = await client.get(url, headers=headers)
+            response.raise_for_status()
+            return response.json()
+    except Exception as exc:
+        logger.warning(f"Failed to fetch club details from API, using fallback mock: {exc}")
+        return {
+            "tag": f"#{clean_tag}",
+            "name": "Brawl Masters",
+            "description": "Welcome to Brawl Masters! Active club for all players.",
+            "type": "open",
+            "badgeId": 16000000,
+            "requiredTrophies": 10000,
+            "trophies": 850000,
+            "members": [
+                {"tag": "#Q2LL9G8", "name": "Player 1", "role": "member", "trophies": 35000},
+                {"tag": "#R8G2P9Y", "name": "Player 2", "role": "president", "trophies": 38000}
+            ]
+        }
+

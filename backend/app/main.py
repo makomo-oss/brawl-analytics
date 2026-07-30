@@ -6,6 +6,7 @@ from app.routers.match import router as match_router
 from app.routers.player import router as player_router
 from app.routers.meta import router as meta_router
 from app.routers.cron import router as cron_router
+from app.routers.club import router as club_router
 
 app = FastAPI(title="BrawlAnalytics API")
 
@@ -22,6 +23,7 @@ app.include_router(match_router)
 app.include_router(player_router)
 app.include_router(meta_router)
 app.include_router(cron_router)
+app.include_router(club_router)
 
 @app.get("/")
 def read_root():

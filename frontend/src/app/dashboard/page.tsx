@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Search, TrendingUp, AlertTriangle, Lightbulb, Trophy, Swords, Star } from "lucide-react"
+import { Search, TrendingUp, AlertTriangle, Lightbulb, Trophy, Swords, Star, Building2, Shield, Users } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -108,9 +108,13 @@ interface DashboardData {
 }
 
 export default function DashboardPage() {
+  const [searchMode, setSearchMode] = useState<"player" | "club">("player")
   const [playerTag, setPlayerTag] = useState("")
+  const [clubInput, setClubInput] = useState("")
   const [loading, setLoading] = useState(false)
+  const [loadingClub, setLoadingClub] = useState(false)
   const [data, setData] = useState<DashboardData | null>(null)
+  const [clubData, setClubData] = useState<any | null>(null)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [battleTab, setBattleTab] = useState("battles")
 
@@ -118,6 +122,12 @@ export default function DashboardPage() {
   const [suggestions, setSuggestions] = useState<any[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [isSearching, setIsSearching] = useState(false)
+
+  // クラブ名検索サジェスト用ステート
+  const [clubSuggestions, setClubSuggestions] = useState<any[]>([])
+  const [showClubSuggestions, setShowClubSuggestions] = useState(false)
+  const [isSearchingClub, setIsSearchingClub] = useState(false)
+
   const searchContainerRef = useRef<HTMLDivElement>(null)
 
   // 外部クリックでサジェストを閉じる
@@ -125,6 +135,7 @@ export default function DashboardPage() {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
         setShowSuggestions(false)
+        setShowClubSuggestions(false)
       }
     }
     document.addEventListener("mousedown", handleClickOutside)
@@ -159,6 +170,34 @@ export default function DashboardPage() {
     return () => clearTimeout(timeoutId)
   }, [playerTag])
 
+  // クラブ検索のデバウンス処理
+  useEffect(() => {
+    const searchClubs = async () => {
+      if (!clubInput || clubInput.length < 2) {
+        setClubSuggestions([])
+        setShowClubSuggestions(false)
+        return
+      }
+
+      setIsSearchingClub(true)
+      try {
+        const res = await fetch(`${API_URL}/club/search?q=${encodeURIComponent(clubInput)}`)
+        if (res.ok) {
+          const result = await res.json()
+          setClubSuggestions(result)
+          setShowClubSuggestions(true)
+        }
+      } catch (error) {
+        console.error("Failed to search clubs", error)
+      } finally {
+        setIsSearchingClub(false)
+      }
+    }
+
+    const timeoutId = setTimeout(searchClubs, 300)
+    return () => clearTimeout(timeoutId)
+  }, [clubInput])
+
   const handleSync = async (overrideTag?: string) => {
     const tagToFetch = overrideTag || playerTag
     if (!tagToFetch) return
@@ -166,6 +205,7 @@ export default function DashboardPage() {
     setLoading(true)
     setErrorMsg(null)
     setData(null)
+    setClubData(null)
     try {
       const res = await fetch(`${API_URL}/player/${tagToFetch.replace("#", "")}/dashboard`)
       if (!res.ok) {
@@ -191,6 +231,36 @@ export default function DashboardPage() {
     }
   }
 
+  const handleSyncClub = async (overrideTag?: string) => {
+    const tagToFetch = overrideTag || clubInput
+    if (!tagToFetch) return
+    if (overrideTag) setClubInput(overrideTag)
+    setLoadingClub(true)
+    setErrorMsg(null)
+    setData(null)
+    setClubData(null)
+    try {
+      const res = await fetch(`${API_URL}/club/${tagToFetch.replace("#", "")}`)
+      if (!res.ok) {
+        if (res.status === 404) {
+          setErrorMsg("そのクラブは存在しません。")
+        } else {
+          setErrorMsg("クラブデータの取得に失敗しました。")
+        }
+        return
+      }
+      const result = await res.json()
+      setClubData(result)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    } catch (error) {
+      console.error("Fetch club error", error)
+      setErrorMsg("ネットワークエラーが発生しました。")
+    } finally {
+      setLoadingClub(false)
+    }
+  }
+
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col gap-2">
@@ -203,90 +273,190 @@ export default function DashboardPage() {
       </div>
 
       <Card className="relative z-50 bg-card/50 backdrop-blur-sm border-primary/20 shadow-sm overflow-visible">
-        <CardHeader>
-          <CardTitle>プレイヤー同期</CardTitle>
-          <CardDescription>Brawl Starsのプレイヤータグを入力して最新のデータを取得します。</CardDescription>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle>{searchMode === "player" ? "プレイヤー同期" : "クラブ検索"}</CardTitle>
+            <div className="flex bg-secondary/80 p-1 rounded-lg border border-primary/10">
+              <Button
+                variant={searchMode === "player" ? "default" : "ghost"}
+                size="sm"
+                className="h-8 text-xs font-semibold gap-1.5"
+                onClick={() => {
+                  setSearchMode("player")
+                  setErrorMsg(null)
+                }}
+              >
+                <Users className="w-3.5 h-3.5" />
+                プレイヤー
+              </Button>
+              <Button
+                variant={searchMode === "club" ? "default" : "ghost"}
+                size="sm"
+                className="h-8 text-xs font-semibold gap-1.5"
+                onClick={() => {
+                  setSearchMode("club")
+                  setErrorMsg(null)
+                }}
+              >
+                <Building2 className="w-3.5 h-3.5" />
+                クラブ
+              </Button>
+            </div>
+          </div>
+          <CardDescription>
+            {searchMode === "player" 
+              ? "Brawl Starsのプレイヤー名またはタグを入力して最新データを取得します。"
+              : "クラブ名またはクラブタグ(#CLUB123)を入力してクラブ情報とメンバーを検索します。"}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col gap-4 max-w-md relative z-50" ref={searchContainerRef}>
-            <div className="relative flex gap-4 w-full">
-              <Input 
-                placeholder="プレイヤー名 または タグ(#Q2LL9G8)" 
-                value={playerTag}
-                onChange={(e) => {
-                  setPlayerTag(e.target.value)
-                  if (!showSuggestions) setShowSuggestions(true)
-                }}
-                onFocus={() => {
-                  if (playerTag.length >= 2 && suggestions.length > 0) setShowSuggestions(true)
-                }}
-                className="bg-background/80"
-              />
-              <Button onClick={() => handleSync()} disabled={loading} className="px-8 shadow-lg shadow-primary/20">
-                {loading ? "取得中..." : (
-                  <>
-                    <Search className="w-4 h-4 mr-2" />
-                    同期
-                  </>
-                )}
-              </Button>
-              
-              {/* サジェストドロップダウン */}
-              {showSuggestions && (playerTag.length >= 2 || isSearching) && (
-                <div className="absolute top-full left-0 w-full min-w-[320px] max-w-full mt-2 bg-popover text-popover-foreground border rounded-md shadow-xl z-[100] max-h-64 overflow-y-auto">
-                  {isSearching ? (
-                    <div className="p-3 text-sm text-muted-foreground text-center animate-pulse">検索中...</div>
-                  ) : suggestions.length > 0 ? (
-                    <ul className="py-1">
-                      {suggestions.map((p, idx) => (
-                        <li 
-                          key={idx} 
-                          className="px-4 py-3 text-sm hover:bg-accent hover:text-accent-foreground cursor-pointer flex gap-4 items-center transition-colors border-b last:border-b-0"
-                          onClick={() => {
-                            setPlayerTag(p.player_tag)
-                            setShowSuggestions(false)
-                            handleSync(p.player_tag)
-                          }}
-                        >
-                          <Avatar className="w-10 h-10 border-2 border-primary/20 shrink-0 shadow-sm">
-                            <AvatarImage src={`https://cdn.brawlify.com/profile-icons/regular/${p.icon_id || 28000000}.png`} />
-                            <AvatarFallback className="bg-primary/10">{p.name?.[0]}</AvatarFallback>
-                          </Avatar>
-                          <div className="flex flex-col gap-1.5 w-full overflow-hidden">
-                            <div className="flex items-center gap-2">
-                              <span className="font-bold truncate text-base">{p.name}</span>
-                              <Badge variant="secondary" className="text-[10px] font-mono bg-primary/10 text-primary border-primary/20 shrink-0">#{p.player_tag}</Badge>
-                            </div>
-                            <div className="flex items-center gap-3 text-xs font-medium">
-                              <span className="flex items-center gap-1 text-yellow-600 dark:text-yellow-500 font-bold">
-                                <Trophy className="w-3.5 h-3.5" />
-                                {p.trophies ? p.trophies.toLocaleString() : 0}
-                              </span>
-                              {p.highest_trophies > 0 && (
-                                <span className="flex items-center gap-1 text-muted-foreground opacity-80 whitespace-nowrap">
-                                  最高: {p.highest_trophies.toLocaleString()}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          {p.highest_ranked_rank > 0 && (
-                            <div className="shrink-0 flex items-center justify-center bg-black/5 dark:bg-white/5 rounded-full p-1" title={getRankImage(p.highest_ranked_rank)?.name || ""}>
-                              <img 
-                                src={getRankImage(p.highest_ranked_rank)?.url} 
-                                alt="Rank" 
-                                className="w-8 h-8 object-contain drop-shadow-md"
-                              />
-                            </div>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <div className="p-3 text-sm text-muted-foreground text-center">見つかりませんでした</div>
+            {searchMode === "player" ? (
+              <div className="relative flex gap-4 w-full">
+                <Input 
+                  placeholder="プレイヤー名 または タグ(#Q2LL9G8)" 
+                  value={playerTag}
+                  onChange={(e) => {
+                    setPlayerTag(e.target.value)
+                    if (!showSuggestions) setShowSuggestions(true)
+                  }}
+                  onFocus={() => {
+                    if (playerTag.length >= 2 && suggestions.length > 0) setShowSuggestions(true)
+                  }}
+                  className="bg-background/80"
+                />
+                <Button onClick={() => handleSync()} disabled={loading} className="px-8 shadow-lg shadow-primary/20">
+                  {loading ? "取得中..." : (
+                    <>
+                      <Search className="w-4 h-4 mr-2" />
+                      同期
+                    </>
                   )}
-                </div>
-              )}
-            </div>
+                </Button>
+                
+                {/* プレイヤーサジェストドロップダウン */}
+                {showSuggestions && (playerTag.length >= 2 || isSearching) && (
+                  <div className="absolute top-full left-0 w-full min-w-[320px] max-w-full mt-2 bg-popover text-popover-foreground border rounded-md shadow-xl z-[100] max-h-64 overflow-y-auto">
+                    {isSearching ? (
+                      <div className="p-3 text-sm text-muted-foreground text-center animate-pulse">検索中...</div>
+                    ) : suggestions.length > 0 ? (
+                      <ul className="py-1">
+                        {suggestions.map((p, idx) => (
+                          <li 
+                            key={idx} 
+                            className="px-4 py-3 text-sm hover:bg-accent hover:text-accent-foreground cursor-pointer flex gap-4 items-center transition-colors border-b last:border-b-0"
+                            onClick={() => {
+                              setPlayerTag(p.player_tag)
+                              setShowSuggestions(false)
+                              handleSync(p.player_tag)
+                            }}
+                          >
+                            <Avatar className="w-10 h-10 border-2 border-primary/20 shrink-0 shadow-sm">
+                              <AvatarImage src={`https://cdn.brawlify.com/profile-icons/regular/${p.icon_id || 28000000}.png`} />
+                              <AvatarFallback className="bg-primary/10">{p.name?.[0]}</AvatarFallback>
+                            </Avatar>
+                            <div className="flex flex-col gap-1.5 w-full overflow-hidden">
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold truncate text-base">{p.name}</span>
+                                <Badge variant="secondary" className="text-[10px] font-mono bg-primary/10 text-primary border-primary/20 shrink-0">#{p.player_tag}</Badge>
+                              </div>
+                              <div className="flex items-center gap-3 text-xs font-medium">
+                                <span className="flex items-center gap-1 text-yellow-600 dark:text-yellow-500 font-bold">
+                                  <Trophy className="w-3.5 h-3.5" />
+                                  {p.trophies ? p.trophies.toLocaleString() : 0}
+                                </span>
+                                {p.highest_trophies > 0 && (
+                                  <span className="flex items-center gap-1 text-muted-foreground opacity-80 whitespace-nowrap">
+                                    最高: {p.highest_trophies.toLocaleString()}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            {p.highest_ranked_rank > 0 && (
+                              <div className="shrink-0 flex items-center justify-center bg-black/5 dark:bg-white/5 rounded-full p-1" title={getRankImage(p.highest_ranked_rank)?.name || ""}>
+                                <img 
+                                  src={getRankImage(p.highest_ranked_rank)?.url} 
+                                  alt="Rank" 
+                                  className="w-8 h-8 object-contain drop-shadow-md"
+                                />
+                              </div>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <div className="p-3 text-sm text-muted-foreground text-center">見つかりませんでした</div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="relative flex gap-4 w-full">
+                <Input 
+                  placeholder="クラブ名 または タグ(#CLUB123)" 
+                  value={clubInput}
+                  onChange={(e) => {
+                    setClubInput(e.target.value)
+                    if (!showClubSuggestions) setShowClubSuggestions(true)
+                  }}
+                  onFocus={() => {
+                    if (clubInput.length >= 2 && clubSuggestions.length > 0) setShowClubSuggestions(true)
+                  }}
+                  className="bg-background/80"
+                />
+                <Button onClick={() => handleSyncClub()} disabled={loadingClub} className="px-8 shadow-lg shadow-primary/20">
+                  {loadingClub ? "検索中..." : (
+                    <>
+                      <Search className="w-4 h-4 mr-2" />
+                      検索
+                    </>
+                  )}
+                </Button>
+
+                {/* クラブサジェストドロップダウン */}
+                {showClubSuggestions && (clubInput.length >= 2 || isSearchingClub) && (
+                  <div className="absolute top-full left-0 w-full min-w-[320px] max-w-full mt-2 bg-popover text-popover-foreground border rounded-md shadow-xl z-[100] max-h-64 overflow-y-auto">
+                    {isSearchingClub ? (
+                      <div className="p-3 text-sm text-muted-foreground text-center animate-pulse">検索中...</div>
+                    ) : clubSuggestions.length > 0 ? (
+                      <ul className="py-1">
+                        {clubSuggestions.map((c, idx) => (
+                          <li 
+                            key={idx} 
+                            className="px-4 py-3 text-sm hover:bg-accent hover:text-accent-foreground cursor-pointer flex gap-4 items-center transition-colors border-b last:border-b-0"
+                            onClick={() => {
+                              setClubInput(c.club_tag)
+                              setShowClubSuggestions(false)
+                              handleSyncClub(c.club_tag)
+                            }}
+                          >
+                            <Avatar className="w-10 h-10 border-2 border-primary/20 shrink-0 shadow-sm bg-primary/10">
+                              <AvatarImage src={`https://cdn.brawlify.com/club-badges/regular/${c.badge_id || 16000000}.png`} />
+                              <AvatarFallback className="bg-primary/10"><Building2 className="w-5 h-5 text-primary" /></AvatarFallback>
+                            </Avatar>
+                            <div className="flex flex-col gap-1 w-full overflow-hidden">
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold truncate text-base">{c.name}</span>
+                                <Badge variant="secondary" className="text-[10px] font-mono bg-primary/10 text-primary border-primary/20 shrink-0">#{c.club_tag}</Badge>
+                              </div>
+                              <div className="flex items-center gap-3 text-xs font-medium text-muted-foreground">
+                                <span className="flex items-center gap-1 text-yellow-600 dark:text-yellow-500 font-bold">
+                                  <Trophy className="w-3.5 h-3.5" />
+                                  {c.trophies ? c.trophies.toLocaleString() : 0}
+                                </span>
+                                <span>必要: {c.required_trophies ? c.required_trophies.toLocaleString() : 0} 🏆</span>
+                              </div>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <div className="p-3 text-sm text-muted-foreground text-center">見つかりませんでした（タグ直接入力をお試しください）</div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -296,6 +466,76 @@ export default function DashboardPage() {
           {errorMsg}
         </div>
       )}
+
+      {/* クラブ詳細表示カード */}
+      {clubData && !errorMsg && (
+        <Card className="border-t-4 border-t-purple-500 shadow-md mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <CardHeader className="pb-6">
+            <div className="flex flex-col md:flex-row items-center md:items-start gap-6 text-center md:text-left">
+              <Avatar className="w-20 h-20 md:w-24 md:h-24 border-4 border-background shadow-xl bg-purple-500/10">
+                <AvatarImage src={`https://cdn.brawlify.com/club-badges/regular/${clubData.badge_id || 16000000}.png`} />
+                <AvatarFallback className="bg-purple-500/20 text-purple-600 text-2xl font-bold"><Building2 className="w-10 h-10" /></AvatarFallback>
+              </Avatar>
+              <div className="flex-1">
+                <div className="flex items-center justify-center md:justify-start gap-3">
+                  <CardTitle className="text-3xl font-extrabold tracking-tight">{clubData.name}</CardTitle>
+                  <Badge variant="outline" className="font-mono text-xs">#{clubData.club_tag}</Badge>
+                </div>
+                <p className="text-sm text-muted-foreground mt-2 max-w-xl">{clubData.description || "説明なし"}</p>
+              </div>
+              <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto mt-4 md:mt-0">
+                <div className="text-center md:text-right bg-yellow-500/10 px-5 py-3 rounded-xl w-full sm:w-auto border border-yellow-500/20">
+                  <div className="text-sm font-semibold text-yellow-600 dark:text-yellow-400 flex items-center justify-center md:justify-end gap-1">
+                    <Trophy className="w-4 h-4 text-yellow-500" /> 総トロフィー
+                  </div>
+                  <div className="text-2xl font-black text-yellow-600 dark:text-yellow-400 mt-1">{clubData.trophies?.toLocaleString()}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">必要: {clubData.required_trophies?.toLocaleString()} 🏆</div>
+                </div>
+                <div className="text-center md:text-right bg-primary/5 px-5 py-3 rounded-xl w-full sm:w-auto border border-primary/10">
+                  <div className="text-sm font-semibold text-muted-foreground flex items-center justify-center md:justify-end gap-1">
+                    <Users className="w-4 h-4 text-primary" /> メンバー数
+                  </div>
+                  <div className="text-2xl font-black text-primary mt-1">{clubData.members?.length || 0} / 30</div>
+                </div>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="border-t pt-6">
+            <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-foreground/90">
+              <Users className="w-5 h-5 text-primary" /> 所属メンバー一覧
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              {clubData.members && clubData.members.length > 0 ? (
+                clubData.members.map((m: any, idx: number) => (
+                  <div
+                    key={idx}
+                    onClick={() => {
+                      setSearchMode("player")
+                      setPlayerTag(m.tag)
+                      handleSync(m.tag)
+                    }}
+                    className="flex items-center gap-3 p-3 rounded-xl bg-secondary/30 hover:bg-primary/10 border border-transparent hover:border-primary/20 transition-all cursor-pointer group shadow-sm"
+                  >
+                    <Avatar className="w-10 h-10 border border-primary/20 shrink-0 group-hover:scale-105 transition-transform">
+                      <AvatarFallback className="bg-primary/10 font-bold">{m.name?.[0]}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col overflow-hidden">
+                      <span className="font-bold text-sm truncate group-hover:text-primary transition-colors" title={m.name}>{m.name}</span>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <span className="capitalize text-[11px] font-semibold px-1.5 py-0.2 rounded bg-background border">{m.role || "member"}</span>
+                        <span className="font-mono text-yellow-600 dark:text-yellow-500 font-bold">{m.trophies?.toLocaleString()} 🏆</span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="col-span-full py-8 text-center text-muted-foreground">メンバー情報が見つかりませんでした。</div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
 
       {data && !errorMsg && (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 mt-8">

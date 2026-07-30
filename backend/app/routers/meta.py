@@ -64,29 +64,16 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, in
     if sub_type == "mode" and id:
         try:
             mode_res = db.table("match_raw_history").select("map_id").eq("mode", id).execute()
-            valid_map_ids = set()
-            for r in mode_res.data:
-                m_id = r.get("map_id", "")
-                if m_id.startswith("gachi_"):
-                    valid_map_ids.add(m_id.replace("gachi_", ""))
-                else:
-                    valid_map_ids.add(m_id)
+            valid_map_ids = set([r["map_id"] for r in mode_res.data])
         except:
             valid_map_ids = set()
             
     # フィルタリング
     filtered_data = []
-    
-    # 比較用にIDを正規化
-    normalized_id = (id or "").strip().lower()
-    # valid_map_ids も正規化して保持
-    normalized_valid_maps = {m.strip().lower() for m in valid_map_ids} if valid_map_ids is not None else None
-    
     for row in data:
         map_id = str(row.get("map_id", ""))
-        normalized_map_id = map_id.strip().lower()
         match_type = str(row.get("match_type", "unknown"))
-        is_gachi_match = match_type in ["soloRanked", "teamRanked"]
+        is_gachi_match = match_type in ["ranked", "soloRanked", "teamRanked"]
         
         # ガチバトル指定の場合
         if type == "gachi" and not is_gachi_match:
@@ -94,12 +81,12 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, in
             
         # マップ別フィルタ
         if sub_type == "map" and id:
-            if normalized_map_id != normalized_id:
+            if map_id != id:
                 continue
                 
         # モード別フィルタ
-        if sub_type == "mode" and id and normalized_valid_maps is not None:
-            if normalized_map_id not in normalized_valid_maps:
+        if sub_type == "mode" and id and valid_map_ids is not None:
+            if map_id not in valid_map_ids:
                 continue
                 
         filtered_data.append(row)
@@ -213,7 +200,7 @@ def get_categories(type: str = "global"):
             if not m_id:
                 continue
             if type == "gachi":
-                if row.get("match_type") in ["soloRanked", "teamRanked"]:
+                if row.get("match_type") in ["ranked", "soloRanked", "teamRanked"]:
                     maps.add(m_id)
             else:
                 maps.add(m_id)
@@ -323,3 +310,24 @@ def get_character_detail(character_id: str, type: str = "global", sub_type: str 
     detail["tenteki"] = tenteki
     
     return detail
+
+@router.get("/debug/db")
+def debug_db():
+    db = get_db()
+    try:
+        # Check match_raw_history
+        raw_res = db.table("match_raw_history").select("match_type").limit(1000).execute()
+        raw_types = list(set([r.get("match_type") for r in raw_res.data]))
+        
+        # Check macro_map_stats
+        macro_res = db.table("macro_map_stats").select("match_type, map_id").limit(1000).execute()
+        macro_types = list(set([r.get("match_type") for r in macro_res.data]))
+        macro_maps_solo = list(set([r.get("map_id") for r in macro_res.data if r.get("match_type") in ["ranked", "soloRanked", "teamRanked"]]))
+        
+        return {
+            "match_raw_history_types": raw_types,
+            "macro_map_stats_types": macro_types,
+            "macro_map_stats_solo_maps": macro_maps_solo
+        }
+    except Exception as e:
+        return {"error": str(e)}

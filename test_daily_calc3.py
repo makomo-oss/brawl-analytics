@@ -13,7 +13,7 @@ from app.scripts.daily_calc import calc_macro_map_stats
 data = [
     {
         "match_id": "m1",
-        "match_type": "soloRanked",
+        "match_type": "ranked",
         "map_id": "Mined Out",
         "result": "victory",
         "hero_used": "Shelly",

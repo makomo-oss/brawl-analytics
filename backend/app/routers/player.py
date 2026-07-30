@@ -255,7 +255,8 @@ async def get_dashboard(player_tag: str):
                 "highest_ranked_rank": player_info.get("highestAllTimeRankedRank", 0),
                 "level": player_info.get("expLevel", 0),
                 "3v3_victories": player_info.get("3vs3Victories", 0),
-                "club_name": (player_info.get("club") or {}).get("name", "No Club")
+                "club_name": (player_info.get("club") or {}).get("name", "No Club"),
+                "club_tag": (player_info.get("club") or {}).get("tag", "")
             },
             "brawlers": player_info.get("brawlers", []),
             "recent_battles": recent_battles,

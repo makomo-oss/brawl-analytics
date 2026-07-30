@@ -87,6 +87,7 @@ interface DashboardData {
     highest_ranked_rank: number;
     level: number;
     club_name: string;
+    club_tag?: string;
     "3v3_victories": number;
   };
   brawlers?: Brawler[];
@@ -552,7 +553,23 @@ export default function DashboardPage() {
                     <CardTitle className="text-3xl font-extrabold tracking-tight">{data.profile?.name}</CardTitle>
                     <div className="flex flex-wrap justify-center md:justify-start items-center gap-2 mt-2 text-muted-foreground">
                       <span className="font-medium">{data.player_tag}</span>
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground font-semibold">
+                      <span 
+                        className={`text-xs px-2.5 py-1 rounded-full font-semibold transition-all flex items-center gap-1.5 ${
+                          data.profile?.club_name && data.profile.club_name !== "No Club"
+                            ? "bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 hover:bg-purple-500/20 cursor-pointer shadow-sm"
+                            : "bg-secondary text-secondary-foreground"
+                        }`}
+                        onClick={() => {
+                          if (data.profile?.club_name && data.profile.club_name !== "No Club") {
+                            const tagOrName = data.profile.club_tag || data.profile.club_name;
+                            setSearchMode("club");
+                            setClubInput(tagOrName);
+                            handleSyncClub(tagOrName);
+                          }
+                        }}
+                        title={data.profile?.club_name !== "No Club" ? "クリックしてクラブ詳細を表示" : ""}
+                      >
+                        <Building2 className="w-3.5 h-3.5" />
                         {data.profile?.club_name || "No Club"}
                       </span>
                     </div>

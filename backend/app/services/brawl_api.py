@@ -142,8 +142,8 @@ async def get_club_members(club_tag: str):
         logger.warning(f"Failed to fetch club members from API, using fallback mock: {exc}")
         return {
             "items": [
-                {"tag": "#Q2LL9G8", "name": "Player 1", "role": "member", "trophies": 35000},
-                {"tag": "#R8G2P9Y", "name": "Player 2", "role": "president", "trophies": 38000}
+                {"tag": "#Q2LL9G8", "name": "Player 1", "role": "member", "trophies": 35000, "icon": {"id": 28000013}},
+                {"tag": "#R8G2P9Y", "name": "Player 2", "role": "president", "trophies": 38000, "icon": {"id": 28000000}}
             ]
         }
 
@@ -175,8 +175,8 @@ async def get_club(club_tag: str):
             "requiredTrophies": 10000,
             "trophies": 850000,
             "members": [
-                {"tag": "#Q2LL9G8", "name": "Player 1", "role": "member", "trophies": 35000},
-                {"tag": "#R8G2P9Y", "name": "Player 2", "role": "president", "trophies": 38000}
+                {"tag": "#Q2LL9G8", "name": "Player 1", "role": "member", "trophies": 35000, "icon": {"id": 28000013}},
+                {"tag": "#R8G2P9Y", "name": "Player 2", "role": "president", "trophies": 38000, "icon": {"id": 28000000}}
             ]
         }
 

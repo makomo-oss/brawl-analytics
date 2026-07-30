@@ -518,6 +518,7 @@ export default function DashboardPage() {
                     className="flex items-center gap-3 p-3 rounded-xl bg-secondary/30 hover:bg-primary/10 border border-transparent hover:border-primary/20 transition-all cursor-pointer group shadow-sm"
                   >
                     <Avatar className="w-10 h-10 border border-primary/20 shrink-0 group-hover:scale-105 transition-transform">
+                      <AvatarImage src={`https://cdn.brawlify.com/profile-icons/regular/${m.icon?.id || m.icon_id || 28000000}.png`} />
                       <AvatarFallback className="bg-primary/10 font-bold">{m.name?.[0]}</AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col overflow-hidden">

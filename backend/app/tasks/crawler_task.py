@@ -1,10 +1,18 @@
 import asyncio
 import logging
+import random
 from datetime import datetime, timezone
 from app.database import get_db
 from app.services.brawl_api import get_player_battlelog, get_player, get_club_members
 
 logger = logging.getLogger(__name__)
+
+# 多様なアクティブトッププレイヤーのシードタグ（フォールバックおよびベース補完用）
+DEFAULT_SEED_TAGS = {
+    "Q2LL9G8", "R8G2P9Y", "2P0VR28P", "80V09RRV", "20P0J8V0",
+    "8YRRU0LV", "9L8GYV0U", "L08J28VR", "8VPP9U2L", "8P0QLL8U",
+    "2G80L9RU", "80RGYL2V", "2L8U9P0R", "90J8V2RU", "8L9R0P2V"
+}
 
 async def run_crawler_task():
     """
@@ -24,18 +32,17 @@ async def run_crawler_task():
     except Exception as e:
         logger.warning(f"Cleanup failed (might be ok if empty): {e}")
 
+    base_player_tags = set()
     try:
-        # 常に更新日時が古い（またはまだクロールされていない）プレイヤーを5人だけシードとして取得
-        response = db.table("players").select("player_tag").order("updated_at", desc=False).limit(5).execute()
-        base_player_tags = set(row["player_tag"].replace("#", "") for row in response.data)
+        # 常に更新日時が古いプレイヤーを15人取得して巡回
+        response = db.table("players").select("player_tag").order("updated_at", desc=False).limit(15).execute()
+        if response.data:
+            base_player_tags = set(row["player_tag"].replace("#", "") for row in response.data)
     except Exception as e:
         logger.error(f"Failed to fetch player tags from DB: {e}")
-        return
 
-    if not base_player_tags:
-        logger.info("No players found in DB, using seed tags.")
-        base_player_tags = {"#Q2LL9G8", "#R8G2P9Y"}
-        
+    # シードタグを合成して巡回の偏りと停滞を防止
+    base_player_tags.update(DEFAULT_SEED_TAGS)
     logger.info(f"Target base players count: {len(base_player_tags)}")
     
     semaphore = asyncio.Semaphore(5)
@@ -175,9 +182,11 @@ async def run_crawler_task():
     # フェーズ3: 新規プレイヤーのデータを取得
     if new_player_tags:
         logger.info(f"Found {len(new_player_tags)} new players (from clubs & battles). Fetching their data...")
-        # ランダム性を持たせるため、今回は順序を保持しつつ上限50人に制限 (本来はランダムサンプリングがベスト)
-        target_new_players = list(new_player_tags)[:50]
-        new_tasks = [fetch_player_and_matches(tag) for tag in target_new_players] # 制限: 1バッチにつき最大50人まで
+        # ランダムサンプリングで偏りを排除し、毎回新しいプレイヤーを開拓
+        candidate_list = list(new_player_tags)
+        target_count = min(len(candidate_list), 60)
+        target_new_players = random.sample(candidate_list, target_count)
+        new_tasks = [fetch_player_and_matches(tag) for tag in target_new_players]
         new_results = await asyncio.gather(*new_tasks)
         
         for p_data, m_data, _, _ in new_results:

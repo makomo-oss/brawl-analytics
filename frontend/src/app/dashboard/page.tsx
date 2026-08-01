@@ -140,6 +140,8 @@ export default function DashboardPage() {
   const searchContainerRef = useRef<HTMLDivElement>(null)
   const isComposingPlayerRef = useRef(false)
   const isComposingClubRef = useRef(false)
+  const isSelectingPlayerRef = useRef(false)
+  const isSelectingClubRef = useRef(false)
 
   // 外部クリックでサジェストを閉じる
   useEffect(() => {
@@ -157,8 +159,13 @@ export default function DashboardPage() {
   useEffect(() => {
     const searchPlayers = async () => {
       if (isComposingPlayerRef.current) return
+      if (isSelectingPlayerRef.current) {
+        isSelectingPlayerRef.current = false
+        return
+      }
       const trimmed = (playerTag || "").trim()
-      if (trimmed.length < 2) {
+      // タグ形式（例: #V99J0CCV8 や V99J0CCV8）や2文字未満の場合は検索しない
+      if (trimmed.length < 2 || trimmed.startsWith("#") || /^[A-Za-z0-9]{7,12}$/.test(trimmed)) {
         setSuggestions([])
         setShowSuggestions(false)
         return
@@ -190,8 +197,12 @@ export default function DashboardPage() {
   useEffect(() => {
     const searchClubs = async () => {
       if (isComposingClubRef.current) return
+      if (isSelectingClubRef.current) {
+        isSelectingClubRef.current = false
+        return
+      }
       const trimmed = (clubInput || "").trim()
-      if (trimmed.length < 2) {
+      if (trimmed.length < 2 || trimmed.startsWith("#") || /^[A-Za-z0-9]{7,12}$/.test(trimmed)) {
         setClubSuggestions([])
         setShowClubSuggestions(false)
         return
@@ -223,11 +234,13 @@ export default function DashboardPage() {
     const rawInput = (overrideTag || playerTag || "").trim()
     if (!rawInput) return
     
+    isSelectingPlayerRef.current = true
+    setShowSuggestions(false)
+    setSuggestions([])
     setLoading(true)
     setErrorMsg(null)
     setData(null)
     setClubData(null)
-    setShowSuggestions(false)
     
     try {
       let finalTag = rawInput
@@ -963,7 +976,7 @@ export default function DashboardPage() {
                                <span className="text-[10px] text-muted-foreground/60 font-medium tracking-wide">{formatBattleTime(battle.time)}</span>
                              </div>
                              <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
-                               <img src={getModeIconUrl(battle.mode)} alt={battle.mode} className="w-4 h-4 object-contain drop-shadow-md" />
+                               <img src={getModeIconUrl(battle.mode)} alt={battle.mode} className="w-4 h-4 object-contain drop-shadow-md" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                                <span className="font-medium text-foreground/80">{translateMode(battle.mode)}</span>
                                <span className="opacity-40">|</span>
                                <span>{translateMap(battle.map)}</span>
@@ -993,7 +1006,7 @@ export default function DashboardPage() {
                           <div className="flex flex-col gap-2.5">
                             {battle.my_team && battle.my_team.map((p: any, idx: number) => {
                               const bInfo = getBrawlerInfo(p.brawler);
-                              const isMe = p.brawler.toLowerCase() === battle.hero.toLowerCase(); // 簡易判定
+                              const isMe = (p.brawler || "").toLowerCase() === (battle.hero || "").toLowerCase();
                               return (
                                 <div 
                                   key={idx} 
@@ -1025,7 +1038,7 @@ export default function DashboardPage() {
                           <div className="flex flex-col gap-2.5">
                             {battle.opponent_teams && battle.opponent_teams.map((team: any, t_idx: number) => (
                               <div key={t_idx} className="space-y-2.5">
-                                {team.map((p: any, idx: number) => {
+                                {Array.isArray(team) && team.map((p: any, idx: number) => {
                                   const bInfo = getBrawlerInfo(p.brawler);
                                   return (
                                     <div 
@@ -1067,9 +1080,14 @@ export default function DashboardPage() {
           </TabsContent>
           <TabsContent value="characters" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {data.brawlers?.sort((a, b) => b.trophies - a.trophies).map((brawler, idx) => {
+              {Array.isArray(data.brawlers) && [...data.brawlers].sort((a, b) => (b.trophies || 0) - (a.trophies || 0)).map((brawler, idx) => {
                 const maxPower = 11;
-                const powerRatio = (brawler.power / maxPower) * 100;
+                const power = brawler.power || 1;
+                const powerRatio = (power / maxPower) * 100;
+                const gadgets = Array.isArray(brawler.gadgets) ? brawler.gadgets : [];
+                const starPowers = Array.isArray(brawler.starPowers) ? brawler.starPowers : [];
+                const gears = Array.isArray(brawler.gears) ? brawler.gears : [];
+                const hyperCharges = Array.isArray(brawler.hyperCharges) ? brawler.hyperCharges : [];
                 
                 return (
                   <Card key={idx} className="overflow-hidden hover:border-primary/50 transition-colors bg-gradient-to-br from-card to-card/50">
@@ -1082,16 +1100,16 @@ export default function DashboardPage() {
                           onError={(e) => { e.currentTarget.src = 'https://cdn.brawlify.com/brawler/shelly.png'; }}
                         />
                         <div className="absolute -bottom-1 -right-1 bg-yellow-500 text-black text-[9px] font-black w-5 h-5 rounded-sm flex items-center justify-center border border-black shadow-sm">
-                          {brawler.power}
+                          {power}
                         </div>
                       </div>
                       <div className="flex-1 overflow-hidden">
                         <h4 className="font-extrabold text-lg truncate tracking-tight">{brawler.name}</h4>
                         <div className="flex items-center gap-1.5 mt-0.5 text-xs font-semibold text-muted-foreground">
                           <Trophy className="w-3.5 h-3.5 text-yellow-500" />
-                          <span className="text-yellow-600 dark:text-yellow-400">{brawler.trophies}</span>
+                          <span className="text-yellow-600 dark:text-yellow-400">{brawler.trophies || 0}</span>
                           <span className="opacity-50">/</span>
-                          <span>{brawler.highestTrophies}</span>
+                          <span>{brawler.highestTrophies || brawler.trophies || 0}</span>
                         </div>
                       </div>
                     </div>
@@ -1099,7 +1117,7 @@ export default function DashboardPage() {
                     <div className="px-3 py-2.5 bg-secondary/10 flex flex-col gap-2">
                       <div className="flex items-center justify-between text-xs font-medium">
                         <span className="text-muted-foreground">パワーレベル</span>
-                        <span className={brawler.power === 11 ? "text-green-500 font-bold" : ""}>{brawler.power} / {maxPower}</span>
+                        <span className={power === 11 ? "text-green-500 font-bold" : ""}>{power} / {maxPower}</span>
                       </div>
                       <Progress value={powerRatio} className="h-1.5" />
                       
@@ -1108,7 +1126,7 @@ export default function DashboardPage() {
                         <div className="flex flex-col gap-1 items-center">
                           <span className="text-[9px] font-bold text-green-500">ガジェット</span>
                           <div className="flex gap-1 justify-center flex-wrap">
-                            {brawler.gadgets.length > 0 ? brawler.gadgets.map((g) => (
+                            {gadgets.length > 0 ? gadgets.map((g) => (
                               <img key={g.id} src={`https://cdn.brawlify.com/gadgets/regular/${g.id}.png`} alt={g.name} className="w-6 h-6 rounded-full border border-green-500/50 shadow-sm" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                             )) : <span className="text-muted-foreground text-[10px]">-</span>}
                           </div>
@@ -1117,7 +1135,7 @@ export default function DashboardPage() {
                         <div className="flex flex-col gap-1 items-center">
                           <span className="text-[9px] font-bold text-yellow-500">スターパワー</span>
                           <div className="flex gap-1 justify-center flex-wrap">
-                            {brawler.starPowers.length > 0 ? brawler.starPowers.map((s) => (
+                            {starPowers.length > 0 ? starPowers.map((s) => (
                               <img key={s.id} src={`https://cdn.brawlify.com/star-powers/regular/${s.id}.png`} alt={s.name} className="w-6 h-6 rounded-full border border-yellow-500/50 shadow-sm" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                             )) : <span className="text-muted-foreground text-[10px]">-</span>}
                           </div>
@@ -1126,7 +1144,7 @@ export default function DashboardPage() {
                         <div className="flex flex-col gap-1 items-center">
                           <span className="text-[9px] font-bold text-blue-500">ギア</span>
                           <div className="flex gap-1 justify-center flex-wrap">
-                            {brawler.gears.length > 0 ? brawler.gears.map((g) => (
+                            {gears.length > 0 ? gears.map((g) => (
                               <img key={g.id} src={`https://cdn.brawlify.com/gears/regular/${g.id}.png`} alt={g.name} className="w-6 h-6 rounded-full border border-blue-500/50 shadow-sm" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                             )) : <span className="text-muted-foreground text-[10px]">-</span>}
                           </div>
@@ -1135,7 +1153,7 @@ export default function DashboardPage() {
                         <div className="flex flex-col gap-1 items-center">
                           <span className="text-[9px] font-bold text-purple-500">ハイパー</span>
                           <div className="flex gap-1 justify-center flex-wrap">
-                            {brawler.hyperCharges.length > 0 ? brawler.hyperCharges.map((h) => (
+                            {hyperCharges.length > 0 ? hyperCharges.map((h) => (
                               <div key={h.id} className="w-6 h-6 rounded border border-purple-500/50 bg-gradient-to-tr from-purple-600 to-fuchsia-500 flex items-center justify-center shadow-sm">
                                 <span className="text-[8px] font-black text-white">HC</span>
                               </div>

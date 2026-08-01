@@ -108,21 +108,29 @@ export const BRAWLER_MAP: Record<string, { ja: string, imageUrl: string }> = {
   "shelly": { ja: "シェリー", imageUrl: "https://cdn.brawlify.com/brawlers/borders/16000000.png" },
 }
 
-export function getBrawlerInfo(name: string) {
-  if (!name) return { nameJa: "Unknown", imageUrl: "" }
-  const lowerName = name.toLowerCase()
-  const info = BRAWLER_MAP[lowerName]
-  if (info) {
-    return {
-      nameJa: info.ja,
-      imageUrl: info.imageUrl
-    }
+export function getBrawlerInfo(name: any): { nameJa: string; imageUrl: string } {
+  if (!name || typeof name !== 'string') {
+    return { nameJa: "Unknown", imageUrl: "https://cdn.brawlify.com/brawler/shelly.png" };
+  }
+  const trimmed = name.trim();
+  if (!trimmed) {
+    return { nameJa: "Unknown", imageUrl: "https://cdn.brawlify.com/brawler/shelly.png" };
   }
   
-  // マップにない場合のフォールバック
-  const defaultId = name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9\-]/g, '')
-  return {
-    nameJa: name.charAt(0).toUpperCase() + name.slice(1),
-    imageUrl: `https://cdn.brawlify.com/brawler/${defaultId}.png`
+  const lowerName = trimmed.toLowerCase();
+  const info = BRAWLER_MAP[lowerName];
+  if (info) {
+    return {
+      nameJa: info.ja || trimmed,
+      imageUrl: info.imageUrl || "https://cdn.brawlify.com/brawler/shelly.png"
+    };
   }
+  
+  // マップにない場合のフォールバック（安全なサニタイズ）
+  const defaultId = trimmed.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9\-]/g, '');
+  const capitalized = trimmed.length > 0 ? (Array.from(trimmed)[0] || "").toUpperCase() + Array.from(trimmed).slice(1).join('') : trimmed;
+  return {
+    nameJa: capitalized || trimmed,
+    imageUrl: defaultId ? `https://cdn.brawlify.com/brawler/${defaultId}.png` : "https://cdn.brawlify.com/brawler/shelly.png"
+  };
 }

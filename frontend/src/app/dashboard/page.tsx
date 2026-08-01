@@ -138,6 +138,8 @@ export default function DashboardPage() {
   const [isSearchingClub, setIsSearchingClub] = useState(false)
 
   const searchContainerRef = useRef<HTMLDivElement>(null)
+  const isComposingPlayerRef = useRef(false)
+  const isComposingClubRef = useRef(false)
 
   // 外部クリックでサジェストを閉じる
   useEffect(() => {
@@ -154,7 +156,9 @@ export default function DashboardPage() {
   // プレイヤー検索のデバウンス処理
   useEffect(() => {
     const searchPlayers = async () => {
-      if (!playerTag || playerTag.trim().length < 2) {
+      if (isComposingPlayerRef.current) return
+      const trimmed = (playerTag || "").trim()
+      if (trimmed.length < 2) {
         setSuggestions([])
         setShowSuggestions(false)
         return
@@ -162,7 +166,7 @@ export default function DashboardPage() {
 
       setIsSearching(true)
       try {
-        const res = await fetch(`${API_URL}/player/search?q=${encodeURIComponent(playerTag.trim())}`)
+        const res = await fetch(`${API_URL}/player/search?q=${encodeURIComponent(trimmed)}`)
         if (res.ok) {
           const result = await res.json()
           setSuggestions(Array.isArray(result) ? result : [])
@@ -178,14 +182,16 @@ export default function DashboardPage() {
       }
     }
 
-    const timeoutId = setTimeout(searchPlayers, 300)
+    const timeoutId = setTimeout(searchPlayers, 350)
     return () => clearTimeout(timeoutId)
   }, [playerTag])
 
   // クラブ検索のデバウンス処理
   useEffect(() => {
     const searchClubs = async () => {
-      if (!clubInput || clubInput.trim().length < 2) {
+      if (isComposingClubRef.current) return
+      const trimmed = (clubInput || "").trim()
+      if (trimmed.length < 2) {
         setClubSuggestions([])
         setShowClubSuggestions(false)
         return
@@ -193,7 +199,7 @@ export default function DashboardPage() {
 
       setIsSearchingClub(true)
       try {
-        const res = await fetch(`${API_URL}/club/search?q=${encodeURIComponent(clubInput.trim())}`)
+        const res = await fetch(`${API_URL}/club/search?q=${encodeURIComponent(trimmed)}`)
         if (res.ok) {
           const result = await res.json()
           setClubSuggestions(Array.isArray(result) ? result : [])
@@ -209,20 +215,49 @@ export default function DashboardPage() {
       }
     }
 
-    const timeoutId = setTimeout(searchClubs, 300)
+    const timeoutId = setTimeout(searchClubs, 350)
     return () => clearTimeout(timeoutId)
   }, [clubInput])
 
   const handleSync = async (overrideTag?: string) => {
-    const tagToFetch = overrideTag || playerTag
-    if (!tagToFetch) return
-    if (overrideTag) setPlayerTag(overrideTag)
+    const rawInput = (overrideTag || playerTag || "").trim()
+    if (!rawInput) return
+    
     setLoading(true)
     setErrorMsg(null)
     setData(null)
     setClubData(null)
+    setShowSuggestions(false)
+    
     try {
-      const res = await fetch(`${API_URL}/player/${tagToFetch.replace("#", "")}/dashboard`)
+      let finalTag = rawInput
+      const cleanInput = rawInput.replace(/^#+/, "").trim()
+      const isTagFormat = /^[A-Za-z0-9]{3,15}$/.test(cleanInput)
+      
+      if (!isTagFormat && !overrideTag) {
+        // 名前入力の場合は事前検索して最初のプレイヤーのタグを使用
+        try {
+          const searchRes = await fetch(`${API_URL}/player/search?q=${encodeURIComponent(rawInput)}`)
+          if (searchRes.ok) {
+            const results = await searchRes.json()
+            if (Array.isArray(results) && results.length > 0 && results[0]?.player_tag) {
+              finalTag = results[0].player_tag
+              setPlayerTag(results[0].player_tag)
+            } else {
+              setErrorMsg(`「${rawInput}」に一致するプレイヤーが見つかりませんでした。プレイヤータグ（例: #V99J0CCV8）をお試しください。`)
+              setLoading(false)
+              return
+            }
+          }
+        } catch {
+          // 検索に失敗した場合はそのまま入力タグで試行
+        }
+      } else {
+        finalTag = cleanInput
+        setPlayerTag(cleanInput)
+      }
+
+      const res = await fetch(`${API_URL}/player/${encodeURIComponent(finalTag.replace(/^#+/, ""))}/dashboard`)
       if (!res.ok) {
         if (res.status === 404) {
           setErrorMsg("そのプレイヤーIDは存在しません。")
@@ -237,7 +272,9 @@ export default function DashboardPage() {
         return
       }
       setData(result)
-      window.scrollTo({ top: 0, behavior: 'smooth' })
+      if (typeof window !== "undefined") {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      }
     } catch (error) {
       console.error("Fetch error", error)
       setErrorMsg("ネットワークエラーが発生しました。")
@@ -247,15 +284,43 @@ export default function DashboardPage() {
   }
 
   const handleSyncClub = async (overrideTag?: string) => {
-    const tagToFetch = overrideTag || clubInput
-    if (!tagToFetch) return
-    if (overrideTag) setClubInput(overrideTag)
+    const rawInput = (overrideTag || clubInput || "").trim()
+    if (!rawInput) return
+    
     setLoadingClub(true)
     setErrorMsg(null)
     setData(null)
     setClubData(null)
+    setShowClubSuggestions(false)
+    
     try {
-      const res = await fetch(`${API_URL}/club/${tagToFetch.replace("#", "")}`)
+      let finalTag = rawInput
+      const cleanInput = rawInput.replace(/^#+/, "").trim()
+      const isTagFormat = /^[A-Za-z0-9]{3,15}$/.test(cleanInput)
+      
+      if (!isTagFormat && !overrideTag) {
+        try {
+          const searchRes = await fetch(`${API_URL}/club/search?q=${encodeURIComponent(rawInput)}`)
+          if (searchRes.ok) {
+            const results = await searchRes.json()
+            if (Array.isArray(results) && results.length > 0 && results[0]?.club_tag) {
+              finalTag = results[0].club_tag
+              setClubInput(results[0].club_tag)
+            } else {
+              setErrorMsg(`「${rawInput}」に一致するクラブが見つかりませんでした。クラブタグ（例: #2YRPU8RVV）をお試しください。`)
+              setLoadingClub(false)
+              return
+            }
+          }
+        } catch {
+          // 検索失敗時はそのまま試行
+        }
+      } else {
+        finalTag = cleanInput
+        setClubInput(cleanInput)
+      }
+
+      const res = await fetch(`${API_URL}/club/${encodeURIComponent(finalTag.replace(/^#+/, ""))}`)
       if (!res.ok) {
         if (res.status === 404) {
           setErrorMsg("そのクラブは存在しません。")
@@ -266,7 +331,9 @@ export default function DashboardPage() {
       }
       const result = await res.json()
       setClubData(result)
-      window.scrollTo({ top: 0, behavior: 'smooth' })
+      if (typeof window !== "undefined") {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      }
     } catch (error) {
       console.error("Fetch club error", error)
       setErrorMsg("ネットワークエラーが発生しました。")
@@ -287,7 +354,7 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      <Card className="relative z-50 bg-card/50 backdrop-blur-sm border-primary/20 shadow-sm overflow-visible">
+      <Card className="relative z-50 bg-card border-primary/20 shadow-sm overflow-visible">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle>{searchMode === "player" ? "プレイヤー同期" : "クラブ検索"}</CardTitle>
@@ -331,14 +398,27 @@ export default function DashboardPage() {
                 <Input 
                   placeholder="プレイヤー名 または タグ(#Q2LL9G8)" 
                   value={playerTag}
+                  onCompositionStart={() => {
+                    isComposingPlayerRef.current = true
+                  }}
+                  onCompositionEnd={(e) => {
+                    isComposingPlayerRef.current = false
+                    setPlayerTag(e.currentTarget.value)
+                  }}
                   onChange={(e) => {
                     setPlayerTag(e.target.value)
                     if (!showSuggestions) setShowSuggestions(true)
                   }}
-                  onFocus={() => {
-                    if (playerTag.length >= 2 && suggestions.length > 0) setShowSuggestions(true)
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !isComposingPlayerRef.current) {
+                      setShowSuggestions(false)
+                      handleSync()
+                    }
                   }}
-                  className="bg-background/80"
+                  onFocus={() => {
+                    if (playerTag.trim().length >= 2 && suggestions.length > 0) setShowSuggestions(true)
+                  }}
+                  className="bg-background"
                 />
                 <Button onClick={() => handleSync()} disabled={loading} className="px-8 shadow-lg shadow-primary/20">
                   {loading ? "取得中..." : (
@@ -350,8 +430,8 @@ export default function DashboardPage() {
                 </Button>
                 
                 {/* プレイヤーサジェストドロップダウン */}
-                {showSuggestions && (playerTag.length >= 2 || isSearching) && (
-                  <div className="absolute top-full left-0 w-full min-w-[320px] max-w-full mt-2 bg-popover text-popover-foreground border rounded-md shadow-xl z-[100] max-h-64 overflow-y-auto">
+                {showSuggestions && (playerTag.trim().length >= 2 || isSearching) && (
+                  <div className="absolute top-full left-0 w-full min-w-[320px] max-w-full mt-2 bg-card text-card-foreground border border-border rounded-md shadow-2xl z-[100] max-h-64 overflow-y-auto">
                     {isSearching ? (
                       <div className="p-3 text-sm text-muted-foreground text-center animate-pulse">検索中...</div>
                     ) : suggestions.length > 0 ? (
@@ -415,14 +495,27 @@ export default function DashboardPage() {
                 <Input 
                   placeholder="クラブ名 または タグ(#CLUB123)" 
                   value={clubInput}
+                  onCompositionStart={() => {
+                    isComposingClubRef.current = true
+                  }}
+                  onCompositionEnd={(e) => {
+                    isComposingClubRef.current = false
+                    setClubInput(e.currentTarget.value)
+                  }}
                   onChange={(e) => {
                     setClubInput(e.target.value)
                     if (!showClubSuggestions) setShowClubSuggestions(true)
                   }}
-                  onFocus={() => {
-                    if (clubInput.length >= 2 && clubSuggestions.length > 0) setShowClubSuggestions(true)
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !isComposingClubRef.current) {
+                      setShowClubSuggestions(false)
+                      handleSyncClub()
+                    }
                   }}
-                  className="bg-background/80"
+                  onFocus={() => {
+                    if (clubInput.trim().length >= 2 && clubSuggestions.length > 0) setShowClubSuggestions(true)
+                  }}
+                  className="bg-background"
                 />
                 <Button onClick={() => handleSyncClub()} disabled={loadingClub} className="px-8 shadow-lg shadow-primary/20">
                   {loadingClub ? "検索中..." : (
@@ -434,8 +527,8 @@ export default function DashboardPage() {
                 </Button>
 
                 {/* クラブサジェストドロップダウン */}
-                {showClubSuggestions && (clubInput.length >= 2 || isSearchingClub) && (
-                  <div className="absolute top-full left-0 w-full min-w-[320px] max-w-full mt-2 bg-popover text-popover-foreground border rounded-md shadow-xl z-[100] max-h-64 overflow-y-auto">
+                {showClubSuggestions && (clubInput.trim().length >= 2 || isSearchingClub) && (
+                  <div className="absolute top-full left-0 w-full min-w-[320px] max-w-full mt-2 bg-card text-card-foreground border border-border rounded-md shadow-2xl z-[100] max-h-64 overflow-y-auto">
                     {isSearchingClub ? (
                       <div className="p-3 text-sm text-muted-foreground text-center animate-pulse">検索中...</div>
                     ) : clubSuggestions.length > 0 ? (
@@ -656,7 +749,7 @@ export default function DashboardPage() {
                     <div className="flex items-center gap-2">
                       <Avatar className="w-8 h-8 border border-primary/20 shadow-sm">
                         <AvatarImage src={bInfo.imageUrl} />
-                        <AvatarFallback>{bInfo.nameJa.charAt(0)}</AvatarFallback>
+                        <AvatarFallback className="bg-primary/10"><User className="w-4 h-4 text-primary/70" /></AvatarFallback>
                       </Avatar>
                       <span className="capitalize text-lg">{bInfo.nameJa}</span>
                     </div>
@@ -696,7 +789,7 @@ export default function DashboardPage() {
                     <Badge key={char} variant="default" className="text-sm px-3 py-1.5 capitalize bg-gradient-to-r from-primary to-accent border-none text-white shadow-md flex items-center gap-2">
                       <Avatar className="w-5 h-5 border border-white/30">
                         <AvatarImage src={bInfo.imageUrl} />
-                        <AvatarFallback>{bInfo.nameJa.charAt(0)}</AvatarFallback>
+                        <AvatarFallback className="bg-white/20"><User className="w-3 h-3 text-white" /></AvatarFallback>
                       </Avatar>
                       {bInfo.nameJa}
                     </Badge>
@@ -721,7 +814,7 @@ export default function DashboardPage() {
                     <Badge key={char} variant="destructive" className="text-sm px-3 py-1.5 capitalize shadow-md flex items-center gap-2">
                       <Avatar className="w-5 h-5 border border-white/30">
                         <AvatarImage src={bInfo.imageUrl} />
-                        <AvatarFallback>{bInfo.nameJa.charAt(0)}</AvatarFallback>
+                        <AvatarFallback className="bg-white/20"><User className="w-3 h-3 text-white" /></AvatarFallback>
                       </Avatar>
                       {bInfo.nameJa}
                     </Badge>
@@ -788,7 +881,7 @@ export default function DashboardPage() {
                               <div key={brawlerName} className="flex flex-col items-center gap-1 group">
                                 <Avatar className="w-12 h-12 border-2 border-primary/20 shadow-sm group-hover:scale-110 transition-transform">
                                   <AvatarImage src={bInfo.imageUrl} />
-                                  <AvatarFallback>{bInfo.nameJa.charAt(0)}</AvatarFallback>
+                                  <AvatarFallback className="bg-primary/10"><User className="w-5 h-5 text-primary/70" /></AvatarFallback>
                                 </Avatar>
                                 <span className="text-[10px] font-medium text-muted-foreground truncate w-14 text-center">
                                   {bInfo.nameJa}
@@ -880,7 +973,7 @@ export default function DashboardPage() {
                         <div className="text-right flex items-center gap-4">
                           <Avatar className="w-12 h-12 border-2 border-primary/30 shadow-[0_0_15px_rgba(var(--primary),0.2)]">
                             <AvatarImage src={mainBInfo.imageUrl} />
-                            <AvatarFallback>{mainBInfo.nameJa.charAt(0)}</AvatarFallback>
+                            <AvatarFallback className="bg-primary/10"><User className="w-5 h-5 text-primary/70" /></AvatarFallback>
                           </Avatar>
                           <div className="w-20 text-right flex justify-end">
                             {scoreDisplay}
@@ -909,7 +1002,7 @@ export default function DashboardPage() {
                                 >
                                   <Avatar className={`w-10 h-10 shadow-sm transition-transform group-hover:scale-105 ${isMe ? 'border border-primary ring-2 ring-primary/30 ring-offset-1 ring-offset-background' : 'border border-primary/20'}`}>
                                     <AvatarImage src={bInfo.imageUrl} />
-                                    <AvatarFallback>{bInfo.nameJa.charAt(0)}</AvatarFallback>
+                                    <AvatarFallback className="bg-primary/10"><User className="w-4 h-4 text-primary/70" /></AvatarFallback>
                                   </Avatar>
                                   <div className="flex flex-col overflow-hidden">
                                     <span className={`text-sm truncate max-w-[120px] font-bold tracking-wide ${isMe ? 'text-primary' : 'text-foreground/90'}`} title={p.name}>
@@ -942,7 +1035,7 @@ export default function DashboardPage() {
                                     >
                                       <Avatar className="w-10 h-10 border border-destructive/30 shadow-sm transition-transform group-hover:scale-105">
                                         <AvatarImage src={bInfo.imageUrl} />
-                                        <AvatarFallback>{bInfo.nameJa.charAt(0)}</AvatarFallback>
+                                        <AvatarFallback className="bg-destructive/10"><User className="w-4 h-4 text-destructive/70" /></AvatarFallback>
                                       </Avatar>
                                       <div className="flex flex-col overflow-hidden">
                                         <span className="text-sm truncate max-w-[120px] font-bold tracking-wide text-foreground/90" title={p.name}>{p.name}</span>

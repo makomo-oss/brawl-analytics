@@ -10,7 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { translateMode, translateMap, getModeIconUrl } from "@/lib/translations"
 import { getBrawlerInfo, BRAWLER_MAP } from "@/lib/brawlers"
-import { Swords, Ban, Check, RefreshCw, Trophy, Target } from "lucide-react"
+import { Swords, Ban, Check, RefreshCw, Trophy, Target, User } from "lucide-react"
 import { API_URL } from "@/lib/config"
 
 type Phase = "setup" | "ban" | "pick" | "done"
@@ -584,12 +584,15 @@ export default function DraftCompanionPage() {
                           onClick={() => !excluded && handleSelectCharacter(charName)}
                           className={`flex flex-col items-center gap-1 cursor-pointer transition-transform hover:scale-105 ${excluded ? 'opacity-20 cursor-not-allowed grayscale' : ''}`}
                         >
-                          <div className="w-8 h-8 sm:w-12 sm:h-12 border-2 border-black/20 dark:border-white/10 group-hover:border-primary transition-colors shrink-0 rounded-md bg-primary/10 relative">
-                            <div className="absolute inset-0 flex items-center justify-center z-0">
-                              <span className="text-[10px] font-bold text-primary">{info.nameJa.charAt(0)}</span>
-                            </div>
+                          <div className="w-8 h-8 sm:w-12 sm:h-12 border-2 border-black/20 dark:border-white/10 group-hover:border-primary transition-colors shrink-0 rounded-md bg-primary/10 relative overflow-hidden flex items-center justify-center">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={info.imageUrl} alt={info.nameJa} className="object-cover w-full h-full rounded-sm absolute inset-0 z-10" />
+                            <img 
+                              src={info.imageUrl} 
+                              alt={info.nameJa} 
+                              className="object-cover w-full h-full rounded-sm absolute inset-0 z-10" 
+                              onError={(e) => { e.currentTarget.src = 'https://cdn.brawlify.com/brawler/shelly.png'; }}
+                            />
+                            <User className="w-4 h-4 text-primary/40" />
                           </div>
                           <span className="text-[10px] truncate w-full text-center">{info.nameJa}</span>
                         </div>

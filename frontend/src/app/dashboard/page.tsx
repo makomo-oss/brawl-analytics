@@ -38,21 +38,29 @@ function formatBattleTime(timeStr: string) {
   return `${d.getMonth() + 1}月${d.getDate()}日 ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
 }
 
-function getRankImage(rankValue: number) {
-  if (!rankValue || rankValue <= 0) return null;
-  if (rankValue >= 19) return { name: "MASTERS", url: "https://cdn.brawlify.com/ranked/regular/Masters.png", tier: "" };
-  
-  const tiers = ["Bronze", "Silver", "Gold", "Diamond", "Mythic", "Legendary"];
-  
-  const tierIndex = Math.floor((rankValue - 1) / 3);
-  const subTier = ((rankValue - 1) % 3) + 1; // 1, 2, 3
-  const numerals = ["I", "II", "III"];
-  
-  return {
-    name: `${tiers[tierIndex].toUpperCase()}`,
-    url: `https://cdn.brawlify.com/ranked/regular/${tiers[tierIndex]}.png`,
-    tier: numerals[subTier - 1]
-  };
+function getRankImage(rankValue: any): { name: string; url: string; tier: string } | null {
+  try {
+    const num = Number(rankValue);
+    if (isNaN(num) || num <= 0) return null;
+    if (num >= 19) return { name: "MASTERS", url: "https://cdn.brawlify.com/ranked/regular/Masters.png", tier: "" };
+    
+    const tiers = ["Bronze", "Silver", "Gold", "Diamond", "Mythic", "Legendary"];
+    const tierIndex = Math.floor((num - 1) / 3);
+    if (tierIndex < 0 || tierIndex >= tiers.length || !tiers[tierIndex]) {
+      return null;
+    }
+    
+    const subTier = ((num - 1) % 3) + 1; // 1, 2, 3
+    const numerals = ["I", "II", "III"];
+    
+    return {
+      name: tiers[tierIndex].toUpperCase(),
+      url: `https://cdn.brawlify.com/ranked/regular/${tiers[tierIndex]}.png`,
+      tier: numerals[subTier - 1] || ""
+    };
+  } catch {
+    return null;
+  }
 }
 
 interface ComponentItem {
@@ -146,7 +154,7 @@ export default function DashboardPage() {
   // プレイヤー検索のデバウンス処理
   useEffect(() => {
     const searchPlayers = async () => {
-      if (!playerTag || playerTag.length < 2) {
+      if (!playerTag || playerTag.trim().length < 2) {
         setSuggestions([])
         setShowSuggestions(false)
         return
@@ -154,14 +162,17 @@ export default function DashboardPage() {
 
       setIsSearching(true)
       try {
-        const res = await fetch(`${API_URL}/player/search?q=${encodeURIComponent(playerTag)}`)
+        const res = await fetch(`${API_URL}/player/search?q=${encodeURIComponent(playerTag.trim())}`)
         if (res.ok) {
           const result = await res.json()
-          setSuggestions(result)
+          setSuggestions(Array.isArray(result) ? result : [])
           setShowSuggestions(true)
+        } else {
+          setSuggestions([])
         }
       } catch (error) {
         console.error("Failed to search players", error)
+        setSuggestions([])
       } finally {
         setIsSearching(false)
       }
@@ -174,7 +185,7 @@ export default function DashboardPage() {
   // クラブ検索のデバウンス処理
   useEffect(() => {
     const searchClubs = async () => {
-      if (!clubInput || clubInput.length < 2) {
+      if (!clubInput || clubInput.trim().length < 2) {
         setClubSuggestions([])
         setShowClubSuggestions(false)
         return
@@ -182,14 +193,17 @@ export default function DashboardPage() {
 
       setIsSearchingClub(true)
       try {
-        const res = await fetch(`${API_URL}/club/search?q=${encodeURIComponent(clubInput)}`)
+        const res = await fetch(`${API_URL}/club/search?q=${encodeURIComponent(clubInput.trim())}`)
         if (res.ok) {
           const result = await res.json()
-          setClubSuggestions(result)
+          setClubSuggestions(Array.isArray(result) ? result : [])
           setShowClubSuggestions(true)
+        } else {
+          setClubSuggestions([])
         }
       } catch (error) {
         console.error("Failed to search clubs", error)
+        setClubSuggestions([])
       } finally {
         setIsSearchingClub(false)
       }
@@ -364,24 +378,29 @@ export default function DashboardPage() {
                               <div className="flex items-center gap-3 text-xs font-medium">
                                 <span className="flex items-center gap-1 text-yellow-600 dark:text-yellow-500 font-bold">
                                   <Trophy className="w-3.5 h-3.5" />
-                                  {p.trophies ? p.trophies.toLocaleString() : 0}
+                                  {p.trophies != null ? p.trophies.toLocaleString() : 0}
                                 </span>
-                                {p.highest_trophies > 0 && (
+                                {p.highest_trophies != null && p.highest_trophies > 0 && (
                                   <span className="flex items-center gap-1 text-muted-foreground opacity-80 whitespace-nowrap">
                                     最高: {p.highest_trophies.toLocaleString()}
                                   </span>
                                 )}
                               </div>
                             </div>
-                            {p.highest_ranked_rank > 0 && (
-                              <div className="shrink-0 flex items-center justify-center bg-black/5 dark:bg-white/5 rounded-full p-1" title={getRankImage(p.highest_ranked_rank)?.name || ""}>
-                                <img 
-                                  src={getRankImage(p.highest_ranked_rank)?.url} 
-                                  alt="Rank" 
-                                  className="w-8 h-8 object-contain drop-shadow-md"
-                                />
-                              </div>
-                            )}
+                            {p.highest_ranked_rank > 0 && (() => {
+                              const rank = getRankImage(p.highest_ranked_rank);
+                              if (!rank) return null;
+                              return (
+                                <div className="shrink-0 flex items-center justify-center bg-black/5 dark:bg-white/5 rounded-full p-1" title={rank.name}>
+                                  <img 
+                                    src={rank.url} 
+                                    alt="Rank" 
+                                    className="w-8 h-8 object-contain drop-shadow-md"
+                                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                  />
+                                </div>
+                              );
+                            })()}
                           </li>
                         ))}
                       </ul>
@@ -580,8 +599,8 @@ export default function DashboardPage() {
                   <div className="text-sm font-semibold text-muted-foreground flex items-center justify-center md:justify-end gap-1">
                     <Trophy className="w-4 h-4 text-yellow-500" /> トロフィー
                   </div>
-                  <div className="text-2xl font-black text-primary mt-1">{data.profile?.trophies.toLocaleString()}</div>
-                  <div className="text-xs text-muted-foreground">最高: {data.profile?.highest_trophies.toLocaleString()}</div>
+                  <div className="text-2xl font-black text-primary mt-1">{data.profile?.trophies != null ? data.profile.trophies.toLocaleString() : 0}</div>
+                  <div className="text-xs text-muted-foreground">最高: {data.profile?.highest_trophies != null ? data.profile.highest_trophies.toLocaleString() : 0}</div>
                 </div>
                 {data.profile?.ranked_elo ? (
                   <div className="flex items-center justify-center w-full sm:w-auto gap-3">
@@ -608,8 +627,8 @@ export default function DashboardPage() {
                       <div className="text-sm font-semibold text-purple-600 dark:text-purple-400 flex items-center justify-center md:justify-end gap-1">
                         <Swords className="w-4 h-4" /> 現在スコア
                       </div>
-                      <div className="text-2xl font-black text-purple-600 dark:text-purple-400 mt-1">{data.profile.ranked_elo.toLocaleString()}</div>
-                      <div className="text-xs text-purple-500/70">最高: {data.profile.highest_ranked_elo.toLocaleString()}</div>
+                      <div className="text-2xl font-black text-purple-600 dark:text-purple-400 mt-1">{data.profile.ranked_elo != null ? data.profile.ranked_elo.toLocaleString() : 0}</div>
+                      <div className="text-xs text-purple-500/70">最高: {data.profile.highest_ranked_elo != null ? data.profile.highest_ranked_elo.toLocaleString() : 0}</div>
                     </div>
                   </div>
                 ) : null}

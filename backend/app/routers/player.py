@@ -29,10 +29,12 @@ async def search_players(q: str = Query(..., min_length=1, description="Player t
             
         # APIで追加情報（アイコン、ガチバトルランク）を取得
         async def fetch_extra(p):
+            p["trophies"] = p.get("trophies") or 0
+            p["highest_trophies"] = p.get("highest_trophies") or 0
             try:
                 info = await get_player(p["player_tag"])
-                p["icon_id"] = (info.get("icon") or {}).get("id", 28000000)
-                p["highest_ranked_rank"] = info.get("highestAllTimeRankedRank", 0)
+                p["icon_id"] = (info.get("icon") or {}).get("id", 28000000) or 28000000
+                p["highest_ranked_rank"] = int(info.get("highestAllTimeRankedRank") or 0)
             except Exception:
                 p["icon_id"] = 28000000
                 p["highest_ranked_rank"] = 0

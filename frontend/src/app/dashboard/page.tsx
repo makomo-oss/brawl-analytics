@@ -38,6 +38,11 @@ function formatBattleTime(timeStr: string) {
   return `${d.getMonth() + 1}月${d.getDate()}日 ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
 }
 
+function getFirstChar(name?: string): string {
+  if (!name) return "";
+  return Array.from(name)[0] || "";
+}
+
 function getRankImage(rankValue: number) {
   if (!rankValue || rankValue <= 0) return null;
   if (rankValue >= 19) return { name: "MASTERS", url: "https://cdn.brawlify.com/ranked/regular/Masters.png", tier: "" };
@@ -354,7 +359,7 @@ export default function DashboardPage() {
                           >
                             <Avatar className="w-10 h-10 border-2 border-primary/20 shrink-0 shadow-sm">
                               <AvatarImage src={`https://cdn.brawlify.com/profile-icons/regular/${p.icon_id || 28000000}.png`} />
-                              <AvatarFallback className="bg-primary/10">{Array.from(p.name || "")[0]}</AvatarFallback>
+                              <AvatarFallback className="bg-primary/10">{getFirstChar(p.name)}</AvatarFallback>
                             </Avatar>
                             <div className="flex flex-col gap-1.5 w-full overflow-hidden">
                               <div className="flex items-center gap-2">
@@ -519,7 +524,7 @@ export default function DashboardPage() {
                   >
                     <Avatar className="w-10 h-10 border border-primary/20 shrink-0 group-hover:scale-105 transition-transform">
                       <AvatarImage src={`https://cdn.brawlify.com/profile-icons/regular/${m.icon?.id || m.icon_id || 28000000}.png`} />
-                      <AvatarFallback className="bg-primary/10 font-bold">{Array.from(m.name || "")[0]}</AvatarFallback>
+                      <AvatarFallback className="bg-primary/10 font-bold">{getFirstChar(m.name)}</AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col overflow-hidden">
                       <span className="font-bold text-sm truncate group-hover:text-primary transition-colors" title={m.name}>{m.name}</span>
@@ -548,7 +553,7 @@ export default function DashboardPage() {
                 <div className="flex flex-col md:flex-row items-center md:items-start gap-6 text-center md:text-left">
                   <Avatar className="w-20 h-20 md:w-24 md:h-24 border-4 border-background shadow-xl">
                     <AvatarImage src={`https://cdn.brawlify.com/profile-icons/regular/${data.profile?.icon_id || 28000000}.png`} />
-                    <AvatarFallback className="bg-primary/10 text-2xl font-bold">{Array.from(data.profile?.name || "")[0]}</AvatarFallback>
+                    <AvatarFallback className="bg-primary/10 text-2xl font-bold">{getFirstChar(data.profile?.name)}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
                     <CardTitle className="text-3xl font-extrabold tracking-tight">{data.profile?.name}</CardTitle>

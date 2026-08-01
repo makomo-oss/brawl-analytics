@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Search, TrendingUp, AlertTriangle, Lightbulb, Trophy, Swords, Star, Building2, Shield, Users } from "lucide-react"
+import { Search, TrendingUp, AlertTriangle, Lightbulb, Trophy, Swords, Star, Building2, Shield, Users, User } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -36,11 +36,6 @@ function formatBattleTime(timeStr: string) {
   if (isNaN(d.getTime())) return timeStr;
   
   return `${d.getMonth() + 1}月${d.getDate()}日 ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
-}
-
-function getFirstChar(name?: string): string {
-  if (!name) return "";
-  return Array.from(name)[0] || "";
 }
 
 function getRankImage(rankValue: number) {
@@ -359,7 +354,7 @@ export default function DashboardPage() {
                           >
                             <Avatar className="w-10 h-10 border-2 border-primary/20 shrink-0 shadow-sm">
                               <AvatarImage src={`https://cdn.brawlify.com/profile-icons/regular/${p.icon_id || 28000000}.png`} />
-                              <AvatarFallback className="bg-primary/10">{getFirstChar(p.name)}</AvatarFallback>
+                              <AvatarFallback className="bg-primary/10"><User className="w-5 h-5 text-primary/70" /></AvatarFallback>
                             </Avatar>
                             <div className="flex flex-col gap-1.5 w-full overflow-hidden">
                               <div className="flex items-center gap-2">
@@ -524,7 +519,7 @@ export default function DashboardPage() {
                   >
                     <Avatar className="w-10 h-10 border border-primary/20 shrink-0 group-hover:scale-105 transition-transform">
                       <AvatarImage src={`https://cdn.brawlify.com/profile-icons/regular/${m.icon?.id || m.icon_id || 28000000}.png`} />
-                      <AvatarFallback className="bg-primary/10 font-bold">{getFirstChar(m.name)}</AvatarFallback>
+                      <AvatarFallback className="bg-primary/10 font-bold"><User className="w-5 h-5 text-primary/70" /></AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col overflow-hidden">
                       <span className="font-bold text-sm truncate group-hover:text-primary transition-colors" title={m.name}>{m.name}</span>
@@ -553,7 +548,7 @@ export default function DashboardPage() {
                 <div className="flex flex-col md:flex-row items-center md:items-start gap-6 text-center md:text-left">
                   <Avatar className="w-20 h-20 md:w-24 md:h-24 border-4 border-background shadow-xl">
                     <AvatarImage src={`https://cdn.brawlify.com/profile-icons/regular/${data.profile?.icon_id || 28000000}.png`} />
-                    <AvatarFallback className="bg-primary/10 text-2xl font-bold">{getFirstChar(data.profile?.name)}</AvatarFallback>
+                    <AvatarFallback className="bg-primary/10 text-2xl font-bold"><User className="w-10 h-10 text-primary/70" /></AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
                     <CardTitle className="text-3xl font-extrabold tracking-tight">{data.profile?.name}</CardTitle>

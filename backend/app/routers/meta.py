@@ -60,11 +60,17 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, in
         }
         
     # モード別のマップ一覧が必要な場合
+    # モード別のマップ一覧が必要な場合
     valid_map_ids = None
     if sub_type == "mode" and id:
         try:
-            mode_res = db.table("match_raw_history").select("map_id").eq("mode", id).execute()
-            valid_map_ids = set([r["map_id"] for r in mode_res.data])
+            mode_res = db.table("match_raw_history").select("map_id").eq("mode", id).limit(5000).execute()
+            valid_map_ids = set()
+            for r in mode_res.data:
+                m = r.get("map_id")
+                if m:
+                    valid_map_ids.add(str(m))
+                    valid_map_ids.add(str(m).replace("gachi_", ""))
         except:
             valid_map_ids = set()
             
@@ -72,6 +78,7 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, in
     filtered_data = []
     for row in data:
         map_id = str(row.get("map_id", ""))
+        clean_map_id = map_id.replace("gachi_", "")
         match_type = str(row.get("match_type", "unknown"))
         is_gachi_match = match_type in ["ranked", "soloRanked", "teamRanked"]
         
@@ -81,12 +88,13 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, in
             
         # マップ別フィルタ
         if sub_type == "map" and id:
-            if map_id != id:
+            clean_id = id.replace("gachi_", "")
+            if clean_map_id != clean_id and map_id != id:
                 continue
                 
         # モード別フィルタ
         if sub_type == "mode" and id and valid_map_ids is not None:
-            if map_id not in valid_map_ids:
+            if map_id not in valid_map_ids and clean_map_id not in valid_map_ids:
                 continue
                 
         filtered_data.append(row)
@@ -134,10 +142,7 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, in
         avg_dev = stats["sum_pick_dev"] / stats["count"]
         
         # スコア計算: ウィルソン信頼勝率(70%) + ピック率偏差値(30%)
-        # ※ ranking_wr は 0~100 程度の値、devも 30~70 程度
         score = (ranking_wr * 0.7) + (avg_dev * 0.3)
-        
-        # 0〜100の範囲に収める簡易正規化
         score = min(max(score, 0.0), 100.0)
         
         use_rate = (tm / global_total_matches) * 100
@@ -193,22 +198,26 @@ def get_categories(type: str = "global"):
     db = get_db()
     # マップ一覧を動的取得
     try:
-        res = db.table("macro_map_stats").select("map_id, match_type").execute()
-        maps = set()
+        res = db.table("macro_map_stats").select("map_id, match_type, total_matches").execute()
+        map_counts = {}
         for row in res.data:
             m_id = row.get("map_id")
             if not m_id:
                 continue
+            clean_m_id = str(m_id).replace("gachi_", "")
+            matches = row.get("total_matches") or 0
             if type == "gachi":
                 if row.get("match_type") in ["ranked", "soloRanked", "teamRanked"]:
-                    maps.add(m_id)
+                    map_counts[clean_m_id] = map_counts.get(clean_m_id, 0) + matches
             else:
-                maps.add(m_id)
-        maps = list(maps)
+                map_counts[clean_m_id] = map_counts.get(clean_m_id, 0) + matches
+        
+        # 10試合以上の十分なサンプルがあるマップのみを優先抽出し、少数サンプルマップを除外
+        filtered_maps = [m for m, count in map_counts.items() if count >= 10]
+        maps = filtered_maps if len(filtered_maps) > 0 else list(map_counts.keys())
     except:
         maps = []
         
-    # モードは現状DBに直接持っていないため仮のリストまたはフロントで吸収
     return {
         "modes": ["brawlBall", "gemGrab", "hotZone", "heist", "bounty", "knockout"],
         "maps": maps,

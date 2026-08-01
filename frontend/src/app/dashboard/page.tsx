@@ -138,10 +138,6 @@ export default function DashboardPage() {
   const [isSearchingClub, setIsSearchingClub] = useState(false)
 
   const searchContainerRef = useRef<HTMLDivElement>(null)
-  const isComposingPlayerRef = useRef(false)
-  const isComposingClubRef = useRef(false)
-  const isSelectingPlayerRef = useRef(false)
-  const isSelectingClubRef = useRef(false)
 
   // 外部クリックでサジェストを閉じる
   useEffect(() => {
@@ -157,27 +153,26 @@ export default function DashboardPage() {
 
   // プレイヤー検索のデバウンス処理
   useEffect(() => {
-    const searchPlayers = async () => {
-      if (isComposingPlayerRef.current) return
-      if (isSelectingPlayerRef.current) {
-        isSelectingPlayerRef.current = false
-        return
-      }
-      const trimmed = (playerTag || "").trim()
-      // タグ形式（例: #V99J0CCV8 や V99J0CCV8）や2文字未満の場合は検索しない
-      if (trimmed.length < 2 || trimmed.startsWith("#") || /^[A-Za-z0-9]{7,12}$/.test(trimmed)) {
-        setSuggestions([])
-        setShowSuggestions(false)
-        return
-      }
+    const trimmed = (playerTag || "").trim()
+    if (!trimmed || trimmed.startsWith("#")) {
+      setSuggestions([])
+      setShowSuggestions(false)
+      setIsSearching(false)
+      return
+    }
 
-      setIsSearching(true)
+    setIsSearching(true)
+    const timeoutId = setTimeout(async () => {
       try {
         const res = await fetch(`${API_URL}/player/search?q=${encodeURIComponent(trimmed)}`)
         if (res.ok) {
           const result = await res.json()
-          setSuggestions(Array.isArray(result) ? result : [])
-          setShowSuggestions(true)
+          if (Array.isArray(result)) {
+            setSuggestions(result)
+            setShowSuggestions(true)
+          } else {
+            setSuggestions([])
+          }
         } else {
           setSuggestions([])
         }
@@ -187,34 +182,33 @@ export default function DashboardPage() {
       } finally {
         setIsSearching(false)
       }
-    }
+    }, 250)
 
-    const timeoutId = setTimeout(searchPlayers, 350)
     return () => clearTimeout(timeoutId)
   }, [playerTag])
 
   // クラブ検索のデバウンス処理
   useEffect(() => {
-    const searchClubs = async () => {
-      if (isComposingClubRef.current) return
-      if (isSelectingClubRef.current) {
-        isSelectingClubRef.current = false
-        return
-      }
-      const trimmed = (clubInput || "").trim()
-      if (trimmed.length < 2 || trimmed.startsWith("#") || /^[A-Za-z0-9]{7,12}$/.test(trimmed)) {
-        setClubSuggestions([])
-        setShowClubSuggestions(false)
-        return
-      }
+    const trimmed = (clubInput || "").trim()
+    if (!trimmed || trimmed.startsWith("#")) {
+      setClubSuggestions([])
+      setShowClubSuggestions(false)
+      setIsSearchingClub(false)
+      return
+    }
 
-      setIsSearchingClub(true)
+    setIsSearchingClub(true)
+    const timeoutId = setTimeout(async () => {
       try {
         const res = await fetch(`${API_URL}/club/search?q=${encodeURIComponent(trimmed)}`)
         if (res.ok) {
           const result = await res.json()
-          setClubSuggestions(Array.isArray(result) ? result : [])
-          setShowClubSuggestions(true)
+          if (Array.isArray(result)) {
+            setClubSuggestions(result)
+            setShowClubSuggestions(true)
+          } else {
+            setClubSuggestions([])
+          }
         } else {
           setClubSuggestions([])
         }
@@ -224,9 +218,8 @@ export default function DashboardPage() {
       } finally {
         setIsSearchingClub(false)
       }
-    }
+    }, 250)
 
-    const timeoutId = setTimeout(searchClubs, 350)
     return () => clearTimeout(timeoutId)
   }, [clubInput])
 
@@ -234,7 +227,6 @@ export default function DashboardPage() {
     const rawInput = (overrideTag || playerTag || "").trim()
     if (!rawInput) return
     
-    isSelectingPlayerRef.current = true
     setShowSuggestions(false)
     setSuggestions([])
     setLoading(true)
@@ -285,9 +277,6 @@ export default function DashboardPage() {
         return
       }
       setData(result)
-      if (typeof window !== "undefined") {
-        window.scrollTo({ top: 0, behavior: 'smooth' })
-      }
     } catch (error) {
       console.error("Fetch error", error)
       setErrorMsg("ネットワークエラーが発生しました。")
@@ -411,25 +400,18 @@ export default function DashboardPage() {
                 <Input 
                   placeholder="プレイヤー名 または タグ(#Q2LL9G8)" 
                   value={playerTag}
-                  onCompositionStart={() => {
-                    isComposingPlayerRef.current = true
-                  }}
-                  onCompositionEnd={(e) => {
-                    isComposingPlayerRef.current = false
-                    setPlayerTag(e.currentTarget.value)
-                  }}
                   onChange={(e) => {
                     setPlayerTag(e.target.value)
-                    if (!showSuggestions) setShowSuggestions(true)
+                    setShowSuggestions(true)
                   }}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter" && !isComposingPlayerRef.current) {
+                    if (e.key === "Enter") {
                       setShowSuggestions(false)
                       handleSync()
                     }
                   }}
                   onFocus={() => {
-                    if (playerTag.trim().length >= 2 && suggestions.length > 0) setShowSuggestions(true)
+                    if (playerTag.trim().length > 0) setShowSuggestions(true)
                   }}
                   className="bg-background"
                 />
@@ -443,7 +425,7 @@ export default function DashboardPage() {
                 </Button>
                 
                 {/* プレイヤーサジェストドロップダウン */}
-                {showSuggestions && (playerTag.trim().length >= 2 || isSearching) && (
+                {showSuggestions && (playerTag.trim().length > 0 || isSearching) && (
                   <div className="absolute top-full left-0 w-full min-w-[320px] max-w-full mt-2 bg-card text-card-foreground border border-border rounded-md shadow-2xl z-[100] max-h-64 overflow-y-auto">
                     {isSearching ? (
                       <div className="p-3 text-sm text-muted-foreground text-center animate-pulse">検索中...</div>
@@ -454,9 +436,11 @@ export default function DashboardPage() {
                             key={idx} 
                             className="px-4 py-3 text-sm hover:bg-accent hover:text-accent-foreground cursor-pointer flex gap-4 items-center transition-colors border-b last:border-b-0"
                             onClick={() => {
-                              setPlayerTag(p.player_tag)
+                              const tag = p.player_tag
                               setShowSuggestions(false)
-                              handleSync(p.player_tag)
+                              setSuggestions([])
+                              setPlayerTag(tag)
+                              handleSync(tag)
                             }}
                           >
                             <Avatar className="w-10 h-10 border-2 border-primary/20 shrink-0 shadow-sm">
@@ -488,7 +472,7 @@ export default function DashboardPage() {
                                   <img 
                                     src={rank.url} 
                                     alt="Rank" 
-                                    className="w-8 h-8 object-contain drop-shadow-md"
+                                    className="w-8 h-8 object-contain drop-shadow-md" 
                                     onError={(e) => { e.currentTarget.style.display = 'none'; }}
                                   />
                                 </div>
@@ -508,25 +492,18 @@ export default function DashboardPage() {
                 <Input 
                   placeholder="クラブ名 または タグ(#CLUB123)" 
                   value={clubInput}
-                  onCompositionStart={() => {
-                    isComposingClubRef.current = true
-                  }}
-                  onCompositionEnd={(e) => {
-                    isComposingClubRef.current = false
-                    setClubInput(e.currentTarget.value)
-                  }}
                   onChange={(e) => {
                     setClubInput(e.target.value)
-                    if (!showClubSuggestions) setShowClubSuggestions(true)
+                    setShowClubSuggestions(true)
                   }}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter" && !isComposingClubRef.current) {
+                    if (e.key === "Enter") {
                       setShowClubSuggestions(false)
                       handleSyncClub()
                     }
                   }}
                   onFocus={() => {
-                    if (clubInput.trim().length >= 2 && clubSuggestions.length > 0) setShowClubSuggestions(true)
+                    if (clubInput.trim().length > 0) setShowClubSuggestions(true)
                   }}
                   className="bg-background"
                 />
@@ -540,7 +517,7 @@ export default function DashboardPage() {
                 </Button>
 
                 {/* クラブサジェストドロップダウン */}
-                {showClubSuggestions && (clubInput.trim().length >= 2 || isSearchingClub) && (
+                {showClubSuggestions && (clubInput.trim().length > 0 || isSearchingClub) && (
                   <div className="absolute top-full left-0 w-full min-w-[320px] max-w-full mt-2 bg-card text-card-foreground border border-border rounded-md shadow-2xl z-[100] max-h-64 overflow-y-auto">
                     {isSearchingClub ? (
                       <div className="p-3 text-sm text-muted-foreground text-center animate-pulse">検索中...</div>
@@ -551,9 +528,11 @@ export default function DashboardPage() {
                             key={idx} 
                             className="px-4 py-3 text-sm hover:bg-accent hover:text-accent-foreground cursor-pointer flex gap-4 items-center transition-colors border-b last:border-b-0"
                             onClick={() => {
-                              setClubInput(c.club_tag)
+                              const tag = c.club_tag
                               setShowClubSuggestions(false)
-                              handleSyncClub(c.club_tag)
+                              setClubSuggestions([])
+                              setClubInput(tag)
+                              handleSyncClub(tag)
                             }}
                           >
                             <Avatar className="w-10 h-10 border-2 border-primary/20 shrink-0 shadow-sm bg-primary/10">
@@ -963,9 +942,9 @@ export default function DashboardPage() {
                       }
 
                       return (
-                        <Card key={i} className="bg-background/40 border border-primary/10 overflow-hidden hover:bg-primary/5 transition-colors">
+                        <Card key={i} className="bg-card border border-primary/10 overflow-hidden hover:bg-primary/5 transition-colors">
                       {/* Header section */}
-                       <div className="p-3 border-b border-primary/10 flex justify-between items-center bg-card/60">
+                       <div className="p-3 border-b border-primary/10 flex justify-between items-center bg-secondary/30">
                          <div className="flex items-center gap-3">
                            <div className={`w-1.5 h-11 rounded-full ${battle.result === 'victory' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]' : battle.result === 'defeat' ? 'bg-destructive shadow-[0_0_10px_rgba(239,68,68,0.5)]' : 'bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)]'}`} />
                            <div>
@@ -995,10 +974,9 @@ export default function DashboardPage() {
                       </div>
                       
                       {/* Teams section */}
-                      <div className="p-3 grid grid-cols-2 gap-4 bg-background/30 backdrop-blur-sm">
+                      <div className="p-3 grid grid-cols-2 gap-4 bg-secondary/10">
                         {/* My Team */}
                         <div className="space-y-3 relative">
-                          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -z-10" />
                           <p className="text-xs font-bold text-primary tracking-widest border-b border-primary/20 pb-1.5 flex items-center gap-2">
                             <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                             味方チーム
@@ -1015,7 +993,7 @@ export default function DashboardPage() {
                                 >
                                   <Avatar className={`w-10 h-10 shadow-sm transition-transform group-hover:scale-105 ${isMe ? 'border border-primary ring-2 ring-primary/30 ring-offset-1 ring-offset-background' : 'border border-primary/20'}`}>
                                     <AvatarImage src={bInfo.imageUrl} />
-                                    <AvatarFallback className="bg-primary/10"><User className="w-4 h-4 text-primary/70" /></AvatarFallback>
+                                    <AvatarFallback className="bg-primary/10"><User className="w-5 h-5 text-primary/70" /></AvatarFallback>
                                   </Avatar>
                                   <div className="flex flex-col overflow-hidden">
                                     <span className={`text-sm truncate max-w-[120px] font-bold tracking-wide ${isMe ? 'text-primary' : 'text-foreground/90'}`} title={p.name}>
@@ -1030,7 +1008,6 @@ export default function DashboardPage() {
                         </div>
                         {/* Opponent Teams */}
                         <div className="space-y-3 border-l border-primary/10 pl-4 relative">
-                          <div className="absolute top-0 right-0 w-32 h-32 bg-destructive/5 rounded-full blur-3xl -z-10" />
                           <p className="text-xs font-bold text-destructive tracking-widest border-b border-destructive/20 pb-1.5 flex items-center gap-2">
                             <span className="w-2 h-2 rounded-full bg-destructive" />
                             相手チーム

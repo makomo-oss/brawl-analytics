@@ -54,7 +54,7 @@ export function MainNav() {
               </NavigationMenuItem>
               <NavigationMenuItem>
                 <Link href="/companion" className={navigationMenuTriggerStyle()}>
-                  ドラフト支援 (BAN/Pick)
+                  ピック支援 (BAN/Pick)
                 </Link>
               </NavigationMenuItem>
             </NavigationMenuList>
@@ -106,7 +106,7 @@ export function MainNav() {
             className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname === "/companion" ? "text-primary" : "text-muted-foreground"}`}
           >
             <Cpu className="w-5 h-5" />
-            <span className="text-[10px] font-medium">ドラフト支援</span>
+            <span className="text-[10px] font-medium">ピック支援</span>
           </Link>
         </div>
       </div>

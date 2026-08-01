@@ -100,13 +100,13 @@ export default function Home() {
                 <Cpu className="w-7 h-7 text-purple-600 dark:text-purple-400" />
               </div>
               <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-3">
-                ドラフト支援 (BAN/Pick)
+                ピック支援 (BAN/Pick)
               </h3>
               <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed flex-1">
                 データ駆動型のピック評価機能。マップ適性と敵の編成に対するカウンター性能からリアルタイムに最適キャラを提示します。
               </p>
               <div className="mt-6 flex items-center text-purple-600 dark:text-purple-400 font-medium group-hover:translate-x-2 transition-transform">
-                ドラフト支援を試す <ArrowRight className="ml-2 w-4 h-4" />
+                ピック支援を試す <ArrowRight className="ml-2 w-4 h-4" />
               </div>
             </Link>
 

@@ -278,16 +278,19 @@ def get_character_detail(character_id: str, type: str = "global", sub_type: str 
 
         # カモ (有利な対面: 有利スコアが高い順)
         counters.sort(key=lambda x: x.get("advantage_score", 0.0), reverse=True)
+        total_m = detail.get("total_matches", 0)
         for c in counters:
             if len(kamo) >= 5: break
             enemy_id = c["char_b"]
             if enemy_id == "unknown" or c["advantage_score"] == 0:
                 continue
+            raw_matches = c.get("match_count", 0)
+            capped_matches = min(raw_matches, total_m) if total_m > 0 else raw_matches
             kamo.append({
                 "brawler": enemy_id,
                 "name": format_char_name(enemy_id),
                 "win_rate": round( (c["win_count"] / c["match_count"] * 100) if c["match_count"] > 0 else 50.0, 1 ),
-                "matches": c.get("match_count", 0)
+                "matches": capped_matches
             })
                 
         # 天敵 (不利な対面: 不利スコアが高い順)
@@ -297,11 +300,13 @@ def get_character_detail(character_id: str, type: str = "global", sub_type: str 
             enemy_id = c["char_b"]
             if enemy_id == "unknown" or c["disadvantage_score"] == 0:
                 continue
+            raw_matches = c.get("match_count", 0)
+            capped_matches = min(raw_matches, total_m) if total_m > 0 else raw_matches
             tenteki.append({
                 "brawler": enemy_id,
                 "name": format_char_name(enemy_id),
                 "win_rate": round( (c["win_count"] / c["match_count"] * 100) if c["match_count"] > 0 else 50.0, 1 ),
-                "matches": c.get("match_count", 0)
+                "matches": capped_matches
             })
     except Exception as e:
         print(f"Failed to fetch counters: {e}")

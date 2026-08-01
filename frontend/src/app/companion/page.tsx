@@ -49,7 +49,7 @@ export default function DraftCompanionPage() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await fetch(`${API_URL}/meta/categories`)
+        const res = await fetch(`${API_URL}/meta/categories?type=gachi`)
         if (res.ok) {
           const data = await res.json()
           setCategories(data)

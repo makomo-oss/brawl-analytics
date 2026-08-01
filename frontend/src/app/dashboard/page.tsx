@@ -151,7 +151,7 @@ export default function DashboardPage() {
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
 
-  // プレイヤー検索のデバウンス処理
+  // プレイヤー検索のデバウンス処理（リアルタイム検索・AbortController付き）
   useEffect(() => {
     const trimmed = (playerTag || "").trim()
     if (!trimmed || trimmed.startsWith("#")) {
@@ -162,9 +162,12 @@ export default function DashboardPage() {
     }
 
     setIsSearching(true)
+    const controller = new AbortController()
     const timeoutId = setTimeout(async () => {
       try {
-        const res = await fetch(`${API_URL}/player/search?q=${encodeURIComponent(trimmed)}`)
+        const res = await fetch(`${API_URL}/player/search?q=${encodeURIComponent(trimmed)}`, {
+          signal: controller.signal
+        })
         if (res.ok) {
           const result = await res.json()
           if (Array.isArray(result)) {
@@ -176,18 +179,23 @@ export default function DashboardPage() {
         } else {
           setSuggestions([])
         }
-      } catch (error) {
-        console.error("Failed to search players", error)
-        setSuggestions([])
+      } catch (error: any) {
+        if (error.name !== "AbortError") {
+          console.error("Failed to search players", error)
+          setSuggestions([])
+        }
       } finally {
         setIsSearching(false)
       }
-    }, 250)
+    }, 120)
 
-    return () => clearTimeout(timeoutId)
+    return () => {
+      clearTimeout(timeoutId)
+      controller.abort()
+    }
   }, [playerTag])
 
-  // クラブ検索のデバウンス処理
+  // クラブ検索のデバウンス処理（リアルタイム検索・AbortController付き）
   useEffect(() => {
     const trimmed = (clubInput || "").trim()
     if (!trimmed || trimmed.startsWith("#")) {
@@ -198,9 +206,12 @@ export default function DashboardPage() {
     }
 
     setIsSearchingClub(true)
+    const controller = new AbortController()
     const timeoutId = setTimeout(async () => {
       try {
-        const res = await fetch(`${API_URL}/club/search?q=${encodeURIComponent(trimmed)}`)
+        const res = await fetch(`${API_URL}/club/search?q=${encodeURIComponent(trimmed)}`, {
+          signal: controller.signal
+        })
         if (res.ok) {
           const result = await res.json()
           if (Array.isArray(result)) {
@@ -212,15 +223,20 @@ export default function DashboardPage() {
         } else {
           setClubSuggestions([])
         }
-      } catch (error) {
-        console.error("Failed to search clubs", error)
-        setClubSuggestions([])
+      } catch (error: any) {
+        if (error.name !== "AbortError") {
+          console.error("Failed to search clubs", error)
+          setClubSuggestions([])
+        }
       } finally {
         setIsSearchingClub(false)
       }
-    }, 250)
+    }, 120)
 
-    return () => clearTimeout(timeoutId)
+    return () => {
+      clearTimeout(timeoutId)
+      controller.abort()
+    }
   }, [clubInput])
 
   const handleSync = async (overrideTag?: string) => {
@@ -402,10 +418,15 @@ export default function DashboardPage() {
                   value={playerTag}
                   onChange={(e) => {
                     setPlayerTag(e.target.value)
-                    setShowSuggestions(true)
+                    if (e.target.value.trim().length > 0) setShowSuggestions(true)
+                  }}
+                  onCompositionEnd={(e) => {
+                    const val = e.currentTarget.value
+                    setPlayerTag(val)
+                    if (val.trim().length > 0) setShowSuggestions(true)
                   }}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter") {
+                    if (e.key === "Enter" && !e.nativeEvent.isComposing && e.keyCode !== 229) {
                       setShowSuggestions(false)
                       handleSync()
                     }
@@ -494,10 +515,15 @@ export default function DashboardPage() {
                   value={clubInput}
                   onChange={(e) => {
                     setClubInput(e.target.value)
-                    setShowClubSuggestions(true)
+                    if (e.target.value.trim().length > 0) setShowClubSuggestions(true)
+                  }}
+                  onCompositionEnd={(e) => {
+                    const val = e.currentTarget.value
+                    setClubInput(val)
+                    if (val.trim().length > 0) setShowClubSuggestions(true)
                   }}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter") {
+                    if (e.key === "Enter" && !e.nativeEvent.isComposing && e.keyCode !== 229) {
                       setShowClubSuggestions(false)
                       handleSyncClub()
                     }

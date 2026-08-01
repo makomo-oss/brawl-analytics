@@ -317,7 +317,7 @@ export default function TierListPage() {
                 </Card>
                 <Card className="bg-secondary/20 border-none shadow-inner">
                   <CardContent className="p-4 flex flex-col items-center justify-center">
-                    <span className="text-[10px] font-bold text-muted-foreground mb-1 text-center leading-tight">分析<br/>試合数</span>
+                    <span className="text-[10px] font-bold text-muted-foreground mb-1 text-center leading-tight">選択条件での<br/>分析試合数</span>
                     <span className="text-xl font-black text-foreground">
                       {selectedChar.total_matches}
                     </span>
@@ -329,7 +329,7 @@ export default function TierListPage() {
                 {/* 有利な対面 */}
                 <div className="space-y-3 relative p-4 rounded-xl bg-green-500/5 border border-green-500/20">
                   <h3 className="font-extrabold text-sm flex items-center gap-2 text-green-600 dark:text-green-400">
-                    <TrendingUp className="w-5 h-5" /> 有利な対面 TOP5
+                    <TrendingUp className="w-5 h-5" /> 有利な対面 TOP5 <span className="text-[10px] text-muted-foreground font-normal">（全モード累積サンプル）</span>
                   </h3>
                   {selectedChar.kamo && selectedChar.kamo.length > 0 ? (
                     <div className="space-y-2">
@@ -360,7 +360,7 @@ export default function TierListPage() {
                 {/* 不利な対面 */}
                 <div className="space-y-3 relative p-4 rounded-xl bg-red-500/5 border border-red-500/20">
                   <h3 className="font-extrabold text-sm flex items-center gap-2 text-red-600 dark:text-red-400">
-                    <TrendingDown className="w-5 h-5" /> 不利な対面 TOP5
+                    <TrendingDown className="w-5 h-5" /> 不利な対面 TOP5 <span className="text-[10px] text-muted-foreground font-normal">（全モード累積サンプル）</span>
                   </h3>
                   {selectedChar.tenteki && selectedChar.tenteki.length > 0 ? (
                     <div className="space-y-2">

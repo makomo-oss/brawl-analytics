@@ -195,13 +195,19 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, in
 
 @router.get("/categories")
 def get_categories(type: str = "global"):
+    """カテゴリ一覧（モード、マップ、モード→マップの対応）を返す。
+
+    mode_to_maps は match_raw_history テーブルから動的に構築し、
+    選択されたモードに対応するマップのみをフロントエンドで絞り込めるようにする。
+    """
     db = get_db()
-    # マップ一覧を動的取得
     maps = []
-    mode_to_maps = {}
+    mode_to_maps: dict[str, list[str]] = {}
+
     try:
+        # --- Step 1: macro_map_stats からマップ一覧と試合数を取得 ---
         res = db.table("macro_map_stats").select("map_id, match_type, total_matches").execute()
-        map_counts = {}
+        map_counts: dict[str, int] = {}
         for row in res.data:
             m_id = row.get("map_id")
             if not m_id:
@@ -218,24 +224,49 @@ def get_categories(type: str = "global"):
         filtered_maps = [m for m, count in map_counts.items() if count >= 10]
         maps = filtered_maps if len(filtered_maps) > 0 else list(map_counts.keys())
 
-        # モードごとの対応マップ一覧 (mode_to_maps) を構築
+        # --- Step 2: match_raw_history から mode → map_id の対応表を構築 ---
+        # ページネーションで全件走査し、正確なマッピングを構築
         try:
-            raw_res = db.table("match_raw_history").select("mode, map_id, match_type").limit(5000).execute()
-            temp_mode_map = {}
-            for r in raw_res.data:
-                m_name = r.get("mode")
-                m_id = r.get("map_id")
-                m_type = r.get("match_type")
-                if not m_name or not m_id:
-                    continue
-                if type == "gachi" and m_type not in ["ranked", "soloRanked", "teamRanked"]:
-                    continue
-                clean_m_id = str(m_id).replace("gachi_", "")
-                if clean_m_id in maps or str(m_id) in maps or len(maps) == 0:
+            temp_mode_map: dict[str, set[str]] = {}
+            offset = 0
+            page_size = 1000
+            max_records = 10000  # 安全上限
+
+            while offset < max_records:
+                raw_res = (
+                    db.table("match_raw_history")
+                    .select("mode, map_id, match_type")
+                    .range(offset, offset + page_size - 1)
+                    .execute()
+                )
+                if not raw_res.data:
+                    break
+
+                for r in raw_res.data:
+                    m_name = r.get("mode")
+                    m_id = r.get("map_id")
+                    m_type = r.get("match_type")
+                    if not m_name or not m_id:
+                        continue
+                    # ガチバトルモードの場合、ランク戦のみを対象
+                    if type == "gachi" and m_type not in ["ranked", "soloRanked", "teamRanked"]:
+                        continue
+                    clean_m_id = str(m_id).replace("gachi_", "")
                     if m_name not in temp_mode_map:
                         temp_mode_map[m_name] = set()
                     temp_mode_map[m_name].add(clean_m_id)
-            mode_to_maps = {k: list(v) for k, v in temp_mode_map.items()}
+
+                if len(raw_res.data) < page_size:
+                    break
+                offset += page_size
+
+            # maps 一覧にあるマップのみに絞り込む（macro_map_stats に存在するもの）
+            maps_set = set(maps)
+            mode_to_maps = {
+                k: sorted([m for m in v if m in maps_set]) 
+                for k, v in temp_mode_map.items()
+                if any(m in maps_set for m in v)
+            }
         except Exception as e:
             print(f"Failed to build mode_to_maps: {e}")
             mode_to_maps = {}

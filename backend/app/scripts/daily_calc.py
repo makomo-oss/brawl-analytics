@@ -67,6 +67,15 @@ def calc_macro_map_stats(df: pd.DataFrame):
     # "unknown" または "nan" のデータは集計対象外
     df = df[(df["hero_used"] != "unknown") & (df["hero_used"] != "nan")]
     
+    # Match ID ユニーク化: 同一試合(match_id)で同一ヒーローの重複ログを排除
+    if "match_id" in df.columns:
+        valid_match_id = df["match_id"].astype(str).str.strip().str.len() > 0
+        if valid_match_id.any():
+            df = pd.concat([
+                df[valid_match_id].drop_duplicates(subset=["match_id", "hero_used"]),
+                df[~valid_match_id]
+            ], ignore_index=True)
+
     # match_type × マップ × ヒーローで集計
     grouped = df.groupby(["match_type", "map_id", "hero_used"]).agg(
         total_matches=("match_id", "count"),
@@ -106,7 +115,7 @@ def calc_macro_map_stats(df: pd.DataFrame):
     return stats_list
 
 def calc_dynamic_counters(df: pd.DataFrame):
-    """対面相性（カウンター係数）を計算"""
+    """対面相性（カウンター係数）を計算 (Match ID ユニーク化対応)"""
     logger.info("Calculating dynamic counters...")
     if df.empty:
         return []
@@ -119,7 +128,8 @@ def calc_dynamic_counters(df: pd.DataFrame):
     # hero_used (char_a) と opponents (char_b) のペアを展開
     records = []
     for _, row in df.iterrows():
-        char_a = row["hero_used"]
+        match_id = str(row.get("match_id", "") or "").strip()
+        char_a = str(row.get("hero_used", "") or "").lower()
         is_win = row["is_win"]
         
         # 敵チームとのマッチアップ
@@ -133,13 +143,17 @@ def calc_dynamic_counters(df: pd.DataFrame):
                 
         for char_b in opponents:
             char_b = str(char_b).lower()
+            if not char_a or not char_b or char_a == "unknown" or char_b == "unknown":
+                continue
             records.append({
+                "match_id": match_id,
                 "char_a": char_a,
                 "char_b": char_b,
                 "is_win": is_win
             })
             # 逆視点も追加 (対戦相手から見た自分)
             records.append({
+                "match_id": match_id,
                 "char_a": char_b,
                 "char_b": char_a,
                 "is_win": 1 - is_win
@@ -149,6 +163,16 @@ def calc_dynamic_counters(df: pd.DataFrame):
         return []
         
     pairs_df = pd.DataFrame(records)
+
+    # Match ID ユニーク化: 同一試合(match_id)における同一対戦ペア(char_a, char_b)の重複カウントを徹底排除
+    if "match_id" in pairs_df.columns:
+        valid_match_id = pairs_df["match_id"].astype(str).str.strip().str.len() > 0
+        if valid_match_id.any():
+            pairs_df = pd.concat([
+                pairs_df[valid_match_id].drop_duplicates(subset=["match_id", "char_a", "char_b"]),
+                pairs_df[~valid_match_id]
+            ], ignore_index=True)
+
     grouped = pairs_df.groupby(["char_a", "char_b"]).agg(
         match_count=("is_win", "count"),
         win_count=("is_win", "sum")
@@ -166,7 +190,6 @@ def calc_dynamic_counters(df: pd.DataFrame):
             continue
             
         # 相性係数の計算
-        # サービス開始直後はデータが少ないため、閾値を50から1試合に緩和
         if m_count < 1:
             coef = 0.0
         else:

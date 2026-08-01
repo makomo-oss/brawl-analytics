@@ -27,7 +27,7 @@ export default function Home() {
           </h1>
           
           <p className="text-lg md:text-xl text-zinc-600 dark:text-zinc-400 max-w-2xl mb-10 leading-relaxed animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-150">
-            膨大な対戦データと最先端のAI分析が、あなたのブロスタライフを次のレベルへ。
+            膨大な対戦データと統計駆動の解析ロジックが、あなたのブロスタライフを次のレベルへ。
             最強のメタを把握し、自分だけの最適な戦術を見つけ出そう。
           </p>
           
@@ -100,13 +100,13 @@ export default function Home() {
                 <Cpu className="w-7 h-7 text-purple-600 dark:text-purple-400" />
               </div>
               <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-3">
-                AIコーチ＆IFシミュレーター
+                ドラフト支援 (BAN/Pick)
               </h3>
               <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed flex-1">
-                AIによるピック評価機能。「もしあの時、別のキャラを選んでいたら？」をシミュレートし、負けた試合から確実な学びを得られます。
+                データ駆動型のピック評価機能。マップ適性と敵の編成に対するカウンター性能からリアルタイムに最適キャラを提示します。
               </p>
               <div className="mt-6 flex items-center text-purple-600 dark:text-purple-400 font-medium group-hover:translate-x-2 transition-transform">
-                AIコーチを試す <ArrowRight className="ml-2 w-4 h-4" />
+                ドラフト支援を試す <ArrowRight className="ml-2 w-4 h-4" />
               </div>
             </Link>
 

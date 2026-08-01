@@ -170,19 +170,22 @@ export default function DashboardPage() {
         })
         if (res.ok) {
           const result = await res.json()
-          if (Array.isArray(result)) {
+          if (Array.isArray(result) && result.length > 0) {
             setSuggestions(result)
             setShowSuggestions(true)
           } else {
             setSuggestions([])
+            setShowSuggestions(false)
           }
         } else {
           setSuggestions([])
+          setShowSuggestions(false)
         }
       } catch (error: any) {
         if (error.name !== "AbortError") {
           console.error("Failed to search players", error)
           setSuggestions([])
+          setShowSuggestions(false)
         }
       } finally {
         setIsSearching(false)
@@ -214,19 +217,22 @@ export default function DashboardPage() {
         })
         if (res.ok) {
           const result = await res.json()
-          if (Array.isArray(result)) {
+          if (Array.isArray(result) && result.length > 0) {
             setClubSuggestions(result)
             setShowClubSuggestions(true)
           } else {
             setClubSuggestions([])
+            setShowClubSuggestions(false)
           }
         } else {
           setClubSuggestions([])
+          setShowClubSuggestions(false)
         }
       } catch (error: any) {
         if (error.name !== "AbortError") {
           console.error("Failed to search clubs", error)
           setClubSuggestions([])
+          setShowClubSuggestions(false)
         }
       } finally {
         setIsSearchingClub(false)
@@ -262,8 +268,9 @@ export default function DashboardPage() {
           if (searchRes.ok) {
             const results = await searchRes.json()
             if (Array.isArray(results) && results.length > 0 && results[0]?.player_tag) {
-              finalTag = results[0].player_tag
-              setPlayerTag(results[0].player_tag)
+              const formattedTag = `#${results[0].player_tag.replace(/^#+/, "")}`
+              finalTag = formattedTag
+              setPlayerTag(formattedTag)
             } else {
               setErrorMsg(`「${rawInput}」に一致するプレイヤーが見つかりませんでした。プレイヤータグ（例: #V99J0CCV8）をお試しください。`)
               setLoading(false)
@@ -274,8 +281,9 @@ export default function DashboardPage() {
           // 検索に失敗した場合はそのまま入力タグで試行
         }
       } else {
-        finalTag = cleanInput
-        setPlayerTag(cleanInput)
+        const formattedTag = `#${cleanInput}`
+        finalTag = formattedTag
+        setPlayerTag(formattedTag)
       }
 
       const res = await fetch(`${API_URL}/player/${encodeURIComponent(finalTag.replace(/^#+/, ""))}/dashboard`)
@@ -305,11 +313,12 @@ export default function DashboardPage() {
     const rawInput = (overrideTag || clubInput || "").trim()
     if (!rawInput) return
     
+    setShowClubSuggestions(false)
+    setClubSuggestions([])
     setLoadingClub(true)
     setErrorMsg(null)
     setData(null)
     setClubData(null)
-    setShowClubSuggestions(false)
     
     try {
       let finalTag = rawInput
@@ -322,8 +331,9 @@ export default function DashboardPage() {
           if (searchRes.ok) {
             const results = await searchRes.json()
             if (Array.isArray(results) && results.length > 0 && results[0]?.club_tag) {
-              finalTag = results[0].club_tag
-              setClubInput(results[0].club_tag)
+              const formattedTag = `#${results[0].club_tag.replace(/^#+/, "")}`
+              finalTag = formattedTag
+              setClubInput(formattedTag)
             } else {
               setErrorMsg(`「${rawInput}」に一致するクラブが見つかりませんでした。クラブタグ（例: #2YRPU8RVV）をお試しください。`)
               setLoadingClub(false)
@@ -334,8 +344,9 @@ export default function DashboardPage() {
           // 検索失敗時はそのまま試行
         }
       } else {
-        finalTag = cleanInput
-        setClubInput(cleanInput)
+        const formattedTag = `#${cleanInput}`
+        finalTag = formattedTag
+        setClubInput(formattedTag)
       }
 
       const res = await fetch(`${API_URL}/club/${encodeURIComponent(finalTag.replace(/^#+/, ""))}`)
@@ -349,9 +360,6 @@ export default function DashboardPage() {
       }
       const result = await res.json()
       setClubData(result)
-      if (typeof window !== "undefined") {
-        window.scrollTo({ top: 0, behavior: 'smooth' })
-      }
     } catch (error) {
       console.error("Fetch club error", error)
       setErrorMsg("ネットワークエラーが発生しました。")
@@ -446,18 +454,18 @@ export default function DashboardPage() {
                 </Button>
                 
                 {/* プレイヤーサジェストドロップダウン */}
-                {showSuggestions && (playerTag.trim().length > 0 || isSearching) && (
+                {showSuggestions && (isSearching || suggestions.length > 0) && (
                   <div className="absolute top-full left-0 w-full min-w-[320px] max-w-full mt-2 bg-card text-card-foreground border border-border rounded-md shadow-2xl z-[100] max-h-64 overflow-y-auto">
                     {isSearching ? (
                       <div className="p-3 text-sm text-muted-foreground text-center animate-pulse">検索中...</div>
-                    ) : suggestions.length > 0 ? (
+                    ) : (
                       <ul className="py-1">
                         {suggestions.map((p, idx) => (
                           <li 
                             key={idx} 
                             className="px-4 py-3 text-sm hover:bg-accent hover:text-accent-foreground cursor-pointer flex gap-4 items-center transition-colors border-b last:border-b-0"
                             onClick={() => {
-                              const tag = p.player_tag
+                              const tag = p.player_tag.startsWith("#") ? p.player_tag : `#${p.player_tag}`
                               setShowSuggestions(false)
                               setSuggestions([])
                               setPlayerTag(tag)
@@ -471,7 +479,7 @@ export default function DashboardPage() {
                             <div className="flex flex-col gap-1.5 w-full overflow-hidden">
                               <div className="flex items-center gap-2">
                                 <span className="font-bold truncate text-base">{p.name}</span>
-                                <Badge variant="secondary" className="text-[10px] font-mono bg-primary/10 text-primary border-primary/20 shrink-0">#{p.player_tag}</Badge>
+                                <Badge variant="secondary" className="text-[10px] font-mono bg-primary/10 text-primary border-primary/20 shrink-0">#{p.player_tag.replace(/^#+/, "")}</Badge>
                               </div>
                               <div className="flex items-center gap-3 text-xs font-medium">
                                 <span className="flex items-center gap-1 text-yellow-600 dark:text-yellow-500 font-bold">
@@ -502,8 +510,6 @@ export default function DashboardPage() {
                           </li>
                         ))}
                       </ul>
-                    ) : (
-                      <div className="p-3 text-sm text-muted-foreground text-center">見つかりませんでした</div>
                     )}
                   </div>
                 )}
@@ -543,18 +549,18 @@ export default function DashboardPage() {
                 </Button>
 
                 {/* クラブサジェストドロップダウン */}
-                {showClubSuggestions && (clubInput.trim().length > 0 || isSearchingClub) && (
+                {showClubSuggestions && (isSearchingClub || clubSuggestions.length > 0) && (
                   <div className="absolute top-full left-0 w-full min-w-[320px] max-w-full mt-2 bg-card text-card-foreground border border-border rounded-md shadow-2xl z-[100] max-h-64 overflow-y-auto">
                     {isSearchingClub ? (
                       <div className="p-3 text-sm text-muted-foreground text-center animate-pulse">検索中...</div>
-                    ) : clubSuggestions.length > 0 ? (
+                    ) : (
                       <ul className="py-1">
                         {clubSuggestions.map((c, idx) => (
                           <li 
                             key={idx} 
                             className="px-4 py-3 text-sm hover:bg-accent hover:text-accent-foreground cursor-pointer flex gap-4 items-center transition-colors border-b last:border-b-0"
                             onClick={() => {
-                              const tag = c.club_tag
+                              const tag = c.club_tag.startsWith("#") ? c.club_tag : `#${c.club_tag}`
                               setShowClubSuggestions(false)
                               setClubSuggestions([])
                               setClubInput(tag)
@@ -568,7 +574,7 @@ export default function DashboardPage() {
                             <div className="flex flex-col gap-1 w-full overflow-hidden">
                               <div className="flex items-center gap-2">
                                 <span className="font-bold truncate text-base">{c.name}</span>
-                                <Badge variant="secondary" className="text-[10px] font-mono bg-primary/10 text-primary border-primary/20 shrink-0">#{c.club_tag}</Badge>
+                                <Badge variant="secondary" className="text-[10px] font-mono bg-primary/10 text-primary border-primary/20 shrink-0">#{c.club_tag.replace(/^#+/, "")}</Badge>
                               </div>
                               <div className="flex items-center gap-3 text-xs font-medium text-muted-foreground">
                                 <span className="flex items-center gap-1 text-yellow-600 dark:text-yellow-500 font-bold">
@@ -581,8 +587,6 @@ export default function DashboardPage() {
                           </li>
                         ))}
                       </ul>
-                    ) : (
-                      <div className="p-3 text-sm text-muted-foreground text-center">見つかりませんでした（タグ直接入力をお試しください）</div>
                     )}
                   </div>
                 )}

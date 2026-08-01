@@ -223,6 +223,7 @@ def main():
         logger.info(f"Upserting {len(macro_stats)} macro_map_stats records...")
         # 1000件ずつ分割してUpsert
         for i in range(0, len(macro_stats), 1000):
+            batch = macro_stats[i:i+1000]
             try:
                 supabase.table("macro_map_stats").upsert(batch).execute()
             except Exception as e:

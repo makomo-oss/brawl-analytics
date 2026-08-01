@@ -85,7 +85,7 @@ export function MainNav() {
             className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname === "/" ? "text-primary" : "text-muted-foreground"}`}
           >
             <Home className="w-5 h-5" />
-            <span className="text-[10px] font-medium">Home</span>
+            <span className="text-[10px] font-medium">ホーム</span>
           </Link>
           <Link 
             href="/tier-list" 

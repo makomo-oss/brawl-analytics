@@ -428,7 +428,7 @@ export default function DraftCompanionPage() {
                             <span className="font-bold text-[8px] sm:text-sm truncate w-full text-center sm:text-left">{getBrawlerInfo(charName).nameJa}</span>
                           </>
                         ) : (
-                          <span className="text-muted-foreground text-[10px] sm:text-sm mx-auto">Pick {i+1}</span>
+                          <span className="text-muted-foreground text-[10px] sm:text-sm mx-auto">選択 {i+1}</span>
                         )}
                       </div>
                     )
@@ -457,7 +457,7 @@ export default function DraftCompanionPage() {
                             <span className="font-bold text-[8px] sm:text-sm truncate w-full text-center sm:text-left">{getBrawlerInfo(charName).nameJa}</span>
                           </>
                         ) : (
-                          <span className="text-muted-foreground text-[10px] sm:text-sm mx-auto">Pick {i+1}</span>
+                          <span className="text-muted-foreground text-[10px] sm:text-sm mx-auto">選択 {i+1}</span>
                         )}
                       </div>
                     )
@@ -468,7 +468,7 @@ export default function DraftCompanionPage() {
               {/* Bans Area */}
               <div className="space-y-3">
                 <h3 className="font-bold text-slate-500 flex flex-col items-center justify-center bg-slate-500/10 p-1 sm:p-2 rounded-lg text-[10px] sm:text-base leading-tight">
-                  <span className="flex items-center gap-1"><Ban className="w-3 h-3 sm:w-4 sm:h-4" /> BANS</span>
+                  <span className="flex items-center gap-1"><Ban className="w-3 h-3 sm:w-4 sm:h-4" /> BAN指定</span>
                   <span className="font-normal opacity-0">.</span>
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
@@ -649,7 +649,7 @@ export default function DraftCompanionPage() {
                           </div>
                           <div className="text-right">
                             <Badge variant={phase === "ban" ? "destructive" : "default"}>
-                              Score: {sug.score.toFixed(1)}
+                              スコア: {sug.score.toFixed(1)}
                             </Badge>
                           </div>
                         </div>

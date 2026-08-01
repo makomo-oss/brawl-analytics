@@ -38,13 +38,32 @@ function formatBattleTime(timeStr: string) {
   return `${d.getMonth() + 1}月${d.getDate()}日 ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
 }
 
+function translateRole(role: string): string {
+  if (!role) return "メンバー";
+  const r = role.toLowerCase().replace(/[\s_\-]/g, "");
+  if (r === "president") return "会長";
+  if (r === "vicepresident") return "副会長";
+  if (r === "senior") return "シニア";
+  if (r === "member") return "メンバー";
+  return role;
+}
+
 function getRankImage(rankValue: any): { name: string; url: string; tier: string } | null {
   try {
     const num = Number(rankValue);
     if (isNaN(num) || num <= 0) return null;
-    if (num >= 19) return { name: "MASTERS", url: "https://cdn.brawlify.com/ranked/regular/Masters.png", tier: "" };
+    if (num >= 19) return { name: "マスター", url: "https://cdn.brawlify.com/ranked/regular/Masters.png", tier: "" };
     
     const tiers = ["Bronze", "Silver", "Gold", "Diamond", "Mythic", "Legendary"];
+    const tierNames: Record<string, string> = {
+      "Bronze": "ブロンズ",
+      "Silver": "シルバー",
+      "Gold": "ゴールド",
+      "Diamond": "ダイヤモンド",
+      "Mythic": "ミシック",
+      "Legendary": "レジェンド"
+    };
+    
     const tierIndex = Math.floor((num - 1) / 3);
     if (tierIndex < 0 || tierIndex >= tiers.length || !tiers[tierIndex]) {
       return null;
@@ -52,10 +71,11 @@ function getRankImage(rankValue: any): { name: string; url: string; tier: string
     
     const subTier = ((num - 1) % 3) + 1; // 1, 2, 3
     const numerals = ["I", "II", "III"];
+    const rawTierName = tiers[tierIndex];
     
     return {
-      name: tiers[tierIndex].toUpperCase(),
-      url: `https://cdn.brawlify.com/ranked/regular/${tiers[tierIndex]}.png`,
+      name: tierNames[rawTierName] || rawTierName.toUpperCase(),
+      url: `https://cdn.brawlify.com/ranked/regular/${rawTierName}.png`,
       tier: numerals[subTier - 1] || ""
     };
   } catch {
@@ -658,7 +678,7 @@ export default function DashboardPage() {
                     <div className="flex flex-col overflow-hidden">
                       <span className="font-bold text-sm truncate group-hover:text-primary transition-colors" title={m.name}>{m.name}</span>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <span className="capitalize text-[11px] font-semibold px-1.5 py-0.2 rounded bg-background border">{m.role || "member"}</span>
+                        <span className="capitalize text-[11px] font-semibold px-1.5 py-0.2 rounded bg-background border">{translateRole(m.role)}</span>
                         <span className="font-mono text-yellow-600 dark:text-yellow-500 font-bold">{m.trophies?.toLocaleString()} 🏆</span>
                       </div>
                     </div>
@@ -690,22 +710,22 @@ export default function DashboardPage() {
                       <span className="font-medium">{data.player_tag}</span>
                       <span 
                         className={`text-xs px-2.5 py-1 rounded-full font-semibold transition-all flex items-center gap-1.5 ${
-                          data.profile?.club_name && data.profile.club_name !== "No Club"
+                          data.profile?.club_name && data.profile.club_name !== "No Club" && data.profile.club_name !== "クラブ未所属"
                             ? "bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 hover:bg-purple-500/20 cursor-pointer shadow-sm"
                             : "bg-secondary text-secondary-foreground"
                         }`}
                         onClick={() => {
-                          if (data.profile?.club_name && data.profile.club_name !== "No Club") {
+                          if (data.profile?.club_name && data.profile.club_name !== "No Club" && data.profile.club_name !== "クラブ未所属") {
                             const tagOrName = data.profile.club_tag || data.profile.club_name;
                             setSearchMode("club");
                             setClubInput(tagOrName);
                             handleSyncClub(tagOrName);
                           }
                         }}
-                        title={data.profile?.club_name !== "No Club" ? "クリックしてクラブ詳細を表示" : ""}
+                        title={data.profile?.club_name && data.profile.club_name !== "No Club" && data.profile.club_name !== "クラブ未所属" ? "クリックしてクラブ詳細を表示" : ""}
                       >
                         <Building2 className="w-3.5 h-3.5" />
-                        {data.profile?.club_name || "No Club"}
+                        {(!data.profile?.club_name || data.profile.club_name === "No Club") ? "クラブ未所属" : data.profile.club_name}
                       </span>
                     </div>
                   </div>
@@ -1111,7 +1131,7 @@ export default function DashboardPage() {
                         </div>
                       </div>
                       <div className="flex-1 overflow-hidden">
-                        <h4 className="font-extrabold text-lg truncate tracking-tight">{brawler.name}</h4>
+                        <h4 className="font-extrabold text-lg truncate tracking-tight">{getBrawlerInfo(brawler.name).nameJa}</h4>
                         <div className="flex items-center gap-1.5 mt-0.5 text-xs font-semibold text-muted-foreground">
                           <Trophy className="w-3.5 h-3.5 text-yellow-500" />
                           <span className="text-yellow-600 dark:text-yellow-400">{brawler.trophies || 0}</span>

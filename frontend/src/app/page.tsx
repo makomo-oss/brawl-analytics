@@ -17,13 +17,13 @@ export default function Home() {
         <section className="flex flex-col items-center text-center pt-16 pb-24 md:pt-24 md:pb-32">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/50 dark:bg-white/5 border border-black/5 dark:border-white/10 backdrop-blur-md mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <span className="flex h-2 w-2 rounded-full bg-primary animate-pulse"></span>
-            <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">Brawl Analytics v1.0 is live</span>
+            <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">Brawl Analytics v1.0 公開中</span>
           </div>
           
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-500 dark:from-white dark:via-zinc-200 dark:to-zinc-500 mb-6 max-w-4xl animate-in fade-in slide-in-from-bottom-6 duration-1000">
-            Dominate the Meta.
+            環境を制覇せよ。
             <br className="hidden md:block" />
-            <span className="text-primary">Maximize Your Win Rate.</span>
+            <span className="text-primary">勝率を最大限に高めよう。</span>
           </h1>
           
           <p className="text-lg md:text-xl text-zinc-600 dark:text-zinc-400 max-w-2xl mb-10 leading-relaxed animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-150">
@@ -53,7 +53,7 @@ export default function Home() {
         <section className="py-16 md:py-24 border-t border-zinc-200 dark:border-zinc-800/50">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white mb-4">
-              Core Features
+              主要機能
             </h2>
             <p className="text-zinc-600 dark:text-zinc-400 max-w-2xl mx-auto">
               データ駆動型の分析ツールで、ライバルに差をつけるための3つのコア機能。
@@ -74,7 +74,7 @@ export default function Home() {
                 数百万の試合データから導き出された最新の環境Tier表。マップごとの最適キャラや、有利・不利な対面（カモ・天敵）を一目で把握できます。
               </p>
               <div className="mt-6 flex items-center text-blue-600 dark:text-blue-400 font-medium group-hover:translate-x-2 transition-transform">
-                Explore Tier List <ArrowRight className="ml-2 w-4 h-4" />
+                Tier表を見る <ArrowRight className="ml-2 w-4 h-4" />
               </div>
             </Link>
 
@@ -90,7 +90,7 @@ export default function Home() {
                 自身のプレイスタイルやキャラクターごとの勝率を緻密に分析。成長の軌跡を可視化し、得意・不得意なマップを明らかにします。
               </p>
               <div className="mt-6 flex items-center text-primary font-medium group-hover:translate-x-2 transition-transform">
-                View Dashboard <ArrowRight className="ml-2 w-4 h-4" />
+                ダッシュボードを見る <ArrowRight className="ml-2 w-4 h-4" />
               </div>
             </Link>
 
@@ -106,7 +106,7 @@ export default function Home() {
                 AIによるピック評価機能。「もしあの時、別のキャラを選んでいたら？」をシミュレートし、負けた試合から確実な学びを得られます。
               </p>
               <div className="mt-6 flex items-center text-purple-600 dark:text-purple-400 font-medium group-hover:translate-x-2 transition-transform">
-                Meet AI Coach <ArrowRight className="ml-2 w-4 h-4" />
+                AIコーチを試す <ArrowRight className="ml-2 w-4 h-4" />
               </div>
             </Link>
 
@@ -117,7 +117,7 @@ export default function Home() {
       
       {/* Footer */}
       <footer className="py-8 text-center text-zinc-500 dark:text-zinc-600 border-t border-zinc-200 dark:border-zinc-900 z-10">
-        <p>© 2026 Brawl Analytics. Not affiliated with Supercell.</p>
+        <p>© 2026 Brawl Analytics. Supercellとは提携していません。</p>
       </footer>
     </div>
   );

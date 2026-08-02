@@ -81,38 +81,64 @@ async def run_crawler_task():
                         battle = item.get("battle", {})
                         b_type = battle.get("type")
                         
+                        raw_result = battle.get("result")
+                        rank = battle.get("rank")
+                        trophy_change = battle.get("trophyChange")
+                        mode_str = str(battle.get("mode", "")).lower()
+                        
+                        # Showdownや特殊モード対応の勝率判定
+                        is_win = False
+                        result_str = raw_result
+                        if not result_str:
+                            if rank is not None:
+                                is_win = (rank <= 4) if mode_str == "soloshowdown" else (rank <= 2)
+                                result_str = "victory" if is_win else ("defeat" if rank > 2 else "draw")
+                            elif trophy_change is not None and trophy_change != 0:
+                                is_win = (trophy_change > 0)
+                                result_str = "victory" if is_win else "defeat"
+
                         # ranked=トロフィーマッチ、soloRanked/teamRanked=ガチバトル
-                        if b_type in ["ranked", "soloRanked", "teamRanked"] and battle.get("result"):
+                        if b_type in ["ranked", "soloRanked", "teamRanked"] and result_str:
                             battle_time = item.get("battleTime")
                             match_id = f"{clean_tag}_{battle_time}"
                             
                             original_map_id = item.get("event", {}).get("map", "unknown")
                             map_id = original_map_id
                             
-                            # モックやAPIから取得したチームメンバーを味方/敵に分類
                             hero_used = "unknown"
                             allies = []
                             opponents = []
                             teams = battle.get("teams", [])
+                            players = battle.get("players", [])
                             
-                            # 自チームと敵チームの判定ロジック
-                            for team in teams:
-                                is_my_team = any(p.get("tag", "").replace("%23", "#") == raw_tag for p in team)
-                                team_brawlers = [p.get("brawler", {}).get("name", "unknown") for p in team]
-                                
-                                for p in team:
-                                    ptag = p.get("tag", "")
-                                    if ptag:
-                                        encountered_players.add(ptag.replace("#", ""))
-                                
-                                if is_my_team:
+                            if teams:
+                                for team in teams:
+                                    is_my_team = any(p.get("tag", "").replace("%23", "#").replace("#", "").upper() == clean_tag for p in team)
+                                    team_brawlers = [p.get("brawler", {}).get("name", "unknown") for p in team]
+                                    
                                     for p in team:
-                                        if p.get("tag", "").replace("%23", "#") == raw_tag:
-                                            hero_used = p.get("brawler", {}).get("name", "unknown")
-                                        else:
-                                            allies.append(p.get("brawler", {}).get("name", "unknown"))
-                                else:
-                                    opponents.extend(team_brawlers)
+                                        ptag = p.get("tag", "")
+                                        if ptag:
+                                            encountered_players.add(ptag.replace("#", "").upper())
+                                    
+                                    if is_my_team:
+                                        for p in team:
+                                            if p.get("tag", "").replace("%23", "#").replace("#", "").upper() == clean_tag:
+                                                hero_used = p.get("brawler", {}).get("name", "unknown")
+                                            else:
+                                                allies.append(p.get("brawler", {}).get("name", "unknown"))
+                                    else:
+                                        opponents.extend(team_brawlers)
+                            elif players:
+                                for p in players:
+                                    ptag = p.get("tag", "").replace("#", "").upper()
+                                    if ptag:
+                                        encountered_players.add(ptag)
+                                    bname = p.get("brawler", {}).get("name", "unknown")
+                                    if ptag == clean_tag:
+                                        hero_used = bname
+                                    else:
+                                        opponents.append(bname)
 
                             battle_log_data.append({
                                 "match_id": match_id,
@@ -121,7 +147,7 @@ async def run_crawler_task():
                                 "match_type": b_type,
                                 "mode": battle.get("mode", "unknown"),
                                 "map_id": map_id,
-                                "result": battle.get("result"),
+                                "result": result_str,
                                 "hero_used": hero_used,
                                 "allies": allies,
                                 "opponents": opponents

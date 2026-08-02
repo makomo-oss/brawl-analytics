@@ -79,6 +79,42 @@ async def sync_player(player_tag: str):
         logger.error(f"Sync error: {e}")
         raise HTTPException(status_code=500, detail="Failed to sync player")
 
+def determine_battle_result(battle: dict) -> tuple[str, bool]:
+    """
+    バトルログから勝敗文字列 ("victory"/"defeat"/"draw") と勝敗フラグ (is_win) を決定する。
+    
+    Why:
+    Brawl Stars APIでは Showdown (Solo/Duo/Trio Showdown) や一部特殊モードで
+    battle.result フィールドが存在せず None になる。そのため rank や trophyChange から
+    勝敗を動的に判定してログ消失を防ぐ。
+    """
+    raw_result = battle.get("result")
+    if raw_result:
+        is_win = (raw_result == "victory")
+        return raw_result, is_win
+    
+    rank = battle.get("rank")
+    trophy_change = battle.get("trophyChange")
+    mode = str(battle.get("mode", "")).lower()
+    
+    if rank is not None:
+        if mode == "soloshowdown":
+            is_win = (rank <= 4) or (trophy_change is not None and trophy_change > 0)
+        elif mode in ["duoshowdown", "trioshowdown"]:
+            is_win = (rank <= 2) or (trophy_change is not None and trophy_change > 0)
+        else:
+            is_win = (rank <= 2) or (trophy_change is not None and trophy_change > 0)
+            
+        result_str = "victory" if is_win else ("defeat" if rank > 2 else "draw")
+        return result_str, is_win
+    
+    if trophy_change is not None and trophy_change != 0:
+        is_win = (trophy_change > 0)
+        result_str = "victory" if is_win else "defeat"
+        return result_str, is_win
+
+    return "unknown", False
+
 @router.get("/{player_tag}/dashboard")
 async def get_dashboard(player_tag: str):
     """
@@ -112,44 +148,65 @@ async def get_dashboard(player_tag: str):
         wins = 0
         recent_battles = []
         
-        player_tag_fmt = f"#{player_tag.replace('%23', '').replace('#', '').upper()}"
+        clean_player_tag = player_tag.replace("%23", "").replace("#", "").upper()
+        player_tag_fmt = f"#{clean_player_tag}"
         
         for item in items:
             battle = item.get("battle", {})
             event = item.get("event", {})
             
-            if battle.get("result"):
+            result_str, is_win = determine_battle_result(battle)
+            if result_str != "unknown":
                 total_matches += 1
-                is_win = (battle.get("result") == "victory")
                 if is_win:
                     wins += 1
                     
                 hero_used = "unknown"
-                
                 my_team = []
                 opponent_teams = []
                 
                 # スタープレイヤーの判定
-                star_player_tag = (battle.get("starPlayer") or {}).get("tag", "").replace("#", "")
-                is_star_player = (star_player_tag == player_tag_fmt.replace("#", ""))
+                star_player_tag = (battle.get("starPlayer") or {}).get("tag", "").replace("#", "").upper()
+                is_star_player = (star_player_tag == clean_player_tag)
                 
-                for team in battle.get("teams", []):
-                    is_my_team = False
-                    team_data = []
-                    for p in team:
-                        team_data.append({
+                teams = battle.get("teams", [])
+                players = battle.get("players", [])
+                
+                if teams:
+                    for team in teams:
+                        is_my_team = False
+                        team_data = []
+                        for p in team:
+                            ptag = p.get("tag", "").replace("#", "").upper()
+                            brawler_name = (p.get("brawler") or {}).get("name", "unknown").lower()
+                            team_data.append({
+                                "name": p.get("name", "Unknown"),
+                                "brawler": brawler_name,
+                                "tag": ptag
+                            })
+                            if ptag == clean_player_tag:
+                                is_my_team = True
+                                hero_used = brawler_name
+                        
+                        if is_my_team:
+                            my_team = team_data
+                        else:
+                            opponent_teams.append(team_data)
+                elif players:
+                    # Solo Showdown など
+                    for p in players:
+                        ptag = p.get("tag", "").replace("#", "").upper()
+                        brawler_name = (p.get("brawler") or {}).get("name", "unknown").lower()
+                        p_data = {
                             "name": p.get("name", "Unknown"),
-                            "brawler": (p.get("brawler") or {}).get("name", "unknown").lower(),
-                            "tag": p.get("tag", "").replace("#", "")
-                        })
-                        if p.get("tag") == player_tag_fmt:
-                            is_my_team = True
-                            hero_used = (p.get("brawler") or {}).get("name", "unknown").lower()
-                    
-                    if is_my_team:
-                        my_team = team_data
-                    else:
-                        opponent_teams.append(team_data)
+                            "brawler": brawler_name,
+                            "tag": ptag
+                        }
+                        if ptag == clean_player_tag:
+                            hero_used = brawler_name
+                            my_team.append(p_data)
+                        else:
+                            opponent_teams.append([p_data])
                             
                 if hero_used != "unknown":
                     if hero_used not in char_stats:
@@ -159,7 +216,8 @@ async def get_dashboard(player_tag: str):
                         char_stats[hero_used]["wins"] += 1
                         
                 # モード別統計の集計
-                mode_name = battle.get("mode", "unknown").replace("_", " ").title()
+                raw_mode = battle.get("mode") or event.get("mode") or "unknown"
+                mode_name = raw_mode.replace("_", " ").title()
                 if mode_name not in mode_stats:
                     mode_stats[mode_name] = {"matches": 0, "wins": 0, "star_player": 0, "brawlers": {}}
                 
@@ -177,14 +235,14 @@ async def get_dashboard(player_tag: str):
                 # バトル履歴用データの作成
                 trophy_change = battle.get("trophyChange")
                 if trophy_change is None:
-                    trophy_change = 8 if is_win else (-6 if battle.get("result") == "defeat" else 0)
+                    trophy_change = 8 if is_win else (-6 if result_str == "defeat" else 0)
                 
                 recent_battles.append({
                     "time": item.get("battleTime", ""),
-                    "mode": mode_name,
+                    "mode": raw_mode,
                     "map": event.get("map", "Unknown"),
                     "type": battle.get("type", "unknown"),
-                    "result": battle.get("result", "draw"),
+                    "result": result_str,
                     "hero": hero_used,
                     "trophy_change": trophy_change,
                     "my_team": my_team,

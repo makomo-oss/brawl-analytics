@@ -196,12 +196,46 @@ async def get_dashboard(player_tag: str):
         hidden_weapons = []
         needs_practice = []
         
-        mock_global_win_rates = {"piper": 58.2, "dynamike": 49.5, "spike": 54.0, "colt": 50.0, "shelly": 51.0, "leon": 52.5}
-        
+        # 実データ（macro_map_stats）からキャラクターごとの全体平均勝率を動的計算
+        global_win_rates: dict[str, float] = {}
+        try:
+            db = get_db()
+            macro_res = db.table("macro_map_stats").select("character_id, total_wins, total_matches").execute()
+            if macro_res.data:
+                char_totals: dict[str, dict[str, int]] = {}
+                for row in macro_res.data:
+                    cid = str(row.get("character_id", "")).lower().strip()
+                    tw = row.get("total_wins") or 0
+                    tm = row.get("total_matches") or 0
+                    if cid and tm > 0:
+                        if cid not in char_totals:
+                            char_totals[cid] = {"wins": 0, "matches": 0}
+                        char_totals[cid]["wins"] += tw
+                        char_totals[cid]["matches"] += tm
+                
+                for cid, totals in char_totals.items():
+                    if totals["matches"] > 0:
+                        global_win_rates[cid] = round((totals["wins"] / totals["matches"]) * 100, 1)
+        except Exception as e:
+            logger.warning(f"Failed to fetch global win rates from macro_map_stats: {e}")
+
+        # フォールバック用の一般的キャラクター平均勝率（小文字キー）
+        fallback_global_win_rates: dict[str, float] = {
+            "shelly": 50.8, "colt": 49.2, "bull": 51.5, "brock": 48.9, "el primo": 53.1,
+            "barley": 51.0, "poco": 52.4, "rosa": 52.8, "rico": 50.3, "darryl": 51.9,
+            "penny": 50.1, "carl": 51.2, "jacky": 53.5, "piper": 52.7, "pam": 51.8,
+            "frank": 54.1, "bibi": 52.9, "bea": 50.4, "nani": 49.8, "edgar": 52.6,
+            "mortis": 47.9, "tara": 51.4, "gene": 50.2, "crow": 49.7, "spike": 51.3,
+            "leon": 52.1, "sandy": 53.0, "amber": 52.2, "meg": 53.4, "surge": 51.6
+        }
+
         for char, stats in char_stats.items():
             if stats["matches"] > 0:
+                char_key = char.lower().strip()
                 personal_wr = round((stats["wins"] / stats["matches"]) * 100, 1)
-                global_wr = mock_global_win_rates.get(char, 50.0)
+                
+                # 1. DB集計の最新実効勝率 2. フォールバック辞書 3. デフォルト 51.5% の順で参照
+                global_wr = global_win_rates.get(char_key) or fallback_global_win_rates.get(char_key, 51.5)
                 
                 gap_analysis.append({
                     "char": char,
@@ -210,9 +244,9 @@ async def get_dashboard(player_tag: str):
                     "matches": stats["matches"]
                 })
                 
-                if personal_wr > global_wr + 5.0 and global_wr < 52.0:
+                if personal_wr > global_wr + 4.0 and global_wr < 54.0:
                     hidden_weapons.append(char)
-                elif personal_wr < global_wr - 5.0 and global_wr > 52.0:
+                elif personal_wr < global_wr - 4.0 and global_wr > 48.0:
                     needs_practice.append(char)
                     
         gap_analysis.sort(key=lambda x: x["matches"], reverse=True)

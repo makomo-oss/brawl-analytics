@@ -210,6 +210,7 @@ export function getModeIconUrl(mode: string) {
     "brawlball": "48000005",
     "soloshowdown": "48000006",
     "duoshowdown": "48000009",
+    "trioshowdown": "48000038",
     "hotzone": "48000017",
     "knockout": "48000020",
     "basketbrawl": "48000022",
@@ -226,6 +227,14 @@ export function getModeIconUrl(mode: string) {
     "drumroll": "48000039"
   }
   
-  const iconId = MODE_ICON_MAP[normalizedMode] || "48000000"
+  let iconId = MODE_ICON_MAP[normalizedMode]
+  if (!iconId) {
+    if (normalizedMode.includes("showdown")) {
+      iconId = "48000038" // Trio/Showdown fallback
+    } else {
+      iconId = "48000000" // General fallback
+    }
+  }
+  
   return `https://cdn.brawlify.com/game-modes/regular/${iconId}.png`
 }

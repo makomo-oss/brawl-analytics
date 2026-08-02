@@ -9,7 +9,15 @@ def format_char_name(char_id: str) -> str:
     if not char_id: return "Unknown"
     return char_id.replace("_", " ").title()
 
-def wilson_lower_bound(wins: int, total: int, z: float = 1.96) -> float:
+def wilson_lower_bound(wins: int, total: int, z: float = 1.645) -> float:
+    """
+    ウィルソン信頼区間の下限値を計算する。
+    
+    Why:
+    z=1.96(95%信頼度)はランキングアルゴリズムとしては過度に保守的であり、
+    小サンプル時に下限値が大きく低下する問題があったため、デフォルトを z=1.645(90%信頼度) に調整。
+    これにより、実効的な実勝率を反映しつつノイズを防ぐバランスを取る。
+    """
     if total <= 0 or wins < 0:
         return 0.0
     # 異常データ対策: 勝利数は最大でも試合数と同じにする
@@ -337,17 +345,18 @@ def get_character_detail(character_id: str, type: str = "global", sub_type: str 
             w = c.get("win_count") or 0
             losses = m - w
             
-            # 有利スコア: 「確実にこれ以上は勝てる」確率の下限
-            c["advantage_score"] = wilson_lower_bound(w, m)
-            # 不利スコア: 「確実にこれ以上は負ける」確率の下限
-            c["disadvantage_score"] = wilson_lower_bound(losses, m)
+            # Why: 対面相性はサンプル数が小さくなりやすいため、z=1.28(80%信頼度)を明示的に使用し、
+            # 勝率が高い対面が過度なペナルティで埋もれるのを防止
+            c["advantage_score"] = wilson_lower_bound(w, m, z=1.28)
+            c["disadvantage_score"] = wilson_lower_bound(losses, m, z=1.28)
 
         # カモ (有利な対面: 有利スコアが高い順)
         counters.sort(key=lambda x: x.get("advantage_score", 0.0), reverse=True)
         for c in counters:
             if len(kamo) >= 5: break
             enemy_id = c["char_b"]
-            if enemy_id == "unknown" or c["advantage_score"] == 0:
+            # Why: 3試合未満の極小サンプルノイズを排除
+            if enemy_id == "unknown" or c.get("match_count", 0) < 3 or c["advantage_score"] == 0:
                 continue
             kamo.append({
                 "brawler": enemy_id,
@@ -361,7 +370,7 @@ def get_character_detail(character_id: str, type: str = "global", sub_type: str 
         for c in counters:
             if len(tenteki) >= 5: break
             enemy_id = c["char_b"]
-            if enemy_id == "unknown" or c["disadvantage_score"] == 0:
+            if enemy_id == "unknown" or c.get("match_count", 0) < 3 or c["disadvantage_score"] == 0:
                 continue
             tenteki.append({
                 "brawler": enemy_id,

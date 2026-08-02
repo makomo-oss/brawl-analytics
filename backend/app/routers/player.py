@@ -215,8 +215,19 @@ async def get_dashboard(player_tag: str):
                     if is_win:
                         char_stats[hero_used]["wins"] += 1
                         
-                # モード別統計の集計
-                raw_mode = battle.get("mode") or event.get("mode") or "unknown"
+                # モード別統計の集計（Why: API内部仕様で event.mode に trioShowdown 等が入り battle.mode が duoShowdown と誤表記される問題に対応）
+                event_mode = event.get("mode")
+                battle_mode = battle.get("mode")
+                if event_mode and event_mode != "unknown":
+                    raw_mode = event_mode
+                elif battle_mode and battle_mode != "unknown":
+                    raw_mode = battle_mode
+                else:
+                    raw_mode = "unknown"
+
+                if raw_mode in ["duoShowdown", "duo_showdown"] and teams and any(len(t) >= 3 for t in teams):
+                    raw_mode = "trioShowdown"
+
                 mode_name = raw_mode.replace("_", " ").title()
                 if mode_name not in mode_stats:
                     mode_stats[mode_name] = {"matches": 0, "wins": 0, "star_player": 0, "brawlers": {}}

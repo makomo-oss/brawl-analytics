@@ -13,6 +13,8 @@ export const modeTranslations: Record<string, string> = {
   "wipeout5V5": "ワイプアウト (5v5)",
   "soloShowdown": "ソロ バトルロイヤル",
   "duoShowdown": "デュオ バトルロイヤル",
+  "trioShowdown": "トリオ バトルロイヤル",
+  "trio_showdown": "トリオ バトルロイヤル",
   "duels": "デュエル",
   "basketBrawl": "バスケブロ",
   "volleyBrawl": "バレーブロ",
@@ -35,7 +37,16 @@ export const modeTranslations: Record<string, string> = {
 };
 
 export function translateMode(modeName: string): string {
-  return modeTranslations[modeName] || modeName;
+  if (!modeName) return "不明";
+  if (modeTranslations[modeName]) return modeTranslations[modeName];
+  
+  // キャメルケース化/スネークケース正規化マッピング
+  const cleanKey = modeName.replace(/[\s_\-]/g, "").toLowerCase();
+  for (const [k, v] of Object.entries(modeTranslations)) {
+    if (k.toLowerCase() === cleanKey) return v;
+  }
+  
+  return modeName;
 }
 
 export const mapTranslations: Record<string, string> = {

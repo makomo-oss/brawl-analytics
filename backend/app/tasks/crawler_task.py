@@ -140,12 +140,24 @@ async def run_crawler_task():
                                     else:
                                         opponents.append(bname)
 
+                            event_mode = item.get("event", {}).get("mode")
+                            battle_mode = battle.get("mode")
+                            if event_mode and event_mode != "unknown":
+                                final_mode = event_mode
+                            elif battle_mode and battle_mode != "unknown":
+                                final_mode = battle_mode
+                            else:
+                                final_mode = "unknown"
+
+                            if final_mode in ["duoShowdown", "duo_showdown"] and teams and any(len(t) >= 3 for t in teams):
+                                final_mode = "trioShowdown"
+
                             battle_log_data.append({
                                 "match_id": match_id,
                                 "player_tag": clean_tag,
                                 "match_at": datetime.strptime(battle_time, "%Y%m%dT%H%M%S.%fZ").isoformat() if "T" in battle_time else datetime.now(timezone.utc).isoformat(),
                                 "match_type": b_type,
-                                "mode": battle.get("mode", "unknown"),
+                                "mode": final_mode,
                                 "map_id": map_id,
                                 "result": result_str,
                                 "hero_used": hero_used,

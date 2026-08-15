@@ -47,13 +47,19 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, in
     except:
         pass
         
-    # macro_map_statsからデータを取得
+    # macro_map_statsからデータを安全に全件取得 (ページネーション対応)
+    data = []
     try:
-        query = db.table("macro_map_stats").select("*")
-        # query.eq などの事前絞り込みは行わず、Python側で柔軟にフィルタリングする
-        # ※本来は上限があるためページネーションが必要ですが、キャラ数×マップ数なら数千件なので一括取得
-        res = query.limit(10000).execute()
-        data = res.data
+        offset = 0
+        limit = 5000
+        while True:
+            res = db.table("macro_map_stats").select("*").range(offset, offset + limit - 1).execute()
+            if not res.data:
+                break
+            data.extend(res.data)
+            if len(res.data) < limit:
+                break
+            offset += limit
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {e}")
         

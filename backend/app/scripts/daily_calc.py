@@ -3,27 +3,35 @@ import sys
 import logging
 from datetime import datetime, timezone
 import pandas as pd
+from dotenv import load_dotenv
 from supabase import create_client, Client
 
-# プロジェクトルートをパスに追加
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+# プロジェクトルートとbackendをパスに追加
+backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(backend_dir)
+
+load_dotenv(os.path.join(backend_dir, ".env"))
+load_dotenv(os.path.join(os.path.dirname(backend_dir), ".env"))
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+def get_supabase_client() -> Client:
+    """Supabaseクライアントを取得する"""
+    url = os.getenv("SUPABASE_URL")
+    key = os.getenv("SUPABASE_KEY")
+    if not url or not key:
+        from app.database import SUPABASE_URL, SUPABASE_KEY
+        url = url or SUPABASE_URL
+        key = key or SUPABASE_KEY
+    if not url or not key:
+        raise ValueError("Supabase credentials not found in environment variables.")
+    return create_client(url, key)
 
-if not SUPABASE_URL or not SUPABASE_KEY:
-    logger.error("Supabase credentials not found. Exiting.")
-    sys.exit(1)
-
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-
-def fetch_recent_matches():
-    """過去30日間のマッチ履歴を取得"""
+def fetch_recent_matches(client: Client = None) -> pd.DataFrame:
+    """過去のマッチ履歴を全件取得（ページネーション使用）"""
+    supabase = client or get_supabase_client()
     logger.info("Fetching recent matches from Supabase...")
-    # 全件取得 (ページネーションを使用)
     all_data = []
     limit = 1000
     offset = 0
@@ -207,13 +215,18 @@ def calc_dynamic_counters(df: pd.DataFrame):
         
     return counter_list
 
-def main():
+def run_daily_calculation(client: Client = None):
+    """
+    マッチ履歴を集計し、macro_map_stats と dynamic_counters を最新化する関数。
+    クローラー完了時やcronバッチから呼び出される。
+    """
+    supabase = client or get_supabase_client()
     logger.info("Starting Daily Calculation Batch...")
-    df = fetch_recent_matches()
+    df = fetch_recent_matches(supabase)
     
     if df.empty:
         logger.info("No data found. Exiting.")
-        return
+        return {"macro_stats_count": 0, "dynamic_counters_count": 0}
         
     macro_stats = calc_macro_map_stats(df)
     dynamic_counters = calc_dynamic_counters(df)
@@ -239,6 +252,13 @@ def main():
             supabase.table("dynamic_counters").upsert(batch).execute()
             
     logger.info("Daily Calculation Batch completed successfully.")
+    return {
+        "macro_stats_count": len(macro_stats),
+        "dynamic_counters_count": len(dynamic_counters)
+    }
+
+def main():
+    run_daily_calculation()
 
 if __name__ == "__main__":
     main()

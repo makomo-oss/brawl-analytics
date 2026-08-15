@@ -275,6 +275,15 @@ async def run_crawler_task():
                 logger.info(f"Successfully upserted {len(fallback_matches)} matches via fallback")
             except Exception as fallback_err:
                 logger.error(f"Failed fallback match upsert: {fallback_err}")
+
+    # 5. クロール完了後に自動で macro_map_stats と dynamic_counters を最新集計・更新する
+    try:
+        logger.info("Triggering automatic macro statistics and counter calculation...")
+        from app.scripts.daily_calc import run_daily_calculation
+        calc_result = run_daily_calculation(db)
+        logger.info(f"Automatic calculation completed: {calc_result}")
+    except Exception as calc_err:
+        logger.error(f"Failed to run automatic macro calculations after crawl: {calc_err}")
             
     logger.info("Crawler task completed successfully.")
 

@@ -47,19 +47,19 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, in
     except:
         pass
         
-    # macro_map_statsからデータを安全に全件取得 (ページネーション対応)
+    # macro_map_statsからデータを安全に全件取得 (Supabaseの1000件上限に対応した確実なページネーション)
     data = []
     try:
         offset = 0
-        limit = 5000
+        PAGE_SIZE = 1000
         while True:
-            res = db.table("macro_map_stats").select("*").range(offset, offset + limit - 1).execute()
+            res = db.table("macro_map_stats").select("*").range(offset, offset + PAGE_SIZE - 1).execute()
             if not res.data:
                 break
             data.extend(res.data)
-            if len(res.data) < limit:
+            if len(res.data) < PAGE_SIZE:
                 break
-            offset += limit
+            offset += PAGE_SIZE
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {e}")
         
@@ -219,20 +219,28 @@ def get_categories(type: str = "global"):
     mode_to_maps: dict[str, list[str]] = {}
 
     try:
-        # --- Step 1: macro_map_stats からマップ一覧と試合数を取得 ---
-        res = db.table("macro_map_stats").select("map_id, match_type, total_matches").execute()
+        # --- Step 1: macro_map_stats からマップ一覧と試合数を安全に全件取得 ---
         map_counts: dict[str, int] = {}
-        for row in res.data:
-            m_id = row.get("map_id")
-            if not m_id:
-                continue
-            clean_m_id = str(m_id).replace("gachi_", "")
-            matches = row.get("total_matches") or 0
-            if type == "gachi":
-                if row.get("match_type") in ["ranked", "soloRanked", "teamRanked"]:
+        offset = 0
+        PAGE_SIZE = 1000
+        while True:
+            res = db.table("macro_map_stats").select("map_id, match_type, total_matches").range(offset, offset + PAGE_SIZE - 1).execute()
+            if not res.data:
+                break
+            for row in res.data:
+                m_id = row.get("map_id")
+                if not m_id:
+                    continue
+                clean_m_id = str(m_id).replace("gachi_", "")
+                matches = row.get("total_matches") or 0
+                if type == "gachi":
+                    if row.get("match_type") in ["ranked", "soloRanked", "teamRanked"]:
+                        map_counts[clean_m_id] = map_counts.get(clean_m_id, 0) + matches
+                else:
                     map_counts[clean_m_id] = map_counts.get(clean_m_id, 0) + matches
-            else:
-                map_counts[clean_m_id] = map_counts.get(clean_m_id, 0) + matches
+            if len(res.data) < PAGE_SIZE:
+                break
+            offset += PAGE_SIZE
         
         # 10試合以上の十分なサンプルがあるマップのみを優先抽出し、少数サンプルマップを除外
         filtered_maps = [m for m, count in map_counts.items() if count >= 10]

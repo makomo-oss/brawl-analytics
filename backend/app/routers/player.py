@@ -265,13 +265,17 @@ async def get_dashboard(player_tag: str):
         hidden_weapons = []
         needs_practice = []
         
-        # 実データ（macro_map_stats）からキャラクターごとの全体平均勝率を動的計算
+        # 実データ（macro_map_stats）からキャラクターごとの全体平均勝率を動的計算 (全件ページネーション対応)
         global_win_rates: dict[str, float] = {}
         try:
             db = get_db()
-            macro_res = db.table("macro_map_stats").select("character_id, total_wins, total_matches").execute()
-            if macro_res.data:
-                char_totals: dict[str, dict[str, int]] = {}
+            char_totals: dict[str, dict[str, int]] = {}
+            offset = 0
+            PAGE_SIZE = 1000
+            while True:
+                macro_res = db.table("macro_map_stats").select("character_id, total_wins, total_matches").range(offset, offset + PAGE_SIZE - 1).execute()
+                if not macro_res.data:
+                    break
                 for row in macro_res.data:
                     cid = str(row.get("character_id", "")).lower().strip()
                     tw = row.get("total_wins") or 0
@@ -281,10 +285,13 @@ async def get_dashboard(player_tag: str):
                             char_totals[cid] = {"wins": 0, "matches": 0}
                         char_totals[cid]["wins"] += tw
                         char_totals[cid]["matches"] += tm
+                if len(macro_res.data) < PAGE_SIZE:
+                    break
+                offset += PAGE_SIZE
                 
-                for cid, totals in char_totals.items():
-                    if totals["matches"] > 0:
-                        global_win_rates[cid] = round((totals["wins"] / totals["matches"]) * 100, 1)
+            for cid, totals in char_totals.items():
+                if totals["matches"] > 0:
+                    global_win_rates[cid] = round((totals["wins"] / totals["matches"]) * 100, 1)
         except Exception as e:
             logger.warning(f"Failed to fetch global win rates from macro_map_stats: {e}")
 

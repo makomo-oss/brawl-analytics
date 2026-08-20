@@ -50,18 +50,19 @@ def fetch_recent_matches(client: Client = None) -> pd.DataFrame:
 
 def fetch_player_rank_segments(client: Client = None) -> dict:
     """
-    プレイヤーをガチバトルのランク帯（エリート、レジェンド、マスター・プロ、エリート以上総合）に分類してタグセットを返す。
-    Rank 13-15 = Mythic (エリート)
-    Rank 16-18 = Legendary (レジェンド)
-    Rank 19+   = Masters & Pro (マスター・プロ)
+    プレイヤーを純粋なガチバトルのランク階級（エリート, レジェンド, マスター）のみで分類する。
+    ※ユーザー指摘に基づき、トロフィー数はガチバトルのランクと無関係なため一切使用しない。
+    - Rank 13〜15: Mythic (エリート)
+    - Rank 16〜18: Legendary (レジェンド)
+    - Rank 19+:    Masters (マスター・プロ)
     """
     supabase = client or get_supabase_client()
-    logger.info("Fetching player rank segmentation from Supabase...")
+    logger.info("Fetching pure ranked ranks (Rank 1-19+) from Supabase...")
     all_players = []
     offset = 0
     limit = 1000
     while True:
-        res = supabase.table("players").select("player_tag, trophies, highest_trophies, unlocked_characters").range(offset, offset + limit - 1).execute()
+        res = supabase.table("players").select("player_tag, unlocked_characters").range(offset, offset + limit - 1).execute()
         if not res.data:
             break
         all_players.extend(res.data)
@@ -77,9 +78,6 @@ def fetch_player_rank_segments(client: Client = None) -> dict:
         tag = str(p.get("player_tag", "")).replace("#", "").upper().strip()
         if not tag:
             continue
-        trophies = int(p.get("trophies") or 0)
-        highest_trophies = int(p.get("highest_trophies") or 0)
-        max_trophies = max(trophies, highest_trophies)
         
         chars_json = p.get("unlocked_characters") or {}
         if isinstance(chars_json, str):
@@ -89,15 +87,16 @@ def fetch_player_rank_segments(client: Client = None) -> dict:
             
         ranked_rank = int(chars_json.get("highest_ranked_rank") or chars_json.get("ranked_rank") or 0)
         
-        if ranked_rank >= 19 or max_trophies >= 60000:
+        # 純粋なガチバトルランク（Rank 13+ = エリート, 16+ = レジェンド, 19+ = マスター）
+        if ranked_rank >= 19:
             masters_tags.add(tag)
-        elif ranked_rank >= 16 or max_trophies >= 45000:
+        elif ranked_rank >= 16:
             legendary_tags.add(tag)
-        elif ranked_rank >= 13 or max_trophies >= 30000:
+        elif ranked_rank >= 13:
             mythic_tags.add(tag)
             
     all_elite_tags = mythic_tags | legendary_tags | masters_tags
-    logger.info(f"Segmented players: Mythic={len(mythic_tags)}, Legendary={len(legendary_tags)}, Masters={len(masters_tags)}, Total Elite+={len(all_elite_tags)}")
+    logger.info(f"Pure Rank Segmentation: Mythic={len(mythic_tags)}, Legendary={len(legendary_tags)}, Masters={len(masters_tags)}, Total Elite+={len(all_elite_tags)}")
     
     return {
         "mythic": mythic_tags,

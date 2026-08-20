@@ -4,14 +4,27 @@ import { useState, useEffect, useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { translateMode, translateMap, getModeIconUrl } from "@/lib/translations"
 import { getBrawlerInfo, BRAWLER_MAP } from "@/lib/brawlers"
-import { Swords, Ban, Check, RefreshCw, Trophy, Target, User } from "lucide-react"
+import { Swords, Ban, Check, RefreshCw, Trophy, Target, User, Search, X } from "lucide-react"
 import { API_URL } from "@/lib/config"
+
+function toKatakana(str: string): string {
+  return str.replace(/[\u3041-\u3096]/g, match =>
+    String.fromCharCode(match.charCodeAt(0) + 0x60)
+  );
+}
+
+function toHiragana(str: string): string {
+  return str.replace(/[\u30A1-\u30F6]/g, match =>
+    String.fromCharCode(match.charCodeAt(0) - 0x60)
+  );
+}
 
 type Phase = "setup" | "ban" | "pick" | "done"
 type Team = "blue" | "red"
@@ -40,6 +53,9 @@ export default function DraftCompanionPage() {
   const [enemyBans, setEnemyBans] = useState<string[]>([])
   const [bluePicks, setBluePicks] = useState<string[]>([])
   const [redPicks, setRedPicks] = useState<string[]>([])
+  
+  // Character Search State
+  const [charSearchQuery, setCharSearchQuery] = useState("")
   
   // Data State
   const [metaData, setMetaData] = useState<any>(null)
@@ -78,6 +94,32 @@ export default function DraftCompanionPage() {
     }
   }, [availableMaps, selectedMap])
 
+  // 検索クエリに基づきキャラクターを高速フィルタリング (ひらがな・カタカナ・英語・ローマ字対応)
+  const filteredBrawlers = useMemo(() => {
+    const allChars = Object.keys(BRAWLER_MAP)
+    const q = charSearchQuery.trim().toLowerCase()
+    if (!q) return allChars
+
+    const qKata = toKatakana(q)
+    const qHira = toHiragana(q)
+
+    return allChars.filter(charKey => {
+      const info = getBrawlerInfo(charKey)
+      const nameEn = charKey.toLowerCase()
+      const nameJa = info.nameJa.toLowerCase()
+      const nameJaKata = toKatakana(nameJa)
+      const nameJaHira = toHiragana(nameJa)
+
+      return (
+        nameEn.includes(q) ||
+        nameJa.includes(q) ||
+        nameJaKata.includes(qKata) ||
+        nameJaHira.includes(qHira) ||
+        charKey.toLowerCase().includes(q)
+      )
+    })
+  }, [charSearchQuery])
+
   // ドラフト開始時にメタデータをフェッチ
   const handleStartDraft = async () => {
     setLoading(true)
@@ -102,6 +144,7 @@ export default function DraftCompanionPage() {
     setEnemyBans([])
     setBluePicks([])
     setRedPicks([])
+    setCharSearchQuery("")
     setMetaData(null)
   }
 
@@ -568,37 +611,74 @@ export default function DraftCompanionPage() {
 
           {/* Character Pool */}
           {phase !== "done" && (
-            <Card>
-              <CardHeader className="py-3">
-                <CardTitle className="text-sm text-muted-foreground">キャラクターを選択して割り当てる</CardTitle>
+            <Card className="border-primary/20 shadow-md">
+              <CardHeader className="py-3 px-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b bg-secondary/10">
+                <div className="flex items-center gap-2">
+                  <CardTitle className="text-sm font-bold text-foreground">キャラクター選択</CardTitle>
+                  <Badge variant="secondary" className="text-xs font-mono h-5 px-1.5">
+                    {filteredBrawlers.length} / {Object.keys(BRAWLER_MAP).length}
+                  </Badge>
+                </div>
+                
+                {/* リアルタイム高速検索バー */}
+                <div className="relative w-full sm:w-64">
+                  <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                  <Input
+                    placeholder="キャラ名検索 (ひらがな/英語)..."
+                    value={charSearchQuery}
+                    onChange={(e) => setCharSearchQuery(e.target.value)}
+                    className="h-8 pl-8 pr-8 text-xs bg-background/80 focus-visible:ring-1"
+                  />
+                  {charSearchQuery && (
+                    <button
+                      onClick={() => setCharSearchQuery("")}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-0.5"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
               </CardHeader>
-              <CardContent>
-                <ScrollArea className="h-64 pr-4">
-                  <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3">
-                    {Object.keys(BRAWLER_MAP).map(charName => {
-                      const info = getBrawlerInfo(charName)
-                      const excluded = isExcluded(charName)
-                      return (
-                        <div 
-                          key={charName} 
-                          onClick={() => !excluded && handleSelectCharacter(charName)}
-                          className={`flex flex-col items-center gap-1 cursor-pointer transition-transform hover:scale-105 ${excluded ? 'opacity-20 cursor-not-allowed grayscale' : ''}`}
-                        >
-                          <div className="w-8 h-8 sm:w-12 sm:h-12 border-2 border-black/20 dark:border-white/10 group-hover:border-primary transition-colors shrink-0 rounded-md bg-primary/10 relative overflow-hidden flex items-center justify-center">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img 
-                              src={info.imageUrl} 
-                              alt={info.nameJa} 
-                              className="object-cover w-full h-full rounded-sm absolute inset-0 z-10" 
-                              onError={(e) => { e.currentTarget.src = 'https://cdn.brawlify.com/brawler/shelly.png'; }}
-                            />
-                            <User className="w-4 h-4 text-primary/40" />
+              <CardContent className="p-4">
+                <ScrollArea className="h-64 pr-3">
+                  {filteredBrawlers.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-48 text-muted-foreground gap-2">
+                      <Search className="w-8 h-8 opacity-40" />
+                      <p className="text-sm">「{charSearchQuery}」に一致するキャラクターは見つかりませんでした</p>
+                      <Button variant="ghost" size="sm" onClick={() => setCharSearchQuery("")} className="text-xs">
+                        検索をクリア
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3">
+                      {filteredBrawlers.map(charName => {
+                        const info = getBrawlerInfo(charName)
+                        const excluded = isExcluded(charName)
+                        return (
+                          <div 
+                            key={charName} 
+                            onClick={() => !excluded && handleSelectCharacter(charName)}
+                            className={`flex flex-col items-center gap-1 cursor-pointer transition-all hover:scale-105 group ${excluded ? 'opacity-20 cursor-not-allowed grayscale' : ''}`}
+                            title={info.nameJa}
+                          >
+                            <div className="w-9 h-9 sm:w-12 sm:h-12 border-2 border-black/20 dark:border-white/10 group-hover:border-primary transition-colors shrink-0 rounded-md bg-primary/10 relative overflow-hidden flex items-center justify-center shadow-sm">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img 
+                                src={info.imageUrl} 
+                                alt={info.nameJa} 
+                                className="object-cover w-full h-full rounded-sm absolute inset-0 z-10" 
+                                onError={(e) => { e.currentTarget.src = 'https://cdn.brawlify.com/brawler/shelly.png'; }}
+                              />
+                              <User className="w-4 h-4 text-primary/40" />
+                            </div>
+                            <span className="text-[10px] font-medium truncate w-full text-center group-hover:text-primary transition-colors">
+                              {info.nameJa}
+                            </span>
                           </div>
-                          <span className="text-[10px] truncate w-full text-center">{info.nameJa}</span>
-                        </div>
-                      )
-                    })}
-                  </div>
+                        )
+                      })}
+                    </div>
+                  )}
                 </ScrollArea>
               </CardContent>
             </Card>

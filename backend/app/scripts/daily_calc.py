@@ -1,5 +1,7 @@
 import os
 import sys
+import json
+import asyncio
 import logging
 from datetime import datetime, timezone
 import pandas as pd
@@ -12,6 +14,8 @@ sys.path.append(backend_dir)
 
 load_dotenv(os.path.join(backend_dir, ".env"))
 load_dotenv(os.path.join(os.path.dirname(backend_dir), ".env"))
+
+from app.services.brawl_api import get_player
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -27,6 +31,50 @@ def get_supabase_client() -> Client:
     if not url or not key:
         raise ValueError("Supabase credentials not found in environment variables.")
     return create_client(url, key)
+
+async def auto_sync_missing_player_ranks(missing_tags: list[str], supabase: Client):
+    """
+    集計時にガチバトルランクが未取得（未同期）のプレイヤーが存在した場合、
+    Brawl Stars APIから非同期並列で自動補完同期（Auto-Heal）する。
+    """
+    if not missing_tags:
+        return
+    logger.info(f"Auto-healing {len(missing_tags)} un-synced player ranks from Brawl API...")
+    semaphore = asyncio.Semaphore(20)
+    
+    async def fetch_one(tag: str):
+        async with semaphore:
+            try:
+                p_info = await get_player(tag)
+                if not p_info: return None
+                c_rank = p_info.get("rankedRank") or 0
+                c_name = p_info.get("rankedRankName") or ""
+                h_rank = p_info.get("highestAllTimeRankedRank") or p_info.get("highestSeasonRankedRank") or c_rank
+                h_name = p_info.get("highestAllTimeRankedRankName") or p_info.get("highestSeasonRankedRankName") or c_name
+                return {
+                    "player_tag": tag,
+                    "name": p_info.get("name", "Unknown"),
+                    "trophies": p_info.get("trophies", 0),
+                    "highest_trophies": p_info.get("highestTrophies", 0),
+                    "unlocked_characters": {
+                        "ranked_rank": c_rank,
+                        "highest_ranked_rank": h_rank,
+                        "ranked_name": c_name,
+                        "highest_ranked_name": h_name
+                    },
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }
+            except Exception:
+                return None
+
+    # 最大300件ずつ自己修復
+    tasks = [fetch_one(t) for t in missing_tags[:300]]
+    results = await asyncio.gather(*tasks)
+    valid_updates = [r for r in results if r is not None]
+    if valid_updates:
+        for i in range(0, len(valid_updates), 100):
+            supabase.table("players").upsert(valid_updates[i:i+100]).execute()
+        logger.info(f"Successfully auto-healed {len(valid_updates)} player profiles!")
 
 def fetch_recent_matches(client: Client = None) -> pd.DataFrame:
     """過去のマッチ履歴を全件取得（ページネーション使用）"""
@@ -48,10 +96,10 @@ def fetch_recent_matches(client: Client = None) -> pd.DataFrame:
     logger.info(f"Fetched {len(all_data)} match records.")
     return pd.DataFrame(all_data)
 
-def fetch_player_rank_segments(client: Client = None) -> dict:
+def fetch_player_rank_segments(client: Client = None, match_df: pd.DataFrame = None) -> dict:
     """
     プレイヤーを純粋なガチバトルのランク階級（エリート, レジェンド, マスター）のみで分類する。
-    ※ユーザー指摘に基づき、トロフィー数はガチバトルのランクと無関係なため一切使用しない。
+    未同期のプレイヤーがいれば自動補完同期（Auto-Heal）を実行。
     - Rank 13〜15: Mythic (エリート)
     - Rank 16〜18: Legendary (レジェンド)
     - Rank 19+:    Masters (マスター・プロ)
@@ -73,6 +121,7 @@ def fetch_player_rank_segments(client: Client = None) -> dict:
     mythic_tags = set()
     legendary_tags = set()
     masters_tags = set()
+    synced_tags = set()
     
     for p in all_players:
         tag = str(p.get("player_tag", "")).replace("#", "").upper().strip()
@@ -81,11 +130,12 @@ def fetch_player_rank_segments(client: Client = None) -> dict:
         
         chars_json = p.get("unlocked_characters") or {}
         if isinstance(chars_json, str):
-            import json
             try: chars_json = json.loads(chars_json)
             except: chars_json = {}
             
         ranked_rank = int(chars_json.get("highest_ranked_rank") or chars_json.get("ranked_rank") or 0)
+        if ranked_rank > 0 or "highest_ranked_name" in chars_json:
+            synced_tags.add(tag)
         
         # 純粋なガチバトルランク（Rank 13+ = エリート, 16+ = レジェンド, 19+ = マスター）
         if ranked_rank >= 19:
@@ -94,6 +144,19 @@ def fetch_player_rank_segments(client: Client = None) -> dict:
             legendary_tags.add(tag)
         elif ranked_rank >= 13:
             mythic_tags.add(tag)
+            
+    # Auto-Heal: マッチ履歴に存在するがランク未同期のタグを自動検知して即時補完
+    if match_df is not None and "player_tag" in match_df.columns:
+        match_tags = set(match_df["player_tag"].astype(str).str.replace("#", "").str.upper().str.strip().unique())
+        missing = list(match_tags - synced_tags)
+        if missing:
+            logger.info(f"Detected {len(missing)} un-synced players in battle logs. Triggering Auto-Heal...")
+            try:
+                asyncio.run(auto_sync_missing_player_ranks(missing, supabase))
+                # 補完後に再読み込み
+                return fetch_player_rank_segments(supabase, match_df=None)
+            except Exception as e:
+                logger.warning(f"Auto-heal skipped or failed: {e}")
             
     all_elite_tags = mythic_tags | legendary_tags | masters_tags
     logger.info(f"Pure Rank Segmentation: Mythic={len(mythic_tags)}, Legendary={len(legendary_tags)}, Masters={len(masters_tags)}, Total Elite+={len(all_elite_tags)}")
@@ -320,7 +383,7 @@ def run_daily_calculation(client: Client = None):
         logger.info("No data found. Exiting.")
         return {"macro_stats_count": 0, "dynamic_counters_count": 0}
         
-    rank_segments = fetch_player_rank_segments(supabase)
+    rank_segments = fetch_player_rank_segments(supabase, match_df=df)
     macro_stats = calc_macro_map_stats(df, rank_segments)
     dynamic_counters = calc_dynamic_counters(df)
     

@@ -98,11 +98,11 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
         # ガチバトル指定の場合: ランク帯（all, mythic, legendary, masters）で分岐
         if type == "gachi":
             target_match_type = {
-                "all": ["gachi", "soloRanked", "teamRanked"],
+                "all": ["gachi"],
                 "mythic": ["gachi_mythic"],
                 "legendary": ["gachi_legendary"],
                 "masters": ["gachi_masters"]
-            }.get(rank_tier, ["gachi", "soloRanked", "teamRanked"])
+            }.get(rank_tier, ["gachi"])
             
             if match_type not in target_match_type:
                 continue

@@ -147,10 +147,9 @@ def calc_macro_map_stats(df: pd.DataFrame, rank_segments: dict = None):
     # 集計データセットの構築
     dfs_to_aggregate = [df.copy()]
 
-    # 1. ガチバトル総合 (エリート以上: Mythic, Legendary, Masters, Pro)
-    is_elite = df["clean_tag"].isin(rank_segments.get("all_elite", set()))
-    is_ranked = df["match_type"].isin(["soloRanked", "teamRanked"])
-    df_gachi_all = df[is_elite | is_ranked].copy()
+    # 1. ガチバトル総合 (エリート以上: Mythic, Legendary, Masters, Pro のみ 100% 厳密抽出)
+    # 下位ランク帯（ダイヤ以下）の混入を完全にゼロにするため、all_elite タグで厳密抽出
+    df_gachi_all = df[df["clean_tag"].isin(rank_segments.get("all_elite", set()))].copy()
     if not df_gachi_all.empty:
         df_gachi_all["match_type"] = "gachi"
         dfs_to_aggregate.append(df_gachi_all)

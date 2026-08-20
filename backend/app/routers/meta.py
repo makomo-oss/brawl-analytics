@@ -143,11 +143,9 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, in
     global_total_matches = sum(s["total_matches"] for s in char_stats.values())
     if global_total_matches == 0: global_total_matches = 1
     
-    # 対象キャラ母集団全体での使用率（ピック率）の平均と標準偏差を算出し、全体ピック偏差値を計算
-    all_use_rates = [(s["total_matches"] / global_total_matches * 100) for s in char_stats.values()]
-    mean_use = (sum(all_use_rates) / len(all_use_rates)) if all_use_rates else 1.0
-    variance_use = sum((x - mean_use) ** 2 for x in all_use_rates) / len(all_use_rates) if all_use_rates else 1.0
-    std_use = math.sqrt(variance_use) if variance_use > 0 else 1.0
+    # 対象キャラ母集団の総数 K と、均等に使用された場合の理論使用割合 r_expected (1/K)
+    K = len(char_stats)
+    r_expected = 1.0 / K if K > 0 else 0.01
 
     for cid, stats in char_stats.items():
         tm = stats["total_matches"]
@@ -156,18 +154,28 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, in
         # 表示用の実勝率
         actual_wr = (tw / tm * 100) if tm > 0 else 50.0
         
-        # ランク付け用の信頼勝率（ウィルソンスコア下限）
-        ranking_wr = wilson_lower_bound(tw, tm) * 100
+        # ランク付け用の信頼勝率（ウィルソンスコア下限 z=1.645）
+        ranking_wr = wilson_lower_bound(tw, tm, z=1.645) * 100
         
-        # 全体ピック率偏差値（50基準、25〜75にクランプ）
-        # Why: マップ単体の偏差値平均だと少数ニッチキャラも50前後になってしまうため、
-        # 対象抽出条件全体における絶対使用率の偏差値を計算して、汎用性と支配力を適切に評価する。
+        # 全体使用率 u_i と、均等使用率に対する相対比率 ratio
+        # Why: 固定の試合数しきい値ではなく、母集団全体における割合（均等比率 1/K）を基準とすることで、
+        # 全体集計・モード別・マップ別どんなデータ規模でもスケーラブルに適正な信頼度を算出できる。
         use_rate = (tm / global_total_matches) * 100
-        pick_dev = 50.0 + 10.0 * (use_rate - mean_use) / std_use
-        pick_dev = min(max(pick_dev, 25.0), 75.0)
+        u_i = tm / global_total_matches
+        ratio = u_i / r_expected if r_expected > 0 else 1.0
         
-        # スコア計算: ウィルソン信頼勝率(65%) + 全体ピック率偏差値(35%)
-        score = (ranking_wr * 0.65) + (pick_dev * 0.35)
+        # 動的シグモイド信頼度関数 C(ratio)
+        # 均等使用率の35%未満の極小サンプルキャラは信頼度が低下し、50%（中央値）へ回帰。
+        # 均等使用率の70%以上のキャラは信頼度90%以上となり、実力勝率が正当に評価される。
+        conf = 1.0 / (1.0 + math.exp(-7.0 * (ratio - 0.35)))
+        
+        # 汎用性と環境メタを反映する穏やかな対数ピックボーナス（上限4.0点）
+        # 線形偏差値だとカジュアル人気キャラ（エドガー等）が過剰評価されるため、対数スケールを採用
+        pick_bonus = min(math.log1p(ratio) * 2.5, 4.0)
+        
+        # 最終スコア: 回帰信頼勝率 (94%) + 穏やかな環境ピック補正 (6%)
+        regressed_wr = (ranking_wr * conf) + (50.0 * (1.0 - conf))
+        score = (regressed_wr * 0.94) + ((50.0 + pick_bonus) * 0.06)
         score = min(max(score, 0.0), 100.0)
         
         scored_chars.append({"id": cid, "score": score})

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -30,6 +30,7 @@ export default function TierListPage() {
   const [loading, setLoading] = useState(true)
   const [selectedChar, setSelectedChar] = useState<any>(null)
   const [sheetOpen, setSheetOpen] = useState(false)
+  const [modalLoading, setModalLoading] = useState(false)
   
   const [selectedType, setSelectedType] = useState("global")
   const [selectedRankTier, setSelectedRankTier] = useState("all") // all, mythic, legendary, masters
@@ -37,12 +38,44 @@ export default function TierListPage() {
   const [selectedId, setSelectedId] = useState("")
   const [categories, setCategories] = useState({ modes: [], maps: [] })
 
+  // クライアントサイド・インメモリキャッシュ (0ms即時切り替え用)
+  const dataCacheRef = useRef<Record<string, any>>({})
+  const charDetailCacheRef = useRef<Record<string, any>>({})
+
+  // 初回マウント時: 主要なTierデータをバックグラウンドで並列プリフェッチ
+  useEffect(() => {
+    const prefetchKeyTiers = async () => {
+      const keys = [
+        { key: "global:all::", url: `${API_URL}/meta/tier-list?type=global` },
+        { key: "gachi:all:all:", url: `${API_URL}/meta/tier-list?type=gachi&rank_tier=all` },
+        { key: "gachi:mythic:all:", url: `${API_URL}/meta/tier-list?type=gachi&rank_tier=mythic` },
+        { key: "gachi:legendary:all:", url: `${API_URL}/meta/tier-list?type=gachi&rank_tier=legendary` },
+        { key: "gachi:masters:all:", url: `${API_URL}/meta/tier-list?type=gachi&rank_tier=masters` },
+      ]
+      keys.forEach(async ({ key, url }) => {
+        try {
+          const res = await fetch(url)
+          if (res.ok) {
+            const data = await res.json()
+            dataCacheRef.current[key] = data
+          }
+        } catch {}
+      })
+    }
+    prefetchKeyTiers()
+  }, [])
+
   useEffect(() => {
     const fetchCategories = async () => {
       try {
+        const cacheKey = `categories:${selectedType}`
+        if (dataCacheRef.current[cacheKey]) {
+          setCategories(dataCacheRef.current[cacheKey])
+        }
         const res = await fetch(`${API_URL}/meta/categories?type=${selectedType}`)
         if (res.ok) {
           const data = await res.json()
+          dataCacheRef.current[cacheKey] = data
           setCategories(data)
           
           setSubType((prevSubType) => {
@@ -62,10 +95,20 @@ export default function TierListPage() {
     fetchCategories()
   }, [selectedType])
 
-  // 選択に応じたTierデータの取得
+  // 選択に応じたTierデータの取得 (キャッシュ最優先・0ms即時切り替え)
   useEffect(() => {
-    const fetchTierList = async () => {
+    const cacheKey = `${selectedType}:${selectedRankTier}:${subType}:${selectedId}`
+    const cachedData = dataCacheRef.current[cacheKey]
+    
+    // キャッシュが存在する場合は即座に表示（ローディングスピナーを出さない！）
+    if (cachedData) {
+      setTierData(cachedData)
+      setLoading(false)
+    } else {
       setLoading(true)
+    }
+
+    const fetchTierList = async () => {
       try {
         let url = `${API_URL}/meta/tier-list?type=${selectedType}`
         if (selectedType === "gachi") {
@@ -75,7 +118,6 @@ export default function TierListPage() {
           }
         }
 
-        // gachiでmode/mapが選ばれているのにidがない場合はフェッチ待機
         if (selectedType === "gachi" && subType !== "all" && !selectedId) {
           setLoading(false)
           return
@@ -84,13 +126,14 @@ export default function TierListPage() {
         const res = await fetch(url)
         if (res.ok) {
           const data = await res.json()
+          dataCacheRef.current[cacheKey] = data
           setTierData(data)
-        } else {
-          setTierData(null) // Not found
+        } else if (!cachedData) {
+          setTierData(null)
         }
       } catch (err) {
         console.error(err)
-        setTierData(null)
+        if (!cachedData) setTierData(null)
       } finally {
         setLoading(false)
       }
@@ -110,6 +153,16 @@ export default function TierListPage() {
   }
 
   const fetchCharacterDetail = async (charName: string) => {
+    const detailKey = `${charName}:${selectedType}:${selectedRankTier}:${subType}:${selectedId}`
+    const cachedDetail = charDetailCacheRef.current[detailKey]
+    
+    if (cachedDetail) {
+      setSelectedChar(cachedDetail)
+      setSheetOpen(true)
+      return
+    }
+
+    setModalLoading(true)
     try {
       let url = `${API_URL}/meta/characters/${charName}?type=${selectedType}`
       if (selectedType === "gachi") {
@@ -120,10 +173,13 @@ export default function TierListPage() {
       }
       const res = await fetch(url)
       const data = await res.json()
+      charDetailCacheRef.current[detailKey] = data
       setSelectedChar(data)
       setSheetOpen(true)
     } catch (err) {
       console.error(err)
+    } finally {
+      setModalLoading(false)
     }
   }
 

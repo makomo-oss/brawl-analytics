@@ -162,6 +162,10 @@ export default function DashboardPage() {
 
   const searchContainerRef = useRef<HTMLDivElement>(null)
 
+  // クライアントサイド・インメモリキャッシュ (0ms即時表示用)
+  const dashboardCacheRef = useRef<Record<string, any>>({})
+  const clubCacheRef = useRef<Record<string, any>>({})
+
   // 外部クリックでサジェストを閉じる
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -274,9 +278,7 @@ export default function DashboardPage() {
     
     setShowSuggestions(false)
     setSuggestions([])
-    setLoading(true)
     setErrorMsg(null)
-    setData(null)
     setClubData(null)
     
     try {
@@ -309,7 +311,18 @@ export default function DashboardPage() {
         setPlayerTag(formattedTag)
       }
 
-      const res = await fetch(`${API_URL}/player/${encodeURIComponent(finalTag.replace(/^#+/, ""))}/dashboard`)
+      const cacheKey = finalTag.replace(/^#+/, "").toUpperCase()
+      const cached = dashboardCacheRef.current[cacheKey]
+      if (cached) {
+        // キャッシュがあれば 0ms で即座に表示！
+        setData(cached)
+        setLoading(false)
+      } else {
+        setLoading(true)
+        setData(null)
+      }
+
+      const res = await fetch(`${API_URL}/player/${encodeURIComponent(cacheKey)}/dashboard`)
       if (!res.ok) {
         if (res.status === 404) {
           setErrorMsg("そのプレイヤーIDは存在しません。")
@@ -323,6 +336,7 @@ export default function DashboardPage() {
         setErrorMsg(result.error)
         return
       }
+      dashboardCacheRef.current[cacheKey] = result
       setData(result)
     } catch (error) {
       console.error("Fetch error", error)
@@ -338,10 +352,8 @@ export default function DashboardPage() {
     
     setShowClubSuggestions(false)
     setClubSuggestions([])
-    setLoadingClub(true)
     setErrorMsg(null)
     setData(null)
-    setClubData(null)
     
     try {
       let finalTag = rawInput
@@ -372,16 +384,27 @@ export default function DashboardPage() {
         setClubInput(formattedTag)
       }
 
-      const res = await fetch(`${API_URL}/club/${encodeURIComponent(finalTag.replace(/^#+/, ""))}`)
+      const cacheKey = finalTag.replace(/^#+/, "").toUpperCase()
+      const cached = clubCacheRef.current[cacheKey]
+      if (cached) {
+        setClubData(cached)
+        setLoadingClub(false)
+      } else {
+        setLoadingClub(true)
+        setClubData(null)
+      }
+
+      const res = await fetch(`${API_URL}/club/${encodeURIComponent(cacheKey)}`)
       if (!res.ok) {
         if (res.status === 404) {
-          setErrorMsg("そのクラブは存在しません。")
+          setErrorMsg("そのクラブは見つかりませんでした。")
         } else {
           setErrorMsg("クラブデータの取得に失敗しました。")
         }
         return
       }
       const result = await res.json()
+      clubCacheRef.current[cacheKey] = result
       setClubData(result)
     } catch (error) {
       console.error("Fetch club error", error)

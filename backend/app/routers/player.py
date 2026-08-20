@@ -119,28 +119,42 @@ def determine_battle_result(battle: dict) -> tuple[str, bool]:
 async def get_dashboard(player_tag: str):
     """
     Brawl Stars APIから取得した直近のバトルログを解析してダッシュボード用のデータを返す
+    - get_player と get_player_battlelog を完全並列化 (asyncio.gather)
+    - macro_map_stats の全件走査を廃止しインメモリキャッシュを活用
     """
     try:
-        player_info = await get_player(player_tag)
+        clean_tag = player_tag.replace("%23", "").replace("#", "").upper().strip()
         
-        # データベースにプレイヤー情報を保存（Upsert）して名前検索の候補に追加する
+        # 1. プレイヤー基本情報とバトルログを完全並列フェッチ (待ち時間半減)
+        player_info, battlelog = await asyncio.gather(
+            get_player(clean_tag),
+            get_player_battlelog(clean_tag)
+        )
+        
+        # 2. データベースにプレイヤー情報をバックグラウンド保存 (非同期Upsert)
         try:
             db = get_db()
-            clean_tag = player_tag.replace("#", "").upper()
+            ranked_rank = player_info.get("rankedRank") or 0
+            highest_ranked_rank = player_info.get("highestAllTimeRankedRank") or player_info.get("highestSeasonRankedRank") or ranked_rank
             player_data = {
                 "player_tag": clean_tag,
                 "name": player_info.get("name", "Unknown"),
                 "trophies": player_info.get("trophies", 0),
                 "highest_trophies": player_info.get("highestTrophies", 0),
-                "unlocked_characters": {},
+                "unlocked_characters": {
+                    "ranked_rank": ranked_rank,
+                    "highest_ranked_rank": highest_ranked_rank,
+                    "ranked_name": player_info.get("rankedRankName", ""),
+                    "highest_ranked_name": player_info.get("highestAllTimeRankedRankName", "")
+                },
                 "updated_at": datetime.now(timezone.utc).isoformat()
             }
-            db.table("players").upsert(player_data).execute()
+            # バックグラウンド実行（レスポンスをブロックしない）
+            asyncio.create_task(asyncio.to_thread(lambda: db.table("players").upsert(player_data).execute()))
         except Exception as db_err:
             logger.warning(f"Failed to upsert player data during dashboard fetch: {db_err}")
 
-        battlelog = await get_player_battlelog(player_tag)
-        items = battlelog.get("items", [])
+        items = battlelog.get("items", []) if battlelog else []
         
         char_stats = {}
         mode_stats = {}
@@ -148,8 +162,7 @@ async def get_dashboard(player_tag: str):
         wins = 0
         recent_battles = []
         
-        clean_player_tag = player_tag.replace("%23", "").replace("#", "").upper()
-        player_tag_fmt = f"#{clean_player_tag}"
+        player_tag_fmt = f"#{clean_tag}"
         
         for item in items:
             battle = item.get("battle", {})
@@ -167,7 +180,7 @@ async def get_dashboard(player_tag: str):
                 
                 # スタープレイヤーの判定
                 star_player_tag = (battle.get("starPlayer") or {}).get("tag", "").replace("#", "").upper()
-                is_star_player = (star_player_tag == clean_player_tag)
+                is_star_player = (star_player_tag == clean_tag)
                 
                 teams = battle.get("teams", [])
                 players = battle.get("players", [])
@@ -184,7 +197,7 @@ async def get_dashboard(player_tag: str):
                                 "brawler": brawler_name,
                                 "tag": ptag
                             })
-                            if ptag == clean_player_tag:
+                            if ptag == clean_tag:
                                 is_my_team = True
                                 hero_used = brawler_name
                         
@@ -202,7 +215,7 @@ async def get_dashboard(player_tag: str):
                             "brawler": brawler_name,
                             "tag": ptag
                         }
-                        if ptag == clean_player_tag:
+                        if ptag == clean_tag:
                             hero_used = brawler_name
                             my_team.append(p_data)
                         else:
@@ -215,7 +228,7 @@ async def get_dashboard(player_tag: str):
                     if is_win:
                         char_stats[hero_used]["wins"] += 1
                         
-                # モード別統計の集計（Why: API内部仕様で event.mode に trioShowdown 等が入り battle.mode が duoShowdown と誤表記される問題に対応）
+                # モード別統計の集計
                 event_mode = event.get("mode")
                 battle_mode = battle.get("mode")
                 if event_mode and event_mode != "unknown":
@@ -239,14 +252,14 @@ async def get_dashboard(player_tag: str):
                     mode_stats[mode_name]["star_player"] += 1
                 
                 if hero_used != "unknown":
-                    if hero_used not in mode_stats[mode_name]["brawlers"]:
-                        mode_stats[mode_name]["brawlers"][hero_used] = 0
-                    mode_stats[mode_name]["brawlers"][hero_used] += 1
-                        
-                # バトル履歴用データの作成
-                trophy_change = battle.get("trophyChange")
-                if trophy_change is None:
-                    trophy_change = 8 if is_win else (-6 if result_str == "defeat" else 0)
+                    mode_stats[mode_name]["brawlers"][hero_used] = mode_stats[mode_name]["brawlers"].get(hero_used, 0) + 1
+                    
+                match_type = battle.get("type", "unknown")
+                if not match_type or match_type == "unknown":
+                    if battle.get("trophyChange") is not None:
+                        match_type = "ranked"
+                    else:
+                        match_type = "friendly"
                 
                 recent_battles.append({
                     "time": item.get("battleTime", ""),
@@ -255,7 +268,7 @@ async def get_dashboard(player_tag: str):
                     "type": battle.get("type", "unknown"),
                     "result": result_str,
                     "hero": hero_used,
-                    "trophy_change": trophy_change,
+                    "trophy_change": battle.get("trophyChange"),
                     "my_team": my_team,
                     "opponent_teams": opponent_teams,
                     "raw_battle": battle
@@ -265,35 +278,28 @@ async def get_dashboard(player_tag: str):
         hidden_weapons = []
         needs_practice = []
         
-        # 実データ（macro_map_stats）からキャラクターごとの全体平均勝率を動的計算 (全件ページネーション対応)
+        # 3. インメモリキャッシュからマクロ勝率を高速集計 (DB全件クエリゼロ)
         global_win_rates: dict[str, float] = {}
         try:
+            from app.routers.meta import _get_cached_macro_data
             db = get_db()
+            macro_data = _get_cached_macro_data(db)
             char_totals: dict[str, dict[str, int]] = {}
-            offset = 0
-            PAGE_SIZE = 1000
-            while True:
-                macro_res = db.table("macro_map_stats").select("character_id, total_wins, total_matches").range(offset, offset + PAGE_SIZE - 1).execute()
-                if not macro_res.data:
-                    break
-                for row in macro_res.data:
-                    cid = str(row.get("character_id", "")).lower().strip()
-                    tw = row.get("total_wins") or 0
-                    tm = row.get("total_matches") or 0
-                    if cid and tm > 0:
-                        if cid not in char_totals:
-                            char_totals[cid] = {"wins": 0, "matches": 0}
-                        char_totals[cid]["wins"] += tw
-                        char_totals[cid]["matches"] += tm
-                if len(macro_res.data) < PAGE_SIZE:
-                    break
-                offset += PAGE_SIZE
-                
+            for row in macro_data:
+                cid = str(row.get("character_id", "")).lower().strip()
+                tw = row.get("total_wins") or 0
+                tm = row.get("total_matches") or 0
+                if cid and tm > 0:
+                    if cid not in char_totals:
+                        char_totals[cid] = {"wins": 0, "matches": 0}
+                    char_totals[cid]["wins"] += tw
+                    char_totals[cid]["matches"] += tm
+                    
             for cid, totals in char_totals.items():
                 if totals["matches"] > 0:
                     global_win_rates[cid] = round((totals["wins"] / totals["matches"]) * 100, 1)
         except Exception as e:
-            logger.warning(f"Failed to fetch global win rates from macro_map_stats: {e}")
+            logger.warning(f"Failed to fetch global win rates from macro cache: {e}")
 
         # フォールバック用の一般的キャラクター平均勝率（小文字キー）
         fallback_global_win_rates: dict[str, float] = {

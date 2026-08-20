@@ -1,4 +1,7 @@
 import urllib.request
+import asyncio
+import logging
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -8,7 +11,29 @@ from app.routers.meta import router as meta_router
 from app.routers.cron import router as cron_router
 from app.routers.club import router as club_router
 
-app = FastAPI(title="BrawlAnalytics API")
+logger = logging.getLogger(__name__)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    アプリケーション起動時にバックグラウンドでメタデータ・カウンターキャッシュを事前ウォームアップ
+    初弾リクエストのコールドスタート遅延（2.5秒）をゼロにする
+    """
+    async def warmup():
+        try:
+            from app.database import get_db
+            from app.routers.meta import _get_cached_macro_data, _get_cached_counters_for_char
+            db = get_db()
+            await asyncio.to_thread(lambda: _get_cached_macro_data(db))
+            await asyncio.to_thread(lambda: _get_cached_counters_for_char(db, "shelly"))
+            logger.info("Startup cache warmup completed successfully.")
+        except Exception as e:
+            logger.warning(f"Startup cache warmup error: {e}")
+
+    asyncio.create_task(warmup())
+    yield
+
+app = FastAPI(title="BrawlAnalytics API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

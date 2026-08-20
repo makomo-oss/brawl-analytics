@@ -162,7 +162,37 @@ export default function TierListPage() {
       return
     }
 
+    // --- Optimistic UI: 手元のTierデータから即時モーダルを展開 (0ms即時表示) ---
+    const currentTierChar = tierData?.characters?.[charName] || {
+      win_rate: 50.0,
+      use_rate: 0.0,
+      total_matches: 0
+    }
+    
+    // 所属Tierの検索
+    let currentTier = "Unknown"
+    if (tierData?.tiers) {
+      for (const [tName, charList] of Object.entries(tierData.tiers as Record<string, string[]>)) {
+        if (charList.includes(charName)) {
+          currentTier = tName
+          break
+        }
+      }
+    }
+
+    // クリックした瞬間に即座にモーダルを開く！
+    setSelectedChar({
+      character_id: charName,
+      tier: currentTier,
+      win_rate: currentTierChar.win_rate,
+      use_rate: currentTierChar.use_rate,
+      total_matches: currentTierChar.total_matches,
+      kamo: null, // ロード中
+      tenteki: null
+    })
+    setSheetOpen(true)
     setModalLoading(true)
+
     try {
       let url = `${API_URL}/meta/characters/${charName}?type=${selectedType}`
       if (selectedType === "gachi") {
@@ -172,10 +202,11 @@ export default function TierListPage() {
         }
       }
       const res = await fetch(url)
-      const data = await res.json()
-      charDetailCacheRef.current[detailKey] = data
-      setSelectedChar(data)
-      setSheetOpen(true)
+      if (res.ok) {
+        const data = await res.json()
+        charDetailCacheRef.current[detailKey] = data
+        setSelectedChar(data)
+      }
     } catch (err) {
       console.error(err)
     } finally {
@@ -429,6 +460,12 @@ export default function TierListPage() {
                         )
                       })}
                     </div>
+                  ) : modalLoading ? (
+                    <div className="space-y-2 py-2">
+                      {[1, 2, 3].map((i) => (
+                        <div key={i} className="h-10 bg-green-500/10 rounded-lg animate-pulse" />
+                      ))}
+                    </div>
                   ) : (
                     <p className="text-sm text-muted-foreground p-2">十分な対面データがありません。</p>
                   )}
@@ -459,6 +496,12 @@ export default function TierListPage() {
                           </div>
                         )
                       })}
+                    </div>
+                  ) : modalLoading ? (
+                    <div className="space-y-2 py-2">
+                      {[1, 2, 3].map((i) => (
+                        <div key={i} className="h-10 bg-red-500/10 rounded-lg animate-pulse" />
+                      ))}
                     </div>
                   ) : (
                     <p className="text-sm text-muted-foreground p-2">十分な対面データがありません。</p>

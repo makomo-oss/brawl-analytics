@@ -9,7 +9,46 @@ router = APIRouter(prefix="/meta", tags=["Meta"])
 _MACRO_CACHE = {"data": None, "timestamp": 0, "ttl": 180}
 _TOTAL_MATCHES_CACHE = {"count": 0, "timestamp": 0, "ttl": 180}
 _CATEGORIES_CACHE = {"data": {}, "timestamp": 0, "ttl": 180}
+_COUNTERS_CACHE = {"data": None, "by_char": {}, "timestamp": 0, "ttl": 180}
 _MODE_MAPS_CACHE = {} # mode -> (set of map_ids, timestamp)
+
+def _get_cached_counters_for_char(db, char_a: str) -> list[dict]:
+    """dynamic_counters をインメモリキャッシュから超高速に取得 (DB通信をゼロに)"""
+    now = time.time()
+    if _COUNTERS_CACHE["data"] is not None and (now - _COUNTERS_CACHE["timestamp"]) < _COUNTERS_CACHE["ttl"]:
+        return _COUNTERS_CACHE["by_char"].get(char_a.lower(), [])
+        
+    try:
+        offset = 0
+        PAGE_SIZE = 1000
+        all_counters = []
+        by_char = {}
+        while True:
+            res = db.table("dynamic_counters").select("*").range(offset, offset + PAGE_SIZE - 1).execute()
+            if not res.data:
+                break
+            all_counters.extend(res.data)
+            for row in res.data:
+                ca = str(row.get("char_a", "")).lower()
+                if ca not in by_char:
+                    by_char[ca] = []
+                by_char[ca].append(row)
+            if len(res.data) < PAGE_SIZE:
+                break
+            offset += PAGE_SIZE
+            
+        _COUNTERS_CACHE["data"] = all_counters
+        _COUNTERS_CACHE["by_char"] = by_char
+        _COUNTERS_CACHE["timestamp"] = now
+        return by_char.get(char_a.lower(), [])
+    except Exception as e:
+        if _COUNTERS_CACHE["data"] is not None:
+            return _COUNTERS_CACHE["by_char"].get(char_a.lower(), [])
+        try:
+            res = db.table("dynamic_counters").select("*").eq("char_a", char_a.lower()).execute()
+            return res.data or []
+        except:
+            return []
 
 def _get_cached_macro_data(db) -> list[dict]:
     """macro_map_stats をインメモリキャッシュから超高速に取得 (DB通信を99%削減)"""
@@ -408,9 +447,8 @@ def get_character_detail(character_id: str, type: str = "global", sub_type: str 
     kamo = []
     tenteki = []
     try:
-        # 自分が char_a になっているデータを取得
-        res = db.table("dynamic_counters").select("*").eq("char_a", char_id_lower).execute()
-        counters = res.data
+        # キャッシュから自分が char_a になっているデータを取得 (DB通信ゼロ)
+        counters = [dict(c) for c in _get_cached_counters_for_char(db, char_id_lower)]
         
         # 各対面について、ウィルソン・スコア（有利スコアと不利スコア）を計算
         for c in counters:

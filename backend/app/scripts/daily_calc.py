@@ -99,7 +99,7 @@ def fetch_recent_matches(client: Client = None) -> pd.DataFrame:
 def fetch_player_rank_segments(client: Client = None, match_df: pd.DataFrame = None) -> dict:
     """
     プレイヤーを純粋なガチバトルのランク階級（エリート, レジェンド, マスター）のみで分類する。
-    未同期のプレイヤーがいれば自動補完同期（Auto-Heal）を実行。
+    - 未同期のプレイヤー、または最終同期から3日以上経過した古いプロファイルを自動再同期（Auto-Refresh / Auto-Heal）
     - Rank 13〜15: Mythic (エリート)
     - Rank 16〜18: Legendary (レジェンド)
     - Rank 19+:    Masters (マスター・プロ)
@@ -110,7 +110,7 @@ def fetch_player_rank_segments(client: Client = None, match_df: pd.DataFrame = N
     offset = 0
     limit = 1000
     while True:
-        res = supabase.table("players").select("player_tag, unlocked_characters").range(offset, offset + limit - 1).execute()
+        res = supabase.table("players").select("player_tag, updated_at, unlocked_characters").range(offset, offset + limit - 1).execute()
         if not res.data:
             break
         all_players.extend(res.data)
@@ -121,7 +121,9 @@ def fetch_player_rank_segments(client: Client = None, match_df: pd.DataFrame = N
     mythic_tags = set()
     legendary_tags = set()
     masters_tags = set()
-    synced_tags = set()
+    fresh_synced_tags = set()
+    stale_or_missing_tags = set()
+    now_utc = datetime.now(timezone.utc)
     
     for p in all_players:
         tag = str(p.get("player_tag", "")).replace("#", "").upper().strip()
@@ -134,8 +136,23 @@ def fetch_player_rank_segments(client: Client = None, match_df: pd.DataFrame = N
             except: chars_json = {}
             
         ranked_rank = int(chars_json.get("highest_ranked_rank") or chars_json.get("ranked_rank") or 0)
-        if ranked_rank > 0 or "highest_ranked_name" in chars_json:
-            synced_tags.add(tag)
+        has_rank_info = (ranked_rank > 0) or ("highest_ranked_name" in chars_json)
+        
+        # 鮮度チェック: 3日 (259,200秒) 以内に更新されているか
+        updated_at_str = p.get("updated_at")
+        is_fresh = False
+        if updated_at_str and has_rank_info:
+            try:
+                up_dt = datetime.fromisoformat(updated_at_str.replace("Z", "+00:00"))
+                if (now_utc - up_dt).total_seconds() < 3 * 86400:
+                    is_fresh = True
+            except:
+                is_fresh = False
+                
+        if is_fresh:
+            fresh_synced_tags.add(tag)
+        else:
+            stale_or_missing_tags.add(tag)
         
         # 純粋なガチバトルランク（Rank 13+ = エリート, 16+ = レジェンド, 19+ = マスター）
         if ranked_rank >= 19:
@@ -145,18 +162,18 @@ def fetch_player_rank_segments(client: Client = None, match_df: pd.DataFrame = N
         elif ranked_rank >= 13:
             mythic_tags.add(tag)
             
-    # Auto-Heal: マッチ履歴に存在するがランク未同期のタグを自動検知して即時補完
+    # Auto-Refresh: マッチ履歴に存在するプレイヤーのうち、古い（3日経過）または未同期のタグを自動再取得
     if match_df is not None and "player_tag" in match_df.columns:
         match_tags = set(match_df["player_tag"].astype(str).str.replace("#", "").str.upper().str.strip().unique())
-        missing = list(match_tags - synced_tags)
-        if missing:
-            logger.info(f"Detected {len(missing)} un-synced players in battle logs. Triggering Auto-Heal...")
+        need_refresh = list((match_tags - fresh_synced_tags) | (match_tags & stale_or_missing_tags))
+        if need_refresh:
+            logger.info(f"Detected {len(need_refresh)} active players needing fresh rank verification. Triggering Auto-Refresh...")
             try:
-                asyncio.run(auto_sync_missing_player_ranks(missing, supabase))
-                # 補完後に再読み込み
+                asyncio.run(auto_sync_missing_player_ranks(need_refresh, supabase))
+                # 再同期後に再読み込み
                 return fetch_player_rank_segments(supabase, match_df=None)
             except Exception as e:
-                logger.warning(f"Auto-heal skipped or failed: {e}")
+                logger.warning(f"Auto-refresh skipped or failed: {e}")
             
     all_elite_tags = mythic_tags | legendary_tags | masters_tags
     logger.info(f"Pure Rank Segmentation: Mythic={len(mythic_tags)}, Legendary={len(legendary_tags)}, Masters={len(masters_tags)}, Total Elite+={len(all_elite_tags)}")

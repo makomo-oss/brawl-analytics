@@ -67,7 +67,7 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, in
         # データがまだない場合は空を返す
         return {
             "updated_at": None,
-            "tiers": {"S": [], "A": [], "B": [], "C": [], "D": []},
+            "tiers": {"S+": [], "S": [], "A+": [], "A": [], "B": [], "C": [], "D": []},
             "type": type,
             "metrics": {"analyzed_matches": total_analyzed},
             "characters": {} if include_details else None
@@ -191,18 +191,24 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, in
     # スコアで降順ソート
     scored_chars.sort(key=lambda x: x["score"], reverse=True)
     
-    # Tierの割り当て (S: 10%, A: 20%, B: 40%, C: 20%, D: 10%)
+    # 7段階Tierの割り当て (S+: 5%, S: 12%, A+: 25%, A: 45%, B: 70%, C: 88%, D: 100%)
     total_chars = len(scored_chars)
-    s_limit = max(1, int(total_chars * 0.10))
-    a_limit = max(1, int(total_chars * 0.30))
-    b_limit = max(1, int(total_chars * 0.70))
-    c_limit = max(1, int(total_chars * 0.90))
+    sp_limit = max(1, int(total_chars * 0.05))
+    s_limit  = max(1, int(total_chars * 0.12))
+    ap_limit = max(1, int(total_chars * 0.25))
+    a_limit  = max(1, int(total_chars * 0.45))
+    b_limit  = max(1, int(total_chars * 0.70))
+    c_limit  = max(1, int(total_chars * 0.88))
     
-    tiers = {"S": [], "A": [], "B": [], "C": [], "D": []}
+    tiers = {"S+": [], "S": [], "A+": [], "A": [], "B": [], "C": [], "D": []}
     for i, sc in enumerate(scored_chars):
         cid = sc["id"]
-        if i < s_limit:
+        if i < sp_limit:
+            tiers["S+"].append(cid)
+        elif i < s_limit:
             tiers["S"].append(cid)
+        elif i < ap_limit:
+            tiers["A+"].append(cid)
         elif i < a_limit:
             tiers["A"].append(cid)
         elif i < b_limit:

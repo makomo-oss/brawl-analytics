@@ -147,26 +147,29 @@ def calc_macro_map_stats(df: pd.DataFrame, rank_segments: dict = None):
     dfs_to_aggregate = [df.copy()]
 
     # 1. ガチバトル総合 (エリート以上: Mythic, Legendary, Masters, Pro のみ 100% 厳密抽出)
-    # 下位ランク帯（ダイヤ以下）の混入を完全にゼロにするため、all_elite タグで厳密抽出
-    df_gachi_all = df[df["clean_tag"].isin(rank_segments.get("all_elite", set()))].copy()
+    # ガチバトルの試合のみ（soloRanked / teamRanked / ranked）を対象とするフィルター
+    is_ranked_match = df["match_type"].isin(["ranked", "soloRanked", "teamRanked"])
+    
+    # 1. ガチバトル総合 (エリート以上: Mythic, Legendary, Masters) かつ ガチバトルの試合のみ
+    df_gachi_all = df[is_ranked_match & df["clean_tag"].isin(rank_segments.get("all_elite", set()))].copy()
     if not df_gachi_all.empty:
         df_gachi_all["match_type"] = "gachi"
         dfs_to_aggregate.append(df_gachi_all)
 
-    # 2. エリート帯 (Mythic: Rank 13-15)
-    df_gachi_mythic = df[df["clean_tag"].isin(rank_segments.get("mythic", set()))].copy()
+    # 2. エリート帯 (Mythic: Rank 13-15) かつ ガチバトルの試合のみ
+    df_gachi_mythic = df[is_ranked_match & df["clean_tag"].isin(rank_segments.get("mythic", set()))].copy()
     if not df_gachi_mythic.empty:
         df_gachi_mythic["match_type"] = "gachi_mythic"
         dfs_to_aggregate.append(df_gachi_mythic)
 
-    # 3. レジェンド帯 (Legendary: Rank 16-18)
-    df_gachi_legendary = df[df["clean_tag"].isin(rank_segments.get("legendary", set()))].copy()
+    # 3. レジェンド帯 (Legendary: Rank 16-18) かつ ガチバトルの試合のみ
+    df_gachi_legendary = df[is_ranked_match & df["clean_tag"].isin(rank_segments.get("legendary", set()))].copy()
     if not df_gachi_legendary.empty:
         df_gachi_legendary["match_type"] = "gachi_legendary"
         dfs_to_aggregate.append(df_gachi_legendary)
 
-    # 4. マスター・プロ帯 (Masters & Pro: Rank 19+)
-    df_gachi_masters = df[df["clean_tag"].isin(rank_segments.get("masters", set()))].copy()
+    # 4. マスター・プロ帯 (Masters & Pro: Rank 19+) かつ ガチバトルの試合のみ
+    df_gachi_masters = df[is_ranked_match & df["clean_tag"].isin(rank_segments.get("masters", set()))].copy()
     if not df_gachi_masters.empty:
         df_gachi_masters["match_type"] = "gachi_masters"
         dfs_to_aggregate.append(df_gachi_masters)

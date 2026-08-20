@@ -60,12 +60,21 @@ async def run_crawler_task():
                 # 1. プレイヤー情報の取得
                 player_info = await get_player(clean_tag)
                 
+                # ガチバトルランク（Rank 13+ = エリート, 16+ = レジェンド, 19+ = マスター）の抽出
+                ranked_rank = player_info.get("rankedRank") or 0
+                highest_ranked_rank = player_info.get("highestAllTimeRankedRank") or player_info.get("highestSeasonRankedRank") or ranked_rank
+                
                 player_data = {
-                    "player_tag": clean_tag, # URL等の不具合防止のためDB上は#抜きで統一か、#ありか。仕様に合わせてそのまま
+                    "player_tag": clean_tag,
                     "name": player_info.get("name", "Unknown"),
                     "trophies": player_info.get("trophies", 0),
                     "highest_trophies": player_info.get("highestTrophies", 0),
-                    "unlocked_characters": {}, 
+                    "unlocked_characters": {
+                        "ranked_rank": ranked_rank,
+                        "highest_ranked_rank": highest_ranked_rank,
+                        "ranked_name": player_info.get("rankedRankName", ""),
+                        "highest_ranked_name": player_info.get("highestAllTimeRankedRankName", "")
+                    }, 
                     "updated_at": datetime.now(timezone.utc).isoformat()
                 }
                 

@@ -35,7 +35,7 @@ def wilson_lower_bound(wins: int, total: int, z: float = 1.645) -> float:
     return (center - spread) / denominator
 
 @router.get("/tier-list")
-def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, include_details: bool = False):
+def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, rank_tier: str = "all", include_details: bool = False):
     db = get_db()
     
     # マッチ数のカウント（分析試合数）
@@ -69,11 +69,11 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, in
             "updated_at": None,
             "tiers": {"S+": [], "S": [], "A+": [], "A": [], "B": [], "C": [], "D": []},
             "type": type,
+            "rank_tier": rank_tier,
             "metrics": {"analyzed_matches": total_analyzed},
             "characters": {} if include_details else None
         }
         
-    # モード別のマップ一覧が必要な場合
     # モード別のマップ一覧が必要な場合
     valid_map_ids = None
     if sub_type == "mode" and id:
@@ -94,11 +94,22 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, in
         map_id = str(row.get("map_id", ""))
         clean_map_id = map_id.replace("gachi_", "")
         match_type = str(row.get("match_type", "unknown"))
-        is_gachi_match = match_type in ["ranked", "soloRanked", "teamRanked"]
         
-        # ガチバトル指定の場合
-        if type == "gachi" and not is_gachi_match:
-            continue
+        # ガチバトル指定の場合: ランク帯（all, mythic, legendary, masters）で分岐
+        if type == "gachi":
+            target_match_type = {
+                "all": ["gachi", "soloRanked", "teamRanked"],
+                "mythic": ["gachi_mythic"],
+                "legendary": ["gachi_legendary"],
+                "masters": ["gachi_masters"]
+            }.get(rank_tier, ["gachi", "soloRanked", "teamRanked"])
+            
+            if match_type not in target_match_type:
+                continue
+        elif type == "global":
+            # 全体Tierの場合: 二重カウント防止のためgachi専用タグ以外の基本データを抽出
+            if match_type.startswith("gachi"):
+                continue
             
         # マップ別フィルタ
         if sub_type == "map" and id:
@@ -257,7 +268,8 @@ def get_categories(type: str = "global"):
                 clean_m_id = str(m_id).replace("gachi_", "")
                 matches = row.get("total_matches") or 0
                 if type == "gachi":
-                    if row.get("match_type") in ["ranked", "soloRanked", "teamRanked"]:
+                    mtype = str(row.get("match_type", ""))
+                    if mtype.startswith("gachi") or mtype in ["soloRanked", "teamRanked"]:
                         map_counts[clean_m_id] = map_counts.get(clean_m_id, 0) + matches
                 else:
                     map_counts[clean_m_id] = map_counts.get(clean_m_id, 0) + matches

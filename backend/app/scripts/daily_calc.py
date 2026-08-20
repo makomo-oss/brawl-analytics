@@ -48,17 +48,77 @@ def fetch_recent_matches(client: Client = None) -> pd.DataFrame:
     logger.info(f"Fetched {len(all_data)} match records.")
     return pd.DataFrame(all_data)
 
-def calc_macro_map_stats(df: pd.DataFrame):
-    """マクロマップ適性（勝率とピック率偏差値）を計算"""
-    logger.info("Calculating macro map stats...")
+def fetch_player_rank_segments(client: Client = None) -> dict:
+    """
+    プレイヤーをガチバトルのランク帯（エリート、レジェンド、マスター・プロ、エリート以上総合）に分類してタグセットを返す。
+    Rank 13-15 = Mythic (エリート)
+    Rank 16-18 = Legendary (レジェンド)
+    Rank 19+   = Masters & Pro (マスター・プロ)
+    """
+    supabase = client or get_supabase_client()
+    logger.info("Fetching player rank segmentation from Supabase...")
+    all_players = []
+    offset = 0
+    limit = 1000
+    while True:
+        res = supabase.table("players").select("player_tag, trophies, highest_trophies, unlocked_characters").range(offset, offset + limit - 1).execute()
+        if not res.data:
+            break
+        all_players.extend(res.data)
+        if len(res.data) < limit:
+            break
+        offset += limit
+        
+    mythic_tags = set()
+    legendary_tags = set()
+    masters_tags = set()
+    
+    for p in all_players:
+        tag = str(p.get("player_tag", "")).replace("#", "").upper().strip()
+        if not tag:
+            continue
+        trophies = int(p.get("trophies") or 0)
+        highest_trophies = int(p.get("highest_trophies") or 0)
+        max_trophies = max(trophies, highest_trophies)
+        
+        chars_json = p.get("unlocked_characters") or {}
+        if isinstance(chars_json, str):
+            import json
+            try: chars_json = json.loads(chars_json)
+            except: chars_json = {}
+            
+        ranked_rank = int(chars_json.get("highest_ranked_rank") or chars_json.get("ranked_rank") or 0)
+        
+        if ranked_rank >= 19 or max_trophies >= 60000:
+            masters_tags.add(tag)
+        elif ranked_rank >= 16 or max_trophies >= 45000:
+            legendary_tags.add(tag)
+        elif ranked_rank >= 13 or max_trophies >= 30000:
+            mythic_tags.add(tag)
+            
+    all_elite_tags = mythic_tags | legendary_tags | masters_tags
+    logger.info(f"Segmented players: Mythic={len(mythic_tags)}, Legendary={len(legendary_tags)}, Masters={len(masters_tags)}, Total Elite+={len(all_elite_tags)}")
+    
+    return {
+        "mythic": mythic_tags,
+        "legendary": legendary_tags,
+        "masters": masters_tags,
+        "all_elite": all_elite_tags
+    }
+
+def calc_macro_map_stats(df: pd.DataFrame, rank_segments: dict = None):
+    """マクロマップ適性（勝率とピック率偏差値）を計算 (ランク帯別ガチバトル専用集計対応)"""
+    logger.info("Calculating macro map stats with rank brackets...")
     if df.empty:
         return []
+    
+    if rank_segments is None:
+        rank_segments = {"mythic": set(), "legendary": set(), "masters": set(), "all_elite": set()}
     
     # マイグレーション互換性: match_type カラムが無い場合は追加
     if "match_type" not in df.columns:
         df["match_type"] = "unknown"
 
-    # null(NaN)を空配列や空文字列に置換して安全にする
     df["match_type"] = df["match_type"].fillna("unknown")
     df["map_id"] = df["map_id"].fillna("")
 
@@ -69,10 +129,8 @@ def calc_macro_map_stats(df: pd.DataFrame):
     # 勝利フラグを数値化
     df["is_win"] = (df["result"] == "victory").astype(int)
     
-    # キャラクターIDを小文字に正規化（APIは大文字で返すため）
-    df["hero_used"] = df["hero_used"].str.lower()
-    
-    # "unknown" または "nan" のデータは集計対象外
+    # キャラクターIDを小文字に正規化
+    df["hero_used"] = df["hero_used"].str.lower().str.strip()
     df = df[(df["hero_used"] != "unknown") & (df["hero_used"] != "nan")]
     
     # Match ID ユニーク化: 同一試合(match_id)で同一ヒーローの重複ログを排除
@@ -84,8 +142,41 @@ def calc_macro_map_stats(df: pd.DataFrame):
                 df[~valid_match_id]
             ], ignore_index=True)
 
+    df["clean_tag"] = df["player_tag"].astype(str).str.replace("#", "").str.upper().str.strip()
+
+    # 集計データセットの構築
+    dfs_to_aggregate = [df.copy()]
+
+    # 1. ガチバトル総合 (エリート以上: Mythic, Legendary, Masters, Pro)
+    is_elite = df["clean_tag"].isin(rank_segments.get("all_elite", set()))
+    is_ranked = df["match_type"].isin(["soloRanked", "teamRanked"])
+    df_gachi_all = df[is_elite | is_ranked].copy()
+    if not df_gachi_all.empty:
+        df_gachi_all["match_type"] = "gachi"
+        dfs_to_aggregate.append(df_gachi_all)
+
+    # 2. エリート帯 (Mythic: Rank 13-15)
+    df_gachi_mythic = df[df["clean_tag"].isin(rank_segments.get("mythic", set()))].copy()
+    if not df_gachi_mythic.empty:
+        df_gachi_mythic["match_type"] = "gachi_mythic"
+        dfs_to_aggregate.append(df_gachi_mythic)
+
+    # 3. レジェンド帯 (Legendary: Rank 16-18)
+    df_gachi_legendary = df[df["clean_tag"].isin(rank_segments.get("legendary", set()))].copy()
+    if not df_gachi_legendary.empty:
+        df_gachi_legendary["match_type"] = "gachi_legendary"
+        dfs_to_aggregate.append(df_gachi_legendary)
+
+    # 4. マスター・プロ帯 (Masters & Pro: Rank 19+)
+    df_gachi_masters = df[df["clean_tag"].isin(rank_segments.get("masters", set()))].copy()
+    if not df_gachi_masters.empty:
+        df_gachi_masters["match_type"] = "gachi_masters"
+        dfs_to_aggregate.append(df_gachi_masters)
+
+    combined_df = pd.concat(dfs_to_aggregate, ignore_index=True)
+
     # match_type × マップ × ヒーローで集計
-    grouped = df.groupby(["match_type", "map_id", "hero_used"]).agg(
+    grouped = combined_df.groupby(["match_type", "map_id", "hero_used"]).agg(
         total_matches=("match_id", "count"),
         total_wins=("is_win", "sum")
     ).reset_index()
@@ -228,7 +319,8 @@ def run_daily_calculation(client: Client = None):
         logger.info("No data found. Exiting.")
         return {"macro_stats_count": 0, "dynamic_counters_count": 0}
         
-    macro_stats = calc_macro_map_stats(df)
+    rank_segments = fetch_player_rank_segments(supabase)
+    macro_stats = calc_macro_map_stats(df, rank_segments)
     dynamic_counters = calc_dynamic_counters(df)
     
     # Upsert macro_map_stats

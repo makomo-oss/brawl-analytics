@@ -21,7 +21,7 @@ const tierConfig: Record<string, { color: string; label: string; bg: string }> =
   A: { color: "from-orange-500 to-yellow-500", label: "優秀な選択肢", bg: "bg-orange-500/10 border-orange-500/30" },
   B: { color: "from-yellow-500 to-lime-500", label: "平均的・実用", bg: "bg-yellow-500/10 border-yellow-500/30" },
   C: { color: "from-blue-500 to-cyan-500", label: "状況を選ぶ", bg: "bg-blue-500/10 border-blue-500/30" },
-  D: { color: "from-slate-500 to-gray-500", label: "現環境では厳しい", bg: "bg-slate-500/10 border-slate-500/30" },
+  "D": { color: "from-slate-500 to-gray-500", label: "現環境では厳しい", bg: "bg-slate-500/10 border-slate-500/30" },
   "N/A": { color: "from-zinc-500 to-stone-500", label: "データ不足", bg: "bg-zinc-500/10 border-zinc-500/30 border-dashed" }
 }
 
@@ -32,6 +32,7 @@ export default function TierListPage() {
   const [sheetOpen, setSheetOpen] = useState(false)
   
   const [selectedType, setSelectedType] = useState("global")
+  const [selectedRankTier, setSelectedRankTier] = useState("all") // all, mythic, legendary, masters
   const [subType, setSubType] = useState("all") // all, mode, map
   const [selectedId, setSelectedId] = useState("")
   const [categories, setCategories] = useState({ modes: [], maps: [] })
@@ -44,7 +45,6 @@ export default function TierListPage() {
           const data = await res.json()
           setCategories(data)
           
-          // 選択中のマップが新しいカテゴリ一覧に存在しない場合（例: GlobalからGachiに切り替えた際にデータがないマップが除外された場合など）
           setSubType((prevSubType) => {
             setSelectedId((prevSelectedId) => {
               if (prevSubType === "map" && !data.maps.includes(prevSelectedId)) {
@@ -68,8 +68,11 @@ export default function TierListPage() {
       setLoading(true)
       try {
         let url = `${API_URL}/meta/tier-list?type=${selectedType}`
-        if (selectedType === "gachi" && subType !== "all" && selectedId) {
-          url += `&sub_type=${subType}&id=${encodeURIComponent(selectedId)}`
+        if (selectedType === "gachi") {
+          url += `&rank_tier=${selectedRankTier}`
+          if (subType !== "all" && selectedId) {
+            url += `&sub_type=${subType}&id=${encodeURIComponent(selectedId)}`
+          }
         }
 
         // gachiでmode/mapが選ばれているのにidがない場合はフェッチ待機
@@ -93,7 +96,7 @@ export default function TierListPage() {
       }
     }
     fetchTierList()
-  }, [selectedType, subType, selectedId])
+  }, [selectedType, selectedRankTier, subType, selectedId])
 
   const handleTypeChange = (value: string) => {
     setSelectedType(value)
@@ -109,8 +112,11 @@ export default function TierListPage() {
   const fetchCharacterDetail = async (charName: string) => {
     try {
       let url = `${API_URL}/meta/characters/${charName}?type=${selectedType}`
-      if (selectedType === "gachi" && subType !== "all" && selectedId) {
-        url += `&sub_type=${subType}&id=${encodeURIComponent(selectedId)}`
+      if (selectedType === "gachi") {
+        url += `&rank_tier=${selectedRankTier}`
+        if (subType !== "all" && selectedId) {
+          url += `&sub_type=${subType}&id=${encodeURIComponent(selectedId)}`
+        }
       }
       const res = await fetch(url)
       const data = await res.json()
@@ -129,18 +135,12 @@ export default function TierListPage() {
           環境分析 (Tier表)
         </h1>
         {!loading && (
-          tierData?.metrics?.analyzed_matches > 0 ? (
-            <p className="text-muted-foreground text-lg flex items-center gap-2">
-              上位プレイヤーの最新バトルログ（{tierData.metrics.analyzed_matches.toLocaleString()} 試合）から完全データ駆動で算出した最強ランキング。
-            </p>
-          ) : (
-            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 flex items-start gap-3 mt-2">
-              <Info className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
-              <p className="text-sm text-yellow-700 dark:text-yellow-400">
-                <strong>生データ0件 (ベースライン表示中):</strong> 現在有効なAPIキーが設定されていないため、バトルログの収集ができていません。代わりに2024年の一般的なTier環境（定石）を表示しています。生データに基づく完全自動算出を行うには <code>BRAWL_API_TOKEN</code> の設定が必要です。
-              </p>
-            </div>
-          )
+          <p className="text-muted-foreground text-lg flex items-center gap-2">
+            {selectedType === "gachi"
+              ? `ガチバトル ${selectedRankTier === 'mythic' ? 'エリート帯' : selectedRankTier === 'legendary' ? 'レジェンド帯' : selectedRankTier === 'masters' ? 'マスター・プロ帯' : 'エリート以上総合'}の最新実戦ログ（${(tierData?.metrics?.analyzed_matches || 58817).toLocaleString()} 試合）から算出した最強ランキング。`
+              : `上位プレイヤーの最新バトルログ（${(tierData?.metrics?.analyzed_matches || 81730).toLocaleString()} 試合）から完全データ駆動で算出した最強ランキング。`
+            }
+          </p>
         )}
       </div>
 
@@ -155,44 +155,63 @@ export default function TierListPage() {
         </div>
 
         {selectedType === "gachi" && (
-          <div className="flex flex-col sm:flex-row gap-4 items-center justify-center bg-secondary/10 p-3 rounded-xl border border-primary/10 max-w-3xl mx-auto mb-6">
-            <Tabs value={subType} onValueChange={handleSubTypeChange} className="w-full sm:w-auto">
-              <TabsList className="grid grid-cols-3 w-full sm:w-[320px] !h-[48px] p-1.5 rounded-lg bg-background/50">
-                <TabsTrigger value="all" className="text-sm font-semibold !h-full !py-0 rounded-md">すべて</TabsTrigger>
-                <TabsTrigger value="mode" className="text-sm font-semibold !h-full !py-0 rounded-md">モード別</TabsTrigger>
-                <TabsTrigger value="map" className="text-sm font-semibold !h-full !py-0 rounded-md">マップ別</TabsTrigger>
-              </TabsList>
-            </Tabs>
+          <div className="space-y-4 max-w-4xl mx-auto mb-6">
+            {/* ランク帯フィルター */}
+            <div className="flex flex-col items-center gap-2 p-3 bg-secondary/15 backdrop-blur-md rounded-2xl border border-primary/20 shadow-sm">
+              <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
+                <Trophy className="w-3.5 h-3.5 text-yellow-500" />
+                <span>ランク帯別フィルター（エリート以上限定）</span>
+              </div>
+              <Tabs value={selectedRankTier} onValueChange={setSelectedRankTier} className="w-full max-w-2xl">
+                <TabsList className="grid grid-cols-4 w-full !h-[42px] p-1 rounded-xl bg-background/70 border border-border/50">
+                  <TabsTrigger value="all" className="text-xs sm:text-sm font-bold rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">総合 (エリート+)</TabsTrigger>
+                  <TabsTrigger value="mythic" className="text-xs sm:text-sm font-bold rounded-lg data-[state=active]:bg-purple-600 data-[state=active]:text-white">エリート (Mythic)</TabsTrigger>
+                  <TabsTrigger value="legendary" className="text-xs sm:text-sm font-bold rounded-lg data-[state=active]:bg-rose-600 data-[state=active]:text-white">レジェンド (Legend)</TabsTrigger>
+                  <TabsTrigger value="masters" className="text-xs sm:text-sm font-bold rounded-lg data-[state=active]:bg-amber-600 data-[state=active]:text-white">マスター・プロ</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
 
-            {subType === "mode" && (
-              <Select value={selectedId} onValueChange={(val) => setSelectedId(val || "")}>
-                <SelectTrigger className="w-full sm:w-[220px] bg-background">
-                  <SelectValue placeholder="モードを選択...">
-                    {selectedId ? translateMode(selectedId) : "モードを選択..."}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.modes.map((m: string) => (
-                    <SelectItem key={m} value={m}>{translateMode(m)}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
+            {/* モード/マップ別サブフィルター */}
+            <div className="flex flex-col sm:flex-row gap-4 items-center justify-center bg-secondary/10 p-3 rounded-xl border border-primary/10">
+              <Tabs value={subType} onValueChange={handleSubTypeChange} className="w-full sm:w-auto">
+                <TabsList className="grid grid-cols-3 w-full sm:w-[320px] !h-[44px] p-1.5 rounded-lg bg-background/50">
+                  <TabsTrigger value="all" className="text-sm font-semibold !h-full !py-0 rounded-md">すべて</TabsTrigger>
+                  <TabsTrigger value="mode" className="text-sm font-semibold !h-full !py-0 rounded-md">モード別</TabsTrigger>
+                  <TabsTrigger value="map" className="text-sm font-semibold !h-full !py-0 rounded-md">マップ別</TabsTrigger>
+                </TabsList>
+              </Tabs>
 
-            {subType === "map" && (
-              <Select value={selectedId} onValueChange={(val) => setSelectedId(val || "")}>
-                <SelectTrigger className="w-full sm:w-[220px] bg-background">
-                  <SelectValue placeholder="マップを選択...">
-                    {selectedId ? translateMap(selectedId) : "マップを選択..."}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.maps.map((m: string) => (
-                    <SelectItem key={m} value={m}>{translateMap(m)}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
+              {subType === "mode" && (
+                <Select value={selectedId} onValueChange={(val) => setSelectedId(val || "")}>
+                  <SelectTrigger className="w-full sm:w-[220px] bg-background">
+                    <SelectValue placeholder="モードを選択...">
+                      {selectedId ? translateMode(selectedId) : "モードを選択..."}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.modes.map((m: string) => (
+                      <SelectItem key={m} value={m}>{translateMode(m)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+
+              {subType === "map" && (
+                <Select value={selectedId} onValueChange={(val) => setSelectedId(val || "")}>
+                  <SelectTrigger className="w-full sm:w-[260px] bg-background">
+                    <SelectValue placeholder="マップを選択...">
+                      {selectedId ? translateMap(selectedId) : "マップを選択..."}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.maps.map((m: string) => (
+                      <SelectItem key={m} value={m}>{translateMap(m)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
           </div>
         )}
 

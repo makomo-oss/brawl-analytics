@@ -229,11 +229,20 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
         else:
             tiers["D"].append(cid)
             
+    # 選択条件に応じた実試合数の算出（3vs3のため総キャラ延べ試合数 / 6）
+    total_char_matches = sum(s["total_matches"] for s in char_stats.values())
+    if type == "gachi":
+        # ガチバトル（3vs3）は1試合あたり6キャラ参加
+        display_matches = max(1, round(total_char_matches / 6)) if total_char_matches > 0 else 0
+    else:
+        display_matches = total_analyzed if (not sub_type or sub_type == "all") else max(1, round(total_char_matches / 6))
+
     response_data = {
         "updated_at": None,
         "tiers": tiers,
         "type": type,
-        "metrics": {"analyzed_matches": total_analyzed}
+        "rank_tier": rank_tier,
+        "metrics": {"analyzed_matches": display_matches}
     }
     
     if include_details:

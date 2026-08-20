@@ -137,8 +137,8 @@ export default function TierListPage() {
         {!loading && (
           <p className="text-muted-foreground text-lg flex items-center gap-2">
             {selectedType === "gachi"
-              ? `ガチバトル ${selectedRankTier === 'mythic' ? 'エリート帯' : selectedRankTier === 'legendary' ? 'レジェンド帯' : selectedRankTier === 'masters' ? 'マスター・プロ帯' : 'エリート以上総合'}の最新実戦ログ（${(tierData?.metrics?.analyzed_matches || 58817).toLocaleString()} 試合）から算出した最強ランキング。`
-              : `上位プレイヤーの最新バトルログ（${(tierData?.metrics?.analyzed_matches || 81730).toLocaleString()} 試合）から完全データ駆動で算出した最強ランキング。`
+              ? `ガチバトル ${selectedRankTier === 'mythic' ? 'エリート帯' : selectedRankTier === 'legendary' ? 'レジェンド帯' : selectedRankTier === 'masters' ? 'マスター・プロ帯' : 'エリート以上総合'}の最新実戦ログ（${(tierData?.metrics?.analyzed_matches ?? 0).toLocaleString()} 試合）から算出した最強ランキング。`
+              : `上位プレイヤーの最新バトルログ（${(tierData?.metrics?.analyzed_matches ?? 0).toLocaleString()} 試合）から完全データ駆動で算出した最強ランキング。`
             }
           </p>
         )}

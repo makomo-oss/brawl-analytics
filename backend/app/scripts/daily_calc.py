@@ -424,6 +424,14 @@ def run_daily_calculation(client: Client = None):
             batch = dynamic_counters[i:i+1000]
             supabase.table("dynamic_counters").upsert(batch).execute()
             
+    # キャッシュを即座に破棄して最新データをAPIに反映
+    try:
+        from app.routers.meta import clear_meta_cache
+        clear_meta_cache()
+        logger.info("API meta cache cleared and refreshed successfully.")
+    except Exception as e:
+        logger.warning(f"Failed to clear meta cache: {e}")
+
     logger.info("Daily Calculation Batch completed successfully.")
     return {
         "macro_stats_count": len(macro_stats),

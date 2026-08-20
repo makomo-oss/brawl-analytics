@@ -12,6 +12,20 @@ _CATEGORIES_CACHE = {"data": {}, "timestamp": 0, "ttl": 180}
 _COUNTERS_CACHE = {"data": None, "by_char": {}, "timestamp": 0, "ttl": 180}
 _MODE_MAPS_CACHE = {} # mode -> (set of map_ids, timestamp)
 
+def clear_meta_cache():
+    """日次バッチ完了時やデータ更新時にキャッシュを即座に破棄・最新化する"""
+    _MACRO_CACHE["data"] = None
+    _TOTAL_MATCHES_CACHE["count"] = 0
+    _CATEGORIES_CACHE["data"] = {}
+    _COUNTERS_CACHE["data"] = None
+    _COUNTERS_CACHE["by_char"] = {}
+    _MODE_MAPS_CACHE.clear()
+
+@router.post("/clear-cache")
+def api_clear_cache():
+    clear_meta_cache()
+    return {"status": "ok", "message": "Meta cache cleared successfully"}
+
 def _get_cached_counters_for_char(db, char_a: str) -> list[dict]:
     """dynamic_counters をインメモリキャッシュから超高速に取得 (DB通信をゼロに)"""
     now = time.time()

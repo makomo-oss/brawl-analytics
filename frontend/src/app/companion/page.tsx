@@ -359,29 +359,56 @@ export default function DraftCompanionPage() {
         // 4軸スコアの合成
         const finalScore = (W_map * S_map) + (W_mode * S_mode) + (W_counter * S_counter) + (W_syn * S_syn)
         
-        // 推薦理由バッジの動的生成
-        let reason = "マップ適性"
-        if (bestCounterWr >= 56.0 && bestCounterName) {
+        // スマート推薦理由バッジの動的生成（説得力特化・多重タグ）
+        const badges: Array<{ label: string; type: "counter" | "synergy" | "map" | "mode" | "general" }> = []
+        
+        // 1. カウンターバッジ (敵への有利性)
+        if (bestCounterName) {
           const enemyInfo = getBrawlerInfo(bestCounterName)
-          reason = `${enemyInfo.nameJa}に有利 (${bestCounterWr.toFixed(0)}%)`
-        } else if (bestSynergyLift >= 3.0 && bestSynergyAlly) {
+          if (bestCounterWr >= 64.0) {
+            badges.push({ label: `🔥 ${enemyInfo.nameJa}を完封 (${bestCounterWr.toFixed(0)}%)`, type: "counter" })
+          } else if (bestCounterWr >= 56.0) {
+            badges.push({ label: `⚔️ ${enemyInfo.nameJa}に有利 (${bestCounterWr.toFixed(0)}%)`, type: "counter" })
+          }
+        }
+        
+        // 2. シナジーバッジ (味方との相乗効果)
+        if (bestSynergyAlly) {
           const allyInfo = getBrawlerInfo(bestSynergyAlly)
-          reason = `${allyInfo.nameJa}と高相性 (+${bestSynergyLift.toFixed(1)}%)`
-        } else if (S_mode > S_map && S_mode > 58.0) {
-          reason = `${translateMode(selectedMode)}特化`
-        } else if (S_map >= 60.0) {
-          reason = "マップTier S"
+          if (bestSynergyLift >= 5.0) {
+            badges.push({ label: `⚡ ${allyInfo.nameJa}と黄金連携 (+${bestSynergyLift.toFixed(1)}%)`, type: "synergy" })
+          } else if (bestSynergyLift >= 2.5) {
+            badges.push({ label: `🤝 ${allyInfo.nameJa}と好相性 (+${bestSynergyLift.toFixed(1)}%)`, type: "synergy" })
+          }
+        }
+        
+        // 3. マップ & モード適性バッジ
+        if (S_map >= 62.0) {
+          badges.push({ label: "👑 マップS+ Tier", type: "map" })
+        } else if (S_map >= 58.0) {
+          badges.push({ label: "🗺️ マップ高適性", type: "map" })
+        }
+        
+        if (S_mode >= 60.0 && S_mode > S_map) {
+          badges.push({ label: `🎯 ${translateMode(selectedMode)}特化`, type: "mode" })
+        }
+
+        // デフォルトフォールバック
+        if (badges.length === 0) {
+          badges.push({ label: "安定ピック", type: "general" })
         }
         
         results.push({ 
           name, 
           score: finalScore, 
-          reason, 
+          badges,
           type: "pick",
           baseScore: S_map,
           modeScore: S_mode,
           counterScore: S_counter,
-          synScore: S_syn
+          synScore: S_syn,
+          bestCounterWr,
+          bestSynergyLift
         })
       }
       
@@ -901,13 +928,39 @@ export default function DraftCompanionPage() {
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={info.imageUrl} alt={info.nameJa} className="object-cover w-full h-full rounded-sm absolute inset-0 z-10" />
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="font-bold truncate">{info.nameJa}</div>
-                            <div className="text-xs text-primary font-medium truncate">{sug.reason}</div>
+                          <div className="flex-1 min-w-0 space-y-1">
+                            <div className="font-bold text-sm truncate flex items-center gap-2">
+                              <span>{info.nameJa}</span>
+                            </div>
+                            
+                            {/* スマート推薦タグ群 */}
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              {sug.badges ? (
+                                sug.badges.map((b: any, bIdx: number) => {
+                                  let badgeStyle = "bg-secondary text-secondary-foreground border-border"
+                                  if (b.type === "counter") badgeStyle = "bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30"
+                                  else if (b.type === "synergy") badgeStyle = "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30"
+                                  else if (b.type === "map") badgeStyle = "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30"
+                                  else if (b.type === "mode") badgeStyle = "bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/30"
+                                  
+                                  return (
+                                    <span 
+                                      key={bIdx} 
+                                      className={`inline-flex items-center text-[10px] px-1.5 py-0.5 rounded font-medium border ${badgeStyle}`}
+                                    >
+                                      {b.label}
+                                    </span>
+                                  )
+                                })
+                              ) : (
+                                <span className="text-xs text-primary font-medium truncate">{sug.reason}</span>
+                              )}
+                            </div>
                           </div>
-                          <div className="text-right">
-                            <Badge variant={phase === "ban" ? "destructive" : "default"}>
-                              スコア: {sug.score.toFixed(1)}
+                          
+                          <div className="text-right shrink-0">
+                            <Badge variant={phase === "ban" ? "destructive" : "default"} className="font-mono text-xs shadow-sm">
+                              {sug.score.toFixed(1)}点
                             </Badge>
                           </div>
                         </div>

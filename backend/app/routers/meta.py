@@ -10,6 +10,7 @@ _MACRO_CACHE = {"data": None, "timestamp": 0, "ttl": 180}
 _TOTAL_MATCHES_CACHE = {"count": 0, "timestamp": 0, "ttl": 180}
 _CATEGORIES_CACHE = {"data": {}, "timestamp": 0, "ttl": 180}
 _COUNTERS_CACHE = {"data": None, "by_char": {}, "timestamp": 0, "ttl": 180}
+_SYNERGIES_CACHE = {"data": None, "by_char": {}, "timestamp": 0, "ttl": 300}
 _MODE_MAPS_CACHE = {} # mode -> (set of map_ids, timestamp)
 
 def clear_meta_cache():
@@ -19,12 +20,101 @@ def clear_meta_cache():
     _CATEGORIES_CACHE["data"] = {}
     _COUNTERS_CACHE["data"] = None
     _COUNTERS_CACHE["by_char"] = {}
+    _SYNERGIES_CACHE["data"] = None
+    _SYNERGIES_CACHE["by_char"] = {}
     _MODE_MAPS_CACHE.clear()
 
 @router.post("/clear-cache")
 def api_clear_cache():
     clear_meta_cache()
     return {"status": "ok", "message": "Meta cache cleared successfully"}
+
+def _normalize_id(name: str) -> str:
+    """表記ゆれ（スペース、アンダースコア、ハイフン、ドット、アンド記号）を除去した正規化キーを生成"""
+    if not name: return ""
+    return str(name).lower().replace(" ", "").replace("_", "").replace("-", "").replace(".", "").replace("&", "")
+
+def _get_cached_synergies(db) -> dict[str, dict[str, dict]]:
+    """match_raw_history からペア共起シナジー（相乗効果リフト値）を完全自動集計してキャッシュ"""
+    now = time.time()
+    if _SYNERGIES_CACHE["data"] is not None and (now - _SYNERGIES_CACHE["timestamp"]) < _SYNERGIES_CACHE["ttl"]:
+        return _SYNERGIES_CACHE["by_char"]
+
+    try:
+        # 直近の試合ログから allies ペアを展開
+        res = db.table("match_raw_history").select("hero_used, allies, result").limit(5000).execute()
+        raw_matches = res.data or []
+        
+        char_single_stats: dict[str, list[int]] = {} # norm_char -> [wins, total]
+        pair_stats: dict[tuple[str, str], list[int]] = {} # (min_norm, max_norm) -> [wins, total]
+        
+        for r in raw_matches:
+            hero = str(r.get("hero_used", "") or "").strip()
+            norm_hero = _normalize_id(hero)
+            if not norm_hero or norm_hero == "unknown":
+                continue
+                
+            allies = r.get("allies", [])
+            if isinstance(allies, str):
+                import ast
+                try: allies = ast.literal_eval(allies)
+                except: allies = []
+                
+            is_win = 1 if str(r.get("result", "")).lower() == "victory" else 0
+            
+            if norm_hero not in char_single_stats:
+                char_single_stats[norm_hero] = [0, 0]
+            char_single_stats[norm_hero][0] += is_win
+            char_single_stats[norm_hero][1] += 1
+            
+            for ally in allies:
+                ally_str = str(ally).strip()
+                norm_ally = _normalize_id(ally_str)
+                if not norm_ally or norm_ally == "unknown" or norm_ally == norm_hero:
+                    continue
+                    
+                if norm_ally not in char_single_stats:
+                    char_single_stats[norm_ally] = [0, 0]
+                char_single_stats[norm_ally][0] += is_win
+                char_single_stats[norm_ally][1] += 1
+                
+                pair_key = (min(norm_hero, norm_ally), max(norm_hero, norm_ally))
+                if pair_key not in pair_stats:
+                    pair_stats[pair_key] = [0, 0]
+                pair_stats[pair_key][0] += is_win
+                pair_stats[pair_key][1] += 1
+
+        by_char: dict[str, dict[str, dict]] = {}
+        for (c1, c2), (w, m) in pair_stats.items():
+            if m < 2: continue
+            pair_wr = (w / m) * 100.0
+            
+            wr1 = (char_single_stats[c1][0] / char_single_stats[c1][1] * 100.0) if (c1 in char_single_stats and char_single_stats[c1][1] > 0) else 50.0
+            wr2 = (char_single_stats[c2][0] / char_single_stats[c2][1] * 100.0) if (c2 in char_single_stats and char_single_stats[c2][1] > 0) else 50.0
+            expected_wr = (wr1 + wr2) / 2.0
+            raw_lift = pair_wr - expected_wr
+            
+            # ベイズ縮小（データ数に応じた信頼度平滑化）
+            shrinkage = m / (m + 5.0)
+            regressed_lift = round(raw_lift * shrinkage, 1)
+            
+            entry = {
+                "win_rate": round(pair_wr, 1),
+                "lift": regressed_lift,
+                "matches": m
+            }
+            if c1 not in by_char: by_char[c1] = {}
+            if c2 not in by_char: by_char[c2] = {}
+            by_char[c1][c2] = entry
+            by_char[c2][c1] = entry
+
+        _SYNERGIES_CACHE["data"] = pair_stats
+        _SYNERGIES_CACHE["by_char"] = by_char
+        _SYNERGIES_CACHE["timestamp"] = now
+        return by_char
+    except Exception as e:
+        print(f"Failed to calculate synergies: {e}")
+        return _SYNERGIES_CACHE.get("by_char", {})
 
 def _get_cached_counters_for_char(db, char_a: str) -> list[dict]:
     """dynamic_counters をインメモリキャッシュから超高速に取得 (DB通信をゼロに)"""
@@ -273,13 +363,82 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
         
         scored_chars.append({"id": cid, "score": score})
         
+        # 基本情報（score, win_rate, use_rate, total_matches）は常時提供 (超軽量: 数KB)
+        char_entry = {
+            "score": round(score, 1),
+            "win_rate": round(actual_wr, 1),
+            "use_rate": round(use_rate, 2),
+            "total_matches": tm
+        }
+        
+        # include_details=True の場合のみ、重い対面マトリクス(matchups/kamo/tenteki)と味方シナジー(synergies)を付与
         if include_details:
-            characters_detail[cid] = {
-                "score": round(score, 1),
-                "win_rate": round(actual_wr, 1),
-                "use_rate": round(use_rate, 2),
-                "total_matches": tm
-            }
+            norm_cid = _normalize_id(cid)
+            
+            # 1. 味方シナジーマトリクス (match_raw_history から完全自動集計)
+            all_synergies = _get_cached_synergies(db)
+            char_synergies = all_synergies.get(norm_cid, {})
+            
+            # 2. 対面カウンターマトリクス (dynamic_counters)
+            kamo = []
+            tenteki = []
+            matchups = {}
+            try:
+                raw_counters = _get_cached_counters_for_char(db, cid)
+                merged_counters: dict[str, list[int]] = {}
+                for r in raw_counters:
+                    cb = str(r.get("char_b", "")).lower().strip()
+                    mc = r.get("match_count", 0) or 0
+                    wc = r.get("win_count", 0) or 0
+                    if not cb or cb == "unknown" or cb == cid:
+                        continue
+                    if cb not in merged_counters:
+                        merged_counters[cb] = [0, 0]
+                    merged_counters[cb][0] += mc
+                    merged_counters[cb][1] += wc
+
+                ranked_counters = []
+                for enemy_id, (m, w) in merged_counters.items():
+                    losses = m - w
+                    adv = wilson_lower_bound(w, m, z=1.28)
+                    disadv = wilson_lower_bound(losses, m, z=1.28)
+                    wr = round((w / m * 100) if m > 0 else 50.0, 1)
+                    norm_enemy = _normalize_id(enemy_id)
+                    matchups[norm_enemy] = wr
+                    ranked_counters.append((enemy_id, m, w, adv, disadv, wr))
+
+                # カモ (有利な対面)
+                ranked_counters.sort(key=lambda x: x[3], reverse=True)
+                for enemy_id, m, w, adv, disadv, wr in ranked_counters:
+                    if len(kamo) >= 8: break
+                    if m < 2 or adv == 0: continue
+                    kamo.append({
+                        "brawler": enemy_id,
+                        "name": format_char_name(enemy_id),
+                        "win_rate": wr,
+                        "matches": m
+                    })
+
+                # 天敵 (不利な対面)
+                ranked_counters.sort(key=lambda x: x[4], reverse=True)
+                for enemy_id, m, w, adv, disadv, wr in ranked_counters:
+                    if len(tenteki) >= 8: break
+                    if m < 2 or disadv == 0: continue
+                    tenteki.append({
+                        "brawler": enemy_id,
+                        "name": format_char_name(enemy_id),
+                        "win_rate": wr,
+                        "matches": m
+                    })
+            except Exception:
+                pass
+
+            char_entry["kamo"] = kamo
+            char_entry["tenteki"] = tenteki
+            char_entry["matchups"] = matchups
+            char_entry["synergies"] = char_synergies
+
+        characters_detail[cid] = char_entry
             
     # スコアで降順ソート
     scored_chars.sort(key=lambda x: x["score"], reverse=True)
@@ -314,7 +473,6 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
     # 選択条件に応じた実試合数の算出（3vs3のため総キャラ延べ試合数 / 6）
     total_char_matches = sum(s["total_matches"] for s in char_stats.values())
     if type == "gachi":
-        # ガチバトル（3vs3）は1試合あたり6キャラ参加
         display_matches = max(1, round(total_char_matches / 6)) if total_char_matches > 0 else 0
     else:
         display_matches = total_analyzed if (not sub_type or sub_type == "all") else max(1, round(total_char_matches / 6))
@@ -324,12 +482,9 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
         "tiers": tiers,
         "type": type,
         "rank_tier": rank_tier,
-        "metrics": {"analyzed_matches": display_matches}
+        "metrics": {"analyzed_matches": display_matches},
+        "characters": characters_detail
     }
-    
-    if include_details:
-        response_data["characters"] = characters_detail
-        
     return response_data
 
 @router.get("/categories")
@@ -416,53 +571,64 @@ def get_categories(type: str = "global"):
     return result
 
 @router.get("/characters/{character_id}")
-def get_character_detail(character_id: str, type: str = "global", sub_type: str = None, id: str = None):
+def get_character_detail(character_id: str, type: str = "global", rank_tier: str = "all", sub_type: str = None, id: str = None):
     db = get_db()
-    char_id_lower = character_id.lower()
+    char_id_raw = character_id.lower().strip()
+    norm_target = _normalize_id(char_id_raw)
     
     # 1. 基本情報の取得 (Tier表ロジックと同じく集計)
-    tier_data = get_tier_list(type=type, sub_type=sub_type, id=id, include_details=True)
+    tier_data = get_tier_list(type=type, sub_type=sub_type, id=id, rank_tier=rank_tier, include_details=True)
     chars = tier_data.get("characters", {})
+    tiers = tier_data.get("tiers", {})
     
-    if char_id_lower not in chars:
-        # 基本データ(macro_map_stats)にない場合は、dynamic_countersから逆算して補完を試みる
-        fallback_matches = 0
-        fallback_wins = 0
-        try:
-            fallback_res = db.table("dynamic_counters").select("match_count,win_count").eq("char_a", char_id_lower).execute()
-            for r in fallback_res.data:
-                fallback_matches += r.get("match_count", 0)
-                fallback_wins += r.get("win_count", 0)
-        except:
-            pass
-            
-        fallback_win_rate = round((fallback_wins / fallback_matches * 100), 1) if fallback_matches > 0 else 50.0
-        
-        detail = {
-            "score": 0,
-            "win_rate": fallback_win_rate,
-            "use_rate": 0.0,
-            "total_matches": fallback_matches
-        }
-        my_tier = "Unknown"
+    matched_key = None
+    matched_detail = None
+    
+    if char_id_raw in chars:
+        matched_key = char_id_raw
+        matched_detail = chars[char_id_raw]
     else:
-        detail = chars[char_id_lower]
-        # 所属Tierの検索
-        my_tier = "Unknown"
-        for t_name, char_list in tier_data.get("tiers", {}).items():
-            if char_id_lower in char_list:
-                my_tier = t_name
+        for k, v in chars.items():
+            if _normalize_id(k) == norm_target:
+                matched_key = k
+                matched_detail = v
                 break
                 
+    # 所属Tierの検索
+    my_tier = "Unknown"
+    for t_name, char_list in tiers.items():
+        if matched_key and matched_key in char_list:
+            my_tier = t_name
+            break
+        for c in char_list:
+            if _normalize_id(c) == norm_target:
+                my_tier = t_name
+                break
+        if my_tier != "Unknown":
+            break
+
+    if not matched_detail:
+        # 基本データにない場合のフォールバック
+        detail = {
+            "score": 50.0,
+            "win_rate": 50.0,
+            "use_rate": 0.0,
+            "total_matches": 0,
+            "kamo": [],
+            "tenteki": []
+        }
+    else:
+        detail = matched_detail
+
     detail["tier"] = my_tier
-    detail["character_id"] = char_id_lower
+    detail["character_id"] = char_id_raw
     
     # 2. カモ・天敵の取得 (dynamic_counters)
     kamo = []
     tenteki = []
     try:
         # キャッシュから自分が char_a になっているデータを取得 (DB通信ゼロ)
-        counters = [dict(c) for c in _get_cached_counters_for_char(db, char_id_lower)]
+        counters = [dict(c) for c in _get_cached_counters_for_char(db, char_id_raw)]
         
         # 各対面について、ウィルソン・スコア（有利スコアと不利スコア）を計算
         for c in counters:

@@ -215,7 +215,58 @@ export default function DraftCompanionPage() {
   const allyPicks = myTeam === "blue" ? bluePicks : redPicks
   const enemyPicks = myTeam === "blue" ? redPicks : bluePicks
 
-  // サジェスト計算ロジック
+  // キャラクターのメタ統計を正規化キーで安全に取得
+  const getCharStats = (charId: string) => {
+    if (!metaData?.characters) return null
+    const norm = charId.toLowerCase().replace(/[\s_\-&.]/g, "")
+    if (metaData.characters[charId]) return metaData.characters[charId]
+    for (const [k, v] of Object.entries<any>(metaData.characters)) {
+      if (k.toLowerCase().replace(/[\s_\-&.]/g, "") === norm) return v
+    }
+    return null
+  }
+
+  // 2キャラ間の直接対面勝率を取得 (双方向解決)
+  const getMatchupWinRate = (myChar: string, enemyChar: string): number => {
+    const myStats = getCharStats(myChar)
+    const enemyStats = getCharStats(enemyChar)
+    const normMy = myChar.toLowerCase().replace(/[\s_\-&.]/g, "")
+    const normEnemy = enemyChar.toLowerCase().replace(/[\s_\-&.]/g, "")
+
+    if (myStats?.matchups && typeof myStats.matchups[normEnemy] === "number") {
+      return myStats.matchups[normEnemy]
+    }
+    if (enemyStats?.matchups && typeof enemyStats.matchups[normMy] === "number") {
+      return 100.0 - enemyStats.matchups[normMy]
+    }
+    if (myStats?.kamo) {
+      const k = myStats.kamo.find((item: any) => item.brawler.toLowerCase().replace(/[\s_\-&.]/g, "") === normEnemy)
+      if (k) return k.win_rate
+    }
+    if (myStats?.tenteki) {
+      const t = myStats.tenteki.find((item: any) => item.brawler.toLowerCase().replace(/[\s_\-&.]/g, "") === normEnemy)
+      if (t) return t.win_rate
+    }
+    return 50.0
+  }
+
+  // 2キャラ間の味方ペア共起シナジー（リフト値）を取得 (双方向解決)
+  const getPairSynergyLift = (myChar: string, allyChar: string): number => {
+    const myStats = getCharStats(myChar)
+    const allyStats = getCharStats(allyChar)
+    const normMy = myChar.toLowerCase().replace(/[\s_\-&.]/g, "")
+    const normAlly = allyChar.toLowerCase().replace(/[\s_\-&.]/g, "")
+
+    if (myStats?.synergies && myStats.synergies[normAlly]?.lift !== undefined) {
+      return myStats.synergies[normAlly].lift
+    }
+    if (allyStats?.synergies && allyStats.synergies[normMy]?.lift !== undefined) {
+      return allyStats.synergies[normMy].lift
+    }
+    return 0.0
+  }
+
+  // サジェスト計算ロジック (4軸統合エンジン: マップ・モード・対面・味方シナジー)
   const suggestions = useMemo(() => {
     if (!metaData || !metaData.characters) return []
     
@@ -226,63 +277,111 @@ export default function DraftCompanionPage() {
       // おすすめBAN: マップ適性 (score) が高く、まだ除外されていないキャラ
       for (const [name, stats] of Object.entries<any>(chars)) {
         if (isExcluded(name)) continue
-        results.push({ name, score: stats.score, reason: "マップTier高", type: "ban" })
+        const sMap = stats.score ?? 50.0
+        results.push({ name, score: sMap, reason: "マップTier高", type: "ban" })
       }
       results.sort((a, b) => b.score - a.score)
       return results.slice(0, 10)
     } 
     
     if (phase === "pick") {
-      // おすすめPick
+      const allyCount = allyPicks.length
       const enemyCount = enemyPicks.length
-      const W = WEIGHTS[enemyCount] || WEIGHTS[3]
+
+      // 盤面に応じた動的4軸ウェイトの決定
+      let W_map = 0.50
+      let W_mode = 0.30
+      let W_counter = 0.00
+      let W_syn = 0.00
+
+      if (enemyCount === 0 && allyCount === 1) {
+        W_map = 0.40; W_mode = 0.25; W_counter = 0.00; W_syn = 0.35
+      } else if (enemyCount === 0 && allyCount === 2) {
+        W_map = 0.35; W_mode = 0.20; W_counter = 0.00; W_syn = 0.45
+      } else if (enemyCount === 1 && allyCount === 0) {
+        W_map = 0.35; W_mode = 0.20; W_counter = 0.45; W_syn = 0.00
+      } else if (enemyCount === 1 && allyCount >= 1) {
+        W_map = 0.30; W_mode = 0.20; W_counter = 0.30; W_syn = 0.20
+      } else if (enemyCount === 2 && allyCount === 0) {
+        W_map = 0.25; W_mode = 0.15; W_counter = 0.60; W_syn = 0.00
+      } else if (enemyCount === 2 && allyCount >= 1) {
+        W_map = 0.20; W_mode = 0.15; W_counter = 0.40; W_syn = 0.25
+      } else if (enemyCount === 3 && allyCount >= 1) {
+        W_map = 0.15; W_mode = 0.10; W_counter = 0.45; W_syn = 0.30
+      }
 
       for (const [name, stats] of Object.entries<any>(chars)) {
         if (isExcluded(name)) continue
         
-        // S_map: Tier Z-score
-        const S_map = stats.score
+        // 1. S_map (マップ適性: 50点基準)
+        const S_map = stats.score ?? 50.0
         
-        // S_counter: 敵Pickに対する勝率（50%を基準にプラスマイナス計算）
-        let S_counter = 0
-        let counterReason = ""
+        // 2. S_mode (モード適性: 50点基準)
+        const S_mode = stats.mode_score ?? stats.score ?? 50.0
+        
+        // 3. S_counter (対面カウンター相性: 50点基準)
+        let S_counter = 50.0
+        let bestCounterName = ""
+        let bestCounterWr = 50.0
         
         if (enemyCount > 0) {
-          let totalCounterScore = 0
+          let totalCounterDiff = 0
           for (const enemy of enemyPicks) {
-            // enemy に対するこのキャラ(name)の勝率を探す
-            // kamo/tentekiリストに入っていればその勝率を使用、なければ50%と仮定
-            let wrAgainstEnemy = 50.0
-            
-            // kamo(得意な相手)を探す
-            const asKamo = stats.kamo?.find((k: any) => k.brawler === enemy)
-            if (asKamo) wrAgainstEnemy = asKamo.win_rate
-            
-            // tenteki(苦手な相手)を探す
-            const asTenteki = stats.tenteki?.find((t: any) => t.brawler === enemy)
-            if (asTenteki) wrAgainstEnemy = asTenteki.win_rate
-            
-            // 50%からの差分を係数として加算 (例: 勝率60%なら +1.0)
-            const diff = (wrAgainstEnemy - 50.0) / 10.0
-            totalCounterScore += diff
-            
-            if (wrAgainstEnemy > 55) counterReason = `${getBrawlerInfo(enemy).nameJa}に有利`
+            const wr = getMatchupWinRate(name, enemy)
+            const diff = wr - 50.0
+            totalCounterDiff += diff
+            if (wr > bestCounterWr) {
+              bestCounterWr = wr
+              bestCounterName = enemy
+            }
           }
-          S_counter = totalCounterScore / enemyCount
+          S_counter = 50.0 + (totalCounterDiff / enemyCount) * 1.5
         }
         
-        // S_syn: 今回は簡易的に0とする
-        const S_syn = 0
+        // 4. S_syn (味方ペア共起シナジー: 50点基準)
+        let S_syn = 50.0
+        let bestSynergyAlly = ""
+        let bestSynergyLift = 0.0
         
-        const finalScore = (W.W_map * S_map) + (W.W_counter * S_counter) + (W.W_syn * S_syn)
+        if (allyCount > 0) {
+          let totalLift = 0
+          for (const ally of allyPicks) {
+            const lift = getPairSynergyLift(name, ally)
+            totalLift += lift
+            if (lift > bestSynergyLift) {
+              bestSynergyLift = lift
+              bestSynergyAlly = ally
+            }
+          }
+          S_syn = 50.0 + (totalLift / allyCount) * 1.5
+        }
+        
+        // 4軸スコアの合成
+        const finalScore = (W_map * S_map) + (W_mode * S_mode) + (W_counter * S_counter) + (W_syn * S_syn)
+        
+        // 推薦理由バッジの動的生成
+        let reason = "マップ適性"
+        if (bestCounterWr >= 56.0 && bestCounterName) {
+          const enemyInfo = getBrawlerInfo(bestCounterName)
+          reason = `${enemyInfo.nameJa}に有利 (${bestCounterWr.toFixed(0)}%)`
+        } else if (bestSynergyLift >= 3.0 && bestSynergyAlly) {
+          const allyInfo = getBrawlerInfo(bestSynergyAlly)
+          reason = `${allyInfo.nameJa}と高相性 (+${bestSynergyLift.toFixed(1)}%)`
+        } else if (S_mode > S_map && S_mode > 58.0) {
+          reason = `${translateMode(selectedMode)}特化`
+        } else if (S_map >= 60.0) {
+          reason = "マップTier S"
+        }
         
         results.push({ 
           name, 
           score: finalScore, 
-          reason: counterReason || "マップ適性", 
+          reason, 
           type: "pick",
           baseScore: S_map,
-          counterScore: S_counter
+          modeScore: S_mode,
+          counterScore: S_counter,
+          synScore: S_syn
         })
       }
       
@@ -291,21 +390,79 @@ export default function DraftCompanionPage() {
     }
     
     return []
-  }, [phase, allyBans, enemyBans, bluePicks, redPicks, metaData, enemyPicks])
+  }, [phase, allyBans, enemyBans, bluePicks, redPicks, metaData, enemyPicks, allyPicks, selectedMode])
 
-  // 勝率予測計算
-  const predictedWinRate = useMemo(() => {
-    if (phase !== "done" || !metaData || !metaData.characters) return 50
-    let myScore = 0
-    let enemyScore = 0
+  // 4軸統合による高精度勝率予測計算 (詳細メトリクス付き)
+  const predictionStats = useMemo(() => {
+    const defaultStats = {
+      winRate: 50,
+      allyEnvAvg: 50.0,
+      enemyEnvAvg: 50.0,
+      matchupAdvantage: 0.0,
+      allySynergyTotal: 0.0
+    }
+    if (phase !== "done" || !metaData || !metaData.characters) return defaultStats
     
-    allyPicks.forEach(c => myScore += metaData.characters[c]?.score || 0)
-    enemyPicks.forEach(c => enemyScore += metaData.characters[c]?.score || 0)
+    let allyEnvTotal = 0
+    let enemyEnvTotal = 0
     
-    const diff = myScore - enemyScore
-    // シグモイド関数で勝率に変換 (係数2.0で適度に丸める)
-    const p = 1 / (1 + Math.exp(-2.0 * diff))
-    return Math.round(p * 100)
+    allyPicks.forEach(c => {
+      const stats = getCharStats(c)
+      allyEnvTotal += (stats?.score ?? 50.0)
+    })
+    enemyPicks.forEach(c => {
+      const stats = getCharStats(c)
+      enemyEnvTotal += (stats?.score ?? 50.0)
+    })
+
+    const allyEnvAvg = allyEnvTotal / (allyPicks.length || 1)
+    const enemyEnvAvg = enemyEnvTotal / (enemyPicks.length || 1)
+
+    // 対面マトリクス (味方3 vs 敵3 = 9対面) の総合アドバンテージ
+    let matchupAdvantage = 0
+    allyPicks.forEach(a => {
+      enemyPicks.forEach(e => {
+        const wr = getMatchupWinRate(a, e)
+        matchupAdvantage += (wr - 50.0)
+      })
+    })
+    matchupAdvantage = matchupAdvantage / 9.0 // 1対面あたりの平均勝率乖離
+
+    // 味方シナジー総和 vs 敵シナジー総和
+    let allySynergyTotal = 0
+    if (allyPicks.length >= 2) {
+      allySynergyTotal += getPairSynergyLift(allyPicks[0], allyPicks[1])
+      if (allyPicks.length >= 3) {
+        allySynergyTotal += getPairSynergyLift(allyPicks[0], allyPicks[2])
+        allySynergyTotal += getPairSynergyLift(allyPicks[1], allyPicks[2])
+      }
+    }
+
+    let enemySynergyTotal = 0
+    if (enemyPicks.length >= 2) {
+      enemySynergyTotal += getPairSynergyLift(enemyPicks[0], enemyPicks[1])
+      if (enemyPicks.length >= 3) {
+        enemySynergyTotal += getPairSynergyLift(enemyPicks[0], enemyPicks[2])
+        enemySynergyTotal += getPairSynergyLift(enemyPicks[1], enemyPicks[2])
+      }
+    }
+
+    // 環境適性の差分 (40%) + 対面相性アドバンテージ (40%) + チームシナジー差分 (20%)
+    const envDiff = allyEnvTotal - enemyEnvTotal
+    const synDiff = allySynergyTotal - enemySynergyTotal
+    const totalAdvantage = (envDiff * 0.40) + (matchupAdvantage * 1.5 * 0.40) + (synDiff * 1.2 * 0.20)
+
+    // シグモイド関数で勝率に変換
+    const p = 1 / (1 + Math.exp(-0.15 * totalAdvantage))
+    const winRate = Math.min(Math.max(Math.round(p * 100), 5), 95)
+
+    return {
+      winRate,
+      allyEnvAvg,
+      enemyEnvAvg,
+      matchupAdvantage,
+      allySynergyTotal
+    }
   }, [phase, allyPicks, enemyPicks, metaData])
 
   // ================= UI Components =================
@@ -591,18 +748,39 @@ export default function DraftCompanionPage() {
                     <circle 
                       cx="96" cy="96" r="80" stroke="currentColor" strokeWidth="12" fill="transparent" 
                       strokeDasharray="502" 
-                      strokeDashoffset={502 - (502 * predictedWinRate) / 100}
-                      className={predictedWinRate >= 50 ? "text-blue-500 transition-all duration-1000 ease-out" : "text-red-500 transition-all duration-1000 ease-out"} 
+                      strokeDashoffset={502 - (502 * predictionStats.winRate) / 100}
+                      className={predictionStats.winRate >= 50 ? "text-blue-500 transition-all duration-1000 ease-out" : "text-red-500 transition-all duration-1000 ease-out"} 
                     />
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-5xl font-extrabold">{predictedWinRate}%</span>
+                    <span className="text-5xl font-extrabold">{predictionStats.winRate}%</span>
                   </div>
                 </div>
-                <p className="text-sm text-muted-foreground text-center max-w-[300px]">
-                  現在の環境メタとマップ適正度に基づく自チームの理論上の勝率です
+                <div className="grid grid-cols-3 gap-2 w-full max-w-md bg-secondary/30 p-3 rounded-lg border border-primary/10 text-center">
+                  <div className="space-y-1">
+                    <div className="text-[10px] text-muted-foreground font-medium">マップ適性</div>
+                    <div className="text-xs font-bold text-foreground">
+                      {predictionStats.allyEnvAvg.toFixed(1)} vs {predictionStats.enemyEnvAvg.toFixed(1)}
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-[10px] text-muted-foreground font-medium">対面相性優位</div>
+                    <div className={`text-xs font-bold ${predictionStats.matchupAdvantage >= 0 ? 'text-blue-500' : 'text-red-500'}`}>
+                      {predictionStats.matchupAdvantage >= 0 ? `+${(predictionStats.matchupAdvantage * 100 / 50).toFixed(1)}%` : `${(predictionStats.matchupAdvantage * 100 / 50).toFixed(1)}%`}
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-[10px] text-muted-foreground font-medium">味方シナジー</div>
+                    <div className={`text-xs font-bold ${predictionStats.allySynergyTotal >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                      {predictionStats.allySynergyTotal >= 0 ? `+${predictionStats.allySynergyTotal.toFixed(1)}%` : `${predictionStats.allySynergyTotal.toFixed(1)}%`}
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-xs text-muted-foreground text-center max-w-[340px]">
+                  マップ適性・モード適性・対面カウンター・味方ペアシナジーを総合統合した高精度予測です
                 </p>
-                <Button className="mt-4" size="lg" onClick={handleReset}>
+                <Button className="mt-2" size="lg" onClick={handleReset}>
                   <RefreshCw className="w-4 h-4 mr-2" /> 新しいドラフトを始める
                 </Button>
               </CardContent>

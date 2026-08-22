@@ -288,9 +288,9 @@ export default function DraftCompanionPage() {
       const allyCount = allyPicks.length
       const enemyCount = enemyPicks.length
 
-      // 盤面に応じた動的4軸ウェイトの決定
-      let W_map = 0.50
-      let W_mode = 0.30
+      // 盤面に応じた動的4軸ウェイトの決定 (合計は常に1.0)
+      let W_map = 0.55
+      let W_mode = 0.45
       let W_counter = 0.00
       let W_syn = 0.00
 

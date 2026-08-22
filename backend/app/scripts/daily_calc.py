@@ -387,9 +387,102 @@ def calc_dynamic_counters(df: pd.DataFrame):
         
     return counter_list
 
+def calc_dynamic_synergies(df: pd.DataFrame):
+    """味方ペア共起シナジー（実戦勝率＆リフト値）を計算 (Match ID ユニーク化対応)"""
+    logger.info("Calculating dynamic teammate synergies...")
+    if df.empty:
+        return []
+        
+    # 全体のヒーロー別平均勝率を計算
+    df["is_win"] = (df["result"] == "victory").astype(int)
+    df["hero_used"] = df["hero_used"].str.lower()
+    global_win_rates = df.groupby("hero_used")["is_win"].mean().to_dict()
+    
+    records = []
+    for _, row in df.iterrows():
+        match_id = str(row.get("match_id", "") or "").strip()
+        char_a = str(row.get("hero_used", "") or "").lower()
+        is_win = row["is_win"]
+        
+        allies = row.get("allies", [])
+        if isinstance(allies, str):
+            import ast
+            try:
+                allies = ast.literal_eval(allies)
+            except:
+                allies = []
+                
+        for char_b in allies:
+            char_b = str(char_b).lower()
+            if not char_a or not char_b or char_a == "unknown" or char_b == "unknown" or char_a == char_b:
+                continue
+            records.append({
+                "match_id": match_id,
+                "char_a": char_a,
+                "char_b": char_b,
+                "is_win": is_win
+            })
+            # 双方向ペアとして追加
+            records.append({
+                "match_id": match_id,
+                "char_a": char_b,
+                "char_b": char_a,
+                "is_win": is_win
+            })
+
+    if not records:
+        return []
+        
+    pairs_df = pd.DataFrame(records)
+
+    # Match ID ユニーク化: 同一試合における同一ペア(char_a, char_b)の重複カウントを排除
+    if "match_id" in pairs_df.columns:
+        valid_match_id = pairs_df["match_id"].astype(str).str.strip().str.len() > 0
+        if valid_match_id.any():
+            pairs_df = pd.concat([
+                pairs_df[valid_match_id].drop_duplicates(subset=["match_id", "char_a", "char_b"]),
+                pairs_df[~valid_match_id]
+            ], ignore_index=True)
+
+    grouped = pairs_df.groupby(["char_a", "char_b"]).agg(
+        match_count=("is_win", "count"),
+        win_count=("is_win", "sum")
+    ).reset_index()
+    
+    synergy_list = []
+    for _, row in grouped.iterrows():
+        char_a = row["char_a"]
+        char_b = row["char_b"]
+        m_count = int(row["match_count"])
+        w_count = int(row["win_count"])
+        
+        if char_a == "unknown" or char_b == "unknown" or m_count < 1:
+            continue
+            
+        pair_wr = (w_count / m_count) * 100.0
+        wr_a = global_win_rates.get(char_a, 0.5) * 100.0
+        wr_b = global_win_rates.get(char_b, 0.5) * 100.0
+        expected_wr = (wr_a + wr_b) / 2.0
+        raw_lift = pair_wr - expected_wr
+        
+        # ベイズ縮小（データ数に応じた信頼度平滑化）
+        shrinkage = m_count / (m_count + 5.0)
+        regressed_lift = float(round(raw_lift * shrinkage, 2))
+        
+        synergy_list.append({
+            "char_a": char_a,
+            "char_b": char_b,
+            "match_count": m_count,
+            "win_count": w_count,
+            "win_rate": float(round(pair_wr, 2)),
+            "lift": regressed_lift
+        })
+        
+    return synergy_list
+
 def run_daily_calculation(client: Client = None):
     """
-    マッチ履歴を集計し、macro_map_stats と dynamic_counters を最新化する関数。
+    マッチ履歴を集計し、macro_map_stats, dynamic_counters, dynamic_synergies を最新化する関数。
     クローラー完了時やcronバッチから呼び出される。
     """
     supabase = client or get_supabase_client()
@@ -398,16 +491,16 @@ def run_daily_calculation(client: Client = None):
     
     if df.empty:
         logger.info("No data found. Exiting.")
-        return {"macro_stats_count": 0, "dynamic_counters_count": 0}
+        return {"macro_stats_count": 0, "dynamic_counters_count": 0, "dynamic_synergies_count": 0}
         
     rank_segments = fetch_player_rank_segments(supabase, match_df=df)
     macro_stats = calc_macro_map_stats(df, rank_segments)
     dynamic_counters = calc_dynamic_counters(df)
+    dynamic_synergies = calc_dynamic_synergies(df)
     
-    # Upsert macro_map_stats
+    # 1. Upsert macro_map_stats
     if macro_stats:
         logger.info(f"Upserting {len(macro_stats)} macro_map_stats records...")
-        # 1000件ずつ分割してUpsert
         for i in range(0, len(macro_stats), 1000):
             batch = macro_stats[i:i+1000]
             try:
@@ -417,12 +510,25 @@ def run_daily_calculation(client: Client = None):
                 fallback_batch = [{k: v for k, v in item.items() if k != "match_type"} for item in batch]
                 supabase.table("macro_map_stats").upsert(fallback_batch).execute()
             
-    # Upsert dynamic_counters
+    # 2. Upsert dynamic_counters
     if dynamic_counters:
         logger.info(f"Upserting {len(dynamic_counters)} dynamic_counters records...")
         for i in range(0, len(dynamic_counters), 1000):
             batch = dynamic_counters[i:i+1000]
-            supabase.table("dynamic_counters").upsert(batch).execute()
+            try:
+                supabase.table("dynamic_counters").upsert(batch).execute()
+            except Exception as e:
+                logger.warning(f"Upsert dynamic_counters failed: {e}")
+
+    # 3. Upsert dynamic_synergies
+    if dynamic_synergies:
+        logger.info(f"Upserting {len(dynamic_synergies)} dynamic_synergies records...")
+        for i in range(0, len(dynamic_synergies), 1000):
+            batch = dynamic_synergies[i:i+1000]
+            try:
+                supabase.table("dynamic_synergies").upsert(batch).execute()
+            except Exception as e:
+                logger.warning(f"Upsert dynamic_synergies failed (might need table creation): {e}")
             
     # キャッシュを即座に破棄して最新データをAPIに反映
     try:
@@ -435,7 +541,8 @@ def run_daily_calculation(client: Client = None):
     logger.info("Daily Calculation Batch completed successfully.")
     return {
         "macro_stats_count": len(macro_stats),
-        "dynamic_counters_count": len(dynamic_counters)
+        "dynamic_counters_count": len(dynamic_counters),
+        "dynamic_synergies_count": len(dynamic_synergies)
     }
 
 def main():

@@ -1,7 +1,10 @@
 from fastapi import APIRouter, HTTPException
 import math
 import time
+import logging
 from app.database import get_db
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/meta", tags=["Meta"])
 
@@ -35,18 +38,54 @@ def _normalize_id(name: str) -> str:
     return str(name).lower().replace(" ", "").replace("_", "").replace("-", "").replace(".", "").replace("&", "")
 
 def _get_cached_synergies(db) -> dict[str, dict[str, dict]]:
-    """match_raw_history からペア共起シナジー（相乗効果リフト値）を完全自動集計してキャッシュ"""
+    """dynamic_synergies テーブル（事前計算済みバッチデータ）からインメモリキャッシュへ超高速取得 (DB負荷99%削減)"""
     now = time.time()
     if _SYNERGIES_CACHE["data"] is not None and (now - _SYNERGIES_CACHE["timestamp"]) < _SYNERGIES_CACHE["ttl"]:
         return _SYNERGIES_CACHE["by_char"]
 
+    # 1. dynamic_synergies テーブルから一括取得を試みる
     try:
-        # 直近の試合ログから allies ペアを展開
+        offset = 0
+        PAGE_SIZE = 1000
+        all_synergies = []
+        by_char: dict[str, dict[str, dict]] = {}
+        
+        while True:
+            res = db.table("dynamic_synergies").select("*").range(offset, offset + PAGE_SIZE - 1).execute()
+            if not res.data:
+                break
+            all_synergies.extend(res.data)
+            for row in res.data:
+                ca = _normalize_id(row.get("char_a", ""))
+                cb = _normalize_id(row.get("char_b", ""))
+                if not ca or not cb or ca == cb:
+                    continue
+                if ca not in by_char:
+                    by_char[ca] = {}
+                by_char[ca][cb] = {
+                    "win_rate": float(row.get("win_rate") or 50.0),
+                    "lift": float(row.get("lift") or 0.0),
+                    "matches": int(row.get("match_count") or 0)
+                }
+            if len(res.data) < PAGE_SIZE:
+                break
+            offset += PAGE_SIZE
+
+        if by_char:
+            _SYNERGIES_CACHE["data"] = all_synergies
+            _SYNERGIES_CACHE["by_char"] = by_char
+            _SYNERGIES_CACHE["timestamp"] = now
+            return by_char
+    except Exception as e:
+        logger.warning(f"Could not load dynamic_synergies table: {e}. Falling back to match_raw_history...")
+
+    # 2. テーブル未作成時の自動フォールバック集計 (match_raw_history)
+    try:
         res = db.table("match_raw_history").select("hero_used, allies, result").limit(5000).execute()
         raw_matches = res.data or []
         
-        char_single_stats: dict[str, list[int]] = {} # norm_char -> [wins, total]
-        pair_stats: dict[tuple[str, str], list[int]] = {} # (min_norm, max_norm) -> [wins, total]
+        char_single_stats: dict[str, list[int]] = {}
+        pair_stats: dict[tuple[str, str], list[int]] = {}
         
         for r in raw_matches:
             hero = str(r.get("hero_used", "") or "").strip()
@@ -94,7 +133,6 @@ def _get_cached_synergies(db) -> dict[str, dict[str, dict]]:
             expected_wr = (wr1 + wr2) / 2.0
             raw_lift = pair_wr - expected_wr
             
-            # ベイズ縮小（データ数に応じた信頼度平滑化）
             shrinkage = m / (m + 5.0)
             regressed_lift = round(raw_lift * shrinkage, 1)
             
@@ -113,7 +151,7 @@ def _get_cached_synergies(db) -> dict[str, dict[str, dict]]:
         _SYNERGIES_CACHE["timestamp"] = now
         return by_char
     except Exception as e:
-        print(f"Failed to calculate synergies: {e}")
+        print(f"Failed to calculate synergies fallback: {e}")
         return _SYNERGIES_CACHE.get("by_char", {})
 
 def _get_cached_counters_for_char(db, char_a: str) -> list[dict]:

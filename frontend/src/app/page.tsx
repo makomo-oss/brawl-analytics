@@ -200,7 +200,7 @@ export default function CockpitHomePage() {
         return;
       }
 
-      setSearchError(`「${raw}」に一致するプレイヤーが見つかりませんでした。プレイヤータグ（例: #V99J0CCV8）を直接入力してお試しください。`);
+      setSearchError(`「${raw}」に一致するプレイヤーが見つかりませんでした。プレイヤータグを直接入力してお試しください。`);
     } catch (err) {
       console.error("Search error", err);
       setSearchError("検索中にエラーが発生しました。");
@@ -292,7 +292,7 @@ export default function CockpitHomePage() {
             </div>
             <Input
               type="text"
-              placeholder="プレイヤータグ（例: #V99J0CCV8）または名前"
+              placeholder="プレイヤータグまたは名前"
               value={searchInput}
               onChange={(e) => {
                 setSearchInput(e.target.value);

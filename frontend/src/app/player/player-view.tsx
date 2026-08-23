@@ -502,7 +502,7 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
             {searchMode === "player" ? (
               <div className="relative flex gap-4 w-full">
                 <Input 
-                  placeholder="プレイヤー名 または タグ(#Q2LL9G8)" 
+                  placeholder="プレイヤータグまたは名前" 
                   value={playerTag}
                   onChange={(e) => {
                     setPlayerTag(e.target.value)

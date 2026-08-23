@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://burolabo.com/sitemap.xml
+Sitemap: https://brawl-lab.sozai-hub.com/sitemap.xml

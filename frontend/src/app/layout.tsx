@@ -5,8 +5,8 @@ import { MainNav } from "@/components/main-nav";
 
 const inter = Inter({ subsets: ["latin"] });
 
-/** サイトの正規 URL（Cloudflare Pages のカスタムドメインまたはデフォルトドメイン） */
-const SITE_URL = "https://burolabo.com";
+/** サイトの正規 URL（Cloudflare Pages のカスタムドメイン） */
+const SITE_URL = "https://brawl-lab.sozai-hub.com";
 
 /**
  * Next.js Metadata API による包括的 SEO 設定

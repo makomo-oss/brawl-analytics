@@ -45,18 +45,23 @@ export function MainNav() {
           <NavigationMenu>
             <NavigationMenuList className="gap-2">
               <NavigationMenuItem>
-                <Link href="/tier-list" className={navigationMenuTriggerStyle()}>
-                  環境分析 (Tier表)
+                <Link href="/" className={navigationMenuTriggerStyle()}>
+                  ダッシュボード
                 </Link>
               </NavigationMenuItem>
               <NavigationMenuItem>
-                <Link href="/dashboard" className={navigationMenuTriggerStyle()}>
-                  ダッシュボード
+                <Link href="/tier" className={navigationMenuTriggerStyle()}>
+                  環境分析 (Tier表)
                 </Link>
               </NavigationMenuItem>
               <NavigationMenuItem>
                 <Link href="/companion" className={navigationMenuTriggerStyle()}>
                   ピック支援 (BAN/Pick)
+                </Link>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <Link href="/ai-coach" className={navigationMenuTriggerStyle()}>
+                  AIコーチ
                 </Link>
               </NavigationMenuItem>
             </NavigationMenuList>
@@ -91,18 +96,11 @@ export function MainNav() {
             <span className="text-[10px] font-medium">ホーム</span>
           </Link>
           <Link 
-            href="/tier-list" 
-            className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname === "/tier-list" ? "text-primary" : "text-muted-foreground"}`}
+            href="/tier" 
+            className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname === "/tier" || pathname === "/tier-list" ? "text-primary" : "text-muted-foreground"}`}
           >
             <Trophy className="w-5 h-5" />
             <span className="text-[10px] font-medium">Tier表</span>
-          </Link>
-          <Link 
-            href="/dashboard" 
-            className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname === "/dashboard" ? "text-primary" : "text-muted-foreground"}`}
-          >
-            <BarChart3 className="w-5 h-5" />
-            <span className="text-[10px] font-medium">戦績</span>
           </Link>
           <Link 
             href="/companion" 
@@ -110,6 +108,13 @@ export function MainNav() {
           >
             <Cpu className="w-5 h-5" />
             <span className="text-[10px] font-medium">ピック支援</span>
+          </Link>
+          <Link 
+            href="/ai-coach" 
+            className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname === "/ai-coach" ? "text-primary" : "text-muted-foreground"}`}
+          >
+            <BarChart3 className="w-5 h-5" />
+            <span className="text-[10px] font-medium">AIコーチ</span>
           </Link>
         </div>
       </div>

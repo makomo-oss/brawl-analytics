@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Trophy, BarChart3, Cpu, Home } from "lucide-react";
 import { NavigationMenu, NavigationMenuItem, NavigationMenuList, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu";
+import { BurolaboIcon } from "@/components/brand-icon";
 
 export function MainNav() {
   const pathname = usePathname();
@@ -35,8 +36,9 @@ export function MainNav() {
       {/* Desktop Header */}
       <div className="hidden md:block border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
         <div className="container flex h-16 items-center px-4 max-w-7xl mx-auto">
-          <Link href="/" className="mr-6 flex items-center space-x-2">
-            <span className="font-bold text-xl bg-gradient-to-r from-primary to-accent-foreground bg-clip-text text-transparent">
+          <Link href="/" className="mr-6 flex items-center space-x-2.5 group">
+            <BurolaboIcon size={30} className="group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-sm" />
+            <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-primary via-purple-400 to-cyan-400 bg-clip-text text-transparent">
               ブロラボ
             </span>
           </Link>
@@ -65,8 +67,9 @@ export function MainNav() {
       {/* Mobile Top Header (Just Logo) */}
       <div className="md:hidden border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
         <div className="flex h-14 items-center justify-center px-4">
-          <Link href="/" className="flex items-center space-x-2">
-            <span className="font-bold text-lg bg-gradient-to-r from-primary to-accent-foreground bg-clip-text text-transparent">
+          <Link href="/" className="flex items-center space-x-2 group">
+            <BurolaboIcon size={24} className="group-hover:scale-110 transition-transform duration-300" />
+            <span className="font-extrabold text-lg tracking-tight bg-gradient-to-r from-primary via-purple-400 to-cyan-400 bg-clip-text text-transparent">
               ブロラボ
             </span>
           </Link>

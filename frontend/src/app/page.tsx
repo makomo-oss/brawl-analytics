@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, BarChart3, LineChart, Cpu, Trophy } from "lucide-react";
+import { BurolaboIcon } from "@/components/brand-icon";
 
 export default function Home() {
   return (
@@ -11,10 +12,17 @@ export default function Home() {
         <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-blue-500/20 dark:bg-blue-900/20 blur-[120px]" />
       </div>
 
-      <main className="flex-1 w-full max-w-6xl mx-auto px-6 py-20 z-10">
+      <main className="flex-1 w-full max-w-6xl mx-auto px-6 py-16 z-10">
         
         {/* Hero Section */}
-        <section className="flex flex-col items-center text-center pt-16 pb-24 md:pt-24 md:pb-32">
+        <section className="flex flex-col items-center text-center pt-8 pb-20 md:pt-16 md:pb-28">
+          <div className="mb-6 animate-in zoom-in-50 duration-700">
+            <div className="relative inline-block group">
+              <div className="absolute -inset-2 bg-gradient-to-r from-purple-600 via-pink-500 to-cyan-400 rounded-3xl blur-xl opacity-70 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-pulse"></div>
+              <BurolaboIcon size={88} className="relative transform group-hover:scale-105 transition-transform duration-300 drop-shadow-2xl" />
+            </div>
+          </div>
+
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/50 dark:bg-white/5 border border-black/5 dark:border-white/10 backdrop-blur-md mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <span className="flex h-2 w-2 rounded-full bg-primary animate-pulse"></span>
             <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">ブロラボ v1.0 公開中</span>

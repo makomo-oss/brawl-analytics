@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { Search, TrendingUp, AlertTriangle, Lightbulb, Trophy, Swords, Star, Building2, Shield, Users, User, ShieldAlert, Sparkles, Filter, CheckCircle2, XCircle, Crown, Target } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { getBrawlerInfo } from "@/lib/brawlers"
 import { translateMode, translateMap, getModeIconUrl } from "@/lib/translations"
@@ -159,6 +160,8 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
 
   // プレイヤー名検索サジェスト用ステート
   const [suggestions, setSuggestions] = useState<any[]>([])
+  const [candidates, setCandidates] = useState<any[]>([])
+  const [candidateModalOpen, setCandidateModalOpen] = useState(false)
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [isSearching, setIsSearching] = useState(false)
 
@@ -306,16 +309,25 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
       const cleanInput = rawInput.replace(/^#+/, "").trim()
       const isTagFormat = /^[A-Za-z0-9]{3,15}$/.test(cleanInput)
       
-      if (!isTagFormat && !overrideTag) {
-        // 名前入力の場合は事前検索して最初のプレイヤーのタグを使用
+      if (!isTagFormat && !overrideTag && !rawInput.startsWith("#")) {
+        // 名前入力の場合は事前検索
         try {
           const searchRes = await fetch(`${API_URL}/player/search?q=${encodeURIComponent(rawInput)}`)
           if (searchRes.ok) {
             const results = await searchRes.json()
-            if (Array.isArray(results) && results.length > 0 && results[0]?.player_tag) {
-              const formattedTag = `#${results[0].player_tag.replace(/^#+/, "")}`
-              finalTag = formattedTag
-              setPlayerTag(formattedTag)
+            if (Array.isArray(results) && results.length > 0) {
+              if (results.length === 1) {
+                const pTag = results[0].player_tag || results[0].tag
+                const formattedTag = `#${pTag.replace(/^#+/, "")}`
+                finalTag = formattedTag
+                setPlayerTag(formattedTag)
+              } else {
+                // 複数件ヒットした場合は候補モーダルを開いてユーザーに選択してもらう
+                setCandidates(results)
+                setCandidateModalOpen(true)
+                setLoading(false)
+                return
+              }
             } else {
               setErrorMsg(`「${rawInput}」に一致するプレイヤーが見つかりませんでした。プレイヤータグ（例: #V99J0CCV8）をお試しください。`)
               setLoading(false)
@@ -1495,6 +1507,67 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
         </Tabs>
         </div>
       )}
+    
+      {/* プレイヤー名検索 複数候補選択モーダル */}
+      <Sheet open={candidateModalOpen} onOpenChange={setCandidateModalOpen}>
+        <SheetContent side="bottom" className="sm:max-w-lg mx-auto rounded-t-3xl max-h-[85vh] p-0 flex flex-col bg-zinc-950 border-zinc-800">
+          <SheetHeader className="p-6 pb-3 border-b border-zinc-800 text-left">
+            <div className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-primary" />
+              <SheetTitle className="text-lg font-bold text-white">
+                プレイヤーの選択（{candidates.length}件の候補）
+              </SheetTitle>
+            </div>
+            <SheetDescription className="text-xs text-zinc-400">
+              該当するプレイヤーを選択して戦績を表示します。
+            </SheetDescription>
+          </SheetHeader>
+
+          <div className="flex-1 overflow-y-auto p-4 space-y-2 divide-y divide-zinc-800/50">
+            {candidates.map((p: any) => {
+              const pTag = p.player_tag || p.tag;
+              return (
+                <button
+                  key={pTag}
+                  type="button"
+                  onClick={() => {
+                    setCandidateModalOpen(false);
+                    handleSync(pTag);
+                  }}
+                  className="w-full pt-2 first:pt-0 p-3 flex items-center justify-between rounded-2xl hover:bg-zinc-900/90 border border-transparent hover:border-zinc-700 transition-all text-left group"
+                >
+                  <div className="flex items-center gap-3">
+                    <Avatar className="w-12 h-12 rounded-xl border border-zinc-700 shadow-md">
+                      <AvatarImage src={`https://cdn.brawlify.com/profile-icons/regular/${p.icon_id || 28000000}.png`} />
+                      <AvatarFallback>{p.name?.[0]}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div className="font-bold text-base text-zinc-100 group-hover:text-primary transition-colors">
+                        {p.name}
+                      </div>
+                      <div className="text-xs text-zinc-400 font-mono">
+                        #{pTag.replace(/^#/, "")}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-right">
+                    <div className="font-extrabold text-sm text-amber-400">
+                      🏆 {p.trophies?.toLocaleString()}
+                    </div>
+                    {p.highest_trophies > 0 && (
+                      <div className="text-[11px] text-zinc-500">
+                        最高 {p.highest_trophies?.toLocaleString()}
+                      </div>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </SheetContent>
+      </Sheet>
+
     </div>
   )
 }

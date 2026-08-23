@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, Trophy, Swords, ArrowRight, Sparkles, TrendingUp, TrendingDown, Clock, Shield, Cpu, Bot, User, Flame } from "lucide-react";
+import { Search, Trophy, Swords, ArrowRight, Sparkles, TrendingUp, TrendingDown, Clock, Shield, Cpu, Bot, User, Flame, Users, AlertCircle, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,13 +27,19 @@ export default function CockpitHomePage() {
   const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
   const [tierData, setTierData] = useState<any>(null);
   const [loadingTier, setLoadingTier] = useState(true);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
   
-  // モーダル用ステート
+  // 複数候補モーダル用ステート
+  const [candidates, setCandidates] = useState<any[]>([]);
+  const [candidateModalOpen, setCandidateModalOpen] = useState(false);
+
+  // キャラ対面詳細モーダル用ステート
   const [selectedChar, setSelectedChar] = useState<any>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [modalLoading, setModalLoading] = useState(false);
 
-  // 検索サジェスト用
+  // サジェスト用
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
@@ -118,28 +124,89 @@ export default function CockpitHomePage() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // 検索実行
-  const handleSearch = (overrideTag?: string, overrideName?: string) => {
-    const raw = (overrideTag || searchInput).trim();
-    if (!raw) return;
+  // プレイヤー検索の実行
+  const handleSearch = async (overrideTag?: string, overrideName?: string) => {
+    setShowSuggestions(false);
+    setSearchError(null);
 
-    // タグ保存
-    const cleanTag = raw.startsWith("#") ? raw : `#${raw}`;
-    const urlTag = raw.replace(/^#/, "");
+    // 1. タグまたは候補が直接指定された場合
+    if (overrideTag) {
+      const cleanTag = overrideTag.startsWith("#") ? overrideTag : `#${overrideTag}`;
+      const urlTag = overrideTag.replace(/^#/, "");
 
-    // 履歴保存
-    try {
-      const updated = [
-        { tag: cleanTag, name: overrideName || cleanTag },
-        ...recentSearches.filter(s => s.tag.toUpperCase() !== cleanTag.toUpperCase())
-      ].slice(0, 4);
-      setRecentSearches(updated);
-      localStorage.setItem("burolabo_recent_searches", JSON.stringify(updated));
-    } catch {
-      // ignore
+      // 履歴保存
+      try {
+        const updated = [
+          { tag: cleanTag, name: overrideName || cleanTag },
+          ...recentSearches.filter(s => s.tag.toUpperCase() !== cleanTag.toUpperCase())
+        ].slice(0, 4);
+        setRecentSearches(updated);
+        localStorage.setItem("burolabo_recent_searches", JSON.stringify(updated));
+      } catch {
+        // ignore
+      }
+
+      setCandidateModalOpen(false);
+      router.push(`/player?tag=${encodeURIComponent(urlTag)}`);
+      return;
     }
 
-    router.push(`/player?tag=${encodeURIComponent(urlTag)}`);
+    const raw = searchInput.trim();
+    if (!raw) return;
+
+    // 2. 入力が '#' から始まる場合は直接タグ検索
+    if (raw.startsWith("#")) {
+      const cleanTag = raw;
+      const urlTag = raw.replace(/^#/, "");
+      try {
+        const updated = [
+          { tag: cleanTag, name: cleanTag },
+          ...recentSearches.filter(s => s.tag.toUpperCase() !== cleanTag.toUpperCase())
+        ].slice(0, 4);
+        setRecentSearches(updated);
+        localStorage.setItem("burolabo_recent_searches", JSON.stringify(updated));
+      } catch {}
+      router.push(`/player?tag=${encodeURIComponent(urlTag)}`);
+      return;
+    }
+
+    // 3. 名前またはタグ文字列の検索API問い合わせ
+    setIsSearching(true);
+    try {
+      const res = await fetch(`${API_URL}/player/search?q=${encodeURIComponent(raw)}`);
+      if (res.ok) {
+        const list = await res.json();
+        if (Array.isArray(list) && list.length > 0) {
+          if (list.length === 1) {
+            // 候補が1件のみの場合は即座にそのプレイヤーへジャンプ
+            const p = list[0];
+            const pTag = p.player_tag || p.tag || raw;
+            handleSearch(pTag, p.name);
+            return;
+          } else {
+            // 複数件ヒットした場合は候補一覧モーダルを表示
+            setCandidates(list);
+            setCandidateModalOpen(true);
+            setIsSearching(false);
+            return;
+          }
+        }
+      }
+
+      // 候補が0件の場合: もし英数字3-15文字ならタグとして試行
+      const isTagLike = /^[A-Za-z0-9]{3,15}$/.test(raw);
+      if (isTagLike) {
+        handleSearch(raw, `#${raw}`);
+        return;
+      }
+
+      setSearchError(`「${raw}」に一致するプレイヤーが見つかりませんでした。プレイヤータグ（例: #V99J0CCV8）を直接入力してお試しください。`);
+    } catch (err) {
+      console.error("Search error", err);
+      setSearchError("検索中にエラーが発生しました。");
+    } finally {
+      setIsSearching(false);
+    }
   };
 
   // キャラクタークリック時（対面詳細モーダル）
@@ -208,7 +275,7 @@ export default function CockpitHomePage() {
           </h1>
         </div>
         <p className="text-xs sm:text-sm text-zinc-400 max-w-md mb-6">
-          タグを入力して、リアルタイムのガチバトル戦績やメタ適性を即時診断。
+          タグまたは名前を入力して、リアルタイムのガチバトル戦績やメタ適性を即時診断。
         </p>
 
         {/* 検索入力ボックス (大きく押しやすい主役UI) */}
@@ -221,58 +288,74 @@ export default function CockpitHomePage() {
             className="relative flex items-center shadow-2xl rounded-2xl p-1 bg-gradient-to-r from-purple-500/30 via-cyan-500/30 to-purple-500/30 border border-white/15 backdrop-blur-xl transition-all duration-300 focus-within:border-primary/80 focus-within:shadow-[0_0_30px_rgba(168,85,247,0.35)]"
           >
             <div className="flex items-center pl-3.5 pointer-events-none text-zinc-400">
-              <Search className="w-5 h-5" />
+              {isSearching ? <Loader2 className="w-5 h-5 animate-spin text-primary" /> : <Search className="w-5 h-5" />}
             </div>
             <Input
               type="text"
               placeholder="プレイヤータグ（例: #V99J0CCV8）または名前"
               value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
+              onChange={(e) => {
+                setSearchInput(e.target.value);
+                setSearchError(null);
+              }}
               className="flex-1 bg-transparent border-0 text-white placeholder:text-zinc-500 focus-visible:ring-0 focus-visible:ring-offset-0 text-sm sm:text-base px-3 py-3 h-12"
             />
             <Button
               type="submit"
+              disabled={isSearching}
               className="h-10 px-5 rounded-xl font-bold bg-primary text-primary-foreground hover:bg-primary/90 transition-all active:scale-95 shadow-md shrink-0"
             >
-              分析する
+              {isSearching ? "検索中..." : "分析する"}
             </Button>
           </form>
+
+          {/* エラーアラート */}
+          {searchError && (
+            <div className="flex items-center gap-2 mt-2.5 px-4 py-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs text-left animate-in fade-in">
+              <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+              <span>{searchError}</span>
+            </div>
+          )}
 
           {/* サジェストドロップダウン */}
           {showSuggestions && suggestions.length > 0 && (
             <div className="absolute top-full left-0 right-0 mt-2 bg-zinc-900/95 border border-zinc-700/80 rounded-xl shadow-2xl backdrop-blur-md overflow-hidden z-50 text-left">
-              <div className="p-2 border-b border-zinc-800 text-[11px] font-medium text-zinc-400">
-                検索候補（プレイヤー名）
+              <div className="p-2 border-b border-zinc-800 text-[11px] font-medium text-zinc-400 flex items-center justify-between">
+                <span>検索候補（クリックで即時分析）</span>
+                <span className="text-[10px] text-zinc-500">{suggestions.length}件</span>
               </div>
-              <div className="max-h-60 overflow-y-auto divide-y divide-zinc-800/60">
-                {suggestions.map((p: any) => (
-                  <button
-                    key={p.tag}
-                    type="button"
-                    onClick={() => handleSearch(p.tag, p.name)}
-                    className="w-full px-4 py-3 flex items-center justify-between hover:bg-zinc-800/70 transition-colors text-left"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <Avatar className="w-7 h-7 border border-zinc-700">
-                        <AvatarImage src={`https://cdn.brawlify.com/profile-icons/regular/${p.icon_id || 28000000}.png`} />
-                        <AvatarFallback>{p.name?.[0]}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <div className="font-bold text-sm text-zinc-100">{p.name}</div>
-                        <div className="text-[11px] text-zinc-400 font-mono">{p.tag}</div>
+              <div className="max-h-64 overflow-y-auto divide-y divide-zinc-800/60">
+                {suggestions.map((p: any) => {
+                  const pTag = p.player_tag || p.tag;
+                  return (
+                    <button
+                      key={pTag}
+                      type="button"
+                      onClick={() => handleSearch(pTag, p.name)}
+                      className="w-full px-4 py-3 flex items-center justify-between hover:bg-zinc-800/70 transition-colors text-left group"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Avatar className="w-8 h-8 border border-zinc-700">
+                          <AvatarImage src={`https://cdn.brawlify.com/profile-icons/regular/${p.icon_id || 28000000}.png`} />
+                          <AvatarFallback>{p.name?.[0]}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <div className="font-bold text-sm text-zinc-100 group-hover:text-primary transition-colors">{p.name}</div>
+                          <div className="text-[11px] text-zinc-400 font-mono">#{pTag.replace(/^#/, "")}</div>
+                        </div>
                       </div>
-                    </div>
-                    <div className="text-right text-xs">
-                      <div className="font-bold text-amber-400">🏆 {p.trophies?.toLocaleString()}</div>
-                    </div>
-                  </button>
-                ))}
+                      <div className="text-right text-xs">
+                        <div className="font-bold text-amber-400">🏆 {p.trophies?.toLocaleString()}</div>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
         </div>
 
-        {/* 最近検索した履歴チップ (さりげなく配置) */}
+        {/* 最近検索した履歴チップ */}
         {recentSearches.length > 0 && (
           <div className="flex items-center gap-1.5 mt-3 flex-wrap justify-center text-xs text-zinc-400">
             <span className="flex items-center gap-1 text-zinc-500 font-medium">
@@ -292,6 +375,65 @@ export default function CockpitHomePage() {
           </div>
         )}
       </section>
+
+      {/* ========================================================================= */}
+      {/* プレイヤー名検索 複数候補選択モーダル (Sheet/Modal) */}
+      {/* ========================================================================= */}
+      <Sheet open={candidateModalOpen} onOpenChange={setCandidateModalOpen}>
+        <SheetContent side="bottom" className="sm:max-w-lg mx-auto rounded-t-3xl max-h-[85vh] p-0 flex flex-col bg-zinc-950 border-zinc-800">
+          <SheetHeader className="p-6 pb-3 border-b border-zinc-800 text-left">
+            <div className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-primary" />
+              <SheetTitle className="text-lg font-bold text-white">
+                プレイヤーの選択（{candidates.length}件の候補）
+              </SheetTitle>
+            </div>
+            <SheetDescription className="text-xs text-zinc-400">
+              「{searchInput}」に一致するプレイヤーが見つかりました。該当するプレイヤーを選択してください。
+            </SheetDescription>
+          </SheetHeader>
+
+          <div className="flex-1 overflow-y-auto p-4 space-y-2 divide-y divide-zinc-800/50">
+            {candidates.map((p: any) => {
+              const pTag = p.player_tag || p.tag;
+              return (
+                <button
+                  key={pTag}
+                  type="button"
+                  onClick={() => handleSearch(pTag, p.name)}
+                  className="w-full pt-2 first:pt-0 p-3 flex items-center justify-between rounded-2xl hover:bg-zinc-900/90 border border-transparent hover:border-zinc-700 transition-all text-left group"
+                >
+                  <div className="flex items-center gap-3">
+                    <Avatar className="w-12 h-12 rounded-xl border border-zinc-700 shadow-md">
+                      <AvatarImage src={`https://cdn.brawlify.com/profile-icons/regular/${p.icon_id || 28000000}.png`} />
+                      <AvatarFallback>{p.name?.[0]}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div className="font-bold text-base text-zinc-100 group-hover:text-primary transition-colors">
+                        {p.name}
+                      </div>
+                      <div className="text-xs text-zinc-400 font-mono">
+                        #{pTag.replace(/^#/, "")}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-right">
+                    <div className="font-extrabold text-sm text-amber-400">
+                      🏆 {p.trophies?.toLocaleString()}
+                    </div>
+                    {p.highest_trophies > 0 && (
+                      <div className="text-[11px] text-zinc-500">
+                        最高 {p.highest_trophies?.toLocaleString()}
+                      </div>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {/* ========================================================================= */}
       {/* ② 優先度: 今日の環境速報 (S+ / S Tier) */}

@@ -271,11 +271,11 @@ export default function CockpitHomePage() {
         <div className="flex items-center justify-center gap-2.5 mb-3">
           <BurolaboIcon size={36} className="shadow-lg" />
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">
-            ブロスタ戦績 & メタ分析
+            ブロラボ - ブロスタ戦績・Tier表・ピック支援
           </h1>
         </div>
         <p className="text-xs sm:text-sm text-zinc-400 max-w-md mb-6">
-          タグまたは名前を入力して、リアルタイムのガチバトル戦績やメタ適性を即時診断。
+          プレイヤー戦績検索・環境Tier表・BAN/Pick支援を無料で。ガチバトルの勝率を上げよう。
         </p>
 
         {/* 検索入力ボックス (大きく押しやすい主役UI) */}

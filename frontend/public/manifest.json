@@ -1,0 +1,28 @@
+{
+  "name": "ブロラボ - ブロスタ戦績・Tier表・ピック支援",
+  "short_name": "ブロラボ",
+  "description": "ブロスタ（Brawl Stars）のガチバトル戦績検索・環境Tier表・BAN/Pick支援を提供する無料分析ツール",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#a855f7",
+  "lang": "ja",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

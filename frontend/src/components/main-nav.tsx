@@ -37,7 +37,7 @@ export function MainNav() {
         <div className="container flex h-16 items-center px-4 max-w-7xl mx-auto">
           <Link href="/" className="mr-6 flex items-center space-x-2">
             <span className="font-bold text-xl bg-gradient-to-r from-primary to-accent-foreground bg-clip-text text-transparent">
-              BrawlAnalytics
+              ブロラボ
             </span>
           </Link>
           <NavigationMenu>
@@ -67,7 +67,7 @@ export function MainNav() {
         <div className="flex h-14 items-center justify-center px-4">
           <Link href="/" className="flex items-center space-x-2">
             <span className="font-bold text-lg bg-gradient-to-r from-primary to-accent-foreground bg-clip-text text-transparent">
-              BrawlAnalytics
+              ブロラボ
             </span>
           </Link>
         </div>

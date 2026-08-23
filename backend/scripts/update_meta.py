@@ -71,7 +71,7 @@ async def get_player_battles(client: httpx.AsyncClient, tag: str):
 
 async def fetch_all_brawlers(client: httpx.AsyncClient):
     try:
-        res = await client.get("https://api.brawlapi.com/v1/brawlers", headers={"User-Agent": "BrawlAnalytics/1.0"}, timeout=10.0)
+        res = await client.get("https://api.brawlapi.com/v1/brawlers", headers={"User-Agent": "Burolabo/1.0"}, timeout=10.0)
         if res.status_code == 200:
             return [b.get("name").lower() for b in res.json().get("list", [])]
     except: pass

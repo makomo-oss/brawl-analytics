@@ -33,7 +33,7 @@ async def lifespan(app: FastAPI):
     asyncio.create_task(warmup())
     yield
 
-app = FastAPI(title="BrawlAnalytics API", lifespan=lifespan)
+app = FastAPI(title="ブロラボ API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -52,7 +52,7 @@ app.include_router(club_router)
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to BrawlAnalytics API"}
+    return {"message": "Welcome to ブロラボ API"}
 
 # RenderのIPアドレスを確認するための追加コード
 @app.get("/my-ip")

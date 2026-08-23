@@ -1,1 +1,1 @@
-# brawl-analytics
+# ブロラボ (Brawl Lab)

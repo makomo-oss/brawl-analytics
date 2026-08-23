@@ -17,7 +17,7 @@ export default function Home() {
         <section className="flex flex-col items-center text-center pt-16 pb-24 md:pt-24 md:pb-32">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/50 dark:bg-white/5 border border-black/5 dark:border-white/10 backdrop-blur-md mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <span className="flex h-2 w-2 rounded-full bg-primary animate-pulse"></span>
-            <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">Brawl Analytics v1.0 公開中</span>
+            <span className="text-sm font-medium text-zinc-800 dark:text-zinc-200">ブロラボ v1.0 公開中</span>
           </div>
           
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-500 dark:from-white dark:via-zinc-200 dark:to-zinc-500 mb-6 max-w-4xl animate-in fade-in slide-in-from-bottom-6 duration-1000">
@@ -117,7 +117,7 @@ export default function Home() {
       
       {/* Footer */}
       <footer className="py-8 text-center text-zinc-500 dark:text-zinc-600 border-t border-zinc-200 dark:border-zinc-900 z-10">
-        <p>© 2026 Brawl Analytics. Supercellとは提携していません。</p>
+        <p>© 2026 ブロラボ. Supercellとは提携していません。</p>
       </footer>
     </div>
   );

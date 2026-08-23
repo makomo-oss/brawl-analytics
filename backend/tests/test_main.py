@@ -10,7 +10,7 @@ client = TestClient(app)
 def test_read_root():
     response = client.get("/")
     assert response.status_code == 200
-    assert response.json() == {"message": "Welcome to BrawlAnalytics API"}
+    assert response.json() == {"message": "Welcome to ブロラボ API"}
 
 def test_recommend():
     response = client.post("/match/recommend", json={
@@ -27,4 +27,7 @@ def test_recommend():
 def test_tier_list():
     response = client.get("/meta/tier-list")
     assert response.status_code == 200
-    assert "tier_S" in response.json()
+    data = response.json()
+    assert "tiers" in data
+    assert "S+" in data["tiers"]
+    assert "S" in data["tiers"]

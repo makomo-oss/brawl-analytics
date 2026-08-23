@@ -6,8 +6,8 @@ import { MainNav } from "@/components/main-nav";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "BrawlAnalytics - ガチバトル支援",
-  description: "Brawl Stars ガチバトル分析＆Pick支援ツール",
+  title: "ブロラボ - ガチバトル支援",
+  description: "ブロスタ ガチバトル分析＆Pick支援ツール「ブロラボ」",
 };
 
 export default function RootLayout({

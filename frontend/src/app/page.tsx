@@ -139,7 +139,7 @@ export default function CockpitHomePage() {
       // ignore
     }
 
-    router.push(`/player/${encodeURIComponent(urlTag)}`);
+    router.push(`/player?tag=${encodeURIComponent(urlTag)}`);
   };
 
   // キャラクタークリック時（対面詳細モーダル）

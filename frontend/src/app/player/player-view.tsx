@@ -283,14 +283,14 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
   }, [clubInput])
 
   
-  // URL パラメータでタグが渡された場合、初回自動同期を実行
+  // URL パラメータ(defaultTag)でタグが渡された場合、初回自動同期を実行
   useEffect(() => {
-    if (routeTag) {
-      const formattedTag = routeTag.startsWith("#") ? routeTag : `#${routeTag}`
+    if (defaultTag) {
+      const formattedTag = defaultTag.startsWith("#") ? defaultTag : `#${defaultTag}`
       setPlayerTag(formattedTag)
       handleSync(formattedTag)
     }
-  }, [routeTag])
+  }, [defaultTag])
 
   const handleSync = async (overrideTag?: string) => {
     const rawInput = (overrideTag || playerTag || "").trim()
@@ -358,6 +358,8 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
       }
       dashboardCacheRef.current[cacheKey] = result
       setData(result)
+      // URL を現在のタグで更新
+      window.history.replaceState(null, '', `/player?tag=${encodeURIComponent(cacheKey)}`)
     } catch (error) {
       console.error("Fetch error", error)
       setErrorMsg("ネットワークエラーが発生しました。")

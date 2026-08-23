@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, Trophy, Swords, ArrowRight, Sparkles, TrendingUp, TrendingDown, Clock, Shield, Cpu, Bot, User, Flame, Users, AlertCircle, Loader2 } from "lucide-react";
+import { Search, Trophy, Swords, ArrowRight, Sparkles, TrendingUp, TrendingDown, Clock, Shield, Cpu, Bot, User, Flame, Users, AlertCircle, Loader2, BarChart3 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -542,25 +542,25 @@ export default function CockpitHomePage() {
           <ArrowRight className="w-4 h-4 text-zinc-500 group-hover:text-purple-400 group-hover:translate-x-1 transition-all shrink-0" />
         </Link>
 
-        {/* AI 戦術コーチ */}
+        {/* ダッシュボード (戦績分析) */}
         <Link
-          href="/ai-coach"
+          href="/player"
           className="group flex items-center gap-4 p-4 rounded-2xl bg-zinc-900/40 hover:bg-zinc-900/80 border border-zinc-800/80 hover:border-cyan-500/40 transition-all duration-300"
         >
           <div className="w-12 h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center text-cyan-400 group-hover:scale-110 group-hover:bg-cyan-500/20 transition-all shrink-0">
-            <Bot className="w-6 h-6" />
+            <BarChart3 className="w-6 h-6" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <h3 className="font-bold text-sm text-zinc-100 group-hover:text-cyan-300 transition-colors">
-                AI 専属戦術コーチ
+                ダッシュボード (戦績分析)
               </h3>
               <Badge variant="outline" className="text-[10px] text-cyan-400 border-cyan-500/30">
-                GPT-4o 駆動
+                詳細スタッツ
               </Badge>
             </div>
             <p className="text-xs text-zinc-400 truncate mt-0.5">
-              戦績ログからあなたのプレイスタイルの課題や改善点を診断
+              メタギャップ診断・隠れ得意キャラ・クラブ詳細分析
             </p>
           </div>
           <ArrowRight className="w-4 h-4 text-zinc-500 group-hover:text-cyan-400 group-hover:translate-x-1 transition-all shrink-0" />

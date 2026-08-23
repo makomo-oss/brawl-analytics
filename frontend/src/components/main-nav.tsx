@@ -46,22 +46,22 @@ export function MainNav() {
             <NavigationMenuList className="gap-2">
               <NavigationMenuItem>
                 <Link href="/" className={navigationMenuTriggerStyle()}>
+                  ホーム
+                </Link>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <Link href="/player" className={navigationMenuTriggerStyle()}>
                   ダッシュボード
                 </Link>
               </NavigationMenuItem>
               <NavigationMenuItem>
                 <Link href="/tier" className={navigationMenuTriggerStyle()}>
-                  環境分析 (Tier表)
+                  Tier表
                 </Link>
               </NavigationMenuItem>
               <NavigationMenuItem>
                 <Link href="/companion" className={navigationMenuTriggerStyle()}>
                   ピック支援 (BAN/Pick)
-                </Link>
-              </NavigationMenuItem>
-              <NavigationMenuItem>
-                <Link href="/ai-coach" className={navigationMenuTriggerStyle()}>
-                  AIコーチ
                 </Link>
               </NavigationMenuItem>
             </NavigationMenuList>
@@ -96,6 +96,13 @@ export function MainNav() {
             <span className="text-[10px] font-medium">ホーム</span>
           </Link>
           <Link 
+            href="/player" 
+            className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname.startsWith("/player") || pathname.startsWith("/dashboard") ? "text-primary" : "text-muted-foreground"}`}
+          >
+            <BarChart3 className="w-5 h-5" />
+            <span className="text-[10px] font-medium">ダッシュボード</span>
+          </Link>
+          <Link 
             href="/tier" 
             className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname === "/tier" || pathname === "/tier-list" ? "text-primary" : "text-muted-foreground"}`}
           >
@@ -108,13 +115,6 @@ export function MainNav() {
           >
             <Cpu className="w-5 h-5" />
             <span className="text-[10px] font-medium">ピック支援</span>
-          </Link>
-          <Link 
-            href="/ai-coach" 
-            className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname === "/ai-coach" ? "text-primary" : "text-muted-foreground"}`}
-          >
-            <BarChart3 className="w-5 h-5" />
-            <span className="text-[10px] font-medium">AIコーチ</span>
           </Link>
         </div>
       </div>

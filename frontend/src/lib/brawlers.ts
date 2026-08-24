@@ -134,3 +134,41 @@ export function getBrawlerInfo(name: any): { nameJa: string; imageUrl: string } 
     imageUrl: defaultId ? `https://cdn.brawlify.com/brawler/${defaultId}.png` : "https://cdn.brawlify.com/brawler/shelly.png"
   };
 }
+
+/**
+ * ガチバトルのランク数値（1〜19）からランク名・バッジ画像URL・サブティア（I, II, III）を取得する共通関数
+ */
+export function getRankImage(rankValue: any): { name: string; url: string; tier: string } | null {
+  try {
+    const num = Number(rankValue);
+    if (isNaN(num) || num <= 0) return null;
+    if (num >= 19) return { name: "マスター", url: "https://cdn.brawlify.com/ranked/regular/Masters.png", tier: "" };
+    
+    const tiers = ["Bronze", "Silver", "Gold", "Diamond", "Mythic", "Legendary"];
+    const tierNames: Record<string, string> = {
+      "Bronze": "ブロンズ",
+      "Silver": "シルバー",
+      "Gold": "ゴールド",
+      "Diamond": "ダイヤモンド",
+      "Mythic": "ミシック",
+      "Legendary": "レジェンド"
+    };
+    
+    const tierIndex = Math.floor((num - 1) / 3);
+    if (tierIndex < 0 || tierIndex >= tiers.length || !tiers[tierIndex]) {
+      return null;
+    }
+    
+    const subTier = ((num - 1) % 3) + 1; // 1, 2, 3
+    const numerals = ["I", "II", "III"];
+    const rawTierName = tiers[tierIndex];
+    
+    return {
+      name: tierNames[rawTierName] || rawTierName.toUpperCase(),
+      url: `https://cdn.brawlify.com/ranked/regular/${rawTierName}.png`,
+      tier: numerals[subTier - 1] || ""
+    };
+  } catch {
+    return null;
+  }
+}

@@ -8,19 +8,36 @@ from datetime import datetime, timezone
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/player", tags=["Player"])
 
+import time
+
+# --- Player Enrichment Cache Layer (tag -> ({icon_id, highest_ranked_rank}, timestamp)) ---
+_PLAYER_SEARCH_ENRICH_CACHE: dict[str, tuple[dict, float]] = {}
+_ENRICH_CACHE_TTL = 86400.0  # 24 hours
+
 @router.get("/search")
 async def search_players(q: str = Query(..., min_length=1, description="Player tag or name to search")):
     """
     プレイヤーを名前で部分一致検索する
     クエリが '#' で始まる場合はそのままタグとして返す
     
-    Why: 外部APIへの多重ファンアウト（N+1）を完全に排除し、
-    DBクエリ1発で即時返却（1500ms -> 15ms）する。
+    Why: エンリッチキャッシュ（TTL 24h）を併用することで、
+    初検索時でもアイコン・最高ランクを高速補完し、2回目以降は 0ms（DBのみ 15ms）で即時返却する。
     """
     clean_q = q.strip()
     if clean_q.startswith("#"):
         tag_val = clean_q.replace("#", "").upper()
-        return [{"player_tag": tag_val, "name": f"#{tag_val}", "trophies": 0, "highest_trophies": 0, "icon_id": 28000000}]
+        # キャッシュがあれば適用
+        cached_entry = _PLAYER_SEARCH_ENRICH_CACHE.get(tag_val)
+        icon_id = cached_entry[0].get("icon_id", 28000000) if cached_entry else 28000000
+        highest_rank = cached_entry[0].get("highest_ranked_rank", 0) if cached_entry else 0
+        return [{
+            "player_tag": tag_val,
+            "name": f"#{tag_val}",
+            "trophies": 0,
+            "highest_trophies": 0,
+            "icon_id": icon_id,
+            "highest_ranked_rank": highest_rank
+        }]
         
     try:
         db = get_db()
@@ -28,11 +45,47 @@ async def search_players(q: str = Query(..., min_length=1, description="Player t
         res = db.table("players").select("player_tag, name, trophies, highest_trophies").ilike("name", f"%{clean_q}%").order("trophies", desc=True).limit(10).execute()
         
         players = res.data or []
+        if not players:
+            return []
+
+        now = time.time()
+        missing_enrich = []
+
         for p in players:
             p["trophies"] = p.get("trophies") or 0
             p["highest_trophies"] = p.get("highest_trophies") or 0
-            p["icon_id"] = p.get("icon_id") or 28000000
-            p["highest_ranked_rank"] = 0
+            tag = p.get("player_tag", "").upper()
+            
+            cached = _PLAYER_SEARCH_ENRICH_CACHE.get(tag)
+            if cached and (now - cached[1]) < _ENRICH_CACHE_TTL:
+                p["icon_id"] = cached[0].get("icon_id", 28000000)
+                p["highest_ranked_rank"] = cached[0].get("highest_ranked_rank", 0)
+            else:
+                p["icon_id"] = 28000000
+                p["highest_ranked_rank"] = 0
+                missing_enrich.append(p)
+
+        # キャッシュ未登録のプレイヤーのみ、短時間タイムアウトで並列エンリッチ
+        if missing_enrich:
+            async def fetch_enrich(player_obj):
+                tag_to_fetch = player_obj.get("player_tag", "")
+                try:
+                    # タイムアウト付きで安全にフェッチ
+                    info = await asyncio.wait_for(get_player(tag_to_fetch), timeout=2.0)
+                    icon_val = (info.get("icon") or {}).get("id", 28000000) or 28000000
+                    rank_val = int(info.get("highestAllTimeRankedRank") or info.get("rankedRank") or 0)
+                    
+                    player_obj["icon_id"] = icon_val
+                    player_obj["highest_ranked_rank"] = rank_val
+                    
+                    _PLAYER_SEARCH_ENRICH_CACHE[tag_to_fetch.upper()] = (
+                        {"icon_id": icon_val, "highest_ranked_rank": rank_val},
+                        time.time()
+                    )
+                except Exception as e:
+                    logger.debug(f"Failed to fetch enrich info for {tag_to_fetch}: {e}")
+
+            await asyncio.gather(*(fetch_enrich(p) for p in missing_enrich), return_exceptions=True)
             
         return players
     except Exception as e:
@@ -52,6 +105,14 @@ async def sync_player(player_tag: str):
             db = get_db()
             clean_tag = player_tag.replace("#", "").upper()
             icon_id = (player_info.get("icon") or {}).get("id", 28000000) or 28000000
+            highest_rank = int(player_info.get("highestAllTimeRankedRank") or player_info.get("rankedRank") or 0)
+            
+            # エンリッチキャッシュも即座に更新
+            _PLAYER_SEARCH_ENRICH_CACHE[clean_tag] = (
+                {"icon_id": icon_id, "highest_ranked_rank": highest_rank},
+                time.time()
+            )
+            
             player_data = {
                 "player_tag": clean_tag,
                 "name": player_info.get("name", "Unknown"),
@@ -129,7 +190,15 @@ async def get_dashboard(player_tag: str):
         try:
             db = get_db()
             ranked_rank = player_info.get("rankedRank") or 0
-            highest_ranked_rank = player_info.get("highestAllTimeRankedRank") or player_info.get("highestSeasonRankedRank") or ranked_rank
+            highest_ranked_rank = int(player_info.get("highestAllTimeRankedRank") or player_info.get("highestSeasonRankedRank") or ranked_rank)
+            icon_id = (player_info.get("icon") or {}).get("id", 28000000) or 28000000
+            
+            # エンリッチキャッシュを即座に更新
+            _PLAYER_SEARCH_ENRICH_CACHE[clean_tag] = (
+                {"icon_id": icon_id, "highest_ranked_rank": highest_ranked_rank},
+                time.time()
+            )
+
             player_data = {
                 "player_tag": clean_tag,
                 "name": player_info.get("name", "Unknown"),

@@ -13,7 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { getBrawlerInfo } from "@/lib/brawlers"
+import { getBrawlerInfo, getRankImage } from "@/lib/brawlers"
 import { translateMode, translateMap, getModeIconUrl } from "@/lib/translations"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
@@ -51,41 +51,6 @@ function translateRole(role: string): string {
   if (r === "senior") return "シニア";
   if (r === "member") return "メンバー";
   return role;
-}
-
-function getRankImage(rankValue: any): { name: string; url: string; tier: string } | null {
-  try {
-    const num = Number(rankValue);
-    if (isNaN(num) || num <= 0) return null;
-    if (num >= 19) return { name: "マスター", url: "https://cdn.brawlify.com/ranked/regular/Masters.png", tier: "" };
-    
-    const tiers = ["Bronze", "Silver", "Gold", "Diamond", "Mythic", "Legendary"];
-    const tierNames: Record<string, string> = {
-      "Bronze": "ブロンズ",
-      "Silver": "シルバー",
-      "Gold": "ゴールド",
-      "Diamond": "ダイヤモンド",
-      "Mythic": "ミシック",
-      "Legendary": "レジェンド"
-    };
-    
-    const tierIndex = Math.floor((num - 1) / 3);
-    if (tierIndex < 0 || tierIndex >= tiers.length || !tiers[tierIndex]) {
-      return null;
-    }
-    
-    const subTier = ((num - 1) % 3) + 1; // 1, 2, 3
-    const numerals = ["I", "II", "III"];
-    const rawTierName = tiers[tierIndex];
-    
-    return {
-      name: tierNames[rawTierName] || rawTierName.toUpperCase(),
-      url: `https://cdn.brawlify.com/ranked/regular/${rawTierName}.png`,
-      tier: numerals[subTier - 1] || ""
-    };
-  } catch {
-    return null;
-  }
 }
 
 interface ComponentItem {
@@ -1526,6 +1491,7 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
           <div className="flex-1 overflow-y-auto p-4 space-y-2 divide-y divide-zinc-800/50">
             {candidates.map((p: any) => {
               const pTag = p.player_tag || p.tag;
+              const rank = p.highest_ranked_rank > 0 ? getRankImage(p.highest_ranked_rank) : null;
               return (
                 <button
                   key={pTag}
@@ -1551,15 +1517,23 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                     </div>
                   </div>
 
-                  <div className="text-right">
-                    <div className="font-extrabold text-sm text-amber-400">
-                      🏆 {p.trophies?.toLocaleString()}
-                    </div>
-                    {p.highest_trophies > 0 && (
-                      <div className="text-[11px] text-zinc-500">
-                        最高 {p.highest_trophies?.toLocaleString()}
+                  <div className="flex items-center gap-3">
+                    {rank && (
+                      <div className="flex items-center gap-1.5 bg-zinc-800/80 px-2.5 py-1 rounded-xl border border-zinc-700/60" title={`最高ランク: ${rank.name} ${rank.tier}`}>
+                        <img src={rank.url} alt={rank.name} className="w-6 h-6 object-contain" />
+                        <span className="text-xs font-bold text-zinc-200">{rank.tier}</span>
                       </div>
                     )}
+                    <div className="text-right">
+                      <div className="font-extrabold text-sm text-amber-400">
+                        🏆 {p.trophies?.toLocaleString()}
+                      </div>
+                      {p.highest_trophies > 0 && (
+                        <div className="text-[11px] text-zinc-500">
+                          最高 {p.highest_trophies?.toLocaleString()}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </button>
               );

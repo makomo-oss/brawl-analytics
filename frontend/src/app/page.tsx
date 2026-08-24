@@ -12,7 +12,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { getBrawlerInfo } from "@/lib/brawlers";
+import { getBrawlerInfo, getRankImage } from "@/lib/brawlers";
 import { API_URL } from "@/lib/config";
 import { BurolaboIcon } from "@/components/brand-icon";
 
@@ -352,6 +352,7 @@ export default function CockpitHomePage() {
               <div className="max-h-64 overflow-y-auto divide-y divide-zinc-800/60">
                 {suggestions.map((p: any) => {
                   const pTag = p.player_tag || p.tag;
+                  const rank = p.highest_ranked_rank > 0 ? getRankImage(p.highest_ranked_rank) : null;
                   return (
                     <button
                       key={pTag}
@@ -360,17 +361,25 @@ export default function CockpitHomePage() {
                       className="w-full px-4 py-3 flex items-center justify-between hover:bg-zinc-800/70 transition-colors text-left group"
                     >
                       <div className="flex items-center gap-2.5">
-                        <Avatar className="w-8 h-8 border border-zinc-700">
+                        <Avatar className="w-9 h-9 border border-zinc-700 shrink-0">
                           <AvatarImage src={`https://cdn.brawlify.com/profile-icons/regular/${p.icon_id || 28000000}.png`} />
                           <AvatarFallback>{p.name?.[0]}</AvatarFallback>
                         </Avatar>
-                        <div>
-                          <div className="font-bold text-sm text-zinc-100 group-hover:text-primary transition-colors">{p.name}</div>
+                        <div className="min-w-0">
+                          <div className="font-bold text-sm text-zinc-100 group-hover:text-primary transition-colors truncate">{p.name}</div>
                           <div className="text-[11px] text-zinc-400 font-mono">#{pTag.replace(/^#/, "")}</div>
                         </div>
                       </div>
-                      <div className="text-right text-xs">
-                        <div className="font-bold text-amber-400">🏆 {p.trophies?.toLocaleString()}</div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        {rank && (
+                          <div className="flex items-center gap-1 bg-zinc-800/80 px-2 py-0.5 rounded-full border border-zinc-700/60" title={`最高ランク: ${rank.name} ${rank.tier}`}>
+                            <img src={rank.url} alt={rank.name} className="w-5 h-5 object-contain" />
+                            <span className="text-[11px] font-bold text-zinc-300">{rank.tier}</span>
+                          </div>
+                        )}
+                        <div className="text-right text-xs">
+                          <div className="font-bold text-amber-400">🏆 {p.trophies?.toLocaleString()}</div>
+                        </div>
                       </div>
                     </button>
                   );
@@ -421,6 +430,7 @@ export default function CockpitHomePage() {
           <div className="flex-1 overflow-y-auto p-4 space-y-2 divide-y divide-zinc-800/50">
             {candidates.map((p: any) => {
               const pTag = p.player_tag || p.tag;
+              const rank = p.highest_ranked_rank > 0 ? getRankImage(p.highest_ranked_rank) : null;
               return (
                 <button
                   key={pTag}
@@ -443,15 +453,23 @@ export default function CockpitHomePage() {
                     </div>
                   </div>
 
-                  <div className="text-right">
-                    <div className="font-extrabold text-sm text-amber-400">
-                      🏆 {p.trophies?.toLocaleString()}
-                    </div>
-                    {p.highest_trophies > 0 && (
-                      <div className="text-[11px] text-zinc-500">
-                        最高 {p.highest_trophies?.toLocaleString()}
+                  <div className="flex items-center gap-3">
+                    {rank && (
+                      <div className="flex items-center gap-1.5 bg-zinc-800/80 px-2.5 py-1 rounded-xl border border-zinc-700/60" title={`最高ランク: ${rank.name} ${rank.tier}`}>
+                        <img src={rank.url} alt={rank.name} className="w-6 h-6 object-contain" />
+                        <span className="text-xs font-bold text-zinc-200">{rank.tier}</span>
                       </div>
                     )}
+                    <div className="text-right">
+                      <div className="font-extrabold text-sm text-amber-400">
+                        🏆 {p.trophies?.toLocaleString()}
+                      </div>
+                      {p.highest_trophies > 0 && (
+                        <div className="text-[11px] text-zinc-500">
+                          最高 {p.highest_trophies?.toLocaleString()}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </button>
               );

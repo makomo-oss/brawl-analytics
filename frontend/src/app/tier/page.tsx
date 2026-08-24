@@ -41,25 +41,47 @@ export default function TierListPage() {
   // クライアントサイド・インメモリキャッシュ (0ms即時切り替え用)
   const dataCacheRef = useRef<Record<string, any>>({})
   const charDetailCacheRef = useRef<Record<string, any>>({})
+  const pendingRequestsRef = useRef<Record<string, Promise<any> | undefined>>({})
 
-  // 初回マウント時: 主要なTierデータをバックグラウンドで並列プリフェッチ
+  // キャッシュまたは進行中リクエストを共有するフェッチヘルパー
+  const fetchWithDedup = async (cacheKey: string, url: string) => {
+    if (dataCacheRef.current[cacheKey]) {
+      return dataCacheRef.current[cacheKey]
+    }
+    if (pendingRequestsRef.current[cacheKey]) {
+      return pendingRequestsRef.current[cacheKey]
+    }
+    const promise = (async () => {
+      try {
+        const res = await fetch(url)
+        if (res.ok) {
+          const data = await res.json()
+          dataCacheRef.current[cacheKey] = data
+          return data
+        }
+      } catch (err) {
+        console.error(err)
+      } finally {
+        delete pendingRequestsRef.current[cacheKey]
+      }
+      return null
+    })()
+    pendingRequestsRef.current[cacheKey] = promise
+    return promise
+  }
+
+  // 初回マウント時: ガチバトルの各ランク帯をバックグラウンドで事前プリフェッチ
   useEffect(() => {
     const prefetchKeyTiers = async () => {
       const keys = [
-        { key: "global:all::", url: `${API_URL}/meta/tier-list?type=global` },
+        { key: "global:all:all:", url: `${API_URL}/meta/tier-list?type=global` },
         { key: "gachi:all:all:", url: `${API_URL}/meta/tier-list?type=gachi&rank_tier=all` },
         { key: "gachi:mythic:all:", url: `${API_URL}/meta/tier-list?type=gachi&rank_tier=mythic` },
         { key: "gachi:legendary:all:", url: `${API_URL}/meta/tier-list?type=gachi&rank_tier=legendary` },
         { key: "gachi:masters:all:", url: `${API_URL}/meta/tier-list?type=gachi&rank_tier=masters` },
       ]
-      keys.forEach(async ({ key, url }) => {
-        try {
-          const res = await fetch(url)
-          if (res.ok) {
-            const data = await res.json()
-            dataCacheRef.current[key] = data
-          }
-        } catch {}
+      keys.forEach(({ key, url }) => {
+        fetchWithDedup(key, url)
       })
     }
     prefetchKeyTiers()
@@ -123,10 +145,8 @@ export default function TierListPage() {
           return
         }
 
-        const res = await fetch(url)
-        if (res.ok) {
-          const data = await res.json()
-          dataCacheRef.current[cacheKey] = data
+        const data = await fetchWithDedup(cacheKey, url)
+        if (data) {
           setTierData(data)
         } else if (!cachedData) {
           setTierData(null)

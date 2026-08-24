@@ -44,6 +44,10 @@ export default function CockpitHomePage() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
+  // クライアントサイド・インメモリキャッシュ (0ms即時表示用)
+  const metaCacheRef = useRef<any>(null);
+  const charDetailCacheRef = useRef<Record<string, any>>({});
+
   // 1. 最近の検索履歴を localStorage から読み込み
   useEffect(() => {
     try {
@@ -56,13 +60,20 @@ export default function CockpitHomePage() {
     }
   }, []);
 
-  // 2. 今日の環境速報 (ガチバトル S+ / S Tier) を取得
+  // 2. 今日の環境速報 (ガチバトル S+ / S Tier) を取得（キャッシュ優先）
   useEffect(() => {
+    if (metaCacheRef.current) {
+      setTierData(metaCacheRef.current);
+      setLoadingTier(false);
+      return;
+    }
+
     const fetchTopMeta = async () => {
       try {
         const res = await fetch(`${API_URL}/meta/tier-list?type=gachi&rank_tier=all`);
         if (res.ok) {
           const data = await res.json();
+          metaCacheRef.current = data;
           setTierData(data);
         }
       } catch (err) {
@@ -209,7 +220,7 @@ export default function CockpitHomePage() {
     }
   };
 
-  // キャラクタークリック時（対面詳細モーダル）
+  // キャラクタークリック時（対面詳細モーダル・キャッシュ優先）
   const handleCharClick = async (charName: string, tier: string) => {
     const baseInfo = tierData?.characters?.[charName] || {
       score: 50.0,
@@ -217,6 +228,19 @@ export default function CockpitHomePage() {
       use_rate: 0.0,
       total_matches: 0
     };
+
+    const cachedDetail = charDetailCacheRef.current[charName];
+    if (cachedDetail) {
+      setSelectedChar({
+        id: charName,
+        tier,
+        ...baseInfo,
+        ...cachedDetail
+      });
+      setSheetOpen(true);
+      setModalLoading(false);
+      return;
+    }
 
     setSelectedChar({
       id: charName,
@@ -232,6 +256,7 @@ export default function CockpitHomePage() {
       const res = await fetch(`${API_URL}/meta/characters/${encodeURIComponent(charName)}?type=gachi&rank_tier=all`);
       if (res.ok) {
         const detail = await res.json();
+        charDetailCacheRef.current[charName] = detail;
         setSelectedChar((prev: any) => ({
           ...prev,
           ...detail,

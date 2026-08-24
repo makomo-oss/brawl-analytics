@@ -8,12 +8,13 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/meta", tags=["Meta"])
 
-# --- In-Memory Cache Layers (TTL = 180 seconds) ---
-_MACRO_CACHE = {"data": None, "timestamp": 0, "ttl": 180}
-_TOTAL_MATCHES_CACHE = {"count": 0, "timestamp": 0, "ttl": 180}
-_CATEGORIES_CACHE = {"data": {}, "timestamp": 0, "ttl": 180}
-_COUNTERS_CACHE = {"data": None, "by_char": {}, "timestamp": 0, "ttl": 180}
-_SYNERGIES_CACHE = {"data": None, "by_char": {}, "timestamp": 0, "ttl": 300}
+# --- In-Memory Cache Layers (TTL = 3600 seconds / 1 hour) ---
+# 日次バッチ実行時 (clear_meta_cache) または 1 時間経過で最新化
+_MACRO_CACHE = {"data": None, "timestamp": 0, "ttl": 3600}
+_TOTAL_MATCHES_CACHE = {"count": 0, "timestamp": 0, "ttl": 3600}
+_CATEGORIES_CACHE = {"data": {}, "timestamp": 0, "ttl": 3600}
+_COUNTERS_CACHE = {"data": None, "by_char": {}, "timestamp": 0, "ttl": 3600}
+_SYNERGIES_CACHE = {"data": None, "by_char": {}, "timestamp": 0, "ttl": 3600}
 _MODE_MAPS_CACHE = {} # mode -> (set of map_ids, timestamp)
 
 def clear_meta_cache():
@@ -287,16 +288,23 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
     # モード別のマップ一覧が必要な場合
     valid_map_ids = None
     if sub_type == "mode" and id:
-        try:
-            mode_res = db.table("match_raw_history").select("map_id").eq("mode", id).limit(5000).execute()
-            valid_map_ids = set()
-            for r in mode_res.data:
-                m = r.get("map_id")
-                if m:
-                    valid_map_ids.add(str(m))
-                    valid_map_ids.add(str(m).replace("gachi_", ""))
-        except:
-            valid_map_ids = set()
+        now = time.time()
+        cached_mode = _MODE_MAPS_CACHE.get(id)
+        if cached_mode and (now - cached_mode[1]) < 3600:
+            valid_map_ids = cached_mode[0]
+        else:
+            try:
+                mode_res = db.table("match_raw_history").select("map_id").eq("mode", id).limit(5000).execute()
+                valid_map_ids = set()
+                for r in (mode_res.data or []):
+                    m = r.get("map_id")
+                    if m:
+                        valid_map_ids.add(str(m))
+                        valid_map_ids.add(str(m).replace("gachi_", ""))
+                _MODE_MAPS_CACHE[id] = (valid_map_ids, now)
+            except Exception as e:
+                logger.warning(f"Failed to fetch maps for mode {id}: {e}")
+                valid_map_ids = set()
             
     # フィルタリング
     filtered_data = []

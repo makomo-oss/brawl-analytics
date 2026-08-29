@@ -328,7 +328,7 @@ export default function CockpitHomePage() {
             <Button
               type="submit"
               disabled={isSearching}
-              className="h-10 px-5 rounded-xl font-bold bg-primary text-primary-foreground hover:bg-primary/90 transition-all active:scale-95 shadow-md shrink-0"
+              className="h-10 px-3 sm:px-5 rounded-xl font-bold text-sm bg-primary text-primary-foreground hover:bg-primary/90 transition-all active:scale-95 shadow-md shrink-0"
             >
               {isSearching ? "検索中..." : "分析する"}
             </Button>
@@ -400,7 +400,7 @@ export default function CockpitHomePage() {
                 key={item.tag}
                 type="button"
                 onClick={() => handleSearch(item.tag, item.name)}
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 hover:text-white border border-zinc-700/50 transition-colors"
+                className="inline-flex items-center gap-1 px-2.5 py-2 rounded-full bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 hover:text-white border border-zinc-700/50 transition-colors"
               >
                 <span className="font-medium">{item.name || item.tag}</span>
                 <span className="text-[10px] text-zinc-500 font-mono">{item.tag}</span>
@@ -438,13 +438,13 @@ export default function CockpitHomePage() {
                   onClick={() => handleSearch(pTag, p.name)}
                   className="w-full pt-2 first:pt-0 p-3 flex items-center justify-between rounded-2xl hover:bg-zinc-900/90 border border-transparent hover:border-zinc-700 transition-all text-left group"
                 >
-                  <div className="flex items-center gap-3">
-                    <Avatar className="w-12 h-12 rounded-xl border border-zinc-700 shadow-md">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <Avatar className="w-12 h-12 rounded-xl border border-zinc-700 shadow-md shrink-0">
                       <AvatarImage src={`https://cdn.brawlify.com/profile-icons/regular/${p.icon_id || 28000000}.png`} />
                       <AvatarFallback>{p.name?.[0]}</AvatarFallback>
                     </Avatar>
-                    <div>
-                      <div className="font-bold text-base text-zinc-100 group-hover:text-primary transition-colors">
+                    <div className="min-w-0">
+                      <div className="font-bold text-base text-zinc-100 group-hover:text-primary transition-colors truncate">
                         {p.name}
                       </div>
                       <div className="text-xs text-zinc-400 font-mono">
@@ -453,7 +453,7 @@ export default function CockpitHomePage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 shrink-0">
                     {rank && (
                       <div className="flex items-center gap-1.5 bg-zinc-800/80 px-2.5 py-1 rounded-xl border border-zinc-700/60" title={`最高ランク: ${rank.name} ${rank.tier}`}>
                         <img src={rank.url} alt={rank.name} className="w-6 h-6 object-contain" />
@@ -491,7 +491,7 @@ export default function CockpitHomePage() {
           </div>
           <Link
             href="/tier"
-            className="text-xs font-semibold text-primary hover:text-primary/80 flex items-center gap-1 transition-colors"
+            className="text-xs font-semibold text-primary hover:text-primary/80 flex items-center gap-1 transition-colors py-2 shrink-0"
           >
             詳細Tier表を見る <ArrowRight className="w-3.5 h-3.5" />
           </Link>

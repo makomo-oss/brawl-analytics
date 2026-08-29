@@ -599,7 +599,7 @@ export default function DraftCompanionPage() {
             {phase === "pick" && <><Swords className="w-6 h-6 text-primary" /> Pickフェーズ</>}
             {phase === "done" && <><Check className="w-6 h-6 text-green-500" /> ドラフト完了</>}
           </h2>
-          <p className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
+          <p className="text-xs sm:text-sm text-muted-foreground flex flex-wrap items-center gap-1.5 sm:gap-2 mt-1">
             {translateMode(selectedMode)} - {translateMap(selectedMap)}
             <Badge variant="outline" className={myTeam === "blue" ? "text-blue-500 border-blue-200" : "text-red-500 border-red-200"}>
               自チーム: {myTeam === "blue" ? "青チーム" : "赤チーム"}
@@ -632,7 +632,7 @@ export default function DraftCompanionPage() {
             <CardHeader className="pb-3 border-b bg-secondary/10">
               <CardTitle className="text-lg">ドラフトボード</CardTitle>
             </CardHeader>
-            <CardContent className="pt-4 grid grid-cols-3 gap-2 sm:gap-6">
+            <CardContent className="pt-4 grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-6">
               
               {/* Blue Team Area */}
               <div className="space-y-3">
@@ -693,12 +693,12 @@ export default function DraftCompanionPage() {
               </div>
 
               {/* Bans Area */}
-              <div className="space-y-3">
+              <div className="space-y-3 col-span-2 md:col-span-1">
                 <h3 className="font-bold text-slate-500 flex flex-col items-center justify-center bg-slate-500/10 p-1 sm:p-2 rounded-lg text-[10px] sm:text-base leading-tight">
                   <span className="flex items-center gap-1"><Ban className="w-3 h-3 sm:w-4 sm:h-4" /> BAN指定</span>
                   <span className="font-normal opacity-0">.</span>
                 </h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-1 md:gap-4 gap-4">
                   {/* Ally Bans */}
                   <div className="space-y-2">
                     <div className="text-xs text-center font-bold text-muted-foreground">味方 BAN</div>
@@ -855,7 +855,7 @@ export default function DraftCompanionPage() {
                       </Button>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3">
+                    <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2 sm:gap-3">
                       {filteredBrawlers.map(charName => {
                         const info = getBrawlerInfo(charName)
                         const excluded = isExcluded(charName)
@@ -863,7 +863,7 @@ export default function DraftCompanionPage() {
                           <div 
                             key={charName} 
                             onClick={() => !excluded && handleSelectCharacter(charName)}
-                            className={`flex flex-col items-center gap-1 cursor-pointer transition-all hover:scale-105 group ${excluded ? 'opacity-20 cursor-not-allowed grayscale' : ''}`}
+                            className={`flex flex-col items-center justify-center min-h-[44px] min-w-[44px] gap-1 cursor-pointer transition-all hover:scale-105 group ${excluded ? 'opacity-20 cursor-not-allowed grayscale' : ''}`}
                             title={info.nameJa}
                           >
                             <div className="w-9 h-9 sm:w-12 sm:h-12 border-2 border-black/20 dark:border-white/10 group-hover:border-primary transition-colors shrink-0 rounded-md bg-primary/10 relative overflow-hidden flex items-center justify-center shadow-sm">

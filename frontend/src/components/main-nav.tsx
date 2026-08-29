@@ -15,12 +15,14 @@ export function MainNav() {
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
+      // ページ最下部付近ではナビを常時表示（回遊性確保）
+      const isAtBottom = (window.innerHeight + currentScrollY) >= (document.documentElement.scrollHeight - 50);
       
-      if (currentScrollY > lastScrollY && currentScrollY > 50) {
-        // Scrolling down
+      if (isAtBottom) {
+        setIsVisible(true);
+      } else if (currentScrollY > lastScrollY && currentScrollY > 50) {
         setIsVisible(false);
       } else {
-        // Scrolling up
         setIsVisible(true);
       }
       
@@ -34,7 +36,7 @@ export function MainNav() {
   return (
     <>
       {/* Desktop Header */}
-      <div className="hidden md:block border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
+      <div className="hidden lg:block border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
         <div className="container flex h-16 items-center px-4 max-w-7xl mx-auto">
           <Link href="/" className="mr-6 flex items-center space-x-2.5 group">
             <BurolaboIcon size={30} className="group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-sm" />
@@ -70,7 +72,7 @@ export function MainNav() {
       </div>
 
       {/* Mobile Top Header (Just Logo) */}
-      <div className="md:hidden border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
+      <div className="lg:hidden border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
         <div className="flex h-14 items-center justify-center px-4">
           <Link href="/" className="flex items-center space-x-2 group">
             <BurolaboIcon size={24} className="group-hover:scale-110 transition-transform duration-300" />
@@ -83,7 +85,7 @@ export function MainNav() {
 
       {/* Mobile Bottom Tab Navigation */}
       <div 
-        className={`md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-t border-border/50 pb-safe transition-transform duration-300 ease-in-out ${
+        className={`lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-t border-border/50 pb-safe transition-transform duration-300 ease-in-out ${
           isVisible ? "translate-y-0" : "translate-y-[150%]"
         }`}
       >

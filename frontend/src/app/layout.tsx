@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Inter } from "next/font/google";
 import { MainNav } from "@/components/main-nav";
@@ -114,6 +114,19 @@ export const metadata: Metadata = {
 };
 
 /**
+ * Next.js Viewport API によるモバイル表示最適化
+ *
+ * Why: iOS Safari のノッチ/セーフエリアや PWA 表示時のスケーリングを
+ * 正しく制御するため、viewport を明示的にエクスポートする。
+ */
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: "cover",
+};
+
+/**
  * JSON-LD 構造化データ (WebApplication + WebSite)
  *
  * Why: Google のリッチリザルトやナレッジパネルに
@@ -189,7 +202,7 @@ export default function RootLayout({
       </head>
       <body className={`${inter.className} min-h-screen bg-background text-foreground antialiased`}>
         <MainNav />
-        <main className="container mx-auto p-4 sm:p-6 lg:p-8 max-w-7xl pb-24 md:pb-8">
+        <main className="container mx-auto px-3 py-4 sm:p-6 lg:p-8 max-w-7xl pb-24 lg:pb-8">
           {children}
         </main>
       </body>

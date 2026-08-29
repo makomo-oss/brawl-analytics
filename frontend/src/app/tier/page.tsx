@@ -237,7 +237,7 @@ export default function TierListPage() {
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-7xl mx-auto">
       <div className="flex flex-col gap-2">
-        <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent flex items-center gap-3">
+        <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent flex items-center gap-3">
           <Trophy className="w-8 h-8 text-yellow-500" />
           環境分析 (Tier表)
         </h1>
@@ -271,9 +271,9 @@ export default function TierListPage() {
               </div>
               <Tabs value={selectedRankTier} onValueChange={setSelectedRankTier} className="w-full max-w-2xl">
                 <TabsList className="grid grid-cols-4 w-full !h-[42px] p-1 rounded-xl bg-background/70 border border-border/50">
-                  <TabsTrigger value="all" className="text-xs sm:text-sm font-bold rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">総合 (エリート+)</TabsTrigger>
-                  <TabsTrigger value="mythic" className="text-xs sm:text-sm font-bold rounded-lg data-[state=active]:bg-purple-600 data-[state=active]:text-white">エリート (Mythic)</TabsTrigger>
-                  <TabsTrigger value="legendary" className="text-xs sm:text-sm font-bold rounded-lg data-[state=active]:bg-rose-600 data-[state=active]:text-white">レジェンド (Legend)</TabsTrigger>
+                  <TabsTrigger value="all" className="text-xs sm:text-sm font-bold rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"><><span className="sm:hidden">総合</span><span className="hidden sm:inline">総合 (エリート+)</span></></TabsTrigger>
+                  <TabsTrigger value="mythic" className="text-xs sm:text-sm font-bold rounded-lg data-[state=active]:bg-purple-600 data-[state=active]:text-white"><><span className="sm:hidden">エリート</span><span className="hidden sm:inline">エリート (Mythic)</span></></TabsTrigger>
+                  <TabsTrigger value="legendary" className="text-xs sm:text-sm font-bold rounded-lg data-[state=active]:bg-rose-600 data-[state=active]:text-white"><><span className="sm:hidden">レジェンド</span><span className="hidden sm:inline">レジェンド (Legend)</span></></TabsTrigger>
                   <TabsTrigger value="masters" className="text-xs sm:text-sm font-bold rounded-lg data-[state=active]:bg-amber-600 data-[state=active]:text-white">マスター・プロ</TabsTrigger>
                 </TabsList>
               </Tabs>
@@ -370,9 +370,9 @@ export default function TierListPage() {
                             <div 
                               key={charId} 
                               onClick={() => fetchCharacterDetail(charId)}
-                              className="group relative flex flex-col items-center justify-center p-2 rounded-xl bg-background/60 hover:bg-background/90 border border-primary/10 hover:border-primary/50 transition-all hover:-translate-y-1 cursor-pointer shadow-sm"
+                              className="group relative flex flex-col items-center justify-center p-1.5 sm:p-2 rounded-xl bg-background/60 hover:bg-background/90 border border-primary/10 hover:border-primary/50 transition-all hover:-translate-y-1 cursor-pointer shadow-sm"
                             >
-                              <div className="w-14 h-14 sm:w-16 sm:h-16 shrink-0 border-2 border-black/20 dark:border-white/10 group-hover:border-primary transition-colors shadow-sm rounded-md bg-primary/10 relative overflow-hidden flex items-center justify-center">
+                              <div className="w-11 h-11 sm:w-14 sm:h-14 shrink-0 border-2 border-black/20 dark:border-white/10 group-hover:border-primary transition-colors shadow-sm rounded-md bg-primary/10 relative overflow-hidden flex items-center justify-center">
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img 
                                   src={info.imageUrl} 
@@ -426,27 +426,27 @@ export default function TierListPage() {
                 </div>
               </SheetHeader>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-3 gap-2 sm:gap-4">
                 <Card className="bg-secondary/20 border-none shadow-inner">
-                  <CardContent className="p-4 flex flex-col items-center justify-center">
+                  <CardContent className="p-2.5 sm:p-4 flex flex-col items-center justify-center">
                     <span className="text-xs font-bold text-muted-foreground mb-1">総合勝率</span>
-                    <span className={`text-2xl font-black ${selectedChar.win_rate >= 55 ? 'text-green-500' : selectedChar.win_rate >= 50 ? 'text-blue-500' : 'text-orange-500'}`}>
+                    <span className={`text-lg sm:text-2xl font-black ${selectedChar.win_rate >= 55 ? 'text-green-500' : selectedChar.win_rate >= 50 ? 'text-blue-500' : 'text-orange-500'}`}>
                       {selectedChar.win_rate}%
                     </span>
                   </CardContent>
                 </Card>
                 <Card className="bg-secondary/20 border-none shadow-inner">
-                  <CardContent className="p-4 flex flex-col items-center justify-center">
+                  <CardContent className="p-2.5 sm:p-4 flex flex-col items-center justify-center">
                     <span className="text-xs font-bold text-muted-foreground mb-1">使用率</span>
-                    <span className="text-2xl font-black text-primary">
+                    <span className="text-lg sm:text-2xl font-black text-primary">
                       {selectedChar.use_rate}%
                     </span>
                   </CardContent>
                 </Card>
                 <Card className="bg-secondary/20 border-none shadow-inner">
-                  <CardContent className="p-4 flex flex-col items-center justify-center">
+                  <CardContent className="p-2.5 sm:p-4 flex flex-col items-center justify-center">
                     <span className="text-[10px] font-bold text-muted-foreground mb-1 text-center leading-tight">選択条件での<br/>分析試合数</span>
-                    <span className="text-xl font-black text-foreground">
+                    <span className="text-base sm:text-xl font-black text-foreground">
                       {selectedChar.total_matches}
                     </span>
                   </CardContent>

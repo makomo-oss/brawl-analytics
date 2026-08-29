@@ -500,7 +500,7 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                 
                 {/* プレイヤーサジェストドロップダウン */}
                 {showSuggestions && (isSearching || suggestions.length > 0) && (
-                  <div className="absolute top-full left-0 w-full min-w-[320px] max-w-full mt-2 bg-card text-card-foreground border border-border rounded-md shadow-2xl z-[100] max-h-64 overflow-y-auto">
+                  <div className="absolute top-full left-0 w-full max-w-full mt-2 bg-card text-card-foreground border border-border rounded-md shadow-2xl z-[100] max-h-64 overflow-y-auto">
                     {isSearching ? (
                       <div className="p-3 text-sm text-muted-foreground text-center animate-pulse">検索中...</div>
                     ) : (
@@ -595,7 +595,7 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
 
                 {/* クラブサジェストドロップダウン */}
                 {showClubSuggestions && (isSearchingClub || clubSuggestions.length > 0) && (
-                  <div className="absolute top-full left-0 w-full min-w-[320px] max-w-full mt-2 bg-card text-card-foreground border border-border rounded-md shadow-2xl z-[100] max-h-64 overflow-y-auto">
+                  <div className="absolute top-full left-0 w-full max-w-full mt-2 bg-card text-card-foreground border border-border rounded-md shadow-2xl z-[100] max-h-64 overflow-y-auto">
                     {isSearchingClub ? (
                       <div className="p-3 text-sm text-muted-foreground text-center animate-pulse">検索中...</div>
                     ) : (
@@ -979,13 +979,13 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                   const isPositive = diff >= 0;
                   return (
                     <div key={item.char} className="space-y-2.5 p-3 rounded-xl bg-secondary/20 border border-border/40">
-                      <div className="flex justify-between items-center text-sm font-medium">
+                      <div className="flex justify-between items-center text-xs sm:text-sm font-medium">
                         <div className="flex items-center gap-2.5">
                           <Avatar className="w-8 h-8 border border-primary/20 shadow-sm">
                             <AvatarImage src={bInfo.imageUrl} />
                             <AvatarFallback className="bg-primary/10"><User className="w-4 h-4 text-primary/70" /></AvatarFallback>
                           </Avatar>
-                          <span className="font-bold text-base">{bInfo.nameJa}</span>
+                          <span className="font-bold text-sm sm:text-base">{bInfo.nameJa}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <Badge variant="outline" className={`text-xs font-extrabold ${isPositive ? 'text-green-500 border-green-500/30 bg-green-500/10' : 'text-red-500 border-red-500/30 bg-red-500/10'}`}>
@@ -1174,7 +1174,7 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                     <Button 
                       variant={resultFilter === "all" ? "default" : "ghost"} 
                       size="sm" 
-                      className="h-7 text-xs px-2.5 font-bold"
+                      className="h-9 text-xs px-2.5 font-bold"
                       onClick={() => setResultFilter("all")}
                     >
                       全結果
@@ -1182,7 +1182,7 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                     <Button 
                       variant={resultFilter === "victory" ? "default" : "ghost"} 
                       size="sm" 
-                      className="h-7 text-xs px-2.5 font-bold text-green-500 hover:text-green-400"
+                      className="h-9 text-xs px-2.5 font-bold text-green-500 hover:text-green-400"
                       onClick={() => setResultFilter("victory")}
                     >
                       勝利のみ
@@ -1190,7 +1190,7 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                     <Button 
                       variant={resultFilter === "defeat" ? "default" : "ghost"} 
                       size="sm" 
-                      className="h-7 text-xs px-2.5 font-bold text-red-500 hover:text-red-400"
+                      className="h-9 text-xs px-2.5 font-bold text-red-500 hover:text-red-400"
                       onClick={() => setResultFilter("defeat")}
                     >
                       敗北のみ
@@ -1203,7 +1203,7 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                     if (uniqueModes.length === 0) return null;
                     return (
                       <Select value={modeFilter} onValueChange={(val) => setModeFilter(val || "all")}>
-                        <SelectTrigger className="w-[140px] h-8 text-xs bg-secondary/40 border border-border/40">
+                        <SelectTrigger className="w-[140px] h-9 text-xs bg-secondary/40 border border-border/40">
                           <SelectValue placeholder="モード絞り込み" />
                         </SelectTrigger>
                         <SelectContent>
@@ -1265,9 +1265,9 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                         <Card key={i} className="bg-card border border-primary/10 overflow-hidden hover:bg-primary/5 transition-colors">
                       {/* Header section */}
                        <div className="p-3 border-b border-primary/10 flex justify-between items-center bg-secondary/30">
-                         <div className="flex items-center gap-3">
+                         <div className="flex items-center gap-3 min-w-0 flex-1">
                            <div className={`w-1.5 h-11 rounded-full ${battle.result === 'victory' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]' : battle.result === 'defeat' ? 'bg-destructive shadow-[0_0_10px_rgba(239,68,68,0.5)]' : 'bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)]'}`} />
-                           <div>
+                           <div className="min-w-0">
                              <div className="flex items-center gap-2 mb-1">
                                <Badge variant={battle.result === 'victory' ? 'default' : battle.result === 'defeat' ? 'destructive' : 'outline'} className="uppercase text-[10px] px-2 font-bold tracking-wider">
                                  {battle.result === 'victory' ? '勝利' : battle.result === 'defeat' ? '敗北' : '引き分け'}
@@ -1278,23 +1278,23 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                                <img src={getModeIconUrl(battle.mode)} alt={battle.mode} className="w-4 h-4 object-contain drop-shadow-md" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                                <span className="font-medium text-foreground/80">{translateMode(battle.mode)}</span>
                                <span className="opacity-40">|</span>
-                               <span>{translateMap(battle.map)}</span>
+                               <span className="truncate">{translateMap(battle.map)}</span>
                              </div>
                            </div>
                         </div>
                         <div className="text-right flex items-center gap-4">
-                          <Avatar className="w-12 h-12 border-2 border-primary/30 shadow-[0_0_15px_rgba(var(--primary),0.2)]">
+                          <Avatar className="w-9 h-9 sm:w-12 sm:h-12 border-2 border-primary/30 shadow-[0_0_15px_rgba(var(--primary),0.2)]">
                             <AvatarImage src={mainBInfo.imageUrl} />
                             <AvatarFallback className="bg-primary/10"><User className="w-5 h-5 text-primary/70" /></AvatarFallback>
                           </Avatar>
-                          <div className="w-20 text-right flex justify-end">
+                          <div className="w-14 sm:w-20 text-right flex justify-end">
                             {scoreDisplay}
                           </div>
                         </div>
                       </div>
                       
                       {/* Teams section */}
-                      <div className="p-3 grid grid-cols-2 gap-4 bg-secondary/10">
+                      <div className="p-3 grid grid-cols-1 sm:grid-cols-2 gap-4 bg-secondary/10">
                         {/* My Team */}
                         <div className="space-y-3 relative">
                           <p className="text-xs font-bold text-primary tracking-widest border-b border-primary/20 pb-1.5 flex items-center gap-2">
@@ -1327,7 +1327,7 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                           </div>
                         </div>
                         {/* Opponent Teams */}
-                        <div className="space-y-3 border-l border-primary/10 pl-4 relative">
+                        <div className="space-y-3 border-t sm:border-t-0 sm:border-l border-primary/10 pt-3 sm:pt-0 sm:pl-4 relative">
                           <p className="text-xs font-bold text-destructive tracking-widest border-b border-destructive/20 pb-1.5 flex items-center gap-2">
                             <span className="w-2 h-2 rounded-full bg-destructive" />
                             相手チーム
@@ -1502,13 +1502,13 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                   }}
                   className="w-full pt-2 first:pt-0 p-3 flex items-center justify-between rounded-2xl hover:bg-zinc-900/90 border border-transparent hover:border-zinc-700 transition-all text-left group"
                 >
-                  <div className="flex items-center gap-3">
-                    <Avatar className="w-12 h-12 rounded-xl border border-zinc-700 shadow-md">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <Avatar className="w-12 h-12 rounded-xl border border-zinc-700 shadow-md shrink-0">
                       <AvatarImage src={`https://cdn.brawlify.com/profile-icons/regular/${p.icon_id || 28000000}.png`} />
                       <AvatarFallback>{p.name?.[0]}</AvatarFallback>
                     </Avatar>
-                    <div>
-                      <div className="font-bold text-base text-zinc-100 group-hover:text-primary transition-colors">
+                    <div className="min-w-0">
+                      <div className="font-bold text-base text-zinc-100 group-hover:text-primary transition-colors truncate">
                         {p.name}
                       </div>
                       <div className="text-xs text-zinc-400 font-mono">
@@ -1517,7 +1517,7 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 shrink-0">
                     {rank && (
                       <div className="flex items-center gap-1.5 bg-zinc-800/80 px-2.5 py-1 rounded-xl border border-zinc-700/60" title={`最高ランク: ${rank.name} ${rank.tier}`}>
                         <img src={rank.url} alt={rank.name} className="w-6 h-6 object-contain" />

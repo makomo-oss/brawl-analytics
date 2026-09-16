@@ -58,3 +58,31 @@ def test_tier_counts_observations_without_dividing_by_six(monkeypatch):
     result=meta.get_tier_list(type="gachi")
     assert result["metrics"]["analyzed_matches"] == 12
     assert result["updated_at"] == "2026-09-16"
+
+
+def test_recommendation_uses_data_and_excludes_bans(monkeypatch):
+    from app.algorithm.recommender import recommend_picks
+    def tier(**kwargs):
+        return {"characters": {"colt": {"score": 80}, "shelly": {"score": 60}, "el primo": {"score": 90}}}
+    monkeypatch.setattr(meta, "get_tier_list", tier)
+    result = recommend_picks("map", "brawlBall", ["el_primo"], [], 1, True, ["COLT"])
+    assert [r["character_id"] for r in result] == ["shelly"]
+
+
+def test_empty_recommendation_has_no_fabricated_characters(monkeypatch):
+    from app.algorithm.recommender import recommend_picks
+    monkeypatch.setattr(meta, "get_tier_list", lambda **kwargs: {"characters": {}})
+    assert recommend_picks("map", "brawlBall", [], [], 1, True) == []
+
+
+def test_snapshot_is_published_atomically_and_errors_propagate(monkeypatch):
+    from app.scripts import daily_calc
+    from unittest.mock import Mock
+    monkeypatch.setattr(daily_calc, "fetch_recent_matches", lambda db: pd.DataFrame())
+    monkeypatch.setattr(daily_calc, "fetch_player_rank_segments", lambda *args, **kwargs: {})
+    db = Mock()
+    db.rpc.return_value.execute.side_effect = RuntimeError("transaction failed")
+    with pytest.raises(RuntimeError, match="transaction failed"):
+        daily_calc.run_daily_calculation(db)
+    db.rpc.assert_called_once_with("replace_analytics_snapshot", {"macro_rows": [], "counter_rows": [], "synergy_rows": []})
+    db.table.assert_not_called()

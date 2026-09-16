@@ -12,7 +12,8 @@ def test_read_root():
     assert response.status_code == 200
     assert response.json() == {"message": "Welcome to ブロラボ API"}
 
-def test_recommend():
+def test_recommend(monkeypatch):
+    monkeypatch.setattr("app.routers.match.recommend_picks", lambda *args: [])
     response = client.post("/match/recommend", json={
         "map_id": "map_1",
         "mode": "bounty",
@@ -24,7 +25,10 @@ def test_recommend():
     assert response.status_code == 200
     assert "recommendations" in response.json()
 
-def test_tier_list():
+def test_tier_list(monkeypatch):
+    monkeypatch.setattr("app.routers.meta.get_db", lambda: None)
+    monkeypatch.setattr("app.routers.meta._get_cached_macro_data", lambda db: [])
+    monkeypatch.setattr("app.routers.meta._get_cached_total_analyzed", lambda db: 0)
     response = client.get("/meta/tier-list")
     assert response.status_code == 200
     data = response.json()

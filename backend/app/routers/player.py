@@ -349,6 +349,8 @@ async def get_dashboard(player_tag: str):
             macro_data = _get_cached_macro_data(db)
             char_totals: dict[str, dict[str, int]] = {}
             for row in macro_data:
+                if str(row.get("match_type", "")).startswith("gachi"):
+                    continue
                 cid = str(row.get("character_id", "")).lower().strip()
                 tw = row.get("total_wins") or 0
                 tm = row.get("total_matches") or 0
@@ -364,23 +366,15 @@ async def get_dashboard(player_tag: str):
         except Exception as e:
             logger.warning(f"Failed to fetch global win rates from macro cache: {e}")
 
-        # フォールバック用の一般的キャラクター平均勝率（小文字キー）
-        fallback_global_win_rates: dict[str, float] = {
-            "shelly": 50.8, "colt": 49.2, "bull": 51.5, "brock": 48.9, "el primo": 53.1,
-            "barley": 51.0, "poco": 52.4, "rosa": 52.8, "rico": 50.3, "darryl": 51.9,
-            "penny": 50.1, "carl": 51.2, "jacky": 53.5, "piper": 52.7, "pam": 51.8,
-            "frank": 54.1, "bibi": 52.9, "bea": 50.4, "nani": 49.8, "edgar": 52.6,
-            "mortis": 47.9, "tara": 51.4, "gene": 50.2, "crow": 49.7, "spike": 51.3,
-            "leon": 52.1, "sandy": 53.0, "amber": 52.2, "meg": 53.4, "surge": 51.6
-        }
-
         for char, stats in char_stats.items():
             if stats["matches"] > 0:
                 char_key = char.lower().strip()
                 personal_wr = round((stats["wins"] / stats["matches"]) * 100, 1)
                 
                 # 1. DB集計の最新実効勝率 2. フォールバック辞書 3. デフォルト 51.5% の順で参照
-                global_wr = global_win_rates.get(char_key) or fallback_global_win_rates.get(char_key, 51.5)
+                global_wr = global_win_rates.get(char_key)
+                if global_wr is None:
+                    continue
                 
                 gap_analysis.append({
                     "char": char,
@@ -411,17 +405,10 @@ async def get_dashboard(player_tag: str):
             })
         mode_analysis.sort(key=lambda x: x["matches"], reverse=True)
         
-        highest_rank = player_info.get("rankedRank") or player_info.get("highestAllTimeRankedRank") or player_info.get("highestRank")
-        if not highest_rank:
-            highest_trophies = player_info.get("highestTrophies", 0)
-            if highest_trophies >= 80000: highest_rank = 19
-            elif highest_trophies >= 60000: highest_rank = 16
-            elif highest_trophies >= 45000: highest_rank = 13
-            elif highest_trophies >= 30000: highest_rank = 10
-            elif highest_trophies >= 20000: highest_rank = 7
-            elif highest_trophies >= 10000: highest_rank = 4
-            else: highest_rank = 1
-        
+        highest_rank = max(player_info.get("highestAllTimeRankedRank") or 0,
+                           player_info.get("highestSeasonRankedRank") or 0,
+                           player_info.get("rankedRank") or 0)
+
         return {
             "player_tag": player_tag,
             "profile": {
@@ -446,7 +433,7 @@ async def get_dashboard(player_tag: str):
                 "overall_win_rate": round((wins / total_matches * 100) if total_matches > 0 else 0, 1)
             },
             "insights": {
-                "gap_analysis": gap_analysis[:5] if gap_analysis else [{"char": "no data", "global_win_rate": 50.0, "personal_win_rate": 50.0, "matches": 0}],
+                "gap_analysis": gap_analysis[:5],
                 "hidden_weapons": hidden_weapons[:3],
                 "needs_practice": needs_practice[:3],
                 "mode_analysis": mode_analysis
@@ -455,7 +442,7 @@ async def get_dashboard(player_tag: str):
     except ValueError as e:
         if str(e) == "Player not found":
             raise HTTPException(status_code=404, detail="Player not found")
-        return {"error": "Failed to generate dashboard"}
+        raise HTTPException(status_code=502, detail="戦績データを取得できませんでした。時間をおいて再試行してください。")
     except Exception as e:
         logger.error(f"Dashboard error: {e}")
-        return {"error": "Failed to generate dashboard"}
+        raise HTTPException(status_code=502, detail="戦績データを取得できませんでした。時間をおいて再試行してください。")

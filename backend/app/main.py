@@ -31,7 +31,11 @@ async def lifespan(app: FastAPI):
             logger.warning(f"Startup cache warmup error: {e}")
 
     asyncio.create_task(warmup())
-    yield
+    try:
+        yield
+    finally:
+        from app.services.brawl_api import close_http_client
+        await close_http_client()
 
 app = FastAPI(title="ブロラボ API", lifespan=lifespan)
 

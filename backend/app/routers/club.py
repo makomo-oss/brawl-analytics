@@ -21,7 +21,7 @@ async def search_clubs(q: str = Query(..., min_length=1)):
         return res.data or []
     except Exception as e:
         logger.error(f"Error searching clubs: {e}")
-        return []
+        raise HTTPException(status_code=503, detail="クラブ検索を利用できません")
 
 import asyncio
 
@@ -41,9 +41,11 @@ async def get_club_details(club_tag: str):
             return_exceptions=True
         )
         
-        if isinstance(club_info, Exception) or not club_info:
-            logger.error(f"Error fetching club for {club_tag}: {club_info}")
+        if isinstance(club_info, ValueError):
             raise HTTPException(status_code=404, detail="Club not found")
+        if isinstance(club_info, Exception) or isinstance(members_info, Exception) or not club_info:
+            logger.error(f"Error fetching club for {club_tag}: {club_info}")
+            raise HTTPException(status_code=502, detail="クラブ情報を取得できませんでした")
             
         members = members_info.get("items", []) if isinstance(members_info, dict) else []
         

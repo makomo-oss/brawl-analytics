@@ -64,7 +64,7 @@ def _get_cached_synergies(db) -> dict[str, dict[str, dict]]:
                 if ca not in by_char:
                     by_char[ca] = {}
                 by_char[ca][cb] = {
-                    "win_rate": float(row.get("win_rate") or 50.0),
+                    "win_rate": float(row["win_rate"] if row.get("win_rate") is not None else 50.0),
                     "lift": float(row.get("lift") or 0.0),
                     "matches": int(row.get("match_count") or 0)
                 }
@@ -232,7 +232,7 @@ def _get_cached_total_analyzed(db) -> int:
             return res.count
     except:
         pass
-    return _TOTAL_MATCHES_CACHE["count"] or 81730
+    return _TOTAL_MATCHES_CACHE["count"]
 
 def format_char_name(char_id: str) -> str:
     # 簡易的なキャラクター名フォーマット
@@ -282,7 +282,7 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
             "type": type,
             "rank_tier": rank_tier,
             "metrics": {"analyzed_matches": total_analyzed},
-            "characters": {} if include_details else None
+            "characters": {}
         }
         
     # モード別のマップ一覧が必要な場合
@@ -457,7 +457,7 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
                 ranked_counters.sort(key=lambda x: x[3], reverse=True)
                 for enemy_id, m, w, adv, disadv, wr in ranked_counters:
                     if len(kamo) >= 8: break
-                    if m < 2 or adv == 0: continue
+                    if m < 2 or adv <= 0.5: continue
                     kamo.append({
                         "brawler": enemy_id,
                         "name": format_char_name(enemy_id),
@@ -469,7 +469,7 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
                 ranked_counters.sort(key=lambda x: x[4], reverse=True)
                 for enemy_id, m, w, adv, disadv, wr in ranked_counters:
                     if len(tenteki) >= 8: break
-                    if m < 2 or disadv == 0: continue
+                    if m < 2 or disadv <= 0.5: continue
                     tenteki.append({
                         "brawler": enemy_id,
                         "name": format_char_name(enemy_id),
@@ -516,19 +516,15 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
         else:
             tiers["D"].append(cid)
             
-    # 選択条件に応じた実試合数の算出（3vs3のため総キャラ延べ試合数 / 6）
-    total_char_matches = sum(s["total_matches"] for s in char_stats.values())
-    if type == "gachi":
-        display_matches = max(1, round(total_char_matches / 6)) if total_char_matches > 0 else 0
-    else:
-        display_matches = total_analyzed if (not sub_type or sub_type == "all") else max(1, round(total_char_matches / 6))
+    # Each source row describes one observed player's match, not all six players.
+    display_matches = sum(s["total_matches"] for s in char_stats.values())
 
     response_data = {
-        "updated_at": None,
+        "updated_at": max((str(r.get("updated_at") or "") for r in data), default="") or None,
         "tiers": tiers,
         "type": type,
         "rank_tier": rank_tier,
-        "metrics": {"analyzed_matches": display_matches},
+        "metrics": {"analyzed_matches": display_matches, "count_unit": "player_observations"},
         "characters": characters_detail
     }
     return response_data
@@ -693,7 +689,7 @@ def get_character_detail(character_id: str, type: str = "global", rank_tier: str
             if len(kamo) >= 5: break
             enemy_id = c["char_b"]
             # Why: 3試合未満の極小サンプルノイズを排除
-            if enemy_id == "unknown" or c.get("match_count", 0) < 3 or c["advantage_score"] == 0:
+            if enemy_id == "unknown" or c.get("match_count", 0) < 3 or c["advantage_score"] <= 0.5:
                 continue
             kamo.append({
                 "brawler": enemy_id,
@@ -707,7 +703,7 @@ def get_character_detail(character_id: str, type: str = "global", rank_tier: str
         for c in counters:
             if len(tenteki) >= 5: break
             enemy_id = c["char_b"]
-            if enemy_id == "unknown" or c.get("match_count", 0) < 3 or c["disadvantage_score"] == 0:
+            if enemy_id == "unknown" or c.get("match_count", 0) < 3 or c["disadvantage_score"] <= 0.5:
                 continue
             tenteki.append({
                 "brawler": enemy_id,

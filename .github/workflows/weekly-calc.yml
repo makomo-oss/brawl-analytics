@@ -27,4 +27,4 @@ jobs:
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
         run: |
           cd backend
-          python -m app.scripts.update_counters
+          python -m app.scripts.daily_calc

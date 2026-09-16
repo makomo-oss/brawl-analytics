@@ -25,13 +25,6 @@ async def run_crawler_task():
     logger.info("Starting advanced background crawler task...")
     db = get_db()
     
-    try:
-        # 重複して保存されてしまった古い「#付き」の不正データを自動削除（クリーニング）
-        db.table("match_raw_history").delete().like("match_id", "#%").execute()
-        db.table("players").delete().like("player_tag", "#%").execute()
-    except Exception as e:
-        logger.warning(f"Cleanup failed (might be ok if empty): {e}")
-
     base_player_tags = set()
     try:
         # 常に更新日時が古いプレイヤーを15人取得して巡回
@@ -264,6 +257,7 @@ async def run_crawler_task():
             db.table("players").upsert(upsert_players).execute()
         except Exception as e:
             logger.error(f"Failed to upsert players: {e}")
+            raise
 
     if upsert_clubs:
         try:
@@ -276,23 +270,19 @@ async def run_crawler_task():
         try:
             logger.info(f"Bulk upserting {len(upsert_matches)} matches...")
             db.table("match_raw_history").upsert(upsert_matches).execute()
-        except Exception as e:
-            logger.warning(f"Failed to upsert matches directly, trying fallback without match_type: {e}")
-            try:
-                fallback_matches = [{k: v for k, v in m.items() if k != "match_type"} for m in upsert_matches]
-                db.table("match_raw_history").upsert(fallback_matches).execute()
-                logger.info(f"Successfully upserted {len(fallback_matches)} matches via fallback")
-            except Exception as fallback_err:
-                logger.error(f"Failed fallback match upsert: {fallback_err}")
+        except Exception:
+            logger.exception("Failed to persist matches; aggregation cancelled")
+            raise
 
     # 5. クロール完了後に自動で macro_map_stats と dynamic_counters を最新集計・更新する
     try:
         logger.info("Triggering automatic macro statistics and counter calculation...")
         from app.scripts.daily_calc import run_daily_calculation
-        calc_result = run_daily_calculation(db)
+        calc_result = await asyncio.to_thread(run_daily_calculation, db)
         logger.info(f"Automatic calculation completed: {calc_result}")
     except Exception as calc_err:
         logger.error(f"Failed to run automatic macro calculations after crawl: {calc_err}")
+        raise
             
     logger.info("Crawler task completed successfully.")
 

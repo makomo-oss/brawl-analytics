@@ -3,7 +3,7 @@ import sys
 import json
 import asyncio
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import pandas as pd
 from dotenv import load_dotenv
 from supabase import create_client, Client
@@ -84,7 +84,7 @@ def fetch_recent_matches(client: Client = None) -> pd.DataFrame:
     limit = 1000
     offset = 0
     while True:
-        response = supabase.table("match_raw_history").select("*").range(offset, offset + limit - 1).execute()
+        response = supabase.table("match_raw_history").select("*,players!inner(name)").not_.ilike("players.name", "Mock%").gte("match_at", (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()).order("match_id").range(offset, offset + limit - 1).execute()
         data = response.data
         if not data:
             break
@@ -110,7 +110,7 @@ def fetch_player_rank_segments(client: Client = None, match_df: pd.DataFrame = N
     offset = 0
     limit = 1000
     while True:
-        res = supabase.table("players").select("player_tag, updated_at, unlocked_characters").range(offset, offset + limit - 1).execute()
+        res = supabase.table("players").select("player_tag, updated_at, unlocked_characters").not_.ilike("name", "Mock%").order("player_tag").range(offset, offset + limit - 1).execute()
         if not res.data:
             break
         all_players.extend(res.data)
@@ -135,7 +135,7 @@ def fetch_player_rank_segments(client: Client = None, match_df: pd.DataFrame = N
             try: chars_json = json.loads(chars_json)
             except: chars_json = {}
             
-        ranked_rank = int(chars_json.get("highest_ranked_rank") or chars_json.get("ranked_rank") or 0)
+        ranked_rank = int(chars_json.get("ranked_rank") or 0)
         has_rank_info = (ranked_rank > 0) or ("highest_ranked_name" in chars_json)
         
         # 鮮度チェック: 3日 (259,200秒) 以内に更新されているか
@@ -185,9 +185,24 @@ def fetch_player_rank_segments(client: Client = None, match_df: pd.DataFrame = N
         "all_elite": all_elite_tags
     }
 
+def prepare_observations(df: pd.DataFrame) -> pd.DataFrame:
+    """Use decisive, identifiable observations; leave the caller's frame unchanged."""
+    df = df.copy()
+    if df.empty:
+        return df
+    df = df[df["result"].isin(["victory", "defeat"])].copy()
+    df["hero_used"] = df["hero_used"].fillna("").astype(str).str.lower().str.strip()
+    df = df[~df["hero_used"].isin(["", "unknown", "nan"])].copy()
+    if "match_id" in df:
+        valid = df["match_id"].notna() & df["match_id"].astype(str).str.strip().ne("")
+        df = pd.concat([df[valid].drop_duplicates("match_id"), df[~valid]], ignore_index=True)
+    return df
+
+
 def calc_macro_map_stats(df: pd.DataFrame, rank_segments: dict = None):
     """マクロマップ適性（勝率とピック率偏差値）を計算 (ランク帯別ガチバトル専用集計対応)"""
     logger.info("Calculating macro map stats with rank brackets...")
+    df = prepare_observations(df)
     if df.empty:
         return []
     
@@ -214,7 +229,7 @@ def calc_macro_map_stats(df: pd.DataFrame, rank_segments: dict = None):
     
     # Match ID ユニーク化: 同一試合(match_id)で同一ヒーローの重複ログを排除
     if "match_id" in df.columns:
-        valid_match_id = df["match_id"].astype(str).str.strip().str.len() > 0
+        valid_match_id = df["match_id"].notna() & df["match_id"].astype(str).str.strip().ne("")
         if valid_match_id.any():
             df = pd.concat([
                 df[valid_match_id].drop_duplicates(subset=["match_id", "hero_used"]),
@@ -228,7 +243,7 @@ def calc_macro_map_stats(df: pd.DataFrame, rank_segments: dict = None):
 
     # 1. ガチバトル総合 (エリート以上: Mythic, Legendary, Masters, Pro のみ 100% 厳密抽出)
     # ガチバトルの試合のみ（soloRanked / teamRanked / ranked）を対象とするフィルター
-    is_ranked_match = df["match_type"].isin(["ranked", "soloRanked", "teamRanked"])
+    is_ranked_match = df["match_type"].isin(["soloRanked", "teamRanked"])
     
     # 1. ガチバトル総合 (エリート以上: Mythic, Legendary, Masters) かつ ガチバトルの試合のみ
     df_gachi_all = df[is_ranked_match & df["clean_tag"].isin(rank_segments.get("all_elite", set()))].copy()
@@ -258,7 +273,7 @@ def calc_macro_map_stats(df: pd.DataFrame, rank_segments: dict = None):
 
     # match_type × マップ × ヒーローで集計
     grouped = combined_df.groupby(["match_type", "map_id", "hero_used"]).agg(
-        total_matches=("match_id", "count"),
+        total_matches=("is_win", "size"),
         total_wins=("is_win", "sum")
     ).reset_index()
     
@@ -266,17 +281,11 @@ def calc_macro_map_stats(df: pd.DataFrame, rank_segments: dict = None):
     grouped["win_rate"] = (grouped["total_wins"] / grouped["total_matches"]) * 100.0
     
     # ピック率偏差値の計算 (マップ内での出現回数の偏差値)
-    def calc_deviation(group):
-        mean = group["total_matches"].mean()
-        std = group["total_matches"].std()
-        if pd.isna(std) or std == 0:
-            group["pick_rate_deviation"] = 50.0
-        else:
-            group["pick_rate_deviation"] = 50.0 + 10.0 * (group["total_matches"] - mean) / std
-        return group
+    counts = grouped.groupby(["match_type", "map_id"])["total_matches"]
+    mean = counts.transform("mean")
+    std = counts.transform("std").replace(0, float("nan"))
+    grouped["pick_rate_deviation"] = (50.0 + 10.0 * (grouped["total_matches"] - mean) / std).fillna(50.0)
 
-    grouped = grouped.groupby(["match_type", "map_id"]).apply(calc_deviation).reset_index(drop=True)
-    
     now_str = datetime.now(timezone.utc).isoformat()
     
     stats_list = []
@@ -297,6 +306,9 @@ def calc_macro_map_stats(df: pd.DataFrame, rank_segments: dict = None):
 def calc_dynamic_counters(df: pd.DataFrame):
     """対面相性（カウンター係数）を計算 (Match ID ユニーク化対応)"""
     logger.info("Calculating dynamic counters...")
+    df = prepare_observations(df)
+    if "mode" in df:
+        df = df[df["mode"].isin(["brawlBall", "gemGrab", "hotZone", "heist", "bounty", "knockout"])].copy()
     if df.empty:
         return []
         
@@ -390,6 +402,9 @@ def calc_dynamic_counters(df: pd.DataFrame):
 def calc_dynamic_synergies(df: pd.DataFrame):
     """味方ペア共起シナジー（実戦勝率＆リフト値）を計算 (Match ID ユニーク化対応)"""
     logger.info("Calculating dynamic teammate synergies...")
+    df = prepare_observations(df)
+    if "mode" in df:
+        df = df[df["mode"].isin(["brawlBall", "gemGrab", "hotZone", "heist", "bounty", "knockout"])].copy()
     if df.empty:
         return []
         
@@ -498,38 +513,12 @@ def run_daily_calculation(client: Client = None):
     dynamic_counters = calc_dynamic_counters(df)
     dynamic_synergies = calc_dynamic_synergies(df)
     
-    # 1. Upsert macro_map_stats
-    if macro_stats:
-        logger.info(f"Upserting {len(macro_stats)} macro_map_stats records...")
-        for i in range(0, len(macro_stats), 1000):
-            batch = macro_stats[i:i+1000]
-            try:
-                supabase.table("macro_map_stats").upsert(batch).execute()
-            except Exception as e:
-                logger.warning(f"Upsert macro_map_stats failed, trying fallback without match_type: {e}")
-                fallback_batch = [{k: v for k, v in item.items() if k != "match_type"} for item in batch]
-                supabase.table("macro_map_stats").upsert(fallback_batch).execute()
-            
-    # 2. Upsert dynamic_counters
-    if dynamic_counters:
-        logger.info(f"Upserting {len(dynamic_counters)} dynamic_counters records...")
-        for i in range(0, len(dynamic_counters), 1000):
-            batch = dynamic_counters[i:i+1000]
-            try:
-                supabase.table("dynamic_counters").upsert(batch).execute()
-            except Exception as e:
-                logger.warning(f"Upsert dynamic_counters failed: {e}")
+    for table, records in [("macro_map_stats", macro_stats),
+                           ("dynamic_counters", dynamic_counters),
+                           ("dynamic_synergies", dynamic_synergies)]:
+        for i in range(0, len(records), 1000):
+            supabase.table(table).upsert(records[i:i+1000]).execute()
 
-    # 3. Upsert dynamic_synergies
-    if dynamic_synergies:
-        logger.info(f"Upserting {len(dynamic_synergies)} dynamic_synergies records...")
-        for i in range(0, len(dynamic_synergies), 1000):
-            batch = dynamic_synergies[i:i+1000]
-            try:
-                supabase.table("dynamic_synergies").upsert(batch).execute()
-            except Exception as e:
-                logger.warning(f"Upsert dynamic_synergies failed (might need table creation): {e}")
-            
     # キャッシュを即座に破棄して最新データをAPIに反映
     try:
         from app.routers.meta import clear_meta_cache

@@ -504,20 +504,22 @@ def run_daily_calculation(client: Client = None):
     logger.info("Starting Daily Calculation Batch...")
     df = fetch_recent_matches(supabase)
     
-    if df.empty:
-        logger.info("No data found. Exiting.")
-        return {"macro_stats_count": 0, "dynamic_counters_count": 0, "dynamic_synergies_count": 0}
         
     rank_segments = fetch_player_rank_segments(supabase, match_df=df)
     macro_stats = calc_macro_map_stats(df, rank_segments)
     dynamic_counters = calc_dynamic_counters(df)
     dynamic_synergies = calc_dynamic_synergies(df)
     
-    for table, records in [("macro_map_stats", macro_stats),
-                           ("dynamic_counters", dynamic_counters),
-                           ("dynamic_synergies", dynamic_synergies)]:
-        for i in range(0, len(records), 1000):
-            supabase.table(table).upsert(records[i:i+1000]).execute()
+    # Publish all derived tables in one transaction, including removal of expired rows.
+    # Requires the analytics_snapshot_and_clubs migration; fail closed if absent.
+    now = datetime.now(timezone.utc).isoformat()
+    for row in dynamic_synergies:
+        row["updated_at"] = now
+    supabase.rpc("replace_analytics_snapshot", {
+        "macro_rows": macro_stats,
+        "counter_rows": dynamic_counters,
+        "synergy_rows": dynamic_synergies,
+    }).execute()
 
     # キャッシュを即座に破棄して最新データをAPIに反映
     try:

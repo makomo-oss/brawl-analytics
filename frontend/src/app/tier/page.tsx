@@ -119,6 +119,7 @@ export default function TierListPage() {
 
   // 選択に応じたTierデータの取得 (キャッシュ最優先・0ms即時切り替え)
   useEffect(() => {
+    let active = true
     const cacheKey = `${selectedType}:${selectedRankTier}:${subType}:${selectedId}`
     const cachedData = dataCacheRef.current[cacheKey]
     
@@ -146,6 +147,7 @@ export default function TierListPage() {
         }
 
         const data = await fetchWithDedup(cacheKey, url)
+        if (!active) return
         if (data) {
           setTierData(data)
         } else if (!cachedData) {
@@ -153,12 +155,13 @@ export default function TierListPage() {
         }
       } catch (err) {
         console.error(err)
-        if (!cachedData) setTierData(null)
+        if (active && !cachedData) setTierData(null)
       } finally {
-        setLoading(false)
+        if (active) setLoading(false)
       }
     }
     fetchTierList()
+    return () => { active = false }
   }, [selectedType, selectedRankTier, subType, selectedId])
 
   const handleTypeChange = (value: string) => {
@@ -244,8 +247,8 @@ export default function TierListPage() {
         {!loading && (
           <p className="text-muted-foreground text-lg flex items-center gap-2">
             {selectedType === "gachi"
-              ? `ガチバトル ${selectedRankTier === 'mythic' ? 'エリート帯' : selectedRankTier === 'legendary' ? 'レジェンド帯' : selectedRankTier === 'masters' ? 'マスター・プロ帯' : 'エリート以上総合'}の最新実戦ログ（${(tierData?.metrics?.analyzed_matches ?? 0).toLocaleString()} 試合）から算出した最強ランキング。`
-              : `上位プレイヤーの最新バトルログ（${(tierData?.metrics?.analyzed_matches ?? 0).toLocaleString()} 試合）から完全データ駆動で算出した最強ランキング。`
+              ? `ガチバトル ${selectedRankTier === 'mythic' ? 'エリート帯' : selectedRankTier === 'legendary' ? 'レジェンド帯' : selectedRankTier === 'masters' ? 'マスター・プロ帯' : 'エリート以上総合'}の最新実戦ログ（${(tierData?.metrics?.analyzed_matches ?? 0).toLocaleString()} 件のプレイヤー戦績）から算出した相対ランキング。`
+              : `上位プレイヤーの最新バトルログ（${(tierData?.metrics?.analyzed_matches ?? 0).toLocaleString()} 件のプレイヤー戦績）から完全データ駆動で算出した相対ランキング。`
             }
           </p>
         )}

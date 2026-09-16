@@ -60,12 +60,14 @@ export default function DraftCompanionPage() {
   // Data State
   const [metaData, setMetaData] = useState<any>(null)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
 
   // 初期ロード：カテゴリの取得
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const res = await fetch(`${API_URL}/meta/categories?type=gachi`)
+        if (!res.ok) throw new Error("カテゴリを取得できませんでした。再読み込みしてください。")
         if (res.ok) {
           const data = await res.json()
           setCategories(data)
@@ -73,7 +75,7 @@ export default function DraftCompanionPage() {
           if (data.maps?.length > 0) setSelectedMap(data.maps[0])
         }
       } catch (err) {
-        console.error(err)
+        setError(err instanceof Error ? err.message : "データを取得できませんでした")
       }
     }
     fetchCategories()
@@ -81,15 +83,14 @@ export default function DraftCompanionPage() {
 
   // 選択されたモードに属するマップを計算
   const availableMaps = useMemo(() => {
-    if (!selectedMode || !categories.mode_to_maps || !categories.mode_to_maps[selectedMode]) {
-      return categories.maps
-    }
-    return categories.mode_to_maps[selectedMode]
+    if (!selectedMode) return categories.maps
+    return categories.mode_to_maps[selectedMode] ?? []
   }, [selectedMode, categories])
 
   // モードが変わった時に、選択中マップが含まれていなければ自動補正する
   useEffect(() => {
-    if (availableMaps.length > 0 && (!selectedMap || !availableMaps.includes(selectedMap))) {
+    if (availableMaps.length === 0) setSelectedMap("")
+    else if (availableMaps.length > 0 && (!selectedMap || !availableMaps.includes(selectedMap))) {
       setSelectedMap(availableMaps[0])
     }
   }, [availableMaps, selectedMap])
@@ -123,16 +124,23 @@ export default function DraftCompanionPage() {
   // ドラフト開始時にメタデータをフェッチ
   const handleStartDraft = async () => {
     setLoading(true)
+    setError("")
     try {
-      const url = `${API_URL}/meta/tier-list?type=gachi&sub_type=map&id=${encodeURIComponent(selectedMap)}&include_details=true`
-      const res = await fetch(url)
-      if (res.ok) {
-        const data = await res.json()
-        setMetaData(data)
-        setPhase("ban")
+      const [mapRes, modeRes] = await Promise.all([
+        fetch(`${API_URL}/meta/tier-list?type=gachi&sub_type=map&id=${encodeURIComponent(selectedMap)}&include_details=true`),
+        fetch(`${API_URL}/meta/tier-list?type=gachi&sub_type=mode&id=${encodeURIComponent(selectedMode)}`)
+      ])
+      if (!mapRes.ok || !modeRes.ok) throw new Error("分析データを取得できませんでした。再試行してください。")
+      const data = await mapRes.json()
+      const modeData = await modeRes.json()
+      if (!Object.keys(data.characters ?? {}).length) throw new Error("このマップのガチバトルデータが不足しています。別のマップを選択してください。")
+      for (const [name, stats] of Object.entries<any>(data.characters)) {
+        stats.mode_score = modeData.characters?.[name]?.score ?? 50
       }
+      setMetaData(data)
+      setPhase("ban")
     } catch (err) {
-      console.error(err)
+      setError(err instanceof Error ? err.message : "データを取得できませんでした")
     } finally {
       setLoading(false)
     }
@@ -510,6 +518,7 @@ export default function DraftCompanionPage() {
           <CardHeader>
             <CardTitle>ドラフト初期設定</CardTitle>
             <CardDescription>現在の試合環境を入力してください。</CardDescription>
+            {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -767,7 +776,7 @@ export default function DraftCompanionPage() {
               <CardContent className="p-8 flex flex-col items-center justify-center space-y-4">
                 <div className="flex items-center gap-3 text-primary">
                   <Trophy className="w-8 h-8 text-yellow-500" />
-                  <h2 className="text-2xl font-bold">予測勝率</h2>
+                  <h2 className="text-2xl font-bold">編成有利度（参考値）</h2>
                 </div>
                 <div className="relative">
                   <svg className="w-48 h-48 transform -rotate-90">
@@ -805,7 +814,7 @@ export default function DraftCompanionPage() {
                 </div>
 
                 <p className="text-xs text-muted-foreground text-center max-w-[340px]">
-                  マップ適性・モード適性・対面カウンター・味方ペアシナジーを総合統合した高精度予測です
+                  集計スコアから算出した参考指標です。実際の勝率を保証するものではありません。対面・味方相性は全モード共通の集計です。
                 </p>
                 <Button className="mt-2" size="lg" onClick={handleReset}>
                   <RefreshCw className="w-4 h-4 mr-2" /> 新しいドラフトを始める

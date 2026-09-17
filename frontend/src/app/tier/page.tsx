@@ -457,14 +457,22 @@ export default function TierListPage() {
                 </Card>
               </div>
 
-              <p className="text-xs text-muted-foreground mt-4">
-                {selectedChar.confidence_interval && `実勝率の95%区間: ${selectedChar.confidence_interval[0]}–${selectedChar.confidence_interval[1]}%。`}
-                {selectedChar.sample_sufficient === false && " サンプル不足のためTier判定は保留です。"}
-                直近30日を集計し、14日で重みを半減。20件未満、または重み付き件数10未満はN/A。
-                同じマップ・モード・試合種別の平均を上回る勝率差は、件数が少ないほど加点を控えます。上振れが不確かな場合、勝率評価は平均相当の50点に近づきます。平均を下回る差はそのまま評価し、使用率補正は最大±2点です。
-                {selectedChar.performance_score !== undefined && ` 勝率評価: ${selectedChar.performance_score}、使用率偏差値: ${selectedChar.pick_rate_deviation}、使用率補正: ${selectedChar.usage_adjustment}、直近性を加味した件数: ${selectedChar.weighted_matches}。`}
-                {selectedChar.uncertainty_margin !== undefined && ` 補正後の勝率差: ${selectedChar.estimated_win_lift}ポイント、加点に必要な余裕: ${selectedChar.uncertainty_margin}ポイント、評価に採用した差: ${selectedChar.supported_win_lift}ポイント。`}
-              </p>
+              <div className="space-y-2 text-sm leading-relaxed text-muted-foreground mt-4">
+                <p>
+                  {selectedChar.confidence_interval && `実勝率の95%区間: ${selectedChar.confidence_interval[0]}–${selectedChar.confidence_interval[1]}%。 `}
+                  {selectedChar.sample_sufficient === false && "サンプル不足のためTier判定は保留です。 "}
+                  直近30日を集計し、14日で重みを半減します。20件未満、または重み付き件数10未満はN/Aです。
+                </p>
+                <p>同じマップ・モード・試合種別の平均を上回る勝率差は、件数が少ないほど加点を控えます。平均を下回る差はそのまま評価し、使用率補正は最大±2点です。</p>
+                {selectedChar.performance_score !== undefined && (
+                  <p>勝率評価: {selectedChar.performance_score}点 ／ 使用率補正: {selectedChar.usage_adjustment}点 ／ 直近性を加味した件数: {selectedChar.weighted_matches}</p>
+                )}
+                {selectedChar.uncertainty_margin !== undefined && (
+                  selectedChar.estimated_win_lift > 0
+                    ? <p>補正後の勝率差: {selectedChar.estimated_win_lift}ポイント − 加点に必要な余裕: {selectedChar.uncertainty_margin}ポイント → 評価に採用した差: {selectedChar.supported_win_lift}ポイント</p>
+                    : <p>補正後の勝率差: {selectedChar.estimated_win_lift}ポイント。平均以下のため加点はなく、この差をそのまま評価します。</p>
+                )}
+              </div>
               <div className="space-y-6 mt-8">
                 {/* 有利な対面 */}
                 <div className="space-y-3 relative p-4 rounded-xl bg-green-500/5 border border-green-500/20">

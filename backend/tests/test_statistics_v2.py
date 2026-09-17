@@ -85,6 +85,23 @@ def test_equal_win_rates_use_sample_share_in_tier_score(monkeypatch):
     assert data['bull']['score'] > data['colt']['score']
 
 
+def test_popularity_cannot_promote_below_average_win_performance_to_s_tier(monkeypatch):
+    rows = [dict(character_id='edgar', map_id='map', mode='brawlBall', match_type='ranked',
+                 total_matches=2000, total_wins=1120)]
+    rows.extend(dict(character_id=f'other{i}', map_id='map', mode='brawlBall', match_type='ranked',
+                     total_matches=200, total_wins=120) for i in range(9))
+    monkeypatch.setattr(meta, 'get_db', lambda: None)
+    monkeypatch.setattr(meta, '_get_cached_total_analyzed', lambda db: 3800)
+    monkeypatch.setattr(meta, '_get_cached_macro_data', lambda db: rows)
+    result = meta.get_tier_list()
+    edgar = result['characters']['edgar']
+    assert edgar['performance_score'] < 50
+    assert edgar['pick_rate_deviation'] > 70
+    assert edgar['usage_adjustment'] <= 2
+    assert edgar['score'] < 57
+    assert 'edgar' not in result['tiers']['S+']
+
+
 def test_profile_sync_keeps_rank_and_inventory():
     record = profile_record('ABC', {'tag':'#ABC','name':'Real','rankedRank':13,'highestAllTimeRankedRank':16,'brawlers':[{'name':'COLT','power':11}]})
     assert record['unlocked_characters']['ranked_rank'] == 13

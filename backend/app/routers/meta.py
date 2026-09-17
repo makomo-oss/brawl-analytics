@@ -8,6 +8,7 @@ from app.algorithm.statistics import posterior_rate, wilson_interval, MIN_TIER_M
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/meta", tags=["Meta"])
+USAGE_ADJUSTMENT_CAP = 2.0
 
 # --- In-Memory Cache Layers (TTL = 3600 seconds / 1 hour) ---
 # 日次バッチ実行時 (clear_meta_cache) または 1 時間経過で最新化
@@ -335,7 +336,10 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
         adjusted = posterior_rate(stats["weighted_wins"], weighted_n, expected_rate)
         performance_score = min(100.0, max(0.0, 50.0 + 100.0 * (adjusted - expected_rate)))
         pick_deviation = min(100.0, max(0.0, 50.0 + 10.0 * (tm - mean_picks) / pick_std)) if pick_std else 50.0
-        score = 0.7 * performance_score + 0.3 * pick_deviation
+        # Preserve the 70/30 blend, but do not let popularity alone overpower
+        # observed win performance and promote a weak character to S tier.
+        usage_adjustment = max(-USAGE_ADJUSTMENT_CAP, min(USAGE_ADJUSTMENT_CAP, 0.3 * (pick_deviation - performance_score)))
+        score = performance_score + usage_adjustment
         use_rate = tm / global_total_matches * 100
         eligible = tm >= MIN_TIER_MATCHES and weighted_n >= MIN_TIER_WEIGHT
         if eligible:
@@ -347,6 +351,7 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
             "score": round(score, 1),
             "performance_score": round(performance_score, 1),
             "pick_rate_deviation": round(pick_deviation, 1),
+            "usage_adjustment": round(round(score, 1) - round(performance_score, 1), 1),
             "win_rate": round(actual_wr, 1),
             "use_rate": round(use_rate, 2),
             "total_matches": tm,
@@ -407,7 +412,7 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
         "tiers": tiers,
         "type": type,
         "rank_tier": rank_tier,
-        "metrics": {"analyzed_matches": display_matches, "count_unit": "player_observations", "baseline_win_rate": round(baseline * 100, 1), "minimum_matches": MIN_TIER_MATCHES, "half_life_days": 14, "method": "context_adjusted_win70_usage30_v3"},
+        "metrics": {"analyzed_matches": display_matches, "count_unit": "player_observations", "baseline_win_rate": round(baseline * 100, 1), "minimum_matches": MIN_TIER_MATCHES, "half_life_days": 14, "usage_adjustment_cap": USAGE_ADJUSTMENT_CAP, "method": "context_adjusted_win70_capped_usage30_v4"},
         "characters": characters_detail
     }
     return response_data

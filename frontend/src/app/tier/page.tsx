@@ -248,7 +248,7 @@ export default function TierListPage() {
         {!loading && (
           <p className="text-muted-foreground text-lg flex items-center gap-2">
             {selectedType === "gachi"
-              ? `ガチバトル ${selectedRankTier === 'mythic' ? 'エリート帯' : selectedRankTier === 'legendary' ? 'レジェンド帯' : selectedRankTier === 'masters' ? 'マスター・プロ帯' : 'エリート以上総合'}の最新実戦ログ（${(tierData?.metrics?.analyzed_matches ?? 0).toLocaleString()} 件のプレイヤー戦績）から算出した相対ランキング。`
+              ? `直近30日のガチバトル・${selectedRankTier === 'mythic' ? 'エリート帯' : selectedRankTier === 'legendary' ? 'レジェンド帯' : selectedRankTier === 'masters' ? 'マスター・プロ帯' : 'エリート以上総合'}の有効な戦績（${(tierData?.metrics?.analyzed_matches ?? 0).toLocaleString()} 件のプレイヤー別記録）から算出したランキング。`
               : `上位プレイヤーの最新バトルログ（${(tierData?.metrics?.analyzed_matches ?? 0).toLocaleString()} 件のプレイヤー戦績）から算出した相対ランキング。スコアはそのままに、順位を正規分布型の人数比でTierに分けます。`
             }
           </p>
@@ -460,26 +460,9 @@ export default function TierListPage() {
                 </Card>
               </div>
 
-              <div className="space-y-2 text-sm leading-relaxed text-muted-foreground mt-4">
-                {selectedChar.rank_position && <p>スコア順位: {selectedChar.rank_position}位 / 判定対象{tierData?.metrics?.eligible_characters}体</p>}
-                <p>
-                  {selectedChar.confidence_interval && `実勝率の95%区間: ${selectedChar.confidence_interval[0]}–${selectedChar.confidence_interval[1]}%。 `}
-                  {selectedChar.sample_sufficient === false && "サンプル不足のためTier判定は保留です。 "}
-                  直近30日を集計し、14日で重みを半減します。20件未満、または重み付き件数10未満はN/Aです。
-                </p>
-                <p>同じマップ・モード・試合種別の平均を上回る勝率差は、直近性を加味した件数に応じて滑らかに加点します。重み付き{tierData?.metrics?.evidence_half_credit_matches ?? 50}件なら加点は半分です。勝率評価の差を70%、使用率偏差値の差を30%で合成し、使用率補正は最大±2点です。</p>
-                {selectedChar.weighted_win_rate !== undefined && selectedChar.weighted_win_rate !== null && (
-                  <p>直近性を加味した勝率: {selectedChar.weighted_win_rate}% ／ 同条件の平均: {selectedChar.context_baseline_win_rate}% ／ 平均へ補正した推定勝率: {selectedChar.adjusted_win_rate}%</p>
-                )}
-                {selectedChar.win_adjustment !== undefined && (
-                  <p>50点 ＋ 勝率寄与: {selectedChar.win_adjustment}点 ＋ 使用率補正: {selectedChar.usage_adjustment}点。勝率評価: {selectedChar.performance_score}点 ／ 重み付き件数: {selectedChar.weighted_matches}</p>
-                )}
-                {selectedChar.sample_discount !== undefined && (
-                  selectedChar.estimated_win_lift > 0
-                    ? <p>補正後の勝率差: {selectedChar.estimated_win_lift}ポイント − 件数による加点調整: {selectedChar.sample_discount}ポイント → 評価に採用した差: {selectedChar.supported_win_lift}ポイント</p>
-                    : <p>補正後の勝率差: {selectedChar.estimated_win_lift}ポイント。平均以下のため加点はなく、この差をそのまま評価します。</p>
-                )}
-              </div>
+              {selectedChar.rank_position && (
+                <p className="text-sm text-muted-foreground mt-4">スコア順位: {selectedChar.rank_position}位 / 判定対象{tierData?.metrics?.eligible_characters}体</p>
+              )}
               <div className="space-y-6 mt-8">
                 {/* 有利な対面 */}
                 <div className="space-y-3 relative p-4 rounded-xl bg-green-500/5 border border-green-500/20">

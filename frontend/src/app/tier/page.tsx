@@ -461,7 +461,8 @@ export default function TierListPage() {
                 {selectedChar.confidence_interval && `実勝率の95%区間: ${selectedChar.confidence_interval[0]}–${selectedChar.confidence_interval[1]}%。`}
                 {selectedChar.sample_sufficient === false && " サンプル不足のためTier判定は保留です。"}
                 直近30日を集計し、14日で重みを半減。20件未満、または重み付き件数10未満はN/A。
-                同じマップ・モード・試合種別の平均からの差を補正して評価します。
+                同じマップ・モード・試合種別の平均から補正した勝率評価を70%、選択条件内の使用率偏差値を30%としてスコア化します。
+                {selectedChar.performance_score !== undefined && ` 勝率評価: ${selectedChar.performance_score}、使用率偏差値: ${selectedChar.pick_rate_deviation}、重み付き件数: ${selectedChar.weighted_matches}。`}
               </p>
               <div className="space-y-6 mt-8">
                 {/* 有利な対面 */}

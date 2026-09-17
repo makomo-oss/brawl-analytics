@@ -253,9 +253,6 @@ export default function TierListPage() {
             }
           </p>
         )}
-        {!loading && selectedType === "global" && (
-          <p className="text-sm text-muted-foreground">人数比の目安: S+ 2.3%、S 9.2%、A+ 22.9%、A 31.1%、B 22.9%、C 9.2%、D 2.3%。表示スコアが同じキャラは同じTierです。</p>
-        )}
       </div>
 
       <Tabs value={selectedType} onValueChange={handleTypeChange} className="space-y-6">

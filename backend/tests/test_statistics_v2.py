@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 import pandas as pd
 import pytest
-from app.algorithm.statistics import battle_identity, posterior_rate
+from app.algorithm.statistics import battle_identity, posterior_rate, supported_win_lift
 from app.scripts.daily_calc import calc_macro_map_stats, calc_dynamic_counters
 from app.routers import meta
 from app.services.player_profiles import profile_record
@@ -47,6 +47,30 @@ def test_shared_game_deduplicates_inverse_counter_observations():
 
 def test_single_win_is_shrunk_not_a_perfect_matchup():
     assert 0.5 < posterior_rate(1, 1) < 0.55
+
+
+def test_supported_win_lift_requires_more_evidence_for_a_high_tier():
+    # The same 75% recent win rate should not earn the same strength score
+    # from 57 weighted observations as from 450.
+    short = supported_win_lift(57 * .75, 57, .62)
+    long = supported_win_lift(450 * .75, 450, .62)
+    assert short[0] > 0
+    assert short[1] < long[1]
+    assert short[2] > long[2]
+    assert 50 + 100 * short[1] < 57
+
+
+def test_uncertain_win_difference_returns_to_neutral():
+    lift, supported, margin = supported_win_lift(12, 20, .6)
+    assert lift == pytest.approx(0)
+    assert supported == 0
+    assert margin > 0
+
+
+def test_uncertainty_does_not_reward_below_baseline_performance():
+    lift, supported, _ = supported_win_lift(10, 20, .6)
+    assert lift < 0
+    assert supported == lift
 
 
 def test_small_sample_is_not_given_s_tier(monkeypatch):

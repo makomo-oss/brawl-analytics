@@ -2,6 +2,7 @@ import asyncio
 import logging
 import random
 from datetime import datetime, timezone
+from typing import Callable
 from app.database import get_db
 from app.services.player_profiles import profile_record
 from app.algorithm.statistics import battle_identity
@@ -16,7 +17,7 @@ DEFAULT_SEED_TAGS = {
     "2G80L9RU", "80RGYL2V", "2L8U9P0R", "90J8V2RU", "8L9R0P2V"
 }
 
-async def run_crawler_task():
+async def run_crawler_task(report_stage: Callable[[str], None] | None = None):
     """
     バックグラウンドで実行される高度なデータクローラータスク
     1. Supabaseから対象プレイヤーのタグ一覧を取得
@@ -25,6 +26,8 @@ async def run_crawler_task():
     4. プレイヤー情報とバトル履歴をSupabaseへBulk Upsert
     """
     logger.info("Starting advanced background crawler task...")
+    report = report_stage or (lambda stage: None)
+    report("fetching_players")
     db = get_db()
     
     base_player_tags = set()
@@ -244,6 +247,8 @@ async def run_crawler_task():
     if not upsert_players:
         raise RuntimeError("Crawler could not fetch any valid player profiles")
 
+    report("saving_players")
+
     # 4. SupabaseへのBulk Upsert
     if upsert_players:
         try:
@@ -262,6 +267,7 @@ async def run_crawler_task():
             
     if upsert_matches:
         try:
+            report("saving_matches")
             logger.info(f"Bulk upserting {len(upsert_matches)} matches...")
             db.table("match_raw_history").upsert(upsert_matches).execute()
         except Exception:
@@ -270,6 +276,7 @@ async def run_crawler_task():
 
     # 5. クロール完了後に自動で macro_map_stats と dynamic_counters を最新集計・更新する
     try:
+        report("aggregating")
         logger.info("Triggering automatic macro statistics and counter calculation...")
         from app.scripts.daily_calc import run_daily_calculation
         calc_result = await asyncio.to_thread(run_daily_calculation, db)
@@ -279,4 +286,6 @@ async def run_crawler_task():
         raise
             
     logger.info("Crawler task completed successfully.")
+    return {"players_fetched": len(upsert_players), "battle_records_fetched": len(upsert_matches),
+            "clubs_fetched": len(upsert_clubs), "aggregation": calc_result}
 

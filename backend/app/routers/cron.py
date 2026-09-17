@@ -1,9 +1,25 @@
+import logging
+from uuid import uuid4
+
 from fastapi import APIRouter, Depends, HTTPException, Header, BackgroundTasks
 from app.config import CRON_SECRET
 from app.tasks.crawler_task import run_crawler_task
 from app.tasks.cleanup_task import run_cleanup_task
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
+_batch_runs: dict[str, dict] = {}
+
+
+async def _run_batch_with_status(run_id: str):
+    run = _batch_runs[run_id]
+    run["status"] = "running"
+    try:
+        result = await run_crawler_task(lambda stage: run.update(stage=stage))
+        run.update(status="completed", result=result)
+    except Exception as exc:
+        logger.exception("Crawler batch %s failed at %s", run_id, run["stage"])
+        run.update(status="failed", error_type=type(exc).__name__, error_code=str(getattr(exc, "code", "")))
 
 def verify_cron_secret(cron_secret: str = Header(None)):
     """
@@ -25,8 +41,22 @@ async def trigger_batch(background_tasks: BackgroundTasks, secret: str = Depends
     """
     バッチ起動トリガー。認証成功時、クローラータスクをバックグラウンドに回し即座にレスポンスを返す。
     """
-    background_tasks.add_task(run_crawler_task)
-    return {"status": "accepted", "message": "Crawler task is now running in the background."}
+    run_id = uuid4().hex
+    _batch_runs[run_id] = {"status": "accepted", "stage": "queued"}
+    # Only a small recent window is needed while GitHub Actions polls completion.
+    if len(_batch_runs) > 20:
+        for old_id in list(_batch_runs)[:-20]:
+            _batch_runs.pop(old_id, None)
+    background_tasks.add_task(_run_batch_with_status, run_id)
+    return {"status": "accepted", "run_id": run_id}
+
+
+@router.get("/api/cron/batch-status/{run_id}")
+async def batch_status(run_id: str, secret: str = Depends(verify_cron_secret)):
+    run = _batch_runs.get(run_id)
+    if run is None:
+        raise HTTPException(status_code=404, detail="Batch status unavailable")
+    return run
 
 @router.post("/api/cron/db-cleanup")
 async def trigger_cleanup(background_tasks: BackgroundTasks, secret: str = Depends(verify_cron_secret)):

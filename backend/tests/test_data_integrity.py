@@ -100,3 +100,20 @@ def test_failed_crawl_does_not_delete_or_write_data(monkeypatch):
         asyncio.run(crawler_task.run_crawler_task())
     db.table.return_value.upsert.assert_not_called()
     db.table.return_value.delete.assert_not_called()
+
+
+def test_background_crawler_failure_is_visible_to_workflow(monkeypatch):
+    import asyncio
+    from app.routers import cron
+
+    async def failing_crawler(report_stage):
+        report_stage("saving_matches")
+        raise RuntimeError("failed match write")
+
+    monkeypatch.setattr(cron, "run_crawler_task", failing_crawler)
+    cron._batch_runs["test-run"] = {"status": "accepted", "stage": "queued"}
+    asyncio.run(cron._run_batch_with_status("test-run"))
+    assert cron._batch_runs.pop("test-run") == {
+        "status": "failed", "stage": "saving_matches",
+        "error_type": "RuntimeError", "error_code": "",
+    }

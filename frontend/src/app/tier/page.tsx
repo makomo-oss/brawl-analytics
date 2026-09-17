@@ -441,7 +441,7 @@ export default function TierListPage() {
                 </Card>
                 <Card className="bg-secondary/20 border-none shadow-inner">
                   <CardContent className="p-2.5 sm:p-4 flex flex-col items-center justify-center">
-                    <span className="text-xs font-bold text-muted-foreground mb-1">使用率</span>
+                    <span className="text-xs font-bold text-muted-foreground mb-1">観測内使用率</span>
                     <span className="text-lg sm:text-2xl font-black text-primary">
                       {selectedChar.use_rate}%
                     </span>

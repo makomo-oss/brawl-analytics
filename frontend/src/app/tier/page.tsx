@@ -248,8 +248,8 @@ export default function TierListPage() {
         {!loading && (
           <p className="text-muted-foreground text-lg flex items-center gap-2">
             {selectedType === "gachi"
-              ? `直近30日のガチバトル・${selectedRankTier === 'mythic' ? 'エリート帯' : selectedRankTier === 'legendary' ? 'レジェンド帯' : selectedRankTier === 'masters' ? 'マスター・プロ帯' : 'エリート以上総合'}の有効な戦績（${(tierData?.metrics?.analyzed_matches ?? 0).toLocaleString()} 件のプレイヤー別記録）から算出したランキング。`
-              : `上位プレイヤーの最新バトルログ（${(tierData?.metrics?.analyzed_matches ?? 0).toLocaleString()} 件のプレイヤー戦績）から算出した相対ランキング。スコアはそのままに、順位を正規分布型の人数比でTierに分けます。`
+              ? `直近30日のガチバトル・エリート以上の戦績（${(tierData?.metrics?.analyzed_matches ?? 0).toLocaleString()} 件のプレイヤー戦績）から算出したランキング。`
+              : `上位プレイヤーの最新バトルログ（${(tierData?.metrics?.analyzed_matches ?? 0).toLocaleString()} 件のプレイヤー戦績）から算出したランキング。`
             }
           </p>
         )}

@@ -41,7 +41,7 @@ jobs:
               exit 0
             fi
             if [ "$STATUS" = "failed" ]; then
-              printf '%s' "$STATUS_BODY" | jq '{status, stage, error_type, error_code}'
+              printf '%s' "$STATUS_BODY" | jq '{status, stage, error_type, error_code, error_column}'
               exit 1
             fi
             sleep 10

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Query
 from app.services.brawl_api import get_player_battlelog, get_player
 from app.database import get_db
+from app.services.player_profiles import profile_record
 import logging
 import asyncio
 from datetime import datetime, timezone
@@ -42,7 +43,7 @@ async def search_players(q: str = Query(..., min_length=1, description="Player t
     try:
         db = get_db()
         # Supabaseのilike検索（トロフィー数降順で上位10件）
-        res = db.table("players").select("player_tag, name, trophies, highest_trophies").ilike("name", f"%{clean_q}%").order("trophies", desc=True).limit(10).execute()
+        res = db.table("players").select("player_tag, name, trophies, highest_trophies").not_.like("name", "Mock (Error:%").or_("unlocked_characters->>profile_status.is.null,unlocked_characters->>profile_status.neq.not_found").ilike("name", f"%{clean_q}%").order("trophies", desc=True).limit(10).execute()
         
         players = res.data or []
         if not players:
@@ -113,19 +114,15 @@ async def sync_player(player_tag: str):
                 time.time()
             )
             
-            player_data = {
-                "player_tag": clean_tag,
-                "name": player_info.get("name", "Unknown"),
-                "trophies": player_info.get("trophies", 0),
-                "highest_trophies": player_info.get("highestTrophies", 0),
-                "unlocked_characters": {},
-                "updated_at": datetime.now(timezone.utc).isoformat()
-            }
+            player_data = profile_record(clean_tag, player_info)
             db.table("players").upsert(player_data).execute()
         except Exception as db_err:
             logger.warning(f"Failed to upsert player data during sync: {db_err}")
+            raise HTTPException(status_code=503, detail="Failed to save player")
 
         return {"player_tag": player_tag, "status": "synced", "name": player_info.get("name")}
+    except HTTPException:
+        raise
     except ValueError as e:
         if str(e) == "Player not found":
             raise HTTPException(status_code=404, detail="Player not found")
@@ -199,19 +196,7 @@ async def get_dashboard(player_tag: str):
                 time.time()
             )
 
-            player_data = {
-                "player_tag": clean_tag,
-                "name": player_info.get("name", "Unknown"),
-                "trophies": player_info.get("trophies", 0),
-                "highest_trophies": player_info.get("highestTrophies", 0),
-                "unlocked_characters": {
-                    "ranked_rank": ranked_rank,
-                    "highest_ranked_rank": highest_ranked_rank,
-                    "ranked_name": player_info.get("rankedRankName", ""),
-                    "highest_ranked_name": player_info.get("highestAllTimeRankedRankName", "")
-                },
-                "updated_at": datetime.now(timezone.utc).isoformat()
-            }
+            player_data = profile_record(clean_tag, player_info)
             # バックグラウンド実行（レスポンスをブロックしない）
             asyncio.create_task(asyncio.to_thread(lambda: db.table("players").upsert(player_data).execute()))
         except Exception as db_err:

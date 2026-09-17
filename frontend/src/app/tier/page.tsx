@@ -463,9 +463,12 @@ export default function TierListPage() {
                   {selectedChar.sample_sufficient === false && "サンプル不足のためTier判定は保留です。 "}
                   直近30日を集計し、14日で重みを半減します。20件未満、または重み付き件数10未満はN/Aです。
                 </p>
-                <p>同じマップ・モード・試合種別の平均を上回る勝率差は、直近性を加味した件数に応じて滑らかに加点します。重み付き{tierData?.metrics?.evidence_half_credit_matches ?? 50}件なら勝率差による加点は半分です。平均を下回る差はそのまま評価し、使用率補正は最大±2点です。</p>
-                {selectedChar.performance_score !== undefined && (
-                  <p>勝率評価: {selectedChar.performance_score}点 ／ 使用率補正: {selectedChar.usage_adjustment}点 ／ 直近性を加味した件数: {selectedChar.weighted_matches}</p>
+                <p>同じマップ・モード・試合種別の平均を上回る勝率差は、直近性を加味した件数に応じて滑らかに加点します。重み付き{tierData?.metrics?.evidence_half_credit_matches ?? 50}件なら加点は半分です。勝率評価の差を70%、使用率偏差値の差を30%で合成し、使用率補正は最大±2点です。</p>
+                {selectedChar.weighted_win_rate !== undefined && selectedChar.weighted_win_rate !== null && (
+                  <p>直近性を加味した勝率: {selectedChar.weighted_win_rate}% ／ 同条件の平均: {selectedChar.context_baseline_win_rate}% ／ 平均へ補正した推定勝率: {selectedChar.adjusted_win_rate}%</p>
+                )}
+                {selectedChar.win_adjustment !== undefined && (
+                  <p>50点 ＋ 勝率寄与: {selectedChar.win_adjustment}点 ＋ 使用率補正: {selectedChar.usage_adjustment}点。勝率評価: {selectedChar.performance_score}点 ／ 重み付き件数: {selectedChar.weighted_matches}</p>
                 )}
                 {selectedChar.sample_discount !== undefined && (
                   selectedChar.estimated_win_lift > 0

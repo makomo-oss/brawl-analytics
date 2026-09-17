@@ -95,10 +95,12 @@ async def run_crawler_task(report_stage: Callable[[str], None] | None = None):
                         # ranked=トロフィーマッチ、soloRanked/teamRanked=ガチバトル
                         if b_type in ["ranked", "soloRanked", "teamRanked"] and result_str:
                             battle_time = item.get("battleTime")
+                            if not battle_time:
+                                continue
                             match_id = f"{clean_tag}_{battle_time}"
                             
-                            original_map_id = item.get("event", {}).get("map", "unknown")
-                            map_id = original_map_id
+                            event = item.get("event") or {}
+                            map_id = str(event.get("map") or "unknown").strip() or "unknown"
                             
                             hero_used = "unknown"
                             allies = []
@@ -119,9 +121,9 @@ async def run_crawler_task(report_stage: Callable[[str], None] | None = None):
                                     if is_my_team:
                                         for p in team:
                                             if p.get("tag", "").replace("%23", "#").replace("#", "").upper() == clean_tag:
-                                                hero_used = p.get("brawler", {}).get("name", "unknown")
+                                                hero_used = (p.get("brawler") or {}).get("name") or "unknown"
                                             else:
-                                                allies.append(p.get("brawler", {}).get("name", "unknown"))
+                                                allies.append((p.get("brawler") or {}).get("name") or "unknown")
                                     else:
                                         opponents.extend(team_brawlers)
                             elif players:
@@ -129,13 +131,13 @@ async def run_crawler_task(report_stage: Callable[[str], None] | None = None):
                                     ptag = p.get("tag", "").replace("#", "").upper()
                                     if ptag:
                                         encountered_players.add(ptag)
-                                    bname = p.get("brawler", {}).get("name", "unknown")
+                                    bname = (p.get("brawler") or {}).get("name") or "unknown"
                                     if ptag == clean_tag:
                                         hero_used = bname
                                     else:
                                         opponents.append(bname)
 
-                            event_mode = item.get("event", {}).get("mode")
+                            event_mode = event.get("mode")
                             battle_mode = battle.get("mode")
                             if event_mode and event_mode != "unknown":
                                 final_mode = event_mode
@@ -246,6 +248,8 @@ async def run_crawler_task(report_stage: Callable[[str], None] | None = None):
 
     if not upsert_players:
         raise RuntimeError("Crawler could not fetch any valid player profiles")
+    if not upsert_matches:
+        raise RuntimeError("Crawler could not fetch any supported battle records")
 
     report("saving_players")
 

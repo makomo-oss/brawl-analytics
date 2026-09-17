@@ -115,5 +115,38 @@ def test_background_crawler_failure_is_visible_to_workflow(monkeypatch):
     asyncio.run(cron._run_batch_with_status("test-run"))
     assert cron._batch_runs.pop("test-run") == {
         "status": "failed", "stage": "saving_matches",
-        "error_type": "RuntimeError", "error_code": "",
+        "error_type": "RuntimeError", "error_code": "", "error_column": None,
     }
+
+
+def test_crawler_saves_battles_with_missing_map_or_brawler_name(monkeypatch):
+    from unittest.mock import Mock
+    from app.tasks import crawler_task
+    from app.scripts import daily_calc
+
+    db = Mock()
+    db.table.return_value.select.return_value.order.return_value.limit.return_value.execute.return_value.data = []
+    monkeypatch.setattr(crawler_task, "get_db", lambda: db)
+    monkeypatch.setattr(crawler_task, "DEFAULT_SEED_TAGS", {"ABC"})
+
+    async def player_info(tag):
+        if tag != "ABC":
+            raise ValueError("not found")
+        return {"tag": "#ABC", "name": "Test", "club": {}}
+
+    async def battlelog(tag):
+        return {"items": [{"battleTime": "20260917T120000.000Z",
+                           "event": {"mode": "brawlBall", "map": None},
+                           "battle": {"type": "ranked", "result": "victory",
+                                      "teams": [[{"tag": "#ABC", "brawler": {"name": None}}],
+                                                [{"tag": "#DEF", "brawler": {"name": "BULL"}}]]}}]}
+
+    monkeypatch.setattr(crawler_task, "get_player", player_info)
+    monkeypatch.setattr(crawler_task, "get_player_battlelog", battlelog)
+    monkeypatch.setattr(daily_calc, "run_daily_calculation", lambda client: {"macro_stats_count": 1})
+
+    result = asyncio.run(crawler_task.run_crawler_task())
+    saved = db.table.return_value.upsert.call_args_list[-1].args[0]
+    assert result["battle_records_fetched"] == 1
+    assert saved[0]["map_id"] == "unknown"
+    assert saved[0]["hero_used"] == "unknown"

@@ -1,4 +1,5 @@
 import logging
+import re
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Header, BackgroundTasks
@@ -19,7 +20,11 @@ async def _run_batch_with_status(run_id: str):
         run.update(status="completed", result=result)
     except Exception as exc:
         logger.exception("Crawler batch %s failed at %s", run_id, run["stage"])
-        run.update(status="failed", error_type=type(exc).__name__, error_code=str(getattr(exc, "code", "")))
+        message = str(getattr(exc, "message", exc))
+        column = re.search(r'null value in column "([a-z_]+)"', message)
+        run.update(status="failed", error_type=type(exc).__name__,
+                   error_code=str(getattr(exc, "code", "")),
+                   error_column=column.group(1) if column else None)
 
 def verify_cron_secret(cron_secret: str = Header(None)):
     """

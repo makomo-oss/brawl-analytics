@@ -106,7 +106,7 @@ def test_background_crawler_failure_is_visible_to_workflow(monkeypatch):
     import asyncio
     from app.routers import cron
 
-    async def failing_crawler(report_stage):
+    async def failing_crawler(report_stage, aggregate=True):
         report_stage("saving_matches")
         raise RuntimeError("failed match write")
 
@@ -143,10 +143,14 @@ def test_crawler_saves_battles_with_missing_map_or_brawler_name(monkeypatch):
 
     monkeypatch.setattr(crawler_task, "get_player", player_info)
     monkeypatch.setattr(crawler_task, "get_player_battlelog", battlelog)
-    monkeypatch.setattr(daily_calc, "run_daily_calculation", lambda client: {"macro_stats_count": 1})
+    def unexpected_aggregation(client):
+        raise AssertionError("Render must not run aggregation")
 
-    result = asyncio.run(crawler_task.run_crawler_task())
+    monkeypatch.setattr(daily_calc, "run_daily_calculation", unexpected_aggregation)
+
+    result = asyncio.run(crawler_task.run_crawler_task(aggregate=False))
     saved = db.table.return_value.upsert.call_args_list[-1].args[0]
     assert result["battle_records_fetched"] == 1
+    assert result["aggregation"] is None
     assert saved[0]["map_id"] == "unknown"
     assert saved[0]["hero_used"] == "unknown"

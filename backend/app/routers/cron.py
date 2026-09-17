@@ -16,7 +16,7 @@ async def _run_batch_with_status(run_id: str):
     run = _batch_runs[run_id]
     run["status"] = "running"
     try:
-        result = await run_crawler_task(lambda stage: run.update(stage=stage))
+        result = await run_crawler_task(lambda stage: run.update(stage=stage), aggregate=False)
         run.update(status="completed", result=result)
     except Exception as exc:
         logger.exception("Crawler batch %s failed at %s", run_id, run["stage"])

@@ -15,11 +15,11 @@ import { translateMode, translateMap } from "@/lib/translations"
 import { API_URL } from "@/lib/config"
 
 const tierConfig: Record<string, { color: string; label: string; bg: string }> = {
-  "S+": { color: "from-purple-600 to-fuchsia-500", label: "環境支配・最優先", bg: "bg-purple-500/10 border-purple-500/30" },
-  S: { color: "from-pink-500 to-rose-500", label: "環境トップ", bg: "bg-pink-500/10 border-pink-500/30" },
-  "A+": { color: "from-red-500 to-amber-500", label: "極めて優秀", bg: "bg-red-500/10 border-red-500/30" },
-  A: { color: "from-orange-500 to-yellow-500", label: "優秀な選択肢", bg: "bg-orange-500/10 border-orange-500/30" },
-  B: { color: "from-yellow-500 to-lime-500", label: "平均的・実用", bg: "bg-yellow-500/10 border-yellow-500/30" },
+  "S+": { color: "from-purple-600 to-fuchsia-500", label: "最上位・優先候補", bg: "bg-purple-500/10 border-purple-500/30" },
+  S: { color: "from-pink-500 to-rose-500", label: "上位グループ", bg: "bg-pink-500/10 border-pink-500/30" },
+  "A+": { color: "from-red-500 to-amber-500", label: "有力な選択肢", bg: "bg-red-500/10 border-red-500/30" },
+  A: { color: "from-orange-500 to-yellow-500", label: "上位寄り", bg: "bg-orange-500/10 border-orange-500/30" },
+  B: { color: "from-yellow-500 to-lime-500", label: "中位・実用", bg: "bg-yellow-500/10 border-yellow-500/30" },
   C: { color: "from-blue-500 to-cyan-500", label: "状況を選ぶ", bg: "bg-blue-500/10 border-blue-500/30" },
   "D": { color: "from-slate-500 to-gray-500", label: "現環境では厳しい", bg: "bg-slate-500/10 border-slate-500/30" },
   "N/A": { color: "from-zinc-500 to-stone-500", label: "データ不足", bg: "bg-zinc-500/10 border-zinc-500/30 border-dashed" }
@@ -249,7 +249,7 @@ export default function TierListPage() {
           <p className="text-muted-foreground text-lg flex items-center gap-2">
             {selectedType === "gachi"
               ? `ガチバトル ${selectedRankTier === 'mythic' ? 'エリート帯' : selectedRankTier === 'legendary' ? 'レジェンド帯' : selectedRankTier === 'masters' ? 'マスター・プロ帯' : 'エリート以上総合'}の最新実戦ログ（${(tierData?.metrics?.analyzed_matches ?? 0).toLocaleString()} 件のプレイヤー戦績）から算出した相対ランキング。`
-              : `上位プレイヤーの最新バトルログ（${(tierData?.metrics?.analyzed_matches ?? 0).toLocaleString()} 件のプレイヤー戦績）から完全データ駆動で算出した相対ランキング。`
+              : `上位プレイヤーの最新バトルログ（${(tierData?.metrics?.analyzed_matches ?? 0).toLocaleString()} 件のプレイヤー戦績）から算出した相対ランキング。Tier区分には現在のスコア分布に合わせた固定境界を使います。`
             }
           </p>
         )}

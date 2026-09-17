@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 import pandas as pd
 import pytest
-from app.algorithm.statistics import battle_identity, blend_tier_score, posterior_rate, supported_win_lift
+from app.algorithm.statistics import battle_identity, blend_tier_score, normal_tier_boundaries, posterior_rate, supported_win_lift
 from app.scripts.daily_calc import calc_macro_map_stats, calc_dynamic_counters
 from app.routers import meta
 from app.services.player_profiles import profile_record
@@ -89,6 +89,15 @@ def test_usage_cap_keeps_win_component_at_70_percent():
     assert usage_a == pytest.approx(.3 * (52.6 - 50))
     assert mortis == pytest.approx(43.53)
     assert mandy == pytest.approx(47.56)
+
+
+def test_normal_tier_sizes_follow_quantiles_without_splitting_displayed_ties():
+    scores = [(107 - index) / 10 for index in range(107)]
+    assert normal_tier_boundaries(scores) == [2, 12, 37, 70, 95, 105]
+    scores[37] = scores[36]
+    boundaries = normal_tier_boundaries(scores)
+    assert boundaries[2] in (36, 38)
+    assert round(scores[boundaries[2] - 1], 1) > round(scores[boundaries[2]], 1)
 
 
 def test_small_sample_is_not_given_s_tier(monkeypatch):

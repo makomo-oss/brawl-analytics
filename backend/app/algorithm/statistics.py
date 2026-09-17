@@ -2,11 +2,13 @@
 import hashlib
 import json
 import math
+from statistics import NormalDist
 
 PRIOR_MATCHES = 20.0
 TIER_EVIDENCE_MATCHES = 50.0  # Half credit for positive lift at 50 recency-weighted observations.
 TIER_WIN_WEIGHT = 0.7
 TIER_USAGE_WEIGHT = 0.3
+NORMAL_TIER_Z = (2.0, 1.2, 0.4, -0.4, -1.2, -2.0)
 MIN_TIER_MATCHES = 20
 MIN_TIER_WEIGHT = 10.0
 HALF_LIFE_DAYS = 14.0
@@ -36,6 +38,26 @@ def blend_tier_score(performance_score: float, pick_deviation: float, usage_cap:
     win_adjustment = TIER_WIN_WEIGHT * (performance_score - 50.0)
     usage_adjustment = max(-usage_cap, min(usage_cap, TIER_USAGE_WEIGHT * (pick_deviation - 50.0)))
     return 50.0 + win_adjustment + usage_adjustment, win_adjustment, usage_adjustment
+
+
+def normal_tier_boundaries(descending_scores: list[float]) -> list[int]:
+    """Cumulative Tier sizes following normal quantiles without splitting displayed ties."""
+    count = len(descending_scores)
+    if not count:
+        return [0] * len(NORMAL_TIER_Z)
+    # The UI displays one decimal, so equal displayed scores keep the same Tier.
+    group_ends = [0] + [index for index in range(1, count)
+                        if round(descending_scores[index - 1], 1) > round(descending_scores[index], 1)] + [count]
+    normal = NormalDist()
+    boundaries = []
+    previous = 0
+    for z in NORMAL_TIER_Z:
+        target = count * (1.0 - normal.cdf(z))
+        boundary = min((end for end in group_ends if end >= previous),
+                       key=lambda end: (abs(end - target), end))
+        boundaries.append(boundary)
+        previous = boundary
+    return boundaries
 
 
 def wilson_interval(wins: float, matches: float) -> tuple[float, float]:

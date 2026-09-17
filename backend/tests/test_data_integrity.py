@@ -86,3 +86,17 @@ def test_snapshot_is_published_atomically_and_errors_propagate(monkeypatch):
         daily_calc.run_daily_calculation(db)
     db.rpc.assert_called_once_with("replace_analytics_snapshot", {"macro_rows": [], "counter_rows": [], "synergy_rows": []})
     db.table.assert_not_called()
+
+
+def test_failed_crawl_does_not_delete_or_write_data(monkeypatch):
+    from app.tasks import crawler_task
+    from unittest.mock import Mock
+    db = Mock()
+    db.table.return_value.select.return_value.order.return_value.limit.return_value.execute.return_value.data = []
+    monkeypatch.setattr(crawler_task, "get_db", lambda: db)
+    monkeypatch.setattr(crawler_task, "DEFAULT_SEED_TAGS", {"ABC"})
+    monkeypatch.setattr(crawler_task, "get_player", AsyncMock(side_effect=brawl_api.BrawlAPIError("403")))
+    with pytest.raises(RuntimeError, match="valid player profiles"):
+        asyncio.run(crawler_task.run_crawler_task())
+    db.table.return_value.upsert.assert_not_called()
+    db.table.return_value.delete.assert_not_called()

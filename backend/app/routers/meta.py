@@ -72,88 +72,13 @@ def _get_cached_synergies(db) -> dict[str, dict[str, dict]]:
                 break
             offset += PAGE_SIZE
 
-        if by_char:
-            _SYNERGIES_CACHE["data"] = all_synergies
-            _SYNERGIES_CACHE["by_char"] = by_char
-            _SYNERGIES_CACHE["timestamp"] = now
-            return by_char
-    except Exception as e:
-        logger.warning(f"Could not load dynamic_synergies table: {e}. Falling back to match_raw_history...")
-
-    # 2. テーブル未作成時の自動フォールバック集計 (match_raw_history)
-    try:
-        res = db.table("match_raw_history").select("hero_used, allies, result").limit(5000).execute()
-        raw_matches = res.data or []
-        
-        char_single_stats: dict[str, list[int]] = {}
-        pair_stats: dict[tuple[str, str], list[int]] = {}
-        
-        for r in raw_matches:
-            hero = str(r.get("hero_used", "") or "").strip()
-            norm_hero = _normalize_id(hero)
-            if not norm_hero or norm_hero == "unknown":
-                continue
-                
-            allies = r.get("allies", [])
-            if isinstance(allies, str):
-                import ast
-                try: allies = ast.literal_eval(allies)
-                except: allies = []
-                
-            is_win = 1 if str(r.get("result", "")).lower() == "victory" else 0
-            
-            if norm_hero not in char_single_stats:
-                char_single_stats[norm_hero] = [0, 0]
-            char_single_stats[norm_hero][0] += is_win
-            char_single_stats[norm_hero][1] += 1
-            
-            for ally in allies:
-                ally_str = str(ally).strip()
-                norm_ally = _normalize_id(ally_str)
-                if not norm_ally or norm_ally == "unknown" or norm_ally == norm_hero:
-                    continue
-                    
-                if norm_ally not in char_single_stats:
-                    char_single_stats[norm_ally] = [0, 0]
-                char_single_stats[norm_ally][0] += is_win
-                char_single_stats[norm_ally][1] += 1
-                
-                pair_key = (min(norm_hero, norm_ally), max(norm_hero, norm_ally))
-                if pair_key not in pair_stats:
-                    pair_stats[pair_key] = [0, 0]
-                pair_stats[pair_key][0] += is_win
-                pair_stats[pair_key][1] += 1
-
-        by_char: dict[str, dict[str, dict]] = {}
-        for (c1, c2), (w, m) in pair_stats.items():
-            if m < 2: continue
-            pair_wr = (w / m) * 100.0
-            
-            wr1 = (char_single_stats[c1][0] / char_single_stats[c1][1] * 100.0) if (c1 in char_single_stats and char_single_stats[c1][1] > 0) else 50.0
-            wr2 = (char_single_stats[c2][0] / char_single_stats[c2][1] * 100.0) if (c2 in char_single_stats and char_single_stats[c2][1] > 0) else 50.0
-            expected_wr = (wr1 + wr2) / 2.0
-            raw_lift = pair_wr - expected_wr
-            
-            shrinkage = m / (m + 5.0)
-            regressed_lift = round(raw_lift * shrinkage, 1)
-            
-            entry = {
-                "win_rate": round(pair_wr, 1),
-                "lift": regressed_lift,
-                "matches": m
-            }
-            if c1 not in by_char: by_char[c1] = {}
-            if c2 not in by_char: by_char[c2] = {}
-            by_char[c1][c2] = entry
-            by_char[c2][c1] = entry
-
-        _SYNERGIES_CACHE["data"] = pair_stats
+        _SYNERGIES_CACHE["data"] = all_synergies
         _SYNERGIES_CACHE["by_char"] = by_char
         _SYNERGIES_CACHE["timestamp"] = now
         return by_char
-    except Exception as e:
-        print(f"Failed to calculate synergies fallback: {e}")
-        return _SYNERGIES_CACHE.get("by_char", {})
+    except Exception:
+        logger.exception("Could not load validated synergy snapshot")
+        return {}
 
 def _get_cached_counters_for_char(db, char_a: str) -> list[dict]:
     """dynamic_counters をインメモリキャッシュから超高速に取得 (DB通信をゼロに)"""

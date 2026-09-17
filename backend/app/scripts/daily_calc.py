@@ -83,8 +83,9 @@ def fetch_recent_matches(client: Client = None) -> pd.DataFrame:
     all_data = []
     limit = 1000
     offset = 0
+    threshold = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
     while True:
-        response = supabase.table("match_raw_history").select("*,players!inner(name)").not_.ilike("players.name", "Mock%").gte("match_at", (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()).order("match_id").range(offset, offset + limit - 1).execute()
+        response = supabase.table("match_raw_history").select("*,players!inner(name)").not_.ilike("players.name", "Mock%").gte("match_at", threshold).order("match_id").range(offset, offset + limit - 1).execute()
         data = response.data
         if not data:
             break

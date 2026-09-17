@@ -250,6 +250,9 @@ async def run_crawler_task():
             if m_data:
                 upsert_matches.extend(m_data)
 
+    if not upsert_players:
+        raise RuntimeError("Crawler could not fetch any valid player profiles")
+
     # 4. SupabaseへのBulk Upsert
     if upsert_players:
         try:

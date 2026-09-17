@@ -4,7 +4,7 @@ import json
 import math
 
 PRIOR_MATCHES = 20.0
-TIER_EVIDENCE_Z = 1.2815515655446004  # One-sided 90% normal approximation.
+TIER_EVIDENCE_MATCHES = 50.0  # Half credit for positive lift at 50 recency-weighted observations.
 MIN_TIER_MATCHES = 20
 MIN_TIER_WEIGHT = 10.0
 HALF_LIFE_DAYS = 14.0
@@ -15,20 +15,18 @@ def posterior_rate(wins: float, matches: float, baseline: float = 0.5) -> float:
 
 
 def supported_win_lift(wins: float, matches: float, baseline: float) -> tuple[float, float, float]:
-    """Return posterior lift, conservative pick lift, and uncertainty margin.
+    """Return posterior lift, conservative pick lift, and sample discount.
 
     A Beta prior centered on the context baseline supplies PRIOR_MATCHES
-    pseudo-observations. Recency-weighted observations form a power likelihood;
-    the normal-approximation margin reflects their limited evidence. A Tier
-    used for picks should require evidence before rewarding an apparent gain;
-    observed losses retain their posterior estimate instead of being rewarded
-    merely for having less evidence.
+    pseudo-observations. Positive lift gets a smooth reliability factor based
+    on recency-weighted observations, avoiding a hard evidence cutoff that
+    collapses nearby scores to 50. Observed losses retain their posterior
+    estimate instead of being rewarded merely for having less evidence.
     """
     mean = posterior_rate(wins, matches, baseline)
-    margin = TIER_EVIDENCE_Z * math.sqrt(mean * (1 - mean) / (matches + PRIOR_MATCHES + 1))
     lift = mean - baseline
-    supported = min(lift, max(0.0, lift - margin))
-    return lift, supported, margin
+    supported = lift * matches / (matches + TIER_EVIDENCE_MATCHES) if lift > 0 else lift
+    return lift, supported, lift - supported
 
 
 def wilson_interval(wins: float, matches: float) -> tuple[float, float]:

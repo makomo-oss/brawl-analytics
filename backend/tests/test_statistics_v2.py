@@ -60,17 +60,24 @@ def test_supported_win_lift_requires_more_evidence_for_a_high_tier():
     assert 50 + 100 * short[1] < 57
 
 
-def test_uncertain_win_difference_returns_to_neutral():
-    lift, supported, margin = supported_win_lift(12, 20, .6)
+def test_equal_to_baseline_win_difference_has_no_sample_discount():
+    lift, supported, discount = supported_win_lift(12, 20, .6)
     assert lift == pytest.approx(0)
     assert supported == 0
-    assert margin > 0
+    assert discount == 0
 
 
 def test_uncertainty_does_not_reward_below_baseline_performance():
-    lift, supported, _ = supported_win_lift(10, 20, .6)
+    lift, supported, discount = supported_win_lift(10, 20, .6)
     assert lift < 0
     assert supported == lift
+    assert discount == 0
+
+
+def test_positive_lift_is_shrunk_smoothly_without_a_cutoff():
+    lift, supported, discount = supported_win_lift(13, 20, .6)
+    assert 0 < supported < lift
+    assert discount == pytest.approx(lift - supported)
 
 
 def test_small_sample_is_not_given_s_tier(monkeypatch):

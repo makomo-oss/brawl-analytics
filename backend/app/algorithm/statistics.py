@@ -5,6 +5,8 @@ import math
 
 PRIOR_MATCHES = 20.0
 TIER_EVIDENCE_MATCHES = 50.0  # Half credit for positive lift at 50 recency-weighted observations.
+TIER_WIN_WEIGHT = 0.7
+TIER_USAGE_WEIGHT = 0.3
 MIN_TIER_MATCHES = 20
 MIN_TIER_WEIGHT = 10.0
 HALF_LIFE_DAYS = 14.0
@@ -27,6 +29,13 @@ def supported_win_lift(wins: float, matches: float, baseline: float) -> tuple[fl
     lift = mean - baseline
     supported = lift * matches / (matches + TIER_EVIDENCE_MATCHES) if lift > 0 else lift
     return lift, supported, lift - supported
+
+
+def blend_tier_score(performance_score: float, pick_deviation: float, usage_cap: float) -> tuple[float, float, float]:
+    """Blend deviations from 50 while limiting popularity's contribution."""
+    win_adjustment = TIER_WIN_WEIGHT * (performance_score - 50.0)
+    usage_adjustment = max(-usage_cap, min(usage_cap, TIER_USAGE_WEIGHT * (pick_deviation - 50.0)))
+    return 50.0 + win_adjustment + usage_adjustment, win_adjustment, usage_adjustment
 
 
 def wilson_interval(wins: float, matches: float) -> tuple[float, float]:

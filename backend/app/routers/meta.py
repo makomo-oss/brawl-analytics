@@ -3,7 +3,7 @@ import math
 import time
 import logging
 from app.database import get_db
-from app.algorithm.statistics import posterior_rate, supported_win_lift, wilson_interval, MIN_TIER_MATCHES, MIN_TIER_WEIGHT, TIER_EVIDENCE_MATCHES
+from app.algorithm.statistics import blend_tier_score, posterior_rate, supported_win_lift, wilson_interval, MIN_TIER_MATCHES, MIN_TIER_WEIGHT, TIER_EVIDENCE_MATCHES, TIER_WIN_WEIGHT, TIER_USAGE_WEIGHT
 
 logger = logging.getLogger(__name__)
 
@@ -337,10 +337,9 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
         adjusted = expected_rate + lift
         performance_score = min(100.0, max(0.0, 50.0 + 100.0 * supported_lift))
         pick_deviation = min(100.0, max(0.0, 50.0 + 10.0 * (tm - mean_picks) / pick_std)) if pick_std else 50.0
-        # Preserve the 70/30 blend, but do not let popularity alone overpower
-        # observed win performance and promote a weak character to S tier.
-        usage_adjustment = max(-USAGE_ADJUSTMENT_CAP, min(USAGE_ADJUSTMENT_CAP, 0.3 * (pick_deviation - performance_score)))
-        score = performance_score + usage_adjustment
+        # Blend deviations from neutral at the specified 70/30 weights.
+        # Capping usage must not silently raise the win component from 70% to 100%.
+        score, win_adjustment, usage_adjustment = blend_tier_score(performance_score, pick_deviation, USAGE_ADJUSTMENT_CAP)
         use_rate = tm / global_total_matches * 100
         eligible = tm >= MIN_TIER_MATCHES and weighted_n >= MIN_TIER_WEIGHT
         if eligible:
@@ -351,12 +350,15 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
         char_entry = {
             "score": round(score, 1),
             "performance_score": round(performance_score, 1),
+            "win_adjustment": round(win_adjustment, 1),
             "pick_rate_deviation": round(pick_deviation, 1),
-            "usage_adjustment": round(round(score, 1) - round(performance_score, 1), 1),
+            "usage_adjustment": round(usage_adjustment, 1),
             "win_rate": round(actual_wr, 1),
             "use_rate": round(use_rate, 2),
             "total_matches": tm,
             "weighted_matches": round(weighted_n, 2),
+            "weighted_win_rate": round(stats["weighted_wins"] / weighted_n * 100, 1) if weighted_n else None,
+            "context_baseline_win_rate": round(expected_rate * 100, 1),
             "adjusted_win_rate": round(adjusted * 100, 1),
             "estimated_win_lift": round(lift * 100, 1),
             "supported_win_lift": round(supported_lift * 100, 1),
@@ -416,7 +418,7 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
         "tiers": tiers,
         "type": type,
         "rank_tier": rank_tier,
-        "metrics": {"analyzed_matches": display_matches, "count_unit": "player_observations", "baseline_win_rate": round(baseline * 100, 1), "minimum_matches": MIN_TIER_MATCHES, "half_life_days": 14, "evidence_half_credit_matches": TIER_EVIDENCE_MATCHES, "usage_adjustment_cap": USAGE_ADJUSTMENT_CAP, "method": "context_smooth_sample_shrinkage_capped_usage_v6"},
+        "metrics": {"analyzed_matches": display_matches, "count_unit": "player_observations", "baseline_win_rate": round(baseline * 100, 1), "minimum_matches": MIN_TIER_MATCHES, "half_life_days": 14, "evidence_half_credit_matches": TIER_EVIDENCE_MATCHES, "win_weight": TIER_WIN_WEIGHT, "usage_weight": TIER_USAGE_WEIGHT, "usage_adjustment_cap": USAGE_ADJUSTMENT_CAP, "method": "context_smooth_sample_shrinkage_70_30_v7"},
         "characters": characters_detail
     }
     return response_data

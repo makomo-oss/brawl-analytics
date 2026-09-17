@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 import pandas as pd
 import pytest
-from app.algorithm.statistics import battle_identity, posterior_rate, supported_win_lift
+from app.algorithm.statistics import battle_identity, blend_tier_score, posterior_rate, supported_win_lift
 from app.scripts.daily_calc import calc_macro_map_stats, calc_dynamic_counters
 from app.routers import meta
 from app.services.player_profiles import profile_record
@@ -78,6 +78,17 @@ def test_positive_lift_is_shrunk_smoothly_without_a_cutoff():
     lift, supported, discount = supported_win_lift(13, 20, .6)
     assert 0 < supported < lift
     assert discount == pytest.approx(lift - supported)
+
+
+def test_usage_cap_keeps_win_component_at_70_percent():
+    mortis, win_m, usage_m = blend_tier_score(37.9, 71.4, 2)
+    mandy, win_a, usage_a = blend_tier_score(45.4, 52.6, 2)
+    assert win_m == pytest.approx(.7 * (37.9 - 50))
+    assert win_a == pytest.approx(.7 * (45.4 - 50))
+    assert usage_m == 2
+    assert usage_a == pytest.approx(.3 * (52.6 - 50))
+    assert mortis == pytest.approx(43.53)
+    assert mandy == pytest.approx(47.56)
 
 
 def test_small_sample_is_not_given_s_tier(monkeypatch):

@@ -461,8 +461,9 @@ export default function TierListPage() {
                 {selectedChar.confidence_interval && `実勝率の95%区間: ${selectedChar.confidence_interval[0]}–${selectedChar.confidence_interval[1]}%。`}
                 {selectedChar.sample_sufficient === false && " サンプル不足のためTier判定は保留です。"}
                 直近30日を集計し、14日で重みを半減。20件未満、または重み付き件数10未満はN/A。
-                同じマップ・モード・試合種別の平均から補正した勝率評価を70%、選択条件内の使用率偏差値を30%としてスコア化します。使用率による補正は最大±2点です。
-                {selectedChar.performance_score !== undefined && ` 勝率評価: ${selectedChar.performance_score}、使用率偏差値: ${selectedChar.pick_rate_deviation}、使用率補正: ${selectedChar.usage_adjustment}、重み付き件数: ${selectedChar.weighted_matches}。`}
+                同じマップ・モード・試合種別の平均を上回る勝率差は、件数が少ないほど加点を控えます。上振れが不確かな場合、勝率評価は平均相当の50点に近づきます。平均を下回る差はそのまま評価し、使用率補正は最大±2点です。
+                {selectedChar.performance_score !== undefined && ` 勝率評価: ${selectedChar.performance_score}、使用率偏差値: ${selectedChar.pick_rate_deviation}、使用率補正: ${selectedChar.usage_adjustment}、直近性を加味した件数: ${selectedChar.weighted_matches}。`}
+                {selectedChar.uncertainty_margin !== undefined && ` 補正後の勝率差: ${selectedChar.estimated_win_lift}ポイント、加点に必要な余裕: ${selectedChar.uncertainty_margin}ポイント、評価に採用した差: ${selectedChar.supported_win_lift}ポイント。`}
               </p>
               <div className="space-y-6 mt-8">
                 {/* 有利な対面 */}

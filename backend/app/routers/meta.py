@@ -132,7 +132,10 @@ def _get_cached_macro_data(db) -> list[dict]:
         offset = 0
         PAGE_SIZE = 1000
         while True:
-            res = db.table("macro_map_stats").select("*").range(offset, offset + PAGE_SIZE - 1).execute()
+            # The composite key gives every page a stable, unique order.
+            res = (db.table("macro_map_stats").select("*")
+                   .order("map_id").order("character_id").order("match_type").order("mode")
+                   .range(offset, offset + PAGE_SIZE - 1).execute())
             if not res.data:
                 break
             data.extend(res.data)
@@ -383,7 +386,7 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
         characters_detail[cid] = char_entry
             
     # スコアで降順ソート
-    scored_chars.sort(key=lambda x: x["score"], reverse=True)
+    scored_chars.sort(key=lambda x: (-x["score"], x["id"]))
     
     # Fixed differences from the selected population; do not force an S tier.
     tiers = {key: [] for key in ["S+", "S", "A+", "A", "B", "C", "D", "N/A"]}

@@ -205,6 +205,7 @@ export default function TierListPage() {
 
     // クリックした瞬間に即座にモーダルを開く！
     setSelectedChar({
+      ...currentTierChar,
       character_id: charName,
       tier: currentTier,
       win_rate: currentTierChar.win_rate,

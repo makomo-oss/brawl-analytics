@@ -370,7 +370,7 @@ export default function TierListPage() {
                         {chars.map((charId: string) => {
                           const info = getBrawlerInfo(charId);
                           return (
-                            <div 
+                            <button type="button" aria-label={`${info.nameJa}の詳細`}
                               key={charId} 
                               onClick={() => fetchCharacterDetail(charId)}
                               className="group relative flex flex-col items-center justify-center p-1.5 sm:p-2 rounded-xl bg-background/60 hover:bg-background/90 border border-primary/10 hover:border-primary/50 transition-all hover:-translate-y-1 cursor-pointer shadow-sm"
@@ -386,7 +386,7 @@ export default function TierListPage() {
                                 <User className="w-6 h-6 text-primary/40" />
                               </div>
                               <span className="text-xs font-medium text-center truncate w-full px-1 mt-2">{info.nameJa}</span>
-                            </div>
+                            </button>
                           )
                         })}
                       </CardContent>

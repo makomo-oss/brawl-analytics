@@ -279,7 +279,7 @@ export default function DraftCompanionPage() {
     if (!metaData || !metaData.characters) return []
     
     const chars = metaData.characters
-    let results = []
+    const results = []
 
     if (phase === "ban") {
       // おすすめBAN: マップ適性 (score) が高く、まだ除外されていないキャラ
@@ -869,7 +869,7 @@ export default function DraftCompanionPage() {
                         const info = getBrawlerInfo(charName)
                         const excluded = isExcluded(charName)
                         return (
-                          <div 
+                          <button type="button" disabled={excluded} aria-label={info.nameJa}
                             key={charName} 
                             onClick={() => !excluded && handleSelectCharacter(charName)}
                             className={`flex flex-col items-center justify-center min-h-[44px] min-w-[44px] gap-1 cursor-pointer transition-all hover:scale-105 group ${excluded ? 'opacity-20 cursor-not-allowed grayscale' : ''}`}
@@ -888,7 +888,7 @@ export default function DraftCompanionPage() {
                             <span className="text-[10px] font-medium truncate w-full text-center group-hover:text-primary transition-colors">
                               {info.nameJa}
                             </span>
-                          </div>
+                          </button>
                         )
                       })}
                     </div>

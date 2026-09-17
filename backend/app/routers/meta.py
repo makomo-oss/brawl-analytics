@@ -293,19 +293,15 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
             char_stats[cid] = {
                 "total_wins": 0,
                 "total_matches": 0,
-                "sum_pick_dev": 0.0,
                 "weighted_matches": 0.0,
                 "weighted_wins": 0.0,
-                "expected_wins": 0.0,
-                "count": 0
+                "expected_wins": 0.0
             }
         char_stats[cid]["total_wins"] += (row.get("total_wins") or 0)
         char_stats[cid]["total_matches"] += (row.get("total_matches") or 0)
-        char_stats[cid]["sum_pick_dev"] += (row.get("pick_rate_deviation") or 50.0)
         context_w, context_n = contexts[(row.get("match_type"), row.get("mode"), row.get("map_id"))]
         row_n = row.get("weighted_matches") if row.get("weighted_matches") is not None else (row.get("total_matches") or 0)
         char_stats[cid]["expected_wins"] += row_n * (context_w / context_n if context_n else 0.5)
-        char_stats[cid]["count"] += 1
         char_stats[cid]["weighted_matches"] += row.get("weighted_matches") if row.get("weighted_matches") is not None else (row.get("total_matches") or 0)
         char_stats[cid]["weighted_wins"] += row.get("weighted_wins") if row.get("weighted_wins") is not None else (row.get("total_wins") or 0)
         
@@ -316,8 +312,12 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
     # 全体の総試合数 (使用率計算用)
     global_total_matches = sum(s["total_matches"] for s in char_stats.values())
     if global_total_matches == 0: global_total_matches = 1
+    # Usage deviation is defined over characters in the selected cohort/scope.
+    mean_picks = global_total_matches / len(char_stats) if char_stats else 0.0
+    pick_std = math.sqrt(sum((s["total_matches"] - mean_picks) ** 2 for s in char_stats.values()) / len(char_stats)) if char_stats else 0.0
     
-    # Shrink toward the selected population, without rewarding popularity.
+    # Shrink the win component toward the selected population before blending
+    # it with the usage deviation required by the Tier specification.
     weighted_total = sum(v["weighted_matches"] for v in char_stats.values())
     weighted_wins = sum(v["weighted_wins"] for v in char_stats.values())
     baseline = weighted_wins / weighted_total if weighted_total else 0.5
@@ -333,7 +333,9 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
         weighted_n = stats["weighted_matches"]
         expected_rate = stats["expected_wins"] / weighted_n if weighted_n else baseline
         adjusted = posterior_rate(stats["weighted_wins"], weighted_n, expected_rate)
-        score = min(100.0, max(0.0, 50.0 + 100.0 * (adjusted - expected_rate)))
+        performance_score = min(100.0, max(0.0, 50.0 + 100.0 * (adjusted - expected_rate)))
+        pick_deviation = min(100.0, max(0.0, 50.0 + 10.0 * (tm - mean_picks) / pick_std)) if pick_std else 50.0
+        score = 0.7 * performance_score + 0.3 * pick_deviation
         use_rate = tm / global_total_matches * 100
         eligible = tm >= MIN_TIER_MATCHES and weighted_n >= MIN_TIER_WEIGHT
         if eligible:
@@ -343,6 +345,8 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
         # 基本情報（score, win_rate, use_rate, total_matches）は常時提供 (超軽量: 数KB)
         char_entry = {
             "score": round(score, 1),
+            "performance_score": round(performance_score, 1),
+            "pick_rate_deviation": round(pick_deviation, 1),
             "win_rate": round(actual_wr, 1),
             "use_rate": round(use_rate, 2),
             "total_matches": tm,
@@ -386,7 +390,7 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
         characters_detail[cid] = char_entry
             
     # スコアで降順ソート
-    scored_chars.sort(key=lambda x: (-x["score"], x["id"]))
+    scored_chars.sort(key=lambda x: (-x["score"], -characters_detail[x["id"]]["weighted_matches"], x["id"]))
     
     # Fixed differences from the selected population; do not force an S tier.
     tiers = {key: [] for key in ["S+", "S", "A+", "A", "B", "C", "D", "N/A"]}
@@ -403,7 +407,7 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
         "tiers": tiers,
         "type": type,
         "rank_tier": rank_tier,
-        "metrics": {"analyzed_matches": display_matches, "count_unit": "player_observations", "baseline_win_rate": round(baseline * 100, 1), "minimum_matches": MIN_TIER_MATCHES, "half_life_days": 14, "method": "decayed_beta_population_relative_v2"},
+        "metrics": {"analyzed_matches": display_matches, "count_unit": "player_observations", "baseline_win_rate": round(baseline * 100, 1), "minimum_matches": MIN_TIER_MATCHES, "half_life_days": 14, "method": "context_adjusted_win70_usage30_v3"},
         "characters": characters_detail
     }
     return response_data

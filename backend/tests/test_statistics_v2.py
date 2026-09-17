@@ -71,6 +71,20 @@ def test_map_mix_does_not_reward_character_with_easier_schedule(monkeypatch):
     assert data['colt']['score'] == data['bull']['score'] == 50
 
 
+def test_equal_win_rates_use_sample_share_in_tier_score(monkeypatch):
+    rows = [dict(character_id=name, map_id='map', mode='brawlBall', match_type='ranked',
+                 total_matches=matches, total_wins=matches // 2)
+            for name, matches in [('colt', 20), ('bull', 200)]]
+    monkeypatch.setattr(meta, 'get_db', lambda: None)
+    monkeypatch.setattr(meta, '_get_cached_total_analyzed', lambda db: 220)
+    monkeypatch.setattr(meta, '_get_cached_macro_data', lambda db: rows)
+    data = meta.get_tier_list()['characters']
+    assert data['colt']['win_rate'] == data['bull']['win_rate'] == 50
+    assert data['colt']['performance_score'] == data['bull']['performance_score'] == 50
+    assert data['bull']['pick_rate_deviation'] > data['colt']['pick_rate_deviation']
+    assert data['bull']['score'] > data['colt']['score']
+
+
 def test_profile_sync_keeps_rank_and_inventory():
     record = profile_record('ABC', {'tag':'#ABC','name':'Real','rankedRank':13,'highestAllTimeRankedRank':16,'brawlers':[{'name':'COLT','power':11}]})
     assert record['unlocked_characters']['ranked_rank'] == 13

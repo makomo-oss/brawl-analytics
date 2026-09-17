@@ -1,0 +1,44 @@
+"""Conservative evidence scores; constants are policy choices, not fitted accuracy claims."""
+import hashlib
+import json
+import math
+
+PRIOR_MATCHES = 20.0
+MIN_TIER_MATCHES = 20
+MIN_TIER_WEIGHT = 10.0
+HALF_LIFE_DAYS = 14.0
+
+
+def posterior_rate(wins: float, matches: float, baseline: float = 0.5) -> float:
+    return (wins + PRIOR_MATCHES * baseline) / (matches + PRIOR_MATCHES)
+
+
+def wilson_interval(wins: float, matches: float) -> tuple[float, float]:
+    if matches <= 0:
+        return 0.0, 1.0
+    p = min(max(wins / matches, 0), 1)
+    z = 1.96
+    center = p + z * z / (2 * matches)
+    spread = z * math.sqrt(p * (1-p) / matches + z*z / (4*matches*matches))
+    denominator = 1 + z*z / matches
+    return (center-spread)/denominator, (center+spread)/denominator
+
+
+def battle_identity(item: dict) -> str | None:
+    """Observer-independent identity for newly acquired logs, including participants."""
+    battle = item.get("battle") or {}
+    teams = battle.get("teams") or [[p] for p in battle.get("players", [])]
+    if not item.get("battleTime") or not teams:
+        return None
+    participants = []
+    for team in teams:
+        members = []
+        for player in team:
+            tag = player.get("tag", "").replace("#", "").upper()
+            if not tag:
+                return None
+            members.append((tag, (player.get("brawler") or {}).get("name", "")))
+        participants.append(sorted(members))
+    identity = [item["battleTime"], item.get("event"), battle.get("type"),
+                battle.get("mode"), sorted(participants)]
+    return hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()

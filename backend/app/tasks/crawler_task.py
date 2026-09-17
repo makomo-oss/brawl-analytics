@@ -3,6 +3,8 @@ import logging
 import random
 from datetime import datetime, timezone
 from app.database import get_db
+from app.services.player_profiles import profile_record
+from app.algorithm.statistics import battle_identity
 from app.services.brawl_api import get_player_battlelog, get_player, get_club_members, get_club
 
 logger = logging.getLogger(__name__)
@@ -57,20 +59,8 @@ async def run_crawler_task():
                 ranked_rank = player_info.get("rankedRank") or 0
                 highest_ranked_rank = player_info.get("highestAllTimeRankedRank") or player_info.get("highestSeasonRankedRank") or ranked_rank
                 
-                player_data = {
-                    "player_tag": clean_tag,
-                    "name": player_info.get("name", "Unknown"),
-                    "trophies": player_info.get("trophies", 0),
-                    "highest_trophies": player_info.get("highestTrophies", 0),
-                    "unlocked_characters": {
-                        "ranked_rank": ranked_rank,
-                        "highest_ranked_rank": highest_ranked_rank,
-                        "ranked_name": player_info.get("rankedRankName", ""),
-                        "highest_ranked_name": player_info.get("highestAllTimeRankedRankName", "")
-                    }, 
-                    "updated_at": datetime.now(timezone.utc).isoformat()
-                }
-                
+                player_data = profile_record(clean_tag, player_info)
+
                 club_tag = player_info.get("club", {}).get("tag")
                 
                 # 2. バトルログの取得
@@ -156,6 +146,7 @@ async def run_crawler_task():
 
                             battle_log_data.append({
                                 "match_id": match_id,
+                                "battle_uid": battle_identity(item),
                                 "player_tag": clean_tag,
                                 "match_at": datetime.strptime(battle_time, "%Y%m%dT%H%M%S.%fZ").isoformat() if "T" in battle_time else datetime.now(timezone.utc).isoformat(),
                                 "match_type": b_type,

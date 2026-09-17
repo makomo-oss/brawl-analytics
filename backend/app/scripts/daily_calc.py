@@ -16,6 +16,8 @@ load_dotenv(os.path.join(backend_dir, ".env"))
 load_dotenv(os.path.join(os.path.dirname(backend_dir), ".env"))
 
 from app.services.brawl_api import get_player
+from app.services.player_profiles import profile_record
+from app.algorithm.statistics import HALF_LIFE_DAYS, posterior_rate
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -47,23 +49,7 @@ async def auto_sync_missing_player_ranks(missing_tags: list[str], supabase: Clie
             try:
                 p_info = await get_player(tag)
                 if not p_info: return None
-                c_rank = p_info.get("rankedRank") or 0
-                c_name = p_info.get("rankedRankName") or ""
-                h_rank = p_info.get("highestAllTimeRankedRank") or p_info.get("highestSeasonRankedRank") or c_rank
-                h_name = p_info.get("highestAllTimeRankedRankName") or p_info.get("highestSeasonRankedRankName") or c_name
-                return {
-                    "player_tag": tag,
-                    "name": p_info.get("name", "Unknown"),
-                    "trophies": p_info.get("trophies", 0),
-                    "highest_trophies": p_info.get("highestTrophies", 0),
-                    "unlocked_characters": {
-                        "ranked_rank": c_rank,
-                        "highest_ranked_rank": h_rank,
-                        "ranked_name": c_name,
-                        "highest_ranked_name": h_name
-                    },
-                    "updated_at": datetime.now(timezone.utc).isoformat()
-                }
+                return profile_record(tag, p_info)
             except Exception:
                 return None
 
@@ -85,7 +71,7 @@ def fetch_recent_matches(client: Client = None) -> pd.DataFrame:
     offset = 0
     threshold = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
     while True:
-        response = supabase.table("match_raw_history").select("*,players!inner(name)").not_.ilike("players.name", "Mock%").gte("match_at", threshold).order("match_id").range(offset, offset + limit - 1).execute()
+        response = supabase.table("match_raw_history").select("*").gte("match_at", threshold).order("match_id").range(offset, offset + limit - 1).execute()
         data = response.data
         if not data:
             break
@@ -111,7 +97,7 @@ def fetch_player_rank_segments(client: Client = None, match_df: pd.DataFrame = N
     offset = 0
     limit = 1000
     while True:
-        res = supabase.table("players").select("player_tag, updated_at, unlocked_characters").not_.ilike("name", "Mock%").order("player_tag").range(offset, offset + limit - 1).execute()
+        res = supabase.table("players").select("player_tag, updated_at, unlocked_characters").not_.like("name", "Mock (Error:%").order("player_tag").range(offset, offset + limit - 1).execute()
         if not res.data:
             break
         all_players.extend(res.data)
@@ -145,6 +131,8 @@ def fetch_player_rank_segments(client: Client = None, match_df: pd.DataFrame = N
         if updated_at_str and has_rank_info:
             try:
                 up_dt = datetime.fromisoformat(updated_at_str.replace("Z", "+00:00"))
+                if up_dt.tzinfo is None:
+                    up_dt = up_dt.replace(tzinfo=timezone.utc)
                 if (now_utc - up_dt).total_seconds() < 3 * 86400:
                     is_fresh = True
             except:
@@ -167,7 +155,7 @@ def fetch_player_rank_segments(client: Client = None, match_df: pd.DataFrame = N
     if match_df is not None and "player_tag" in match_df.columns:
         match_tags = set(match_df["player_tag"].astype(str).str.replace("#", "").str.upper().str.strip().unique())
         need_refresh = list((match_tags - fresh_synced_tags) | (match_tags & stale_or_missing_tags))
-        if need_refresh:
+        if need_refresh and os.getenv("BRAWL_API_TOKEN") and os.getenv("BRAWL_API_TOKEN") != "mock_token_for_tests":
             logger.info(f"Detected {len(need_refresh)} active players needing fresh rank verification. Triggering Auto-Refresh...")
             try:
                 asyncio.run(auto_sync_missing_player_ranks(need_refresh, supabase))
@@ -272,17 +260,29 @@ def calc_macro_map_stats(df: pd.DataFrame, rank_segments: dict = None):
 
     combined_df = pd.concat(dfs_to_aggregate, ignore_index=True)
 
-    # match_type × マップ × ヒーローで集計
-    grouped = combined_df.groupby(["match_type", "map_id", "hero_used"]).agg(
+    # Retain mode as a real dimension; map names are not globally unique.
+    if "mode" not in combined_df:
+        combined_df["mode"] = "unknown"
+    combined_df["mode"] = combined_df["mode"].fillna("unknown")
+    if "match_at" in combined_df:
+        dates = pd.to_datetime(combined_df["match_at"], utc=True, errors="coerce")
+        age = (pd.Timestamp.now(tz="UTC") - dates).dt.total_seconds() / 86400
+        combined_df["weight"] = (2.0 ** (-age.clip(lower=0) / HALF_LIFE_DAYS)).fillna(0.0)
+    else:
+        combined_df["weight"] = 1.0
+    combined_df["weighted_win"] = combined_df["is_win"] * combined_df["weight"]
+    grouped = combined_df.groupby(["match_type", "mode", "map_id", "hero_used"]).agg(
         total_matches=("is_win", "size"),
-        total_wins=("is_win", "sum")
+        total_wins=("is_win", "sum"),
+        weighted_matches=("weight", "sum"),
+        weighted_wins=("weighted_win", "sum")
     ).reset_index()
     
     # 勝率の計算
     grouped["win_rate"] = (grouped["total_wins"] / grouped["total_matches"]) * 100.0
     
     # ピック率偏差値の計算 (マップ内での出現回数の偏差値)
-    counts = grouped.groupby(["match_type", "map_id"])["total_matches"]
+    counts = grouped.groupby(["match_type", "mode", "map_id"])["total_matches"]
     mean = counts.transform("mean")
     std = counts.transform("std").replace(0, float("nan"))
     grouped["pick_rate_deviation"] = (50.0 + 10.0 * (grouped["total_matches"] - mean) / std).fillna(50.0)
@@ -294,6 +294,9 @@ def calc_macro_map_stats(df: pd.DataFrame, rank_segments: dict = None):
         stats_list.append({
             "match_type": row.get("match_type", "unknown"),
             "map_id": row["map_id"],
+            "mode": row["mode"],
+            "weighted_matches": float(row["weighted_matches"]),
+            "weighted_wins": float(row["weighted_wins"]),
             "character_id": row["hero_used"],
             "total_wins": int(row["total_wins"]),
             "total_matches": int(row["total_matches"]),
@@ -321,7 +324,8 @@ def calc_dynamic_counters(df: pd.DataFrame):
     # hero_used (char_a) と opponents (char_b) のペアを展開
     records = []
     for _, row in df.iterrows():
-        match_id = str(row.get("match_id", "") or "").strip()
+        uid = row.get("battle_uid")
+        match_id = str(uid if isinstance(uid, str) and uid else (row.get("match_id") or "")).strip()
         char_a = str(row.get("hero_used", "") or "").lower()
         is_win = row["is_win"]
         
@@ -362,7 +366,7 @@ def calc_dynamic_counters(df: pd.DataFrame):
         valid_match_id = pairs_df["match_id"].astype(str).str.strip().str.len() > 0
         if valid_match_id.any():
             pairs_df = pd.concat([
-                pairs_df[valid_match_id].drop_duplicates(subset=["match_id", "char_a", "char_b"]),
+                pairs_df[valid_match_id].drop_duplicates(subset=["match_id", "char_a", "char_b", "is_win"]),
                 pairs_df[~valid_match_id]
             ], ignore_index=True)
 
@@ -387,7 +391,7 @@ def calc_dynamic_counters(df: pd.DataFrame):
             coef = 0.0
         else:
             base_wr = global_win_rates.get(char_a, 0.5)
-            actual_wr = w_count / m_count
+            actual_wr = posterior_rate(w_count, m_count, base_wr)
             coef = float(round(actual_wr - base_wr, 4))
             
         counter_list.append({
@@ -416,7 +420,8 @@ def calc_dynamic_synergies(df: pd.DataFrame):
     
     records = []
     for _, row in df.iterrows():
-        match_id = str(row.get("match_id", "") or "").strip()
+        uid = row.get("battle_uid")
+        match_id = str(uid if isinstance(uid, str) and uid else (row.get("match_id") or "")).strip()
         char_a = str(row.get("hero_used", "") or "").lower()
         is_win = row["is_win"]
         
@@ -456,7 +461,7 @@ def calc_dynamic_synergies(df: pd.DataFrame):
         valid_match_id = pairs_df["match_id"].astype(str).str.strip().str.len() > 0
         if valid_match_id.any():
             pairs_df = pd.concat([
-                pairs_df[valid_match_id].drop_duplicates(subset=["match_id", "char_a", "char_b"]),
+                pairs_df[valid_match_id].drop_duplicates(subset=["match_id", "char_a", "char_b", "is_win"]),
                 pairs_df[~valid_match_id]
             ], ignore_index=True)
 
@@ -482,7 +487,7 @@ def calc_dynamic_synergies(df: pd.DataFrame):
         raw_lift = pair_wr - expected_wr
         
         # ベイズ縮小（データ数に応じた信頼度平滑化）
-        shrinkage = m_count / (m_count + 5.0)
+        shrinkage = m_count / (m_count + 20.0)
         regressed_lift = float(round(raw_lift * shrinkage, 2))
         
         synergy_list.append({
@@ -506,7 +511,9 @@ def run_daily_calculation(client: Client = None):
     df = fetch_recent_matches(supabase)
     
         
-    rank_segments = fetch_player_rank_segments(supabase, match_df=df)
+    # Collection owns API refresh. Aggregation is deterministic and never depends on
+    # the batch host IP or on an AsyncClient created on another event loop.
+    rank_segments = fetch_player_rank_segments(supabase, match_df=None)
     macro_stats = calc_macro_map_stats(df, rank_segments)
     dynamic_counters = calc_dynamic_counters(df)
     dynamic_synergies = calc_dynamic_synergies(df)

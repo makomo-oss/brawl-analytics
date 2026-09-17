@@ -136,12 +136,12 @@ export default function TierListPage() {
         let url = `${API_URL}/meta/tier-list?type=${selectedType}`
         if (selectedType === "gachi") {
           url += `&rank_tier=${selectedRankTier}`
-          if (subType !== "all" && selectedId) {
-            url += `&sub_type=${subType}&id=${encodeURIComponent(selectedId)}`
-          }
+        }
+        if (subType !== "all" && selectedId) {
+          url += `&sub_type=${subType}&id=${encodeURIComponent(selectedId)}`
         }
 
-        if (selectedType === "gachi" && subType !== "all" && !selectedId) {
+        if (subType !== "all" && !selectedId) {
           setLoading(false)
           return
         }
@@ -221,9 +221,9 @@ export default function TierListPage() {
       let url = `${API_URL}/meta/characters/${charName}?type=${selectedType}`
       if (selectedType === "gachi") {
         url += `&rank_tier=${selectedRankTier}`
-        if (subType !== "all" && selectedId) {
-          url += `&sub_type=${subType}&id=${encodeURIComponent(selectedId)}`
-        }
+      }
+      if (subType !== "all" && selectedId) {
+        url += `&sub_type=${subType}&id=${encodeURIComponent(selectedId)}`
       }
       const res = await fetch(url)
       if (res.ok) {

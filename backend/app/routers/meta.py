@@ -9,6 +9,8 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/meta", tags=["Meta"])
 USAGE_ADJUSTMENT_CAP = 2.0
+GLOBAL_TIER_THRESHOLDS = ((55, "S+"), (52.5, "S"), (51, "A+"), (49.5, "A"), (48.5, "B"), (47, "C"))
+GACHI_TIER_THRESHOLDS = ((57, "S+"), (54, "S"), (52, "A+"), (50, "A"), (48, "B"), (46, "C"))
 
 # --- In-Memory Cache Layers (TTL = 3600 seconds / 1 hour) ---
 # 日次バッチ実行時 (clear_meta_cache) または 1 時間経過で最新化
@@ -403,10 +405,15 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
     # スコアで降順ソート
     scored_chars.sort(key=lambda x: (-x["score"], -characters_detail[x["id"]]["weighted_matches"], x["id"]))
     
-    # Fixed differences from the selected population; do not force an S tier.
+    # The global score distribution is narrow around 50, so use narrower central
+    # bands there. Keep ranked-only bands conservative for sparse filtered cohorts.
+    # Fixed score boundaries never force a character into a high tier by rank.
     tiers = {key: [] for key in ["S+", "S", "A+", "A", "B", "C", "D", "N/A"]}
+    tier_thresholds = GLOBAL_TIER_THRESHOLDS if type == "global" else GACHI_TIER_THRESHOLDS
     for sc in scored_chars:
-        tier = next((name for threshold, name in [(57,"S+"),(54,"S"),(52,"A+"),(50,"A"),(48,"B"),(46,"C")] if sc["score"] >= threshold), "D")
+        # Match the one-decimal score shown in the global table at its boundaries.
+        tier_score = round(sc["score"], 1) if type == "global" else sc["score"]
+        tier = next((name for threshold, name in tier_thresholds if tier_score >= threshold), "D")
         tiers[tier].append(sc["id"])
     tiers["N/A"] = [cid for cid, stats in characters_detail.items() if not stats["sample_sufficient"]]
 
@@ -418,7 +425,7 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
         "tiers": tiers,
         "type": type,
         "rank_tier": rank_tier,
-        "metrics": {"analyzed_matches": display_matches, "count_unit": "player_observations", "baseline_win_rate": round(baseline * 100, 1), "minimum_matches": MIN_TIER_MATCHES, "half_life_days": 14, "evidence_half_credit_matches": TIER_EVIDENCE_MATCHES, "win_weight": TIER_WIN_WEIGHT, "usage_weight": TIER_USAGE_WEIGHT, "usage_adjustment_cap": USAGE_ADJUSTMENT_CAP, "method": "context_smooth_sample_shrinkage_70_30_v7"},
+        "metrics": {"analyzed_matches": display_matches, "count_unit": "player_observations", "baseline_win_rate": round(baseline * 100, 1), "minimum_matches": MIN_TIER_MATCHES, "half_life_days": 14, "evidence_half_credit_matches": TIER_EVIDENCE_MATCHES, "win_weight": TIER_WIN_WEIGHT, "usage_weight": TIER_USAGE_WEIGHT, "usage_adjustment_cap": USAGE_ADJUSTMENT_CAP, "tier_thresholds": {name: score for score, name in tier_thresholds}, "method": "context_smooth_sample_shrinkage_70_30_v7"},
         "characters": characters_detail
     }
     return response_data

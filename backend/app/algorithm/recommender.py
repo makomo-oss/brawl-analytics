@@ -21,13 +21,13 @@ def calculate_score(char_id: str, f_own: float, s_map: float, s_counter: float, 
 
 def recommend_picks(map_id: str, mode: str, allies: list[str], opponents: list[str], pick_turn: int, is_proxy_pick: bool, bans: list[str] | None = None):
     from app.routers.meta import get_tier_list, _normalize_id
-    map_data = get_tier_list(type="gachi", sub_type="map", id=map_id, include_details=True)
+    map_data = get_tier_list(type="gachi", sub_type="map", id=map_id, include_details=True, mode=mode)
     mode_data = get_tier_list(type="gachi", sub_type="mode", id=mode)
     excluded = {_normalize_id(c) for c in allies + opponents + (bans or [])}
     weights = get_weights(len(opponents), is_proxy_pick)
     results = []
     for char, stats in (map_data.get("characters") or {}).items():
-        if _normalize_id(char) in excluded:
+        if not stats.get("sample_sufficient", True) or _normalize_id(char) in excluded:
             continue
         map_score = stats["score"]
         mode_score = (mode_data.get("characters") or {}).get(char, {}).get("score", 50.0)

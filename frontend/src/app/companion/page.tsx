@@ -127,7 +127,7 @@ export default function DraftCompanionPage() {
     setError("")
     try {
       const [mapRes, modeRes] = await Promise.all([
-        fetch(`${API_URL}/meta/tier-list?type=gachi&sub_type=map&id=${encodeURIComponent(selectedMap)}&include_details=true`),
+        fetch(`${API_URL}/meta/tier-list?type=gachi&sub_type=map&id=${encodeURIComponent(selectedMap)}&mode=${encodeURIComponent(selectedMode)}&include_details=true`),
         fetch(`${API_URL}/meta/tier-list?type=gachi&sub_type=mode&id=${encodeURIComponent(selectedMode)}`)
       ])
       if (!mapRes.ok || !modeRes.ok) throw new Error("分析データを取得できませんでした。再試行してください。")
@@ -284,7 +284,7 @@ export default function DraftCompanionPage() {
     if (phase === "ban") {
       // おすすめBAN: マップ適性 (score) が高く、まだ除外されていないキャラ
       for (const [name, stats] of Object.entries<any>(chars)) {
-        if (isExcluded(name)) continue
+        if (isExcluded(name) || stats.sample_sufficient === false) continue
         const sMap = stats.score ?? 50.0
         results.push({ name, score: sMap, reason: "マップTier高", type: "ban" })
       }
@@ -319,7 +319,7 @@ export default function DraftCompanionPage() {
       }
 
       for (const [name, stats] of Object.entries<any>(chars)) {
-        if (isExcluded(name)) continue
+        if (isExcluded(name) || stats.sample_sufficient === false) continue
         
         // 1. S_map (マップ適性: 50点基準)
         const S_map = stats.score ?? 50.0
@@ -814,7 +814,7 @@ export default function DraftCompanionPage() {
                 </div>
 
                 <p className="text-xs text-muted-foreground text-center max-w-[340px]">
-                  集計スコアから算出した参考指標です。実際の勝率を保証するものではありません。対面・味方相性は全モード共通の集計です。
+                  集計スコアから算出した参考指標です。実際の勝率を保証するものではありません。対面・味方相性も選択したマップ・モードの集計を使用し、少数例は補正しています。
                 </p>
                 <Button className="mt-2" size="lg" onClick={handleReset}>
                   <RefreshCw className="w-4 h-4 mr-2" /> 新しいドラフトを始める
@@ -922,6 +922,7 @@ export default function DraftCompanionPage() {
               ) : (
                 <ScrollArea className="h-[400px] lg:h-[600px] px-4">
                   <div className="space-y-3 pb-4">
+                    {suggestions.length === 0 && <p className="p-4 text-sm text-muted-foreground">この条件で推薦できる十分なデータがありません。キャラクターは手動で選択できます。</p>}
                     {suggestions.map((sug: any, index: number) => {
                       const info = getBrawlerInfo(sug.name)
                       return (

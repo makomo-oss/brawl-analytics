@@ -456,11 +456,17 @@ export default function TierListPage() {
                 </Card>
               </div>
 
+              <p className="text-xs text-muted-foreground mt-4">
+                {selectedChar.confidence_interval && `実勝率の95%区間: ${selectedChar.confidence_interval[0]}–${selectedChar.confidence_interval[1]}%。`}
+                {selectedChar.sample_sufficient === false && " サンプル不足のためTier判定は保留です。"}
+                直近30日を集計し、14日で重みを半減。20件未満、または重み付き件数10未満はN/A。
+                同じマップ・モード・試合種別の平均からの差を補正して評価します。
+              </p>
               <div className="space-y-6 mt-8">
                 {/* 有利な対面 */}
                 <div className="space-y-3 relative p-4 rounded-xl bg-green-500/5 border border-green-500/20">
                   <h3 className="font-extrabold text-sm flex items-center gap-2 text-green-600 dark:text-green-400">
-                    <TrendingUp className="w-5 h-5" /> 有利な対面 TOP5 <span className="text-[10px] text-muted-foreground font-normal">（全モード累積サンプル）</span>
+                    <TrendingUp className="w-5 h-5" /> 有利な対面 TOP5 <span className="text-[10px] text-muted-foreground font-normal">（選択条件・95%区間で判定）</span>
                   </h3>
                   {selectedChar.kamo && selectedChar.kamo.length > 0 ? (
                     <div className="space-y-2">
@@ -497,7 +503,7 @@ export default function TierListPage() {
                 {/* 不利な対面 */}
                 <div className="space-y-3 relative p-4 rounded-xl bg-red-500/5 border border-red-500/20">
                   <h3 className="font-extrabold text-sm flex items-center gap-2 text-red-600 dark:text-red-400">
-                    <TrendingDown className="w-5 h-5" /> 不利な対面 TOP5 <span className="text-[10px] text-muted-foreground font-normal">（全モード累積サンプル）</span>
+                    <TrendingDown className="w-5 h-5" /> 不利な対面 TOP5 <span className="text-[10px] text-muted-foreground font-normal">（選択条件・95%区間で判定）</span>
                   </h3>
                   {selectedChar.tenteki && selectedChar.tenteki.length > 0 ? (
                     <div className="space-y-2">

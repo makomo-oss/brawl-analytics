@@ -2,8 +2,12 @@ name: Data Crawler and Bulk Aggregation
 
 on:
   schedule:
-    - cron: '0 * * * *' # Every hour
+    - cron: '17 * * * *' # Avoid the GitHub Actions top-of-hour peak
   workflow_dispatch:
+
+concurrency:
+  group: brawl-crawler
+  cancel-in-progress: false
 
 jobs:
   trigger-batch:

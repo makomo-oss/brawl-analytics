@@ -21,6 +21,15 @@ def select_anchor_tags(db) -> set[str]:
         raise RuntimeError("Crawler has no verified player anchors")
     return set(random.sample(candidates, min(5, len(candidates))))
 
+
+def raw_history_count(db) -> int | None:
+    try:
+        response = db.table("match_raw_history").select("match_id", count="exact", head=True).execute()
+        return int(response.count)
+    except Exception as exc:
+        logger.warning("Could not count raw battles: %s", exc)
+        return None
+
 async def run_crawler_task(report_stage: Callable[[str], None] | None = None, aggregate: bool = True):
     """
     バックグラウンドで実行される高度なデータクローラータスク
@@ -33,6 +42,7 @@ async def run_crawler_task(report_stage: Callable[[str], None] | None = None, ag
     report = report_stage or (lambda stage: None)
     report("fetching_players")
     db = get_db()
+    initial_raw_count = raw_history_count(db)
     
     # A small rotating sample of verified profiles expands the frontier; no
     # age-based sweep of every registered player is required.
@@ -179,6 +189,11 @@ async def run_crawler_task(report_stage: Callable[[str], None] | None = None, ag
             logger.exception("Failed to persist matches; aggregation cancelled")
             raise
 
+    final_raw_count = raw_history_count(db)
+    new_raw_matches = (max(0, final_raw_count - initial_raw_count)
+                       if initial_raw_count is not None and final_raw_count is not None else None)
+    logger.info("Raw battle observations: total=%s, added_since_start=%s", final_raw_count, new_raw_matches)
+
     # GitHub Actions runs aggregation on its larger runner after this phase.
     # Direct CLI callers can still request the complete pipeline.
     calc_result = None
@@ -195,5 +210,6 @@ async def run_crawler_task(report_stage: Callable[[str], None] | None = None, ag
             
     logger.info("Crawler task completed successfully.")
     return {"players_fetched": len(upsert_players), "battle_records_fetched": len(upsert_matches),
+            "new_raw_matches": new_raw_matches, "raw_history_total": final_raw_count,
             "clubs_fetched": len(upsert_clubs), "aggregation": calc_result}
 

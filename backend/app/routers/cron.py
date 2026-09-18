@@ -64,12 +64,12 @@ async def batch_status(run_id: str, secret: str = Depends(verify_cron_secret)):
     return run
 
 @router.post("/api/cron/db-cleanup")
-async def trigger_cleanup(background_tasks: BackgroundTasks, secret: str = Depends(verify_cron_secret)):
+async def trigger_cleanup(secret: str = Depends(verify_cron_secret)):
     """
-    旧クリーンアップURL。履歴は削除せず保存件数を読み取る。
+    30日超の戦績を削除し、完了結果をワークフローへ返す。
     """
-    background_tasks.add_task(run_cleanup_task)
-    return {"status": "accepted", "message": "Read-only retention audit is running in the background."}
+    result = await run_cleanup_task()
+    return {"status": "completed", **result}
 
 @router.post("/api/cron/daily-calc")
 async def trigger_daily_calc(background_tasks: BackgroundTasks, secret: str = Depends(verify_cron_secret)):

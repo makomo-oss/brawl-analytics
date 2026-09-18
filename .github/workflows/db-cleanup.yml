@@ -1,6 +1,8 @@
-name: DB Retention Audit
+name: Daily DB Cleanup
 
 on:
+  schedule:
+    - cron: '30 4 * * *' # Daily at 13:30 JST
   workflow_dispatch:
 
 jobs:
@@ -22,22 +24,11 @@ jobs:
             sleep 10
           done
           
-      - name: Phase 2 - Read retention counts
+      - name: Phase 2 - Delete expired battles and verify completion
         env:
           RENDER_URL: ${{ secrets.RENDER_URL }}
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
-          echo "Triggering read-only retention audit at $RENDER_URL/api/cron/db-cleanup"
-          RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X POST "$RENDER_URL/api/cron/db-cleanup" -H "cron-secret: $CRON_SECRET")
-          
-          HTTP_STATUS=$(echo "$RESPONSE" | grep "HTTP_STATUS:" | cut -d':' -f2)
-          BODY=$(echo "$RESPONSE" | sed -e 's/HTTP_STATUS:.*//g')
-          
-          echo "Response Body: $BODY"
-          echo "Response Status: $HTTP_STATUS"
-          
-          if [ "$HTTP_STATUS" -ne 200 ]; then
-            echo "Failed to trigger retention audit. Exiting."
-            exit 1
-          fi
-          echo "Retention audit triggered successfully."
+          RESPONSE=$(curl --fail-with-body -sS --max-time 120 -X POST "$RENDER_URL/api/cron/db-cleanup" -H "cron-secret: $CRON_SECRET")
+          printf '%s' "$RESPONSE" | jq -e '{status, deleted_count, remaining_expired}'
+          printf '%s' "$RESPONSE" | jq -e '.status == "completed" and .remaining_expired == 0' >/dev/null

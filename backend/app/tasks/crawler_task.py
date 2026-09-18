@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from typing import Callable
 from app.database import get_db
 from app.services.player_profiles import profile_record
-from app.services.battle_records import parse_battlelog
+from app.services.battle_records import deduplicate_battle_records, parse_battlelog
 from app.services.brawl_api import get_player_battlelog, get_player, get_club_members, get_club
 
 logger = logging.getLogger(__name__)
@@ -194,6 +194,10 @@ async def run_crawler_task(report_stage: Callable[[str], None] | None = None, ag
                 upsert_players.append(p_data)
             if m_data:
                 upsert_matches.extend(m_data)
+
+    # Different discovery paths can return the same player's log. Postgres rejects
+    # duplicate match_id values inside one ON CONFLICT upsert with SQLSTATE 21000.
+    upsert_matches = deduplicate_battle_records(upsert_matches)
 
     if not upsert_players:
         raise RuntimeError("Crawler could not fetch any valid player profiles")

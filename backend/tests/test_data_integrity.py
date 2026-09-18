@@ -266,3 +266,18 @@ def test_crawler_saves_battles_with_missing_map_or_brawler_name(monkeypatch):
     assert saved[0]["hero_used"] == "unknown"
     assert saved[0]["opponents"] == ["unknown"]
     assert saved[1]["match_at"] == "2026-09-17T12:01:00+00:00"
+
+
+def test_duplicate_battle_ids_are_removed_before_upsert():
+    from app.services.battle_records import deduplicate_battle_records, parse_battlelog
+
+    item = {"battleTime": "20260918T120000.000Z",
+            "event": {"mode": "brawlBall", "map": "unknown"},
+            "battle": {"type": "ranked", "result": "victory", "teams": [
+                [{"tag": "#ABC", "brawler": {"name": "COLT"}}],
+                [{"tag": "#DEF", "brawler": {"name": "BULL"}}]]}}
+    improved = {**item, "event": {**item["event"], "map": "Test Map"}}
+    records, _ = parse_battlelog("ABC", [item, improved])
+    assert len(records) == 1
+    assert records[0]["map_id"] == "Test Map"
+    assert len(deduplicate_battle_records(records + records)) == 1

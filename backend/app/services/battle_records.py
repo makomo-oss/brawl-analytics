@@ -21,6 +21,23 @@ def clean_tag(tag: str) -> str:
     return str(tag or "").replace("%23", "#").replace("#", "").strip().upper()
 
 
+def deduplicate_battle_records(records: list[dict]) -> list[dict]:
+    """Keep one observation per database key within a single upsert payload."""
+    unique = {}
+    for record in records:
+        key = record["match_id"]
+        previous = unique.get(key)
+        if previous is None or _record_quality(record) > _record_quality(previous):
+            unique[key] = record
+    return list(unique.values())
+
+
+def _record_quality(record: dict) -> int:
+    return (int(record.get("hero_used") not in (None, "", "unknown"))
+            + int(record.get("map_id") not in (None, "", "unknown"))
+            + len(record.get("allies") or []) + len(record.get("opponents") or []))
+
+
 def parse_battlelog(player_tag: str, items: list) -> tuple[list[dict], set[str]]:
     """Keep each valid observation even when a neighboring log item is malformed."""
     tag = clean_tag(player_tag)
@@ -104,4 +121,4 @@ def parse_battlelog(player_tag: str, items: list) -> tuple[list[dict], set[str]]
             encountered.update(participants)
         except (AttributeError, TypeError, ValueError, KeyError) as exc:
             logger.warning("Skipping invalid battle for %s: %s", tag, exc)
-    return records, encountered
+    return deduplicate_battle_records(records), encountered

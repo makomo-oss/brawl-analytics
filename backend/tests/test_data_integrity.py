@@ -63,6 +63,54 @@ def test_dashboard_failure_is_http_error(monkeypatch):
         asyncio.run(player.get_dashboard("ABC"))
     assert error.value.status_code == 502
 
+
+@pytest.mark.parametrize("route", [player.get_dashboard, player.sync_player])
+def test_player_sync_persists_crawler_compatible_battles(monkeypatch, route):
+    from unittest.mock import Mock, call
+
+    info = {"tag": "#ABC", "name": "Test", "club": {}}
+    battlelog = {"items": [{
+        "battleTime": "20260918T120000.000Z",
+        "event": {"mode": "brawlBall", "map": "Test Map"},
+        "battle": {"type": "soloRanked", "result": "victory", "teams": [
+            [{"tag": "#ABC", "brawler": {"name": "COLT"}}],
+            [{"tag": "#DEF", "brawler": {"name": "BULL"}}],
+        ]},
+    }]}
+    db = Mock()
+    monkeypatch.setattr(player, "get_db", lambda: db)
+    monkeypatch.setattr(player, "get_player", AsyncMock(return_value=info))
+    monkeypatch.setattr(player, "get_player_battlelog", AsyncMock(return_value=battlelog))
+    from app.routers import meta
+    monkeypatch.setattr(meta, "_get_cached_macro_data", lambda database: [])
+
+    result = asyncio.run(route("ABC"))
+    assert db.table.call_args_list[:2] == [call("players"), call("match_raw_history")]
+    records = db.table.return_value.upsert.call_args_list[-1].args[0]
+    assert records[0]["match_id"] == "ABC_20260918T120000.000Z"
+    assert records[0]["match_type"] == "soloRanked"
+    assert records[0]["hero_used"] == "COLT"
+    if route is player.sync_player:
+        assert result["battle_records_saved"] == 1
+
+
+def test_dashboard_reports_failed_battle_persistence(monkeypatch):
+    from unittest.mock import Mock
+
+    db = Mock()
+    db.table.return_value.upsert.return_value.execute.side_effect = [None, RuntimeError("write failed")]
+    monkeypatch.setattr(player, "get_db", lambda: db)
+    monkeypatch.setattr(player, "get_player", AsyncMock(return_value={"tag": "#ABC", "name": "Test"}))
+    monkeypatch.setattr(player, "get_player_battlelog", AsyncMock(return_value={"items": [{
+        "battleTime": "20260918T120000.000Z", "event": {"mode": "brawlBall"},
+        "battle": {"type": "ranked", "result": "victory", "players": [
+            {"tag": "#ABC", "brawler": {"name": "COLT"}}
+        ]},
+    }]}))
+    with pytest.raises(Exception) as error:
+        asyncio.run(player.get_dashboard("ABC"))
+    assert error.value.status_code == 503
+
 def test_tier_counts_observations_without_dividing_by_six(monkeypatch):
     monkeypatch.setattr(meta,"get_db",lambda:None)
     monkeypatch.setattr(meta,"_get_cached_total_analyzed",lambda db:999)

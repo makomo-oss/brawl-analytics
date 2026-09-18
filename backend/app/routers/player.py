@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Query
 from app.services.brawl_api import get_player_battlelog, get_player
 from app.database import get_db
 from app.services.player_profiles import profile_record
+from app.services.battle_records import clean_tag as normalize_player_tag, parse_battlelog
 import logging
 import asyncio
 from datetime import datetime, timezone
@@ -14,6 +15,15 @@ import time
 # --- Player Enrichment Cache Layer (tag -> ({icon_id, highest_ranked_rank}, timestamp)) ---
 _PLAYER_SEARCH_ENRICH_CACHE: dict[str, tuple[dict, float]] = {}
 _ENRICH_CACHE_TTL = 86400.0  # 24 hours
+
+
+def _save_synced_player(db, tag: str, player_info: dict, battlelog: dict) -> int:
+    """Persist profile before its battle observations; fail the sync on write errors."""
+    records, _ = parse_battlelog(tag, (battlelog or {}).get("items") or [])
+    db.table("players").upsert(profile_record(tag, player_info)).execute()
+    if records:
+        db.table("match_raw_history").upsert(records).execute()
+    return len(records)
 
 @router.get("/search")
 async def search_players(q: str = Query(..., min_length=1, description="Player tag or name to search")):
@@ -99,28 +109,29 @@ async def sync_player(player_tag: str):
     プレイヤータグから戦績や保有キャラを同期する
     """
     try:
-        player_info = await get_player(player_tag)
+        clean_tag = normalize_player_tag(player_tag)
+        player_info, battlelog = await asyncio.gather(
+            get_player(clean_tag), get_player_battlelog(clean_tag)
+        )
         
         # データベースにプレイヤー情報を保存（Upsert）して名前検索の候補に追加する
         try:
             db = get_db()
-            clean_tag = player_tag.replace("#", "").upper()
             icon_id = (player_info.get("icon") or {}).get("id", 28000000) or 28000000
             highest_rank = int(player_info.get("highestAllTimeRankedRank") or player_info.get("rankedRank") or 0)
             
-            # エンリッチキャッシュも即座に更新
+            saved = await asyncio.to_thread(_save_synced_player, db, clean_tag, player_info, battlelog)
+
             _PLAYER_SEARCH_ENRICH_CACHE[clean_tag] = (
                 {"icon_id": icon_id, "highest_ranked_rank": highest_rank},
                 time.time()
             )
-            
-            player_data = profile_record(clean_tag, player_info)
-            db.table("players").upsert(player_data).execute()
         except Exception as db_err:
             logger.warning(f"Failed to upsert player data during sync: {db_err}")
             raise HTTPException(status_code=503, detail="Failed to save player")
 
-        return {"player_tag": player_tag, "status": "synced", "name": player_info.get("name")}
+        return {"player_tag": player_tag, "status": "synced", "name": player_info.get("name"),
+                "battle_records_saved": saved}
     except HTTPException:
         raise
     except ValueError as e:
@@ -175,7 +186,7 @@ async def get_dashboard(player_tag: str):
     - macro_map_stats の全件走査を廃止しインメモリキャッシュを活用
     """
     try:
-        clean_tag = player_tag.replace("%23", "").replace("#", "").upper().strip()
+        clean_tag = normalize_player_tag(player_tag)
         
         # 1. プレイヤー基本情報とバトルログを完全並列フェッチ (待ち時間半減)
         player_info, battlelog = await asyncio.gather(
@@ -183,24 +194,22 @@ async def get_dashboard(player_tag: str):
             get_player_battlelog(clean_tag)
         )
         
-        # 2. データベースにプレイヤー情報をバックグラウンド保存 (非同期Upsert)
+        # 2. 同期の成功を返す前にプロフィールと対応する試合を保存する。
         try:
             db = get_db()
             ranked_rank = player_info.get("rankedRank") or 0
             highest_ranked_rank = int(player_info.get("highestAllTimeRankedRank") or player_info.get("highestSeasonRankedRank") or ranked_rank)
             icon_id = (player_info.get("icon") or {}).get("id", 28000000) or 28000000
             
-            # エンリッチキャッシュを即座に更新
+            await asyncio.to_thread(_save_synced_player, db, clean_tag, player_info, battlelog)
+
             _PLAYER_SEARCH_ENRICH_CACHE[clean_tag] = (
                 {"icon_id": icon_id, "highest_ranked_rank": highest_ranked_rank},
                 time.time()
             )
-
-            player_data = profile_record(clean_tag, player_info)
-            # バックグラウンド実行（レスポンスをブロックしない）
-            asyncio.create_task(asyncio.to_thread(lambda: db.table("players").upsert(player_data).execute()))
         except Exception as db_err:
-            logger.warning(f"Failed to upsert player data during dashboard fetch: {db_err}")
+            logger.exception("Failed to save player battles during dashboard sync: %s", db_err)
+            raise HTTPException(status_code=503, detail="戦績データを保存できませんでした。時間をおいて再試行してください。")
 
         items = battlelog.get("items", []) if battlelog else []
         
@@ -213,8 +222,8 @@ async def get_dashboard(player_tag: str):
         player_tag_fmt = f"#{clean_tag}"
         
         for item in items:
-            battle = item.get("battle", {})
-            event = item.get("event", {})
+            battle = item.get("battle") or {}
+            event = item.get("event") or {}
             
             result_str, is_win = determine_battle_result(battle)
             if result_str != "unknown":
@@ -227,19 +236,19 @@ async def get_dashboard(player_tag: str):
                 opponent_teams = []
                 
                 # スタープレイヤーの判定
-                star_player_tag = (battle.get("starPlayer") or {}).get("tag", "").replace("#", "").upper()
+                star_player_tag = ((battle.get("starPlayer") or {}).get("tag") or "").replace("#", "").upper()
                 is_star_player = (star_player_tag == clean_tag)
                 
-                teams = battle.get("teams", [])
-                players = battle.get("players", [])
+                teams = battle.get("teams") or []
+                players = battle.get("players") or []
                 
                 if teams:
                     for team in teams:
                         is_my_team = False
                         team_data = []
                         for p in team:
-                            ptag = p.get("tag", "").replace("#", "").upper()
-                            brawler_name = (p.get("brawler") or {}).get("name", "unknown").lower()
+                            ptag = (p.get("tag") or "").replace("#", "").upper()
+                            brawler_name = ((p.get("brawler") or {}).get("name") or "unknown").lower()
                             team_data.append({
                                 "name": p.get("name", "Unknown"),
                                 "brawler": brawler_name,
@@ -256,8 +265,8 @@ async def get_dashboard(player_tag: str):
                 elif players:
                     # Solo Showdown など
                     for p in players:
-                        ptag = p.get("tag", "").replace("#", "").upper()
-                        brawler_name = (p.get("brawler") or {}).get("name", "unknown").lower()
+                        ptag = (p.get("tag") or "").replace("#", "").upper()
+                        brawler_name = ((p.get("brawler") or {}).get("name") or "unknown").lower()
                         p_data = {
                             "name": p.get("name", "Unknown"),
                             "brawler": brawler_name,
@@ -424,6 +433,8 @@ async def get_dashboard(player_tag: str):
                 "mode_analysis": mode_analysis
             }
         }
+    except HTTPException:
+        raise
     except ValueError as e:
         if str(e) == "Player not found":
             raise HTTPException(status_code=404, detail="Player not found")

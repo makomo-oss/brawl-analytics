@@ -81,7 +81,7 @@ def battle_identity(item: dict) -> str | None:
     for team in teams:
         members = []
         for player in team:
-            tag = player.get("tag", "").replace("#", "").upper()
+            tag = (player.get("tag") or "").replace("%23", "#").replace("#", "").upper()
             if not tag:
                 return None
             members.append((tag, (player.get("brawler") or {}).get("name", "")))

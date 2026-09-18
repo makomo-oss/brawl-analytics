@@ -17,6 +17,16 @@ DEFAULT_SEED_TAGS = {
     "2G80L9RU", "80RGYL2V", "2L8U9P0R", "90J8V2RU", "8L9R0P2V"
 }
 
+def parse_battle_time(raw: str) -> str:
+    """Accept Brawl API UTC timestamps; never invent an observation time."""
+    for format_string in ("%Y%m%dT%H%M%S.%fZ", "%Y%m%dT%H%M%SZ"):
+        try:
+            return datetime.strptime(raw, format_string).replace(tzinfo=timezone.utc).isoformat()
+        except ValueError:
+            continue
+    raise ValueError("Invalid battle time")
+
+
 async def run_crawler_task(report_stage: Callable[[str], None] | None = None, aggregate: bool = True):
     """
     バックグラウンドで実行される高度なデータクローラータスク
@@ -50,121 +60,119 @@ async def run_crawler_task(report_stage: Callable[[str], None] | None = None, ag
     found_clubs = set()
 
     async def fetch_player_and_matches(tag: str):
-        clean_tag = tag.replace("#", "")
-        raw_tag = f"#{clean_tag}"
+        clean_tag = tag.replace("#", "").upper()
         
         async with semaphore:
             try:
                 # 1. プレイヤー情報の取得
                 player_info = await get_player(clean_tag)
                 
-                # ガチバトルランク（Rank 13+ = エリート, 16+ = レジェンド, 19+ = マスター）の抽出
-                ranked_rank = player_info.get("rankedRank") or 0
-                highest_ranked_rank = player_info.get("highestAllTimeRankedRank") or player_info.get("highestSeasonRankedRank") or ranked_rank
-                
                 player_data = profile_record(clean_tag, player_info)
 
-                club_tag = player_info.get("club", {}).get("tag")
+                club_tag = (player_info.get("club") or {}).get("tag")
                 
                 # 2. バトルログの取得
                 battle_log_data = []
                 encountered_players = set()
                 try:
                     logs = await get_player_battlelog(clean_tag)
-                    items = logs.get("items", [])
+                    items = logs.get("items") or []
                     for item in items:
-                        battle = item.get("battle", {})
-                        b_type = battle.get("type")
-                        
-                        raw_result = battle.get("result")
-                        rank = battle.get("rank")
-                        trophy_change = battle.get("trophyChange")
-                        mode_str = str(battle.get("mode", "")).lower()
-                        
-                        # Showdownや特殊モード対応の勝率判定
-                        is_win = False
-                        result_str = raw_result
-                        if not result_str:
-                            if rank is not None:
-                                is_win = (rank <= 4) if mode_str == "soloshowdown" else (rank <= 2)
-                                result_str = "victory" if is_win else ("defeat" if rank > 2 else "draw")
-                            elif trophy_change is not None and trophy_change != 0:
-                                is_win = (trophy_change > 0)
-                                result_str = "victory" if is_win else "defeat"
+                        try:
+                            battle = item.get("battle") or {}
+                            b_type = battle.get("type")
 
-                        # ranked=トロフィーマッチ、soloRanked/teamRanked=ガチバトル
-                        if b_type in ["ranked", "soloRanked", "teamRanked"] and result_str:
-                            battle_time = item.get("battleTime")
-                            if not battle_time:
-                                continue
-                            match_id = f"{clean_tag}_{battle_time}"
-                            
-                            event = item.get("event") or {}
-                            map_id = str(event.get("map") or "unknown").strip() or "unknown"
-                            
-                            hero_used = "unknown"
-                            allies = []
-                            opponents = []
-                            teams = battle.get("teams", [])
-                            players = battle.get("players", [])
-                            
-                            if teams:
-                                for team in teams:
-                                    is_my_team = any(p.get("tag", "").replace("%23", "#").replace("#", "").upper() == clean_tag for p in team)
-                                    team_brawlers = [p.get("brawler", {}).get("name", "unknown") for p in team]
-                                    
-                                    for p in team:
-                                        ptag = p.get("tag", "")
-                                        if ptag:
-                                            encountered_players.add(ptag.replace("#", "").upper())
-                                    
-                                    if is_my_team:
+                            raw_result = battle.get("result")
+                            rank = battle.get("rank")
+                            trophy_change = battle.get("trophyChange")
+                            mode_str = str(battle.get("mode", "")).lower()
+
+                            # Showdownや特殊モード対応の勝率判定
+                            is_win = False
+                            result_str = raw_result
+                            if not result_str:
+                                if rank is not None:
+                                    is_win = (rank <= 4) if mode_str == "soloshowdown" else (rank <= 2)
+                                    result_str = "victory" if is_win else ("defeat" if rank > 2 else "draw")
+                                elif trophy_change is not None and trophy_change != 0:
+                                    is_win = (trophy_change > 0)
+                                    result_str = "victory" if is_win else "defeat"
+
+                            # ranked=トロフィーマッチ、soloRanked/teamRanked=ガチバトル
+                            if b_type in ["ranked", "soloRanked", "teamRanked"] and result_str:
+                                battle_time = item.get("battleTime")
+                                if not battle_time:
+                                    continue
+                                match_id = f"{clean_tag}_{battle_time}"
+
+                                event = item.get("event") or {}
+                                map_id = str(event.get("map") or "unknown").strip() or "unknown"
+
+                                hero_used = "unknown"
+                                allies = []
+                                opponents = []
+                                teams = battle.get("teams") or []
+                                players = battle.get("players") or []
+
+                                if teams:
+                                    for team in teams:
+                                        is_my_team = any((p.get("tag") or "").replace("%23", "#").replace("#", "").upper() == clean_tag for p in team)
+                                        team_brawlers = [(p.get("brawler") or {}).get("name") or "unknown" for p in team]
+
                                         for p in team:
-                                            if p.get("tag", "").replace("%23", "#").replace("#", "").upper() == clean_tag:
-                                                hero_used = (p.get("brawler") or {}).get("name") or "unknown"
-                                            else:
-                                                allies.append((p.get("brawler") or {}).get("name") or "unknown")
-                                    else:
-                                        opponents.extend(team_brawlers)
-                            elif players:
-                                for p in players:
-                                    ptag = p.get("tag", "").replace("#", "").upper()
-                                    if ptag:
-                                        encountered_players.add(ptag)
-                                    bname = (p.get("brawler") or {}).get("name") or "unknown"
-                                    if ptag == clean_tag:
-                                        hero_used = bname
-                                    else:
-                                        opponents.append(bname)
+                                            ptag = p.get("tag") or ""
+                                            if ptag:
+                                                encountered_players.add(ptag.replace("%23", "#").replace("#", "").upper())
 
-                            event_mode = event.get("mode")
-                            battle_mode = battle.get("mode")
-                            if event_mode and event_mode != "unknown":
-                                final_mode = event_mode
-                            elif battle_mode and battle_mode != "unknown":
-                                final_mode = battle_mode
-                            else:
-                                final_mode = "unknown"
+                                        if is_my_team:
+                                            for p in team:
+                                                if (p.get("tag") or "").replace("%23", "#").replace("#", "").upper() == clean_tag:
+                                                    hero_used = (p.get("brawler") or {}).get("name") or "unknown"
+                                                else:
+                                                    allies.append((p.get("brawler") or {}).get("name") or "unknown")
+                                        else:
+                                            opponents.extend(team_brawlers)
+                                elif players:
+                                    for p in players:
+                                        ptag = (p.get("tag") or "").replace("%23", "#").replace("#", "").upper()
+                                        if ptag:
+                                            encountered_players.add(ptag)
+                                        bname = (p.get("brawler") or {}).get("name") or "unknown"
+                                        if ptag == clean_tag:
+                                            hero_used = bname
+                                        else:
+                                            opponents.append(bname)
 
-                            if final_mode in ["duoShowdown", "duo_showdown"] and teams and any(len(t) >= 3 for t in teams):
-                                final_mode = "trioShowdown"
+                                event_mode = event.get("mode")
+                                battle_mode = battle.get("mode")
+                                if event_mode and event_mode != "unknown":
+                                    final_mode = event_mode
+                                elif battle_mode and battle_mode != "unknown":
+                                    final_mode = battle_mode
+                                else:
+                                    final_mode = "unknown"
 
-                            battle_log_data.append({
-                                "match_id": match_id,
-                                "battle_uid": battle_identity(item),
-                                "player_tag": clean_tag,
-                                "match_at": datetime.strptime(battle_time, "%Y%m%dT%H%M%S.%fZ").isoformat() if "T" in battle_time else datetime.now(timezone.utc).isoformat(),
-                                "match_type": b_type,
-                                "mode": final_mode,
-                                "map_id": map_id,
-                                "result": result_str,
-                                "hero_used": hero_used,
-                                "allies": allies,
-                                "opponents": opponents
-                            })
+                                if final_mode in ["duoShowdown", "duo_showdown"] and teams and any(len(t) >= 3 for t in teams):
+                                    final_mode = "trioShowdown"
+
+                                battle_log_data.append({
+                                    "match_id": match_id,
+                                    "battle_uid": battle_identity(item),
+                                    "player_tag": clean_tag,
+                                    "match_at": parse_battle_time(battle_time),
+                                    "match_type": b_type,
+                                    "mode": final_mode,
+                                    "map_id": map_id,
+                                    "result": result_str,
+                                    "hero_used": hero_used,
+                                    "allies": allies,
+                                    "opponents": opponents
+                                })
+                        except (AttributeError, TypeError, ValueError, KeyError) as exc:
+                            logger.warning("Skipping invalid battle for %s: %s", clean_tag, exc)
                 except Exception as e:
                     logger.warning(f"Failed to fetch battlelog for {clean_tag}: {e}")
-                
+
                 return player_data, battle_log_data, club_tag, encountered_players
             except Exception as e:
                 logger.warning(f"Failed to fetch data for player {clean_tag}: {e}")

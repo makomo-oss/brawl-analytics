@@ -10,12 +10,16 @@ from app.services.brawl_api import get_player_battlelog, get_player, get_club_me
 
 logger = logging.getLogger(__name__)
 
-# 多様なアクティブトッププレイヤーのシードタグ（フォールバックおよびベース補完用）
-DEFAULT_SEED_TAGS = {
-    "Q2LL9G8", "R8G2P9Y", "2P0VR28P", "80V09RRV", "20P0J8V0",
-    "8YRRU0LV", "9L8GYV0U", "L08J28VR", "8VPP9U2L", "8P0QLL8U",
-    "2G80L9RU", "80RGYL2V", "2L8U9P0R", "90J8V2RU", "8L9R0P2V"
-}
+def select_anchor_tags(db) -> set[str]:
+    """Start discovery from a few API-verified profiles, not stale hardcoded tags."""
+    response = (db.table("players").select("player_tag")
+                .eq("unlocked_characters->>profile_status", "verified")
+                .order("updated_at", desc=True).limit(1000).execute())
+    candidates = sorted({row["player_tag"].replace("#", "").upper()
+                         for row in (response.data or []) if row.get("player_tag")})
+    if not candidates:
+        raise RuntimeError("Crawler has no verified player anchors")
+    return set(random.sample(candidates, min(5, len(candidates))))
 
 async def run_crawler_task(report_stage: Callable[[str], None] | None = None, aggregate: bool = True):
     """
@@ -30,13 +34,9 @@ async def run_crawler_task(report_stage: Callable[[str], None] | None = None, ag
     report("fetching_players")
     db = get_db()
     
-    # Rotate a few known anchors to discover opponents and club members. Existing
-    # profiles are otherwise revisited only when discovered again in battle logs.
-    seed_tags = sorted(DEFAULT_SEED_TAGS)
-    seed_count = min(5, len(seed_tags))
-    hour = int(datetime.now(timezone.utc).timestamp() // 3600)
-    start_index = (hour * seed_count) % len(seed_tags) if seed_tags else 0
-    base_player_tags = {seed_tags[(start_index + i) % len(seed_tags)] for i in range(seed_count)}
+    # A small rotating sample of verified profiles expands the frontier; no
+    # age-based sweep of every registered player is required.
+    base_player_tags = select_anchor_tags(db)
     logger.info(f"Target base players count: {len(base_player_tags)}")
     
     semaphore = asyncio.Semaphore(5)

@@ -154,12 +154,25 @@ def test_failed_crawl_does_not_delete_or_write_data(monkeypatch):
     db = Mock()
     db.table.return_value.select.return_value.order.return_value.limit.return_value.execute.return_value.data = []
     monkeypatch.setattr(crawler_task, "get_db", lambda: db)
-    monkeypatch.setattr(crawler_task, "DEFAULT_SEED_TAGS", {"ABC"})
+    monkeypatch.setattr(crawler_task, "select_anchor_tags", lambda database: {"ABC"})
     monkeypatch.setattr(crawler_task, "get_player", AsyncMock(side_effect=brawl_api.BrawlAPIError("403")))
     with pytest.raises(RuntimeError, match="valid player profiles"):
         asyncio.run(crawler_task.run_crawler_task())
     db.table.return_value.upsert.assert_not_called()
     db.table.return_value.delete.assert_not_called()
+
+
+def test_crawler_anchors_come_from_verified_profiles():
+    from unittest.mock import Mock
+    from app.tasks.crawler_task import select_anchor_tags
+
+    db = Mock()
+    query = db.table.return_value.select.return_value.eq.return_value.order.return_value.limit.return_value
+    query.execute.return_value.data = [{"player_tag": "#ABC"}, {"player_tag": "DEF"}]
+    assert select_anchor_tags(db) == {"ABC", "DEF"}
+    db.table.return_value.select.return_value.eq.assert_called_once_with(
+        "unlocked_characters->>profile_status", "verified"
+    )
 
 
 def test_background_crawler_failure_is_visible_to_workflow(monkeypatch):
@@ -187,7 +200,7 @@ def test_crawler_saves_battles_with_missing_map_or_brawler_name(monkeypatch):
     db = Mock()
     db.table.return_value.select.return_value.order.return_value.limit.return_value.execute.return_value.data = []
     monkeypatch.setattr(crawler_task, "get_db", lambda: db)
-    monkeypatch.setattr(crawler_task, "DEFAULT_SEED_TAGS", {"ABC"})
+    monkeypatch.setattr(crawler_task, "select_anchor_tags", lambda database: {"ABC"})
 
     async def player_info(tag):
         if tag != "ABC":

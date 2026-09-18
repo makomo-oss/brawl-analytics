@@ -464,7 +464,7 @@ export default function TierListPage() {
                 {/* 有利な対面 */}
                 <div className="space-y-3 relative p-4 rounded-xl bg-green-500/5 border border-green-500/20">
                   <h3 className="font-extrabold text-sm flex items-center gap-2 text-green-600 dark:text-green-400">
-                    <TrendingUp className="w-5 h-5" /> 有利な対面 TOP5 <span className="text-[10px] text-muted-foreground font-normal">（選択条件・95%区間で判定）</span>
+                    <TrendingUp className="w-5 h-5" /> 有利な対面 TOP5 <span className="text-[10px] text-muted-foreground font-normal">（{selectedChar.kamo_scope || "選択条件"}・補正勝率）</span>
                   </h3>
                   {selectedChar.kamo && selectedChar.kamo.length > 0 ? (
                     <div className="space-y-2">
@@ -494,14 +494,14 @@ export default function TierListPage() {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-muted-foreground p-2">十分な対面データがありません。</p>
+                    <p className="text-sm text-muted-foreground p-2">5戦以上の有利傾向の対面がありません。</p>
                   )}
                 </div>
 
                 {/* 不利な対面 */}
                 <div className="space-y-3 relative p-4 rounded-xl bg-red-500/5 border border-red-500/20">
                   <h3 className="font-extrabold text-sm flex items-center gap-2 text-red-600 dark:text-red-400">
-                    <TrendingDown className="w-5 h-5" /> 不利な対面 TOP5 <span className="text-[10px] text-muted-foreground font-normal">（選択条件・95%区間で判定）</span>
+                    <TrendingDown className="w-5 h-5" /> 不利な対面 TOP5 <span className="text-[10px] text-muted-foreground font-normal">（{selectedChar.tenteki_scope || "選択条件"}・補正勝率）</span>
                   </h3>
                   {selectedChar.tenteki && selectedChar.tenteki.length > 0 ? (
                     <div className="space-y-2">
@@ -531,7 +531,7 @@ export default function TierListPage() {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-muted-foreground p-2">十分な対面データがありません。</p>
+                    <p className="text-sm text-muted-foreground p-2">5戦以上の不利傾向の対面がありません。</p>
                   )}
                 </div>
               </div>

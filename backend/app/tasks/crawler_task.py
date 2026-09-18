@@ -18,30 +18,35 @@ PLAYER_WRITE_BATCH = 50
 MATCH_WRITE_BATCH = 500
 
 def select_anchor_tags(db) -> set[str]:
-    """Seed Ranked discovery from verified Elite+ profiles across the whole DB."""
+    """Seed Ranked discovery from recently verified Elite+ profiles."""
     profiles = {}
     offset = 0
+    fresh_after = datetime.now(timezone.utc) - timedelta(days=1)
     while True:
         rows = ((db.table("players")
-                 .select("player_tag,rank:unlocked_characters->>ranked_rank")
+                 .select("player_tag,updated_at,rank:unlocked_characters->>ranked_rank")
                  .eq("unlocked_characters->>profile_status", "verified")
                  .order("player_tag").range(offset, offset + 999).execute()).data or [])
         for row in rows:
             tag = str(row.get("player_tag") or "").replace("#", "").upper()
             if tag:
                 rank = str(row.get("rank") or "")
-                profiles[tag] = int(rank) if rank.isdigit() else 0
+                try:
+                    updated = datetime.fromisoformat(str(row.get("updated_at") or "").replace("Z", "+00:00"))
+                    if updated.tzinfo is None:
+                        updated = updated.replace(tzinfo=timezone.utc)
+                except ValueError:
+                    updated = datetime.min.replace(tzinfo=timezone.utc)
+                profiles[tag] = (int(rank) if rank.isdigit() else 0, updated)
         if len(rows) < 1000:
             break
         offset += 1000
     candidates = sorted(profiles)
     if not candidates:
         raise RuntimeError("Crawler has no verified player anchors")
-    legendary = [tag for tag in candidates if profiles[tag] >= 16]
-    elite = [tag for tag in candidates if profiles[tag] >= 13]
-    anchors = random.sample(legendary, min(3, len(legendary)))
-    elite_remaining = [tag for tag in elite if tag not in anchors]
-    anchors.extend(random.sample(elite_remaining, min(6 - len(anchors), len(elite_remaining))))
+    fresh_elite = [tag for tag in candidates
+                   if profiles[tag][0] >= 13 and profiles[tag][1] >= fresh_after]
+    anchors = random.sample(fresh_elite, min(ANCHOR_LIMIT, len(fresh_elite)))
     others = [tag for tag in candidates if tag not in anchors]
     anchors.extend(random.sample(others, min(ANCHOR_LIMIT - len(anchors), len(others))))
     return set(anchors)
@@ -117,9 +122,9 @@ def select_encountered_tags(db, tags: set[str], limit: int = DISCOVERED_LIMIT,
         else:
             remaining.append(tag)
 
-    selected = (high_ranked[:limit // 3] + ranked_unregistered[:limit // 2] +
+    selected = (ranked_unregistered[:limit // 2] + high_ranked[:limit // 3] +
                 unregistered[:limit // 3])
-    selected.extend(tag for tag in high_ranked + ranked_unregistered + unregistered + remaining
+    selected.extend(tag for tag in ranked_unregistered + high_ranked + unregistered + remaining
                     if tag not in selected)
     selected.extend(tag for tag in candidates if tag not in selected and tag not in pool)
     return selected[:limit]
@@ -196,7 +201,8 @@ async def run_crawler_task(report_stage: Callable[[str], None] | None = None, ag
             found_clubs.add(c_tag)
         if e_players:
             encountered_in_battles.update(e_players)
-        ranked_encounters.update(r_players)
+        if p_data and int(p_data["unlocked_characters"].get("ranked_rank") or 0) >= 13:
+            ranked_encounters.update(r_players)
             
     # フェーズ2: クラブから新メンバーを抽出 & クラブ情報を保存 (芋づる式クローリング制限：最大10クラブ)
     new_player_tags = set()

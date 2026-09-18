@@ -201,8 +201,10 @@ def test_crawler_anchors_include_elite_outside_recent_profiles(monkeypatch):
     query = db.table.return_value.select.return_value.eq.return_value.order.return_value.range.return_value
     query.execute.side_effect = [
         SimpleNamespace(data=[{"player_tag": f"LOW{i}", "rank": "2"} for i in range(1000)]),
-        SimpleNamespace(data=[{"player_tag": "ELITE", "rank": "13"},
-                              {"player_tag": "LEGEND", "rank": "16"}]),
+        SimpleNamespace(data=[{"player_tag": "ELITE", "rank": "13",
+                              "updated_at": pd.Timestamp.now(tz="UTC").isoformat()},
+                              {"player_tag": "LEGEND", "rank": "16",
+                               "updated_at": pd.Timestamp.now(tz="UTC").isoformat()}]),
     ]
     monkeypatch.setattr("app.tasks.crawler_task.random.sample", lambda values, count: list(values)[:count])
     anchors = select_anchor_tags(db)

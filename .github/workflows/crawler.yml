@@ -2,15 +2,46 @@ name: Data Crawler and Bulk Aggregation
 
 on:
   schedule:
-    - cron: '17 * * * *' # Avoid the GitHub Actions top-of-hour peak
+    - cron: '17,47 * * * *' # A second chance when GitHub drops a scheduled run
   workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
 
 concurrency:
   group: brawl-crawler
   cancel-in-progress: false
 
 jobs:
+  cadence:
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.check.outputs.should_run }}
+    steps:
+      - name: Skip the backup slot after a recent success
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          LAST_SUCCESS=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow crawler.yml --status success --limit 1 --json updatedAt --jq '.[0].updatedAt // empty' 2>/dev/null) || LAST_SUCCESS=""
+          if [ -n "$LAST_SUCCESS" ]; then
+            AGE=$(( $(date -u +%s) - $(date -u -d "$LAST_SUCCESS" +%s) ))
+            if [ "$AGE" -ge 0 ] && [ "$AGE" -lt 2700 ]; then
+              echo "A crawler run succeeded ${AGE}s ago; skipping this backup slot."
+              echo "should_run=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+          echo "should_run=true" >> "$GITHUB_OUTPUT"
+
   trigger-batch:
+    needs: cadence
+    if: needs.cadence.outputs.should_run == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Phase 1 - Wake-up Ping

@@ -2,12 +2,13 @@ import logging
 import asyncio
 from datetime import datetime, timedelta, timezone
 from app.database import get_db
+from app.algorithm.statistics import ANALYSIS_WINDOW_DAYS
 
 logger = logging.getLogger(__name__)
 
 async def run_cleanup_task():
-    """Delete only observations outside the 30-day analysis window."""
-    threshold = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
+    """Delete only observations outside the 60-day analysis window."""
+    threshold = (datetime.now(timezone.utc) - timedelta(days=ANALYSIS_WINDOW_DAYS)).isoformat()
     return await asyncio.to_thread(_delete_expired_battles, get_db(), threshold)
 
 
@@ -23,12 +24,12 @@ def _delete_expired_battles(db, threshold: str) -> dict:
     # Repeat in case PostgREST applies a maximum row count to one deletion.
     for _ in range(20):
         if remaining == 0:
-            logger.info("30-day cleanup completed: deleted %s observations.", deleted)
+            logger.info("%s-day cleanup completed: deleted %s observations.", ANALYSIS_WINDOW_DAYS, deleted)
             return {"deleted_count": deleted, "remaining_expired": 0}
         db.table("match_raw_history").delete().lt("match_at", threshold).execute()
         after = expired_count()
         if after >= remaining:
-            raise RuntimeError("30-day cleanup made no progress")
+            raise RuntimeError(f"{ANALYSIS_WINDOW_DAYS}-day cleanup made no progress")
         deleted += remaining - after
         remaining = after
-    raise RuntimeError(f"30-day cleanup incomplete: {remaining} expired observations remain")
+    raise RuntimeError(f"{ANALYSIS_WINDOW_DAYS}-day cleanup incomplete: {remaining} expired observations remain")

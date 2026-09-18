@@ -66,7 +66,7 @@ async def batch_status(run_id: str, secret: str = Depends(verify_cron_secret)):
 @router.post("/api/cron/db-cleanup")
 async def trigger_cleanup(secret: str = Depends(verify_cron_secret)):
     """
-    30日超の戦績を削除し、完了結果をワークフローへ返す。
+    60日超の戦績を削除し、完了結果をワークフローへ返す。
     """
     result = await run_cleanup_task()
     return {"status": "completed", **result}

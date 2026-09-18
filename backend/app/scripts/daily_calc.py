@@ -17,7 +17,8 @@ load_dotenv(os.path.join(os.path.dirname(backend_dir), ".env"))
 
 from app.services.brawl_api import get_player
 from app.services.player_profiles import profile_record
-from app.algorithm.statistics import HALF_LIFE_DAYS, posterior_rate
+from app.algorithm.statistics import (ANALYSIS_WINDOW_DAYS, RECENT_WINDOW_DAYS,
+                                      HALF_LIFE_DAYS, OLDER_HALF_LIFE_DAYS, posterior_rate)
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -69,7 +70,7 @@ def fetch_recent_matches(client: Client = None) -> pd.DataFrame:
     all_data = []
     limit = 1000
     offset = 0
-    threshold = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
+    threshold = (datetime.now(timezone.utc) - timedelta(days=ANALYSIS_WINDOW_DAYS)).isoformat()
     while True:
         response = supabase.table("match_raw_history").select("*").gte("match_at", threshold).order("match_id").range(offset, offset + limit - 1).execute()
         data = response.data
@@ -188,6 +189,17 @@ def prepare_observations(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def observation_weights(df: pd.DataFrame) -> pd.Series:
+    """Use the recent season first; smoothly fade the preceding 30 days faster."""
+    if "match_at" not in df:
+        return pd.Series(1.0, index=df.index)
+    dates = pd.to_datetime(df["match_at"], utc=True, errors="coerce")
+    age = ((pd.Timestamp.now(tz="UTC") - dates).dt.total_seconds() / 86400).clip(lower=0)
+    recent_age = age.clip(upper=RECENT_WINDOW_DAYS)
+    older_age = (age - RECENT_WINDOW_DAYS).clip(lower=0)
+    return (2.0 ** (-recent_age / HALF_LIFE_DAYS - older_age / OLDER_HALF_LIFE_DAYS)).fillna(0.0)
+
+
 def calc_macro_map_stats(df: pd.DataFrame, rank_segments: dict = None):
     """マクロマップ適性（勝率とピック率偏差値）を計算 (ランク帯別ガチバトル専用集計対応)"""
     logger.info("Calculating macro map stats with rank brackets...")
@@ -264,12 +276,7 @@ def calc_macro_map_stats(df: pd.DataFrame, rank_segments: dict = None):
     if "mode" not in combined_df:
         combined_df["mode"] = "unknown"
     combined_df["mode"] = combined_df["mode"].fillna("unknown")
-    if "match_at" in combined_df:
-        dates = pd.to_datetime(combined_df["match_at"], utc=True, errors="coerce")
-        age = (pd.Timestamp.now(tz="UTC") - dates).dt.total_seconds() / 86400
-        combined_df["weight"] = (2.0 ** (-age.clip(lower=0) / HALF_LIFE_DAYS)).fillna(0.0)
-    else:
-        combined_df["weight"] = 1.0
+    combined_df["weight"] = observation_weights(combined_df)
     combined_df["weighted_win"] = combined_df["is_win"] * combined_df["weight"]
     grouped = combined_df.groupby(["match_type", "mode", "map_id", "hero_used"]).agg(
         total_matches=("is_win", "size"),
@@ -282,10 +289,10 @@ def calc_macro_map_stats(df: pd.DataFrame, rank_segments: dict = None):
     grouped["win_rate"] = (grouped["total_wins"] / grouped["total_matches"]) * 100.0
     
     # ピック率偏差値の計算 (マップ内での出現回数の偏差値)
-    counts = grouped.groupby(["match_type", "mode", "map_id"])["total_matches"]
+    counts = grouped.groupby(["match_type", "mode", "map_id"])["weighted_matches"]
     mean = counts.transform("mean")
     std = counts.transform("std").replace(0, float("nan"))
-    grouped["pick_rate_deviation"] = (50.0 + 10.0 * (grouped["total_matches"] - mean) / std).fillna(50.0)
+    grouped["pick_rate_deviation"] = (50.0 + 10.0 * (grouped["weighted_matches"] - mean) / std).fillna(50.0)
 
     now_str = datetime.now(timezone.utc).isoformat()
     
@@ -319,7 +326,10 @@ def calc_dynamic_counters(df: pd.DataFrame):
     # 全体のヒーロー別平均勝率を計算
     df["is_win"] = (df["result"] == "victory").astype(int)
     df["hero_used"] = df["hero_used"].str.lower()
-    global_win_rates = df.groupby("hero_used")["is_win"].mean().to_dict()
+    df["weight"] = observation_weights(df)
+    df["weighted_win"] = df["is_win"] * df["weight"]
+    baselines = df.groupby("hero_used")[["weight", "weighted_win"]].sum()
+    global_win_rates = (baselines["weighted_win"] / baselines["weight"].replace(0, float("nan"))).fillna(0.5).to_dict()
     
     # hero_used (char_a) と opponents (char_b) のペアを展開
     records = []
@@ -346,14 +356,16 @@ def calc_dynamic_counters(df: pd.DataFrame):
                 "match_id": match_id,
                 "char_a": char_a,
                 "char_b": char_b,
-                "is_win": is_win
+                "is_win": is_win,
+                "weight": row["weight"]
             })
             # 逆視点も追加 (対戦相手から見た自分)
             records.append({
                 "match_id": match_id,
                 "char_a": char_b,
                 "char_b": char_a,
-                "is_win": 1 - is_win
+                "is_win": 1 - is_win,
+                "weight": row["weight"]
             })
 
     if not records:
@@ -370,9 +382,12 @@ def calc_dynamic_counters(df: pd.DataFrame):
                 pairs_df[~valid_match_id]
             ], ignore_index=True)
 
+    pairs_df["weighted_win"] = pairs_df["is_win"] * pairs_df["weight"]
     grouped = pairs_df.groupby(["char_a", "char_b"]).agg(
         match_count=("is_win", "count"),
-        win_count=("is_win", "sum")
+        win_count=("is_win", "sum"),
+        weighted_matches=("weight", "sum"),
+        weighted_wins=("weighted_win", "sum")
     ).reset_index()
     
     counter_list = []
@@ -391,7 +406,7 @@ def calc_dynamic_counters(df: pd.DataFrame):
             coef = 0.0
         else:
             base_wr = global_win_rates.get(char_a, 0.5)
-            actual_wr = posterior_rate(w_count, m_count, base_wr)
+            actual_wr = posterior_rate(float(row["weighted_wins"]), float(row["weighted_matches"]), base_wr)
             coef = float(round(actual_wr - base_wr, 4))
             
         counter_list.append({
@@ -416,7 +431,10 @@ def calc_dynamic_synergies(df: pd.DataFrame):
     # 全体のヒーロー別平均勝率を計算
     df["is_win"] = (df["result"] == "victory").astype(int)
     df["hero_used"] = df["hero_used"].str.lower()
-    global_win_rates = df.groupby("hero_used")["is_win"].mean().to_dict()
+    df["weight"] = observation_weights(df)
+    df["weighted_win"] = df["is_win"] * df["weight"]
+    baselines = df.groupby("hero_used")[["weight", "weighted_win"]].sum()
+    global_win_rates = (baselines["weighted_win"] / baselines["weight"].replace(0, float("nan"))).fillna(0.5).to_dict()
     
     records = []
     for _, row in df.iterrows():
@@ -441,14 +459,16 @@ def calc_dynamic_synergies(df: pd.DataFrame):
                 "match_id": match_id,
                 "char_a": char_a,
                 "char_b": char_b,
-                "is_win": is_win
+                "is_win": is_win,
+                "weight": row["weight"]
             })
             # 双方向ペアとして追加
             records.append({
                 "match_id": match_id,
                 "char_a": char_b,
                 "char_b": char_a,
-                "is_win": is_win
+                "is_win": is_win,
+                "weight": row["weight"]
             })
 
     if not records:
@@ -465,9 +485,12 @@ def calc_dynamic_synergies(df: pd.DataFrame):
                 pairs_df[~valid_match_id]
             ], ignore_index=True)
 
+    pairs_df["weighted_win"] = pairs_df["is_win"] * pairs_df["weight"]
     grouped = pairs_df.groupby(["char_a", "char_b"]).agg(
         match_count=("is_win", "count"),
-        win_count=("is_win", "sum")
+        win_count=("is_win", "sum"),
+        weighted_matches=("weight", "sum"),
+        weighted_wins=("weighted_win", "sum")
     ).reset_index()
     
     synergy_list = []
@@ -481,13 +504,15 @@ def calc_dynamic_synergies(df: pd.DataFrame):
             continue
             
         pair_wr = (w_count / m_count) * 100.0
+        weighted_n = float(row["weighted_matches"])
+        weighted_wr = float(row["weighted_wins"]) / weighted_n * 100.0 if weighted_n else 50.0
         wr_a = global_win_rates.get(char_a, 0.5) * 100.0
         wr_b = global_win_rates.get(char_b, 0.5) * 100.0
         expected_wr = (wr_a + wr_b) / 2.0
-        raw_lift = pair_wr - expected_wr
+        raw_lift = weighted_wr - expected_wr
         
         # ベイズ縮小（データ数に応じた信頼度平滑化）
-        shrinkage = m_count / (m_count + 20.0)
+        shrinkage = weighted_n / (weighted_n + 20.0)
         regressed_lift = float(round(raw_lift * shrinkage, 2))
         
         synergy_list.append({

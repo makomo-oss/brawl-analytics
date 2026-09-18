@@ -11,7 +11,10 @@ TIER_USAGE_WEIGHT = 0.3
 NORMAL_TIER_Z = (2.0, 1.2, 0.4, -0.4, -1.2, -2.0)
 MIN_TIER_MATCHES = 20
 MIN_TIER_WEIGHT = 10.0
-HALF_LIFE_DAYS = 14.0
+ANALYSIS_WINDOW_DAYS = 60
+RECENT_WINDOW_DAYS = 30
+HALF_LIFE_DAYS = 30.0
+OLDER_HALF_LIFE_DAYS = 7.0
 
 
 def posterior_rate(wins: float, matches: float, baseline: float = 0.5) -> float:

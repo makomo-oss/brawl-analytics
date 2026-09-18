@@ -175,7 +175,7 @@ def test_cleanup_deletes_only_expired_battles_and_checks_remaining(monkeypatch):
     db.table.return_value.delete.assert_called_once_with()
     cutoff = db.table.return_value.delete.return_value.lt.call_args.args
     assert cutoff[0] == "match_at"
-    assert (pd.Timestamp.now(tz="UTC") - pd.Timestamp(cutoff[1])).days == 30
+    assert (pd.Timestamp.now(tz="UTC") - pd.Timestamp(cutoff[1])).days == 60
 
 
 def test_crawler_anchors_come_from_verified_profiles():

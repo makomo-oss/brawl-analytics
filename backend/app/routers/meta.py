@@ -3,7 +3,7 @@ import math
 import time
 import logging
 from app.database import get_db
-from app.algorithm.statistics import blend_tier_score, normal_tier_boundaries, posterior_rate, supported_win_lift, wilson_interval, MIN_TIER_MATCHES, MIN_TIER_WEIGHT, TIER_EVIDENCE_MATCHES, TIER_WIN_WEIGHT, TIER_USAGE_WEIGHT
+from app.algorithm.statistics import blend_tier_score, normal_tier_boundaries, posterior_rate, supported_win_lift, wilson_interval, MIN_TIER_MATCHES, MIN_TIER_WEIGHT, TIER_EVIDENCE_MATCHES, TIER_WIN_WEIGHT, TIER_USAGE_WEIGHT, ANALYSIS_WINDOW_DAYS, RECENT_WINDOW_DAYS, HALF_LIFE_DAYS, OLDER_HALF_LIFE_DAYS
 
 logger = logging.getLogger(__name__)
 
@@ -314,13 +314,14 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
     # 全体の総試合数 (使用率計算用)
     global_total_matches = sum(s["total_matches"] for s in char_stats.values())
     if global_total_matches == 0: global_total_matches = 1
-    # Usage deviation is defined over characters in the selected cohort/scope.
-    mean_picks = global_total_matches / len(char_stats) if char_stats else 0.0
-    pick_std = math.sqrt(sum((s["total_matches"] - mean_picks) ** 2 for s in char_stats.values()) / len(char_stats)) if char_stats else 0.0
+    # Popularity contributes to the score, so it must use the same recency
+    # weights as performance. Raw use_rate remains a factual 60-day share.
+    weighted_total = sum(v["weighted_matches"] for v in char_stats.values())
+    mean_picks = weighted_total / len(char_stats) if char_stats else 0.0
+    pick_std = math.sqrt(sum((s["weighted_matches"] - mean_picks) ** 2 for s in char_stats.values()) / len(char_stats)) if char_stats else 0.0
     
     # Shrink the win component toward the selected population before blending
     # it with the usage deviation required by the Tier specification.
-    weighted_total = sum(v["weighted_matches"] for v in char_stats.values())
     weighted_wins = sum(v["weighted_wins"] for v in char_stats.values())
     baseline = weighted_wins / weighted_total if weighted_total else 0.5
     pair_data = _contextual_pairs(db, type, sub_type, id, rank_tier, mode) if include_details else {}
@@ -337,7 +338,7 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
         lift, supported_lift, sample_discount = supported_win_lift(stats["weighted_wins"], weighted_n, expected_rate)
         adjusted = expected_rate + lift
         performance_score = min(100.0, max(0.0, 50.0 + 100.0 * supported_lift))
-        pick_deviation = min(100.0, max(0.0, 50.0 + 10.0 * (tm - mean_picks) / pick_std)) if pick_std else 50.0
+        pick_deviation = min(100.0, max(0.0, 50.0 + 10.0 * (weighted_n - mean_picks) / pick_std)) if pick_std else 50.0
         # Blend deviations from neutral at the specified 70/30 weights.
         # Capping usage must not silently raise the win component from 70% to 100%.
         score, win_adjustment, usage_adjustment = blend_tier_score(performance_score, pick_deviation, USAGE_ADJUSTMENT_CAP)
@@ -434,7 +435,7 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
         "tiers": tiers,
         "type": type,
         "rank_tier": rank_tier,
-        "metrics": {"analyzed_matches": display_matches, "count_unit": "player_observations", "baseline_win_rate": round(baseline * 100, 1), "minimum_matches": MIN_TIER_MATCHES, "half_life_days": 14, "evidence_half_credit_matches": TIER_EVIDENCE_MATCHES, "win_weight": TIER_WIN_WEIGHT, "usage_weight": TIER_USAGE_WEIGHT, "usage_adjustment_cap": USAGE_ADJUSTMENT_CAP, "tier_method": "normal_rank_quantiles" if type == "global" else "fixed_score_thresholds", "tier_thresholds": None if type == "global" else {name: score for score, name in GACHI_TIER_THRESHOLDS}, "eligible_characters": len(scored_chars), "method": "context_smooth_sample_shrinkage_70_30_v7"},
+        "metrics": {"analyzed_matches": display_matches, "count_unit": "player_observations", "baseline_win_rate": round(baseline * 100, 1), "minimum_matches": MIN_TIER_MATCHES, "analysis_window_days": ANALYSIS_WINDOW_DAYS, "recent_window_days": RECENT_WINDOW_DAYS, "half_life_days": HALF_LIFE_DAYS, "older_half_life_days": OLDER_HALF_LIFE_DAYS, "evidence_half_credit_matches": TIER_EVIDENCE_MATCHES, "win_weight": TIER_WIN_WEIGHT, "usage_weight": TIER_USAGE_WEIGHT, "usage_adjustment_cap": USAGE_ADJUSTMENT_CAP, "tier_method": "normal_rank_quantiles" if type == "global" else "fixed_score_thresholds", "tier_thresholds": None if type == "global" else {name: score for score, name in GACHI_TIER_THRESHOLDS}, "eligible_characters": len(scored_chars), "method": "context_smooth_sample_shrinkage_70_30_v8"},
         "characters": characters_detail
     }
     return response_data

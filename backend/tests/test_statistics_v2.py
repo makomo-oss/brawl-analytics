@@ -19,14 +19,15 @@ def test_same_map_name_does_not_merge_modes():
     assert {r['mode']: r['win_rate'] for r in rows} == {'brawlBall': 100, 'gemGrab': 0}
 
 
-def test_two_week_old_win_has_half_the_weight():
+def test_previous_season_fades_faster_after_day_30():
     now = datetime.now(timezone.utc)
     first = observation(match_at=now.isoformat())
-    second = {**first, 'match_id': 'two', 'match_at': (now-timedelta(days=14)).isoformat(), 'result': 'defeat'}
-    row = calc_macro_map_stats(pd.DataFrame([first, second]))[0]
-    assert row['weighted_matches'] == pytest.approx(1.5, abs=0.001)
+    second = {**first, 'match_id': 'two', 'match_at': (now-timedelta(days=30)).isoformat(), 'result': 'defeat'}
+    third = {**first, 'match_id': 'three', 'match_at': (now-timedelta(days=37)).isoformat(), 'result': 'defeat'}
+    row = calc_macro_map_stats(pd.DataFrame([first, second, third]))[0]
+    assert row['weighted_matches'] == pytest.approx(1.75, abs=0.001)
     assert row['weighted_wins'] == pytest.approx(1.0, abs=0.001)
-    assert row['total_matches'] == 2
+    assert row['total_matches'] == 3
 
 
 def test_battle_identity_is_observer_independent():

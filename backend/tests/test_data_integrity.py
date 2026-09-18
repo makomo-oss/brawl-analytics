@@ -155,6 +155,7 @@ def test_failed_crawl_does_not_delete_or_write_data(monkeypatch):
     db.table.return_value.select.return_value.order.return_value.limit.return_value.execute.return_value.data = []
     monkeypatch.setattr(crawler_task, "get_db", lambda: db)
     monkeypatch.setattr(crawler_task, "select_anchor_tags", lambda database: {"ABC"})
+    monkeypatch.setattr(crawler_task, "select_elite_refresh_tags", lambda database, excluded: [])
     monkeypatch.setattr(crawler_task, "get_player", AsyncMock(side_effect=brawl_api.BrawlAPIError("403")))
     with pytest.raises(RuntimeError, match="valid player profiles"):
         asyncio.run(crawler_task.run_crawler_task())
@@ -208,6 +209,22 @@ def test_crawler_anchors_include_elite_outside_recent_profiles(monkeypatch):
     assert len(anchors) == 10
     assert {"ELITE", "LEGEND"} <= anchors
     assert query.execute.call_count == 2
+
+
+def test_elite_refresh_skips_recent_or_anchor_players():
+    from unittest.mock import Mock
+    from app.tasks.crawler_task import select_elite_refresh_tags
+
+    db = Mock()
+    query = (db.table.return_value.select.return_value.eq.return_value.lt.return_value
+             .order.return_value.range.return_value)
+    query.execute.return_value.data = [
+        {"player_tag": "ANCHOR", "rank": "18"},
+        {"player_tag": "OLD_ELITE", "rank": "13"},
+        {"player_tag": "OLD_LOW", "rank": "12"},
+    ]
+    assert select_elite_refresh_tags(db, {"ANCHOR"}) == ["OLD_ELITE"]
+    db.table.return_value.select.return_value.eq.return_value.lt.assert_called_once()
 
 
 def test_encountered_targets_include_high_rank_and_new_players(monkeypatch):
@@ -267,6 +284,7 @@ def test_crawler_saves_battles_with_missing_map_or_brawler_name(monkeypatch):
     db.table.return_value.select.return_value.order.return_value.limit.return_value.execute.return_value.data = []
     monkeypatch.setattr(crawler_task, "get_db", lambda: db)
     monkeypatch.setattr(crawler_task, "select_anchor_tags", lambda database: {"ABC"})
+    monkeypatch.setattr(crawler_task, "select_elite_refresh_tags", lambda database, excluded: [])
 
     async def player_info(tag):
         if tag != "ABC":

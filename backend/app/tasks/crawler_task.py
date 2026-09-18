@@ -2,7 +2,7 @@ import asyncio
 import logging
 import random
 from collections import Counter
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Callable
 from app.database import get_db
 from app.services.player_profiles import profile_record
@@ -12,7 +12,8 @@ from app.services.brawl_api import get_player_battlelog, get_player, get_club_me
 
 logger = logging.getLogger(__name__)
 ANCHOR_LIMIT = 10
-DISCOVERED_LIMIT = 150
+ELITE_REFRESH_LIMIT = 50
+DISCOVERED_LIMIT = 100
 PLAYER_WRITE_BATCH = 50
 MATCH_WRITE_BATCH = 500
 
@@ -44,6 +45,30 @@ def select_anchor_tags(db) -> set[str]:
     others = [tag for tag in candidates if tag not in anchors]
     anchors.extend(random.sample(others, min(ANCHOR_LIMIT - len(anchors), len(others))))
     return set(anchors)
+
+
+def select_elite_refresh_tags(db, excluded: set[str]) -> list[str]:
+    """Rotate older Elite+ profiles so their recent Ranked logs are not lost."""
+    cutoff = (datetime.now(timezone.utc) - timedelta(hours=6)).isoformat()
+    selected = []
+    offset = 0
+    while len(selected) < ELITE_REFRESH_LIMIT:
+        rows = ((db.table("players")
+                 .select("player_tag,rank:unlocked_characters->>ranked_rank")
+                 .eq("unlocked_characters->>profile_status", "verified")
+                 .lt("updated_at", cutoff).order("updated_at")
+                 .range(offset, offset + 999).execute()).data or [])
+        for row in rows:
+            tag = str(row.get("player_tag") or "").replace("#", "").upper()
+            rank = str(row.get("rank") or "")
+            if tag and tag not in excluded and rank.isdigit() and int(rank) >= 13:
+                selected.append(tag)
+                if len(selected) == ELITE_REFRESH_LIMIT:
+                    break
+        if len(rows) < 1000:
+            break
+        offset += 1000
+    return selected
 
 
 def raw_history_count(db) -> int | None:
@@ -113,9 +138,12 @@ async def run_crawler_task(report_stage: Callable[[str], None] | None = None, ag
     db = get_db()
     initial_raw_count = raw_history_count(db)
     
-    # Rotate a few verified Elite+ anchors without sweeping every saved profile.
+    # Rotate verified Elite+ players without sweeping every saved profile.
     base_player_tags = select_anchor_tags(db)
-    logger.info(f"Target base players count: {len(base_player_tags)}")
+    elite_refresh_tags = select_elite_refresh_tags(db, base_player_tags)
+    seed_tags = base_player_tags | set(elite_refresh_tags)
+    logger.info("Crawler seeds: anchors=%s, Elite+ refresh=%s", len(base_player_tags),
+                len(elite_refresh_tags))
     
     semaphore = asyncio.Semaphore(5)
     
@@ -153,7 +181,7 @@ async def run_crawler_task(report_stage: Callable[[str], None] | None = None, ag
                 return None, [], None, set(), set()
 
     # フェーズ1: 既存プレイヤーのデータと所属クラブを取得
-    tasks = [fetch_player_and_matches(tag) for tag in base_player_tags]
+    tasks = [fetch_player_and_matches(tag) for tag in seed_tags]
     results = await asyncio.gather(*tasks)
     
     encountered_in_battles = set()
@@ -206,19 +234,20 @@ async def run_crawler_task(report_stage: Callable[[str], None] | None = None, ag
             for m in members:
                 if m:
                     m_clean = m.replace("%23", "#").replace("#", "").upper()
-                    if m_clean not in base_player_tags:
+                    if m_clean not in seed_tags:
                         new_player_tags.add(m_clean)
                         
     # バトルで遭遇したプレイヤーも新規取得リストに加える（クラブ抽出と並行）
     for m_clean in encountered_in_battles:
-        if m_clean not in base_player_tags:
+        if m_clean not in seed_tags:
             new_player_tags.add(m_clean)
                     
     # フェーズ3: 対戦相手・クラブメンバーを取得（登録済みの再取得も許可）
     if new_player_tags:
         logger.info(f"Found {len(new_player_tags)} encountered players (from clubs & battles). Fetching their data...")
-        target_new_players = select_encountered_tags(db, new_player_tags,
-                                                     ranked_tags=ranked_encounters)
+        target_new_players = select_encountered_tags(
+            db, new_player_tags, limit=DISCOVERED_LIMIT + ELITE_REFRESH_LIMIT - len(elite_refresh_tags),
+            ranked_tags=ranked_encounters)
         new_tasks = [fetch_player_and_matches(tag) for tag in target_new_players]
         new_results = await asyncio.gather(*new_tasks)
         

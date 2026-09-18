@@ -131,6 +131,24 @@ def test_pair_details_exclude_unsupported_map_evidence(monkeypatch):
     assert set(details['synergies']) == {'rico'}
 
 
+def test_matchup_labels_follow_recency_weighted_results(monkeypatch):
+    monkeypatch.setattr(meta, 'get_db', lambda: None)
+    monkeypatch.setattr(meta, '_get_cached_total_analyzed', lambda db: 100)
+    monkeypatch.setattr(meta, '_get_cached_macro_data', lambda db: [
+        dict(character_id='colt', match_type='ranked', map_id='map', mode='brawlBall',
+             total_matches=100, total_wins=50, weighted_matches=50, weighted_wins=25)
+    ])
+    monkeypatch.setattr(meta, '_contextual_pairs', lambda *args: {'colt': [
+        dict(kind='counter', char_b='bull', match_count=100, win_count=80,
+             weighted_matches=20.0, weighted_wins=10.0),
+        dict(kind='counter', char_b='shelly', match_count=100, win_count=40,
+             weighted_matches=40.0, weighted_wins=35.0),
+    ]})
+    detail = meta.get_tier_list(include_details=True)['characters']['colt']
+    assert detail['kamo'] == [dict(brawler='shelly', name='Shelly', win_rate=87.5, matches=100)]
+    assert detail['tenteki'] == []
+
+
 def test_map_mix_does_not_reward_character_with_easier_schedule(monkeypatch):
     # Equal performance within both contexts, but very different raw overall win rates.
     rows = [dict(character_id=c, map_id=m, mode='brawlBall', match_type='ranked', total_matches=n, total_wins=w)

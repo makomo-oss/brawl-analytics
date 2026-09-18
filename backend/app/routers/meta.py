@@ -377,7 +377,7 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
             matchups, synergies, kamo, tenteki = {}, {}, [], []
             for pair in char_pairs:
                 enemy = _normalize_id(pair["char_b"])
-                m, w = pair["match_count"], pair["win_count"]
+                m = pair["match_count"]
                 weighted_m = pair["weighted_matches"]
                 weighted_w = pair["weighted_wins"]
                 # A single map often has only one or two observations per pair.
@@ -388,9 +388,11 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
                 rate = posterior_rate(weighted_w, weighted_m)
                 if pair["kind"] == "counter":
                     matchups[enemy] = round(rate * 100, 1)
-                    lo, hi = wilson_interval(w, m)
+                    # Older observations have less influence on the Tier list.
+                    # Use that same conservative sample weight for matchup evidence.
+                    lo, hi = wilson_interval(weighted_w, weighted_m)
                     entry = {"brawler": pair["char_b"], "name": format_char_name(pair["char_b"]),
-                             "win_rate": round(w / m * 100, 1), "matches": m}
+                             "win_rate": round(weighted_w / weighted_m * 100, 1), "matches": m}
                     if lo > 0.5: kamo.append(entry)
                     if hi < 0.5: tenteki.append(entry)
                 else:

@@ -6,23 +6,15 @@ logger = logging.getLogger(__name__)
 
 async def run_cleanup_task():
     """
-    バックグラウンドで実行されるデータクリーンアップタスク
-    1ヶ月（30日）以上経過した古いバトルログを自動削除し、DB容量と鮮度を保つ
+    Historical battles remain available for later analysis and comparison.
+    This legacy endpoint only reports how many observations are over 30 days old.
     """
-    logger.info("Starting background DB cleanup task...")
+    logger.info("Starting read-only battle retention audit...")
     db = get_db()
-    
-    # 30日前の日時を計算
-    threshold_date = datetime.now(timezone.utc) - timedelta(days=30)
-    threshold_iso = threshold_date.isoformat()
-    
-    try:
-        logger.info(f"Deleting match_raw_history records older than {threshold_iso}...")
-        # Supabase Python クライアントの削除オペレーション
-        response = db.table("match_raw_history").delete().lt("match_at", threshold_iso).execute()
-        
-        # 削除されたレコードの数をログに出力
-        deleted_count = len(response.data)
-        logger.info(f"Cleanup completed successfully. Deleted {deleted_count} old records.")
-    except Exception as e:
-        logger.error(f"Failed to clean up old records: {e}")
+    threshold = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
+    response = (db.table("match_raw_history")
+                .select("match_id", count="exact", head=True)
+                .lt("match_at", threshold).execute())
+    old_count = response.count or 0
+    logger.info("Retained %s battle observations older than 30 days.", old_count)
+    return {"retained_older_than_30_days": old_count}

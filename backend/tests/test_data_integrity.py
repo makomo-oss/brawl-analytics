@@ -162,6 +162,17 @@ def test_failed_crawl_does_not_delete_or_write_data(monkeypatch):
     db.table.return_value.delete.assert_not_called()
 
 
+def test_retention_audit_never_deletes_battles(monkeypatch):
+    from unittest.mock import Mock
+    from app.tasks import cleanup_task
+
+    db = Mock()
+    db.table.return_value.select.return_value.lt.return_value.execute.return_value.count = 42
+    monkeypatch.setattr(cleanup_task, "get_db", lambda: db)
+    assert asyncio.run(cleanup_task.run_cleanup_task()) == {"retained_older_than_30_days": 42}
+    db.table.return_value.delete.assert_not_called()
+
+
 def test_crawler_anchors_come_from_verified_profiles():
     from unittest.mock import Mock
     from app.tasks.crawler_task import select_anchor_tags

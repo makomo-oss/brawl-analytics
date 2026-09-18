@@ -30,6 +30,47 @@ def raw_history_count(db) -> int | None:
         logger.warning("Could not count raw battles: %s", exc)
         return None
 
+
+def select_encountered_tags(db, tags: set[str], limit: int = 75) -> list[str]:
+    """Expand the player graph while favoring discovered high-ranked players."""
+    candidates = list(tags)
+    random.shuffle(candidates)
+    if len(candidates) <= limit:
+        return candidates
+
+    # Inspect a bounded random pool so large clubs do not create unbounded DB work.
+    pool = candidates[:400]
+    known = {}
+    try:
+        for offset in range(0, len(pool), 100):
+            response = (db.table("players")
+                        .select("player_tag,rank:unlocked_characters->>ranked_rank,status:unlocked_characters->>profile_status")
+                        .in_("player_tag", pool[offset:offset + 100]).execute())
+            known.update({row["player_tag"]: row for row in (response.data or [])})
+    except Exception as exc:
+        logger.warning("Could not prioritize discovered players: %s", exc)
+        return candidates[:limit]
+
+    high_ranked = []
+    unregistered = []
+    remaining = []
+    for tag in pool:
+        profile = known.get(tag)
+        if profile is None:
+            unregistered.append(tag)
+        elif profile.get("status") == "not_found":
+            continue
+        elif (profile.get("status") == "verified" and
+              str(profile.get("rank") or "").isdigit() and int(profile["rank"]) >= 16):
+            high_ranked.append(tag)
+        else:
+            remaining.append(tag)
+
+    selected = high_ranked[:25] + unregistered[:35]
+    selected.extend(tag for tag in high_ranked[25:] + unregistered[35:] + remaining + candidates[400:]
+                    if tag not in selected)
+    return selected[:limit]
+
 async def run_crawler_task(report_stage: Callable[[str], None] | None = None, aggregate: bool = True):
     """
     バックグラウンドで実行される高度なデータクローラータスク
@@ -132,7 +173,7 @@ async def run_crawler_task(report_stage: Callable[[str], None] | None = None, ag
                 upsert_clubs.append(club_rec)
             for m in members:
                 if m:
-                    m_clean = m.replace("#", "")
+                    m_clean = m.replace("%23", "#").replace("#", "").upper()
                     if m_clean not in base_player_tags:
                         new_player_tags.add(m_clean)
                         
@@ -144,10 +185,7 @@ async def run_crawler_task(report_stage: Callable[[str], None] | None = None, ag
     # フェーズ3: 対戦相手・クラブメンバーを取得（登録済みの再取得も許可）
     if new_player_tags:
         logger.info(f"Found {len(new_player_tags)} encountered players (from clubs & battles). Fetching their data...")
-        # ランダムサンプリングで偏りを排除し、毎回新しいプレイヤーを開拓
-        candidate_list = list(new_player_tags)
-        target_count = min(len(candidate_list), 75)
-        target_new_players = random.sample(candidate_list, target_count)
+        target_new_players = select_encountered_tags(db, new_player_tags)
         new_tasks = [fetch_player_and_matches(tag) for tag in target_new_players]
         new_results = await asyncio.gather(*new_tasks)
         

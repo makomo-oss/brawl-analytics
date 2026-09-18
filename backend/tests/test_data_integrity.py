@@ -191,6 +191,22 @@ def test_crawler_anchors_come_from_verified_profiles():
     )
 
 
+def test_encountered_targets_include_high_rank_and_new_players(monkeypatch):
+    from unittest.mock import Mock
+    from app.tasks import crawler_task
+
+    db = Mock()
+    db.table.return_value.select.return_value.in_.return_value.execute.return_value.data = [
+        {"player_tag": "HIGH", "rank": "19", "status": "verified"},
+        {"player_tag": "LOW", "rank": "10", "status": "verified"},
+        {"player_tag": "BAD", "rank": "0", "status": "not_found"},
+    ]
+    monkeypatch.setattr(crawler_task.random, "shuffle", lambda candidates: None)
+    assert crawler_task.select_encountered_tags(db, {"HIGH", "LOW", "BAD", "NEW"}, limit=3) == [
+        "HIGH", "NEW", "LOW"
+    ]
+
+
 def test_background_crawler_failure_is_visible_to_workflow(monkeypatch):
     import asyncio
     from app.routers import cron

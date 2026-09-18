@@ -10,6 +10,8 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/meta", tags=["Meta"])
 USAGE_ADJUSTMENT_CAP = 2.0
 GACHI_TIER_THRESHOLDS = ((57, "S+"), (54, "S"), (52, "A+"), (50, "A"), (48, "B"), (46, "C"))
+MIN_DISPLAY_MATCHUP_MATCHES = 5
+MIN_DISPLAY_MATCHUP_WEIGHT = 3.0
 
 # --- In-Memory Cache Layers (TTL = 3600 seconds / 1 hour) ---
 # 日次バッチ実行時 (clear_meta_cache) または 1 時間経過で最新化
@@ -216,6 +218,28 @@ def _contextual_pairs(db, type, sub_type, selected_id, rank_tier, mode=None):
     return by_char
 
 
+def _display_matchups(pairs):
+    """Rank observed counters with a conservative, recency-weighted estimate."""
+    favorable, unfavorable = [], []
+    for pair in pairs:
+        if pair["kind"] != "counter":
+            continue
+        matches = pair["match_count"]
+        weighted_matches = pair["weighted_matches"]
+        if matches < MIN_DISPLAY_MATCHUP_MATCHES or weighted_matches < MIN_DISPLAY_MATCHUP_WEIGHT:
+            continue
+        rate = posterior_rate(pair["weighted_wins"], weighted_matches)
+        entry = {"brawler": pair["char_b"], "name": format_char_name(pair["char_b"]),
+                 "win_rate": round(rate * 100, 1), "matches": matches}
+        if rate > 0.5:
+            favorable.append(entry)
+        elif rate < 0.5:
+            unfavorable.append(entry)
+    favorable.sort(key=lambda item: (-item["win_rate"], -item["matches"], item["brawler"]))
+    unfavorable.sort(key=lambda item: (item["win_rate"], -item["matches"], item["brawler"]))
+    return favorable[:5], unfavorable[:5]
+
+
 @router.get("/tier-list")
 def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, rank_tier: str = "all", include_details: bool = False, mode: str = None):
     db = get_db()
@@ -325,6 +349,8 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
     weighted_wins = sum(v["weighted_wins"] for v in char_stats.values())
     baseline = weighted_wins / weighted_total if weighted_total else 0.5
     pair_data = _contextual_pairs(db, type, sub_type, id, rank_tier, mode) if include_details else {}
+    broad_pair_data = (_contextual_pairs(db, "gachi", None, None, "all")
+                       if include_details and type == "gachi" and (sub_type or rank_tier != "all") else {})
 
     for cid, stats in char_stats.items():
         tm = stats["total_matches"]
@@ -374,7 +400,18 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
             norm_cid = _normalize_id(cid)
             
             char_pairs = pair_data.get(norm_cid, [])
-            matchups, synergies, kamo, tenteki = {}, {}, [], []
+            matchups, synergies = {}, {}
+            kamo, tenteki = _display_matchups(char_pairs)
+            matchup_scope = "選択条件" if type == "gachi" else "全体Tierの3対3"
+            kamo_scope = tenteki_scope = matchup_scope
+            if broad_pair_data and (len(kamo) < 2 or len(tenteki) < 2):
+                broad_kamo, broad_tenteki = _display_matchups(broad_pair_data.get(norm_cid, []))
+                if len(kamo) < 2 and len(broad_kamo) > len(kamo):
+                    kamo = broad_kamo
+                    kamo_scope = "ガチバトル・エリート以上全体"
+                if len(tenteki) < 2 and len(broad_tenteki) > len(tenteki):
+                    tenteki = broad_tenteki
+                    tenteki_scope = "ガチバトル・エリート以上全体"
             for pair in char_pairs:
                 enemy = _normalize_id(pair["char_b"])
                 m = pair["match_count"]
@@ -388,13 +425,6 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
                 rate = posterior_rate(weighted_w, weighted_m)
                 if pair["kind"] == "counter":
                     matchups[enemy] = round(rate * 100, 1)
-                    # Older observations have less influence on the Tier list.
-                    # Use that same conservative sample weight for matchup evidence.
-                    lo, hi = wilson_interval(weighted_w, weighted_m)
-                    entry = {"brawler": pair["char_b"], "name": format_char_name(pair["char_b"]),
-                             "win_rate": round(weighted_w / weighted_m * 100, 1), "matches": m}
-                    if lo > 0.5: kamo.append(entry)
-                    if hi < 0.5: tenteki.append(entry)
                 else:
                     ally_stats = next((v for k, v in char_stats.items() if _normalize_id(k) == enemy), None)
                     ally_rate = posterior_rate(ally_stats["weighted_wins"], ally_stats["weighted_matches"], baseline) if ally_stats else baseline
@@ -402,8 +432,8 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
                     synergy_rate = posterior_rate(weighted_w, weighted_m, expected)
                     synergies[enemy] = {"win_rate": round(synergy_rate * 100, 1),
                                        "lift": round((synergy_rate - expected) * 100, 1), "matches": m}
-            char_entry.update({"kamo": sorted(kamo, key=lambda x: -x["win_rate"])[:5],
-                               "tenteki": sorted(tenteki, key=lambda x: x["win_rate"])[:5],
+            char_entry.update({"kamo": kamo, "tenteki": tenteki,
+                               "kamo_scope": kamo_scope, "tenteki_scope": tenteki_scope,
                                "matchups": matchups, "synergies": synergies})
 
         characters_detail[cid] = char_entry

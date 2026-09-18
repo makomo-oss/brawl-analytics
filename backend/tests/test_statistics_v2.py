@@ -145,8 +145,38 @@ def test_matchup_labels_follow_recency_weighted_results(monkeypatch):
              weighted_matches=40.0, weighted_wins=35.0),
     ]})
     detail = meta.get_tier_list(include_details=True)['characters']['colt']
-    assert detail['kamo'] == [dict(brawler='shelly', name='Shelly', win_rate=87.5, matches=100)]
+    assert detail['kamo'] == [dict(brawler='shelly', name='Shelly', win_rate=75.0, matches=100)]
     assert detail['tenteki'] == []
+
+
+def test_sparse_ranked_matchups_use_labeled_ranked_cohort(monkeypatch):
+    monkeypatch.setattr(meta, 'get_db', lambda: None)
+    monkeypatch.setattr(meta, '_get_cached_total_analyzed', lambda db: 20)
+    monkeypatch.setattr(meta, '_get_cached_macro_data', lambda db: [
+        dict(character_id='colt', match_type='gachi', map_id='map', mode='brawlBall',
+             total_matches=20, total_wins=10, weighted_matches=15, weighted_wins=7.5)
+    ])
+    calls = []
+    def pairs(db, type, sub_type, selected_id, rank_tier, mode=None):
+        calls.append((sub_type, rank_tier))
+        if sub_type == 'map':
+            return {'colt': [dict(kind='counter', char_b='bull', match_count=2, win_count=2,
+                                  weighted_matches=2.0, weighted_wins=2.0)]}
+        return {'colt': [
+            dict(kind='counter', char_b='shelly', match_count=8, win_count=7,
+                 weighted_matches=7.0, weighted_wins=6.0),
+            dict(kind='counter', char_b='rico', match_count=8, win_count=1,
+                 weighted_matches=7.0, weighted_wins=1.0),
+        ]}
+    monkeypatch.setattr(meta, '_contextual_pairs', pairs)
+    detail = meta.get_tier_list(type='gachi', sub_type='map', id='map',
+                                include_details=True)['characters']['colt']
+    assert calls == [('map', 'all'), (None, 'all')]
+    assert detail['kamo_scope'] == 'ガチバトル・エリート以上全体'
+    assert detail['tenteki_scope'] == 'ガチバトル・エリート以上全体'
+    assert detail['kamo'][0]['brawler'] == 'shelly'
+    assert detail['tenteki'][0]['brawler'] == 'rico'
+    assert detail['matchups'] == {}
 
 
 def test_map_mix_does_not_reward_character_with_easier_schedule(monkeypatch):

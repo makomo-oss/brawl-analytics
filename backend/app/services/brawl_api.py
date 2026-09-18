@@ -1,5 +1,6 @@
 import httpx
 import logging
+import asyncio
 from app.config import BRAWL_API_TOKEN, BRAWL_API_PROXY, BRAWL_API_BASE_URL
 
 logger = logging.getLogger(__name__)
@@ -41,18 +42,23 @@ async def _get_resource(path: str, tag: str, suffix: str = ""):
     clean_tag = tag.replace("%23", "").replace("#", "").strip().upper()
     from urllib.parse import quote
     url = f"{BRAWL_API_BASE_URL}/{path}/%23{quote(clean_tag, safe='')}{suffix}"
-    try:
-        response = await get_http_client().get(url, headers={
-            "Authorization": f"Bearer {BRAWL_API_TOKEN}", "Accept": "application/json"
-        })
-        response.raise_for_status()
-        return response.json()
-    except httpx.HTTPStatusError as exc:
-        if exc.response.status_code == 404:
-            raise ValueError("Player not found" if path == "players" else "Club not found") from exc
-        raise BrawlAPIError(f"Brawl API returned HTTP {exc.response.status_code}") from exc
-    except (httpx.RequestError, ValueError) as exc:
-        raise BrawlAPIError("Brawl API is unavailable") from exc
+    for attempt in range(3):
+        try:
+            response = await get_http_client().get(url, headers={
+                "Authorization": f"Bearer {BRAWL_API_TOKEN}", "Accept": "application/json"
+            })
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPStatusError as exc:
+            status = exc.response.status_code
+            if status == 404:
+                raise ValueError("Player not found" if path == "players" else "Club not found") from exc
+            if status not in (429, 500, 502, 503, 504) or attempt == 2:
+                raise BrawlAPIError(f"Brawl API returned HTTP {status}") from exc
+        except httpx.RequestError as exc:
+            if attempt == 2:
+                raise BrawlAPIError("Brawl API is unavailable") from exc
+        await asyncio.sleep(0.5 * (2 ** attempt))
 
 async def get_player_battlelog(player_tag: str):
     return await _get_resource("players", player_tag, "/battlelog")

@@ -16,6 +16,18 @@ def test_upstream_failure_never_returns_fake_data(monkeypatch, status, method):
     with pytest.raises(brawl_api.BrawlAPIError):
         asyncio.run(getattr(brawl_api, method)("#ABC"))
 
+
+def test_transient_battlelog_failure_is_retried(monkeypatch):
+    request = httpx.Request("GET", "https://example.com")
+    client = SimpleNamespace(get=AsyncMock(side_effect=[
+        httpx.Response(503, request=request),
+        httpx.Response(200, json={"items": []}, request=request),
+    ]))
+    monkeypatch.setattr(brawl_api, "get_http_client", lambda: client)
+    monkeypatch.setattr(brawl_api.asyncio, "sleep", AsyncMock())
+    assert asyncio.run(brawl_api.get_player_battlelog("#ABC")) == {"items": []}
+    assert client.get.await_count == 2
+
 def row(**overrides):
     data = dict(match_id="a", player_tag="ABC", result="victory", hero_used="COLT", map_id="map", mode="brawlBall", match_type="ranked", allies=["SHELLY"], opponents=["BULL"])
     return {**data, **overrides}
@@ -139,7 +151,12 @@ def test_crawler_saves_battles_with_missing_map_or_brawler_name(monkeypatch):
                            "event": {"mode": "brawlBall", "map": None},
                            "battle": {"type": "ranked", "result": "victory",
                                       "teams": [[{"tag": "#ABC", "brawler": {"name": None}}],
-                                                [{"tag": "#DEF", "brawler": {"name": "BULL"}}]]}}]}
+                                                [{"tag": "#DEF", "brawler": None}]]}},
+                          {"battleTime": "invalid", "battle": {"type": "ranked", "result": "victory"}},
+                          {"battleTime": "20260917T120100Z",
+                           "event": {"mode": "brawlBall", "map": "Test Map"},
+                           "battle": {"type": "ranked", "result": "defeat",
+                                      "teams": [[{"tag": "#ABC", "brawler": {"name": "COLT"}}]]}}]}
 
     monkeypatch.setattr(crawler_task, "get_player", player_info)
     monkeypatch.setattr(crawler_task, "get_player_battlelog", battlelog)
@@ -150,7 +167,9 @@ def test_crawler_saves_battles_with_missing_map_or_brawler_name(monkeypatch):
 
     result = asyncio.run(crawler_task.run_crawler_task(aggregate=False))
     saved = db.table.return_value.upsert.call_args_list[-1].args[0]
-    assert result["battle_records_fetched"] == 1
+    assert result["battle_records_fetched"] == 2
     assert result["aggregation"] is None
     assert saved[0]["map_id"] == "unknown"
     assert saved[0]["hero_used"] == "unknown"
+    assert saved[0]["opponents"] == ["unknown"]
+    assert saved[1]["match_at"] == "2026-09-17T12:01:00+00:00"

@@ -110,6 +110,26 @@ def test_small_sample_is_not_given_s_tier(monkeypatch):
     assert data['characters']['colt']['sample_sufficient'] is False
 
 
+def test_pair_details_exclude_unsupported_map_evidence(monkeypatch):
+    monkeypatch.setattr(meta, 'get_db', lambda: None)
+    monkeypatch.setattr(meta, '_get_cached_total_analyzed', lambda db: 50)
+    monkeypatch.setattr(meta, '_get_cached_macro_data', lambda db: [
+        dict(character_id='colt', match_type='gachi', map_id='map', mode='brawlBall',
+             total_matches=50, total_wins=25, weighted_matches=40, weighted_wins=20)
+    ])
+    pairs = [
+        dict(kind=kind, char_b=char_b, match_count=n, win_count=n,
+             weighted_matches=float(n), weighted_wins=float(n))
+        for kind, char_b, n in [('counter', 'bull', 1), ('counter', 'shelly', 20),
+                                 ('synergy', 'piper', 1), ('synergy', 'rico', 20)]
+    ]
+    monkeypatch.setattr(meta, '_contextual_pairs', lambda *args: {'colt': pairs})
+    details = meta.get_tier_list(type='gachi', sub_type='map', id='map',
+                                 include_details=True)['characters']['colt']
+    assert set(details['matchups']) == {'shelly'}
+    assert set(details['synergies']) == {'rico'}
+
+
 def test_map_mix_does_not_reward_character_with_easier_schedule(monkeypatch):
     # Equal performance within both contexts, but very different raw overall win rates.
     rows = [dict(character_id=c, map_id=m, mode='brawlBall', match_type='ranked', total_matches=n, total_wins=w)

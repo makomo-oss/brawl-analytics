@@ -183,12 +183,31 @@ def test_crawler_anchors_come_from_verified_profiles():
     from app.tasks.crawler_task import select_anchor_tags
 
     db = Mock()
-    query = db.table.return_value.select.return_value.eq.return_value.order.return_value.limit.return_value
-    query.execute.return_value.data = [{"player_tag": "#ABC"}, {"player_tag": "DEF"}]
+    query = db.table.return_value.select.return_value.eq.return_value.order.return_value.range.return_value
+    query.execute.return_value.data = [{"player_tag": "#ABC", "rank": "16"},
+                                       {"player_tag": "DEF", "rank": "13"}]
     assert select_anchor_tags(db) == {"ABC", "DEF"}
     db.table.return_value.select.return_value.eq.assert_called_once_with(
         "unlocked_characters->>profile_status", "verified"
     )
+
+
+def test_crawler_anchors_include_elite_outside_recent_profiles(monkeypatch):
+    from unittest.mock import Mock
+    from app.tasks.crawler_task import select_anchor_tags
+
+    db = Mock()
+    query = db.table.return_value.select.return_value.eq.return_value.order.return_value.range.return_value
+    query.execute.side_effect = [
+        SimpleNamespace(data=[{"player_tag": f"LOW{i}", "rank": "2"} for i in range(1000)]),
+        SimpleNamespace(data=[{"player_tag": "ELITE", "rank": "13"},
+                              {"player_tag": "LEGEND", "rank": "16"}]),
+    ]
+    monkeypatch.setattr("app.tasks.crawler_task.random.sample", lambda values, count: list(values)[:count])
+    anchors = select_anchor_tags(db)
+    assert len(anchors) == 10
+    assert {"ELITE", "LEGEND"} <= anchors
+    assert query.execute.call_count == 2
 
 
 def test_encountered_targets_include_high_rank_and_new_players(monkeypatch):
@@ -205,6 +224,21 @@ def test_encountered_targets_include_high_rank_and_new_players(monkeypatch):
     assert crawler_task.select_encountered_tags(db, {"HIGH", "LOW", "BAD", "NEW"}, limit=3) == [
         "HIGH", "NEW", "LOW"
     ]
+
+
+def test_ranked_encounters_are_prioritized_over_other_unknown_players(monkeypatch):
+    from unittest.mock import Mock
+    from app.tasks import crawler_task
+    from app.services.battle_records import ranked_encountered_tags
+
+    items = [{"battle": {"type": "soloRanked", "teams": [[{"tag": "#ELITE"}]]}},
+             {"battle": {"type": "ranked", "teams": [[{"tag": "#NORMAL"}]]}}]
+    assert ranked_encountered_tags(items) == {"ELITE"}
+    db = Mock()
+    db.table.return_value.select.return_value.in_.return_value.execute.return_value.data = []
+    monkeypatch.setattr(crawler_task.random, "shuffle", lambda candidates: None)
+    assert crawler_task.select_encountered_tags(db, {"NORMAL", "ELITE"}, limit=1,
+                                                 ranked_tags={"ELITE"}) == ["ELITE"]
 
 
 def test_background_crawler_failure_is_visible_to_workflow(monkeypatch):

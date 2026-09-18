@@ -1,25 +1,49 @@
 import asyncio
 import logging
 import random
+from collections import Counter
 from datetime import datetime, timezone
 from typing import Callable
 from app.database import get_db
 from app.services.player_profiles import profile_record
-from app.services.battle_records import deduplicate_battle_records, parse_battlelog
+from app.services.battle_records import (deduplicate_battle_records, parse_battlelog,
+                                         ranked_encountered_tags)
 from app.services.brawl_api import get_player_battlelog, get_player, get_club_members, get_club
 
 logger = logging.getLogger(__name__)
+ANCHOR_LIMIT = 10
+DISCOVERED_LIMIT = 150
+PLAYER_WRITE_BATCH = 50
+MATCH_WRITE_BATCH = 500
 
 def select_anchor_tags(db) -> set[str]:
-    """Start discovery from a few API-verified profiles, not stale hardcoded tags."""
-    response = (db.table("players").select("player_tag")
-                .eq("unlocked_characters->>profile_status", "verified")
-                .order("updated_at", desc=True).limit(1000).execute())
-    candidates = sorted({row["player_tag"].replace("#", "").upper()
-                         for row in (response.data or []) if row.get("player_tag")})
+    """Seed Ranked discovery from verified Elite+ profiles across the whole DB."""
+    profiles = {}
+    offset = 0
+    while True:
+        rows = ((db.table("players")
+                 .select("player_tag,rank:unlocked_characters->>ranked_rank")
+                 .eq("unlocked_characters->>profile_status", "verified")
+                 .order("player_tag").range(offset, offset + 999).execute()).data or [])
+        for row in rows:
+            tag = str(row.get("player_tag") or "").replace("#", "").upper()
+            if tag:
+                rank = str(row.get("rank") or "")
+                profiles[tag] = int(rank) if rank.isdigit() else 0
+        if len(rows) < 1000:
+            break
+        offset += 1000
+    candidates = sorted(profiles)
     if not candidates:
         raise RuntimeError("Crawler has no verified player anchors")
-    return set(random.sample(candidates, min(5, len(candidates))))
+    legendary = [tag for tag in candidates if profiles[tag] >= 16]
+    elite = [tag for tag in candidates if profiles[tag] >= 13]
+    anchors = random.sample(legendary, min(3, len(legendary)))
+    elite_remaining = [tag for tag in elite if tag not in anchors]
+    anchors.extend(random.sample(elite_remaining, min(6 - len(anchors), len(elite_remaining))))
+    others = [tag for tag in candidates if tag not in anchors]
+    anchors.extend(random.sample(others, min(ANCHOR_LIMIT - len(anchors), len(others))))
+    return set(anchors)
 
 
 def raw_history_count(db) -> int | None:
@@ -31,15 +55,16 @@ def raw_history_count(db) -> int | None:
         return None
 
 
-def select_encountered_tags(db, tags: set[str], limit: int = 75) -> list[str]:
-    """Expand the player graph while favoring discovered high-ranked players."""
+def select_encountered_tags(db, tags: set[str], limit: int = DISCOVERED_LIMIT,
+                            ranked_tags: set[str] | None = None) -> list[str]:
+    """Prioritize Elite+ and players encountered in Ranked, retaining exploration."""
     candidates = list(tags)
     random.shuffle(candidates)
-    if len(candidates) <= limit:
-        return candidates
+    ranked_tags = ranked_tags or set()
 
     # Inspect a bounded random pool so large clubs do not create unbounded DB work.
-    pool = candidates[:400]
+    pool = ([tag for tag in candidates if tag in ranked_tags] +
+            [tag for tag in candidates if tag not in ranked_tags])[:max(400, limit * 4)]
     known = {}
     try:
         for offset in range(0, len(pool), 100):
@@ -52,23 +77,26 @@ def select_encountered_tags(db, tags: set[str], limit: int = 75) -> list[str]:
         return candidates[:limit]
 
     high_ranked = []
+    ranked_unregistered = []
     unregistered = []
     remaining = []
     for tag in pool:
         profile = known.get(tag)
         if profile is None:
-            unregistered.append(tag)
+            (ranked_unregistered if tag in ranked_tags else unregistered).append(tag)
         elif profile.get("status") == "not_found":
             continue
         elif (profile.get("status") == "verified" and
-              str(profile.get("rank") or "").isdigit() and int(profile["rank"]) >= 16):
+              str(profile.get("rank") or "").isdigit() and int(profile["rank"]) >= 13):
             high_ranked.append(tag)
         else:
             remaining.append(tag)
 
-    selected = high_ranked[:25] + unregistered[:35]
-    selected.extend(tag for tag in high_ranked[25:] + unregistered[35:] + remaining + candidates[400:]
+    selected = (high_ranked[:limit // 3] + ranked_unregistered[:limit // 2] +
+                unregistered[:limit // 3])
+    selected.extend(tag for tag in high_ranked + ranked_unregistered + unregistered + remaining
                     if tag not in selected)
+    selected.extend(tag for tag in candidates if tag not in selected and tag not in pool)
     return selected[:limit]
 
 async def run_crawler_task(report_stage: Callable[[str], None] | None = None, aggregate: bool = True):
@@ -85,8 +113,7 @@ async def run_crawler_task(report_stage: Callable[[str], None] | None = None, ag
     db = get_db()
     initial_raw_count = raw_history_count(db)
     
-    # A small rotating sample of verified profiles expands the frontier; no
-    # age-based sweep of every registered player is required.
+    # Rotate a few verified Elite+ anchors without sweeping every saved profile.
     base_player_tags = select_anchor_tags(db)
     logger.info(f"Target base players count: {len(base_player_tags)}")
     
@@ -111,24 +138,28 @@ async def run_crawler_task(report_stage: Callable[[str], None] | None = None, ag
                 # 2. バトルログの取得。ダッシュボード同期と同じ変換規則を使う。
                 battle_log_data = []
                 encountered_players = set()
+                ranked_players = set()
                 try:
                     logs = await get_player_battlelog(clean_tag)
-                    battle_log_data, encountered_players = parse_battlelog(clean_tag, logs.get("items") or [])
+                    items = logs.get("items") or []
+                    battle_log_data, encountered_players = parse_battlelog(clean_tag, items)
+                    ranked_players = ranked_encountered_tags(items)
                 except Exception as e:
                     logger.warning(f"Failed to fetch battlelog for {clean_tag}: {e}")
 
-                return player_data, battle_log_data, club_tag, encountered_players
+                return player_data, battle_log_data, club_tag, encountered_players, ranked_players
             except Exception as e:
                 logger.warning(f"Failed to fetch data for player {clean_tag}: {e}")
-                return None, [], None, set()
+                return None, [], None, set(), set()
 
     # フェーズ1: 既存プレイヤーのデータと所属クラブを取得
     tasks = [fetch_player_and_matches(tag) for tag in base_player_tags]
     results = await asyncio.gather(*tasks)
     
     encountered_in_battles = set()
+    ranked_encounters = set()
     
-    for p_data, m_data, c_tag, e_players in results:
+    for p_data, m_data, c_tag, e_players, r_players in results:
         if p_data:
             upsert_players.append(p_data)
         if m_data:
@@ -137,6 +168,7 @@ async def run_crawler_task(report_stage: Callable[[str], None] | None = None, ag
             found_clubs.add(c_tag)
         if e_players:
             encountered_in_battles.update(e_players)
+        ranked_encounters.update(r_players)
             
     # フェーズ2: クラブから新メンバーを抽出 & クラブ情報を保存 (芋づる式クローリング制限：最大10クラブ)
     new_player_tags = set()
@@ -185,11 +217,12 @@ async def run_crawler_task(report_stage: Callable[[str], None] | None = None, ag
     # フェーズ3: 対戦相手・クラブメンバーを取得（登録済みの再取得も許可）
     if new_player_tags:
         logger.info(f"Found {len(new_player_tags)} encountered players (from clubs & battles). Fetching their data...")
-        target_new_players = select_encountered_tags(db, new_player_tags)
+        target_new_players = select_encountered_tags(db, new_player_tags,
+                                                     ranked_tags=ranked_encounters)
         new_tasks = [fetch_player_and_matches(tag) for tag in target_new_players]
         new_results = await asyncio.gather(*new_tasks)
         
-        for p_data, m_data, _, _ in new_results:
+        for p_data, m_data, _, _, _ in new_results:
             if p_data:
                 upsert_players.append(p_data)
             if m_data:
@@ -210,7 +243,8 @@ async def run_crawler_task(report_stage: Callable[[str], None] | None = None, ag
     if upsert_players:
         try:
             logger.info(f"Bulk upserting {len(upsert_players)} players...")
-            db.table("players").upsert(upsert_players).execute()
+            for offset in range(0, len(upsert_players), PLAYER_WRITE_BATCH):
+                db.table("players").upsert(upsert_players[offset:offset + PLAYER_WRITE_BATCH]).execute()
         except Exception as e:
             logger.error(f"Failed to upsert players: {e}")
             raise
@@ -226,7 +260,8 @@ async def run_crawler_task(report_stage: Callable[[str], None] | None = None, ag
         try:
             report("saving_matches")
             logger.info(f"Bulk upserting {len(upsert_matches)} matches...")
-            db.table("match_raw_history").upsert(upsert_matches).execute()
+            for offset in range(0, len(upsert_matches), MATCH_WRITE_BATCH):
+                db.table("match_raw_history").upsert(upsert_matches[offset:offset + MATCH_WRITE_BATCH]).execute()
         except Exception:
             logger.exception("Failed to persist matches; aggregation cancelled")
             raise
@@ -251,7 +286,16 @@ async def run_crawler_task(report_stage: Callable[[str], None] | None = None, ag
             raise
             
     logger.info("Crawler task completed successfully.")
+    fetched_types = Counter(record["match_type"] for record in upsert_matches)
+    elite_tags = {profile["player_tag"] for profile in upsert_players
+                  if int(profile["unlocked_characters"].get("ranked_rank") or 0) >= 13}
+    elite_ranked = sum(record["player_tag"] in elite_tags and
+                       record["match_type"] in ("soloRanked", "teamRanked")
+                       for record in upsert_matches)
     return {"players_fetched": len(upsert_players), "battle_records_fetched": len(upsert_matches),
             "new_raw_matches": new_raw_matches, "raw_history_total": final_raw_count,
+            "battle_records_by_type": dict(fetched_types),
+            "elite_profiles_fetched": len(elite_tags),
+            "elite_ranked_records_fetched": elite_ranked,
             "clubs_fetched": len(upsert_clubs), "aggregation": calc_result}
 

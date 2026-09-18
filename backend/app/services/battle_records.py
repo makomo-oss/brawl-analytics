@@ -21,6 +21,25 @@ def clean_tag(tag: str) -> str:
     return str(tag or "").replace("%23", "#").replace("#", "").strip().upper()
 
 
+def ranked_encountered_tags(items: list) -> set[str]:
+    """Find players encountered in actual Ranked battles for crawler discovery."""
+    tags = set()
+    for item in items or []:
+        if not isinstance(item, dict):
+            continue
+        battle = item.get("battle") or {}
+        if not isinstance(battle, dict):
+            continue
+        if battle.get("type") not in ("soloRanked", "teamRanked"):
+            continue
+        teams = battle.get("teams") or [battle.get("players") or []]
+        for team in teams:
+            for player in team:
+                if isinstance(player, dict) and player.get("tag"):
+                    tags.add(clean_tag(player["tag"]))
+    return tags
+
+
 def deduplicate_battle_records(records: list[dict]) -> list[dict]:
     """Keep one observation per database key within a single upsert payload."""
     unique = {}

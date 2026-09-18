@@ -141,11 +141,11 @@ async def run_crawler_task(report_stage: Callable[[str], None] | None = None, ag
     report = report_stage or (lambda stage: None)
     report("fetching_players")
     db = get_db()
-    initial_raw_count = raw_history_count(db)
+    initial_raw_count = await asyncio.to_thread(raw_history_count, db)
     
     # Rotate verified Elite+ players without sweeping every saved profile.
-    base_player_tags = select_anchor_tags(db)
-    elite_refresh_tags = select_elite_refresh_tags(db, base_player_tags)
+    base_player_tags = await asyncio.to_thread(select_anchor_tags, db)
+    elite_refresh_tags = await asyncio.to_thread(select_elite_refresh_tags, db, base_player_tags)
     seed_tags = base_player_tags | set(elite_refresh_tags)
     logger.info("Crawler seeds: anchors=%s, Elite+ refresh=%s", len(base_player_tags),
                 len(elite_refresh_tags))
@@ -251,9 +251,9 @@ async def run_crawler_task(report_stage: Callable[[str], None] | None = None, ag
     # フェーズ3: 対戦相手・クラブメンバーを取得（登録済みの再取得も許可）
     if new_player_tags:
         logger.info(f"Found {len(new_player_tags)} encountered players (from clubs & battles). Fetching their data...")
-        target_new_players = select_encountered_tags(
-            db, new_player_tags, limit=DISCOVERED_LIMIT + ELITE_REFRESH_LIMIT - len(elite_refresh_tags),
-            ranked_tags=ranked_encounters)
+        target_new_players = await asyncio.to_thread(
+            select_encountered_tags, db, new_player_tags,
+            DISCOVERED_LIMIT + ELITE_REFRESH_LIMIT - len(elite_refresh_tags), ranked_encounters)
         new_tasks = [fetch_player_and_matches(tag) for tag in target_new_players]
         new_results = await asyncio.gather(*new_tasks)
         
@@ -279,7 +279,8 @@ async def run_crawler_task(report_stage: Callable[[str], None] | None = None, ag
         try:
             logger.info(f"Bulk upserting {len(upsert_players)} players...")
             for offset in range(0, len(upsert_players), PLAYER_WRITE_BATCH):
-                db.table("players").upsert(upsert_players[offset:offset + PLAYER_WRITE_BATCH]).execute()
+                batch = upsert_players[offset:offset + PLAYER_WRITE_BATCH]
+                await asyncio.to_thread(lambda: db.table("players").upsert(batch).execute())
         except Exception as e:
             logger.error(f"Failed to upsert players: {e}")
             raise
@@ -287,7 +288,7 @@ async def run_crawler_task(report_stage: Callable[[str], None] | None = None, ag
     if upsert_clubs:
         try:
             logger.info(f"Bulk upserting {len(upsert_clubs)} clubs...")
-            db.table("clubs").upsert(upsert_clubs).execute()
+            await asyncio.to_thread(lambda: db.table("clubs").upsert(upsert_clubs).execute())
         except Exception as e:
             logger.error(f"Failed to upsert clubs: {e}")
             
@@ -296,12 +297,13 @@ async def run_crawler_task(report_stage: Callable[[str], None] | None = None, ag
             report("saving_matches")
             logger.info(f"Bulk upserting {len(upsert_matches)} matches...")
             for offset in range(0, len(upsert_matches), MATCH_WRITE_BATCH):
-                db.table("match_raw_history").upsert(upsert_matches[offset:offset + MATCH_WRITE_BATCH]).execute()
+                batch = upsert_matches[offset:offset + MATCH_WRITE_BATCH]
+                await asyncio.to_thread(lambda: db.table("match_raw_history").upsert(batch).execute())
         except Exception:
             logger.exception("Failed to persist matches; aggregation cancelled")
             raise
 
-    final_raw_count = raw_history_count(db)
+    final_raw_count = await asyncio.to_thread(raw_history_count, db)
     new_raw_matches = (max(0, final_raw_count - initial_raw_count)
                        if initial_raw_count is not None and final_raw_count is not None else None)
     logger.info("Raw battle observations: total=%s, added_since_start=%s", final_raw_count, new_raw_matches)

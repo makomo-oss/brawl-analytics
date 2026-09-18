@@ -31,6 +31,7 @@ export default function TierListPage() {
   const [selectedChar, setSelectedChar] = useState<any>(null)
   const [sheetOpen, setSheetOpen] = useState(false)
   const [modalLoading, setModalLoading] = useState(false)
+  const [modalError, setModalError] = useState(false)
   
   const [selectedType, setSelectedType] = useState("global")
   const [selectedRankTier, setSelectedRankTier] = useState("all") // all, mythic, legendary, masters
@@ -180,6 +181,7 @@ export default function TierListPage() {
     const cachedDetail = charDetailCacheRef.current[detailKey]
     
     if (cachedDetail) {
+      setModalError(false)
       setSelectedChar(cachedDetail)
       setSheetOpen(true)
       return
@@ -216,6 +218,7 @@ export default function TierListPage() {
     })
     setSheetOpen(true)
     setModalLoading(true)
+    setModalError(false)
 
     try {
       let url = `${API_URL}/meta/characters/${charName}?type=${selectedType}`
@@ -230,9 +233,12 @@ export default function TierListPage() {
         const data = await res.json()
         charDetailCacheRef.current[detailKey] = data
         setSelectedChar(data)
+      } else {
+        setModalError(true)
       }
     } catch (err) {
       console.error(err)
+      setModalError(true)
     } finally {
       setModalLoading(false)
     }
@@ -494,7 +500,7 @@ export default function TierListPage() {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-muted-foreground p-2">5戦以上の有利傾向の対面がありません。</p>
+                    <p className="text-sm text-muted-foreground p-2">{modalError ? "対面データの取得に失敗しました。もう一度開いてください。" : "5戦以上の有利傾向の対面がありません。"}</p>
                   )}
                 </div>
 
@@ -531,7 +537,7 @@ export default function TierListPage() {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-muted-foreground p-2">5戦以上の不利傾向の対面がありません。</p>
+                    <p className="text-sm text-muted-foreground p-2">{modalError ? "対面データの取得に失敗しました。もう一度開いてください。" : "5戦以上の不利傾向の対面がありません。"}</p>
                   )}
                 </div>
               </div>

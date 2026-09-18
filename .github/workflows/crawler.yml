@@ -69,14 +69,28 @@ jobs:
           RUN_ID=$(printf '%s' "$RESPONSE" | jq -er '.run_id')
           echo "Batch accepted: $RUN_ID"
           for i in {1..180}; do
-            STATUS_BODY=$(curl --fail-with-body -sS --max-time 30 -H "cron-secret: $CRON_SECRET" "$RENDER_URL/api/cron/batch-status/$RUN_ID")
-            STATUS=$(printf '%s' "$STATUS_BODY" | jq -r '.status')
+            STATUS_FILE="$RUNNER_TEMP/batch-status.json"
+            if ! HTTP_CODE=$(curl -sS --max-time 30 -o "$STATUS_FILE" -w '%{http_code}' -H "cron-secret: $CRON_SECRET" "$RENDER_URL/api/cron/batch-status/$RUN_ID"); then
+              echo "Batch status request timed out; retrying."
+              sleep 10
+              continue
+            fi
+            if [ "$HTTP_CODE" = "401" ] || [ "$HTTP_CODE" = "404" ]; then
+              echo "Batch status unavailable (HTTP $HTTP_CODE)."
+              exit 1
+            fi
+            if [ "$HTTP_CODE" != "200" ]; then
+              echo "Batch status returned HTTP $HTTP_CODE; retrying."
+              sleep 10
+              continue
+            fi
+            STATUS=$(jq -r '.status' "$STATUS_FILE")
             if [ "$STATUS" = "completed" ]; then
-              printf '%s' "$STATUS_BODY" | jq '{status, stage, result}'
+              jq '{status, stage, result}' "$STATUS_FILE"
               exit 0
             fi
             if [ "$STATUS" = "failed" ]; then
-              printf '%s' "$STATUS_BODY" | jq '{status, stage, error_type, error_code, error_column}'
+              jq '{status, stage, error_type, error_code, error_column}' "$STATUS_FILE"
               exit 1
             fi
             sleep 10

@@ -20,6 +20,7 @@ import { Progress } from "@/components/ui/progress"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { API_URL } from "@/lib/config"
 import PlayerAnalysis from "./player-analysis"
+import PlayerAutoSync from "./player-auto-sync"
 
 function formatBattleTime(timeStr: string) {
   if (!timeStr) return "";
@@ -800,6 +801,7 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
               </CardHeader>
             </Card>
           )}
+          <PlayerAutoSync key={`auto-sync-${data.player_tag}`} playerTag={data.player_tag} onCollected={() => setAnalysisRevision(value => value + 1)} />
           <PlayerAnalysis key={data.player_tag} playerTag={data.player_tag} revision={analysisRevision} />
 
         <Tabs defaultValue="battles" className="w-full mt-12 animate-in fade-in slide-in-from-bottom-8 duration-700">

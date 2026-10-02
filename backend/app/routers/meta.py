@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Response
 import math
 import time
 import logging
@@ -8,6 +8,15 @@ from app.algorithm.statistics import blend_tier_score, normal_tier_boundaries, p
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/meta", tags=["Meta"])
+
+
+@router.get("/brawlers")
+async def brawler_catalog(response: Response):
+    from app.services.brawler_catalog import get_brawler_catalog
+    response.headers["Cache-Control"] = "public, max-age=300"
+    return await get_brawler_catalog()
+
+
 USAGE_ADJUSTMENT_CAP = 2.0
 GACHI_TIER_THRESHOLDS = ((57, "S+"), (54, "S"), (52, "A+"), (50, "A"), (48, "B"), (46, "C"))
 MIN_DISPLAY_MATCHUP_MATCHES = 5

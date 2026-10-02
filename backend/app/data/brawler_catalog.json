@@ -1,0 +1,650 @@
+[
+  {
+    "id": 16000110,
+    "name": "Vince",
+    "nameJa": "ヴィンス",
+    "imageUrl": "https://cdn.brawlify.com/profile-icons/regular/28001338.png"
+  },
+  {
+    "id": 16000109,
+    "name": "Cosmo",
+    "nameJa": "コスモ",
+    "imageUrl": "https://cdn.brawlify.com/profile-icons/regular/28001337.png"
+  },
+  {
+    "id": 16000108,
+    "name": "Wendy",
+    "nameJa": "ウェンディ",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000108.png"
+  },
+  {
+    "id": 16000107,
+    "name": "Nori",
+    "nameJa": "ノリ",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000107.png"
+  },
+  {
+    "id": 16000106,
+    "name": "Bolt",
+    "nameJa": "ボルト",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000106.png"
+  },
+  {
+    "id": 16000105,
+    "name": "Starr Nova",
+    "nameJa": "スターノヴァ",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000105.png"
+  },
+  {
+    "id": 16000104,
+    "name": "Damian",
+    "nameJa": "ダミアン",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000104.png"
+  },
+  {
+    "id": 16000103,
+    "name": "Najia",
+    "nameJa": "ナジア",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000103.png"
+  },
+  {
+    "id": 16000102,
+    "name": "Sirius",
+    "nameJa": "シリウス",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000102.png"
+  },
+  {
+    "id": 16000101,
+    "name": "Glowy",
+    "nameJa": "グローウィー",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000101.png"
+  },
+  {
+    "id": 16000100,
+    "name": "Gigi",
+    "nameJa": "ジジ",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000100.png"
+  },
+  {
+    "id": 16000099,
+    "name": "Pierce",
+    "nameJa": "ピアス",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000099.png"
+  },
+  {
+    "id": 16000098,
+    "name": "Ziggy",
+    "nameJa": "ジギー",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000098.png"
+  },
+  {
+    "id": 16000097,
+    "name": "Mina",
+    "nameJa": "ミナ",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000097.png"
+  },
+  {
+    "id": 16000096,
+    "name": "Trunk",
+    "nameJa": "トランク",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000096.png"
+  },
+  {
+    "id": 16000095,
+    "name": "Alli",
+    "nameJa": "アリー",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000095.png"
+  },
+  {
+    "id": 16000094,
+    "name": "Kaze",
+    "nameJa": "カゼ",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000094.png"
+  },
+  {
+    "id": 16000093,
+    "name": "Jae-Yong",
+    "nameJa": "ジェヨン",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000093.png"
+  },
+  {
+    "id": 16000092,
+    "name": "Finx",
+    "nameJa": "フィンクス",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000092.png"
+  },
+  {
+    "id": 16000091,
+    "name": "Lumi",
+    "nameJa": "ルミ",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000091.png"
+  },
+  {
+    "id": 16000090,
+    "name": "Ollie",
+    "nameJa": "オーリー",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000090.png"
+  },
+  {
+    "id": 16000089,
+    "name": "Meeple",
+    "nameJa": "ミープル",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000089.png"
+  },
+  {
+    "id": 16000087,
+    "name": "Juju",
+    "nameJa": "ジュジュ",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000087.png"
+  },
+  {
+    "id": 16000086,
+    "name": "Shade",
+    "nameJa": "シェイド",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000086.png"
+  },
+  {
+    "id": 16000085,
+    "name": "Kenji",
+    "nameJa": "ケンジ",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000085.png"
+  },
+  {
+    "id": 16000084,
+    "name": "Moe",
+    "nameJa": "モー",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000084.png"
+  },
+  {
+    "id": 16000083,
+    "name": "Clancy",
+    "nameJa": "クランシー",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000083.png"
+  },
+  {
+    "id": 16000082,
+    "name": "Berry",
+    "nameJa": "ベリー",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000082.png"
+  },
+  {
+    "id": 16000081,
+    "name": "Lily",
+    "nameJa": "リリー",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000081.png"
+  },
+  {
+    "id": 16000080,
+    "name": "Draco",
+    "nameJa": "ドラコ",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000080.png"
+  },
+  {
+    "id": 16000079,
+    "name": "Angelo",
+    "nameJa": "アンジェロ",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000079.png"
+  },
+  {
+    "id": 16000078,
+    "name": "Melodie",
+    "nameJa": "メロディー",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000078.png"
+  },
+  {
+    "id": 16000077,
+    "name": "Larry & Lawrie",
+    "nameJa": "ラリー＆ローリー",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000077.png"
+  },
+  {
+    "id": 16000076,
+    "name": "Kit",
+    "nameJa": "キット",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000076.png"
+  },
+  {
+    "id": 16000075,
+    "name": "Mico",
+    "nameJa": "ミコ",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000075.png"
+  },
+  {
+    "id": 16000074,
+    "name": "Charlie",
+    "nameJa": "チャーリー",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000074.png"
+  },
+  {
+    "id": 16000073,
+    "name": "Chuck",
+    "nameJa": "チャック",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000073.png"
+  },
+  {
+    "id": 16000072,
+    "name": "Pearl",
+    "nameJa": "パール",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000072.png"
+  },
+  {
+    "id": 16000071,
+    "name": "Doug",
+    "nameJa": "ダグ",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000071.png"
+  },
+  {
+    "id": 16000070,
+    "name": "Cordelius",
+    "nameJa": "コーデリアス",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000070.png"
+  },
+  {
+    "id": 16000069,
+    "name": "Hank",
+    "nameJa": "ハンク",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000069.png"
+  },
+  {
+    "id": 16000068,
+    "name": "Maisie",
+    "nameJa": "メイジー",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000068.png"
+  },
+  {
+    "id": 16000067,
+    "name": "Willow",
+    "nameJa": "ウィロー",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000067.png"
+  },
+  {
+    "id": 16000066,
+    "name": "R-T",
+    "nameJa": "R-T",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000066.png"
+  },
+  {
+    "id": 16000065,
+    "name": "Mandy",
+    "nameJa": "マンディ",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000065.png"
+  },
+  {
+    "id": 16000064,
+    "name": "Gray",
+    "nameJa": "グレイ",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000064.png"
+  },
+  {
+    "id": 16000063,
+    "name": "Chester",
+    "nameJa": "チェスター",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000063.png"
+  },
+  {
+    "id": 16000062,
+    "name": "Buster",
+    "nameJa": "バスター",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000062.png"
+  },
+  {
+    "id": 16000061,
+    "name": "Gus",
+    "nameJa": "ガス",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000061.png"
+  },
+  {
+    "id": 16000060,
+    "name": "Sam",
+    "nameJa": "サム",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000060.png"
+  },
+  {
+    "id": 16000059,
+    "name": "Otis",
+    "nameJa": "オーティス",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000059.png"
+  },
+  {
+    "id": 16000058,
+    "name": "Bonnie",
+    "nameJa": "ボニー",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000058.png"
+  },
+  {
+    "id": 16000057,
+    "name": "Janet",
+    "nameJa": "ジャネット",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000057.png"
+  },
+  {
+    "id": 16000056,
+    "name": "Eve",
+    "nameJa": "イヴ",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000056.png"
+  },
+  {
+    "id": 16000054,
+    "name": "Fang",
+    "nameJa": "ファング",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000054.png"
+  },
+  {
+    "id": 16000053,
+    "name": "Lola",
+    "nameJa": "ローラ",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000053.png"
+  },
+  {
+    "id": 16000052,
+    "name": "Meg",
+    "nameJa": "メグ",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000052.png"
+  },
+  {
+    "id": 16000051,
+    "name": "Ash",
+    "nameJa": "アッシュ",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000051.png"
+  },
+  {
+    "id": 16000050,
+    "name": "Griff",
+    "nameJa": "グリフ",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000050.png"
+  },
+  {
+    "id": 16000049,
+    "name": "Buzz",
+    "nameJa": "バズ",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000049.png"
+  },
+  {
+    "id": 16000048,
+    "name": "Grom",
+    "nameJa": "グロム",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000048.png"
+  },
+  {
+    "id": 16000047,
+    "name": "Squeak",
+    "nameJa": "スクウィーク",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000047.png"
+  },
+  {
+    "id": 16000046,
+    "name": "Belle",
+    "nameJa": "ベル",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000046.png"
+  },
+  {
+    "id": 16000045,
+    "name": "Stu",
+    "nameJa": "ストゥー",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000045.png"
+  },
+  {
+    "id": 16000044,
+    "name": "Ruffs",
+    "nameJa": "ラフス",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000044.png"
+  },
+  {
+    "id": 16000043,
+    "name": "Edgar",
+    "nameJa": "エドガー",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000043.png"
+  },
+  {
+    "id": 16000042,
+    "name": "Byron",
+    "nameJa": "バイロン",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000042.png"
+  },
+  {
+    "id": 16000041,
+    "name": "Lou",
+    "nameJa": "ルー",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000041.png"
+  },
+  {
+    "id": 16000040,
+    "name": "Amber",
+    "nameJa": "アンバー",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000040.png"
+  },
+  {
+    "id": 16000039,
+    "name": "Colette",
+    "nameJa": "コレット",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000039.png"
+  },
+  {
+    "id": 16000038,
+    "name": "Surge",
+    "nameJa": "サージ",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000038.png"
+  },
+  {
+    "id": 16000037,
+    "name": "Sprout",
+    "nameJa": "スプラウト",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000037.png"
+  },
+  {
+    "id": 16000036,
+    "name": "Nani",
+    "nameJa": "ナーニ",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000036.png"
+  },
+  {
+    "id": 16000035,
+    "name": "Gale",
+    "nameJa": "ゲイル",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000035.png"
+  },
+  {
+    "id": 16000034,
+    "name": "Jacky",
+    "nameJa": "ジャッキー",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000034.png"
+  },
+  {
+    "id": 16000032,
+    "name": "Max",
+    "nameJa": "MAX",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000032.png"
+  },
+  {
+    "id": 16000031,
+    "name": "Mr. P",
+    "nameJa": "ミスターP",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000031.png"
+  },
+  {
+    "id": 16000030,
+    "name": "Emz",
+    "nameJa": "Emz",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000030.png"
+  },
+  {
+    "id": 16000029,
+    "name": "Bea",
+    "nameJa": "ビー",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000029.png"
+  },
+  {
+    "id": 16000028,
+    "name": "Sandy",
+    "nameJa": "サンディ",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000028.png"
+  },
+  {
+    "id": 16000027,
+    "name": "8-Bit",
+    "nameJa": "8ビット",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000027.png"
+  },
+  {
+    "id": 16000026,
+    "name": "Bibi",
+    "nameJa": "ビビ",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000026.png"
+  },
+  {
+    "id": 16000025,
+    "name": "Carl",
+    "nameJa": "カール",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000025.png"
+  },
+  {
+    "id": 16000024,
+    "name": "Rosa",
+    "nameJa": "ローサ",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000024.png"
+  },
+  {
+    "id": 16000023,
+    "name": "Leon",
+    "nameJa": "レオン",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000023.png"
+  },
+  {
+    "id": 16000022,
+    "name": "Tick",
+    "nameJa": "ティック",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000022.png"
+  },
+  {
+    "id": 16000021,
+    "name": "Gene",
+    "nameJa": "ジーン",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000021.png"
+  },
+  {
+    "id": 16000020,
+    "name": "Frank",
+    "nameJa": "フランケン",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000020.png"
+  },
+  {
+    "id": 16000019,
+    "name": "Penny",
+    "nameJa": "ペニー",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000019.png"
+  },
+  {
+    "id": 16000018,
+    "name": "Darryl",
+    "nameJa": "ダリル",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000018.png"
+  },
+  {
+    "id": 16000017,
+    "name": "Tara",
+    "nameJa": "タラ",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000017.png"
+  },
+  {
+    "id": 16000016,
+    "name": "Pam",
+    "nameJa": "パム",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000016.png"
+  },
+  {
+    "id": 16000015,
+    "name": "Piper",
+    "nameJa": "エリザベス",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000015.png"
+  },
+  {
+    "id": 16000014,
+    "name": "Bo",
+    "nameJa": "ボウ",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000014.png"
+  },
+  {
+    "id": 16000013,
+    "name": "Poco",
+    "nameJa": "ポコ",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000013.png"
+  },
+  {
+    "id": 16000012,
+    "name": "Crow",
+    "nameJa": "クロウ",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000012.png"
+  },
+  {
+    "id": 16000011,
+    "name": "Mortis",
+    "nameJa": "モーティス",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000011.png"
+  },
+  {
+    "id": 16000010,
+    "name": "El Primo",
+    "nameJa": "エル・プリモ",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000010.png"
+  },
+  {
+    "id": 16000009,
+    "name": "Dynamike",
+    "nameJa": "ダイナマイク",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000009.png"
+  },
+  {
+    "id": 16000008,
+    "name": "Nita",
+    "nameJa": "ニタ",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000008.png"
+  },
+  {
+    "id": 16000007,
+    "name": "Jessie",
+    "nameJa": "ジェシー",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000007.png"
+  },
+  {
+    "id": 16000006,
+    "name": "Barley",
+    "nameJa": "バーリー",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000006.png"
+  },
+  {
+    "id": 16000005,
+    "name": "Spike",
+    "nameJa": "スパイク",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000005.png"
+  },
+  {
+    "id": 16000004,
+    "name": "Rico",
+    "nameJa": "リコ",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000004.png"
+  },
+  {
+    "id": 16000003,
+    "name": "Brock",
+    "nameJa": "ブロック",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000003.png"
+  },
+  {
+    "id": 16000002,
+    "name": "Bull",
+    "nameJa": "ブル",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000002.png"
+  },
+  {
+    "id": 16000001,
+    "name": "Colt",
+    "nameJa": "コルト",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000001.png"
+  },
+  {
+    "id": 16000000,
+    "name": "Shelly",
+    "nameJa": "シェリー",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000000.png"
+  }
+]

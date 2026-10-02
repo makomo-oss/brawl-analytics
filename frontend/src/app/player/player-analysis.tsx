@@ -1,10 +1,10 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { BarChart3, Target, TrendingUp, Users, Swords, RefreshCw, Trophy, Info } from "lucide-react"
+import { BarChart3, Target, TrendingUp, Users, Swords, RefreshCw, Trophy, Info, Crown, Sparkles, ShieldAlert, CheckCircle2, Filter, ChevronRight, MapPin } from "lucide-react"
 import { API_URL } from "@/lib/config"
 import { getBrawlerInfo } from "@/lib/brawlers"
-import { translateMap, translateMode } from "@/lib/translations"
+import { translateMap, translateMode, getModeIconUrl } from "@/lib/translations"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -61,12 +61,28 @@ function Evidence({ row }: { row: Stats }) {
 function CharacterLabel({ name }: { name: string }) {
   const info = getBrawlerInfo(name)
   return <span className="flex items-center gap-2">
-    <Avatar size="sm" className="border border-primary/20 shadow-sm"><AvatarImage src={info.imageUrl} alt="" /><AvatarFallback>{info.nameJa.slice(0, 1)}</AvatarFallback></Avatar>
+    <Avatar className="size-10 shrink-0 border border-primary/30 shadow-sm"><AvatarImage src={info.imageUrl} alt="" /><AvatarFallback>{info.nameJa.slice(0, 1)}</AvatarFallback></Avatar>
     <span className="font-semibold">{info.nameJa}</span>
   </span>
 }
 
-function StatsTable({ rows, dimension, onSelect }: { rows: AnalysisRow[]; dimension: "character" | "mode" | "map" | "map_character"; onSelect?: (row: AnalysisRow) => void }) {
+function WinRateBar({ row }: { row: Stats }) {
+  const positive = row.gap === null || row.gap >= 0
+  return <div className="space-y-2">
+    <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+      <span className="text-muted-foreground">自分の勝率 <strong className={`ml-1 text-base ${positive ? "text-green-400" : "text-rose-400"}`}>{rate(row.win_rate)}</strong></span>
+      {row.gap !== null && row.reference_coverage === 100 && <Badge className={`${positive ? "bg-green-500/10 text-green-400 border-green-500/30" : "bg-red-500/10 text-red-400 border-red-500/30"} border font-extrabold`}>{points(row.gap)}</Badge>}
+    </div>
+    <div className="relative h-2.5 overflow-hidden rounded-full bg-secondary shadow-inner" aria-hidden="true">
+      {row.reference_win_rate !== null && <div className="absolute inset-y-0 left-0 bg-purple-500/35" style={{ width: `${row.reference_win_rate}%` }} />}
+      <div className={`absolute inset-y-0 left-0 rounded-full ${positive ? "bg-gradient-to-r from-green-600 to-emerald-400" : "bg-gradient-to-r from-red-600 to-rose-400"}`} style={{ width: `${row.win_rate ?? 0}%` }} />
+      {row.reference_win_rate !== null && <div className="absolute inset-y-0 w-0.5 bg-purple-200" style={{ left: `${Math.min(99.5, row.reference_win_rate)}%` }} />}
+    </div>
+    {row.reference_win_rate !== null && <p className="text-[11px] text-muted-foreground">紫の目印：同条件の全体勝率 {rate(row.reference_win_rate)}{row.reference_coverage < 100 ? ` · 比較対象の自分 ${rate(row.comparison_win_rate)}（${row.comparison_matches}戦・差 ${points(row.gap)}）` : ""}</p>}
+  </div>
+}
+
+function StatsCards({ rows, dimension, onSelect }: { rows: AnalysisRow[]; dimension: "character" | "mode" | "map" | "map_character"; onSelect?: (row: AnalysisRow) => void }) {
   const [expanded, setExpanded] = useState(false)
   const [sort, setSort] = useState("matches")
   const sorted = [...rows].sort((a, b) => sort === "win_rate" ? (b.win_rate ?? -1) - (a.win_rate ?? -1) || b.matches - a.matches
@@ -80,29 +96,21 @@ function StatsTable({ rows, dimension, onSelect }: { rows: AnalysisRow[]; dimens
         <SelectContent><SelectItem value="matches">試合数</SelectItem><SelectItem value="win_rate">勝率</SelectItem><SelectItem value="gap">全体より低い順</SelectItem></SelectContent>
       </Select>
     </div>
-    <div className={`overflow-x-auto rounded-xl border ${panelClass}`}>
-      <table className="w-full min-w-[650px] text-left text-sm">
-        <caption className="sr-only">{dimension === "character" ? "キャラ" : dimension === "mode" ? "モード" : dimension === "map" ? "マップ" : "キャラ × マップ"}別の成績と同条件の全体勝率</caption>
-        <thead className="bg-secondary/30 text-xs text-muted-foreground"><tr>
-          <th scope="col" className="px-4 py-3">{dimension === "character" ? "キャラクター" : dimension === "mode" ? "モード" : dimension === "map" ? "マップ" : "キャラ × マップ"}</th>
-          <th scope="col" className="px-3 py-3">戦績</th><th scope="col" className="px-3 py-3">勝率</th><th scope="col" className="px-3 py-3">全体参考</th><th scope="col" className="px-3 py-3">差</th><th scope="col" className="px-3 py-3">試合数の目安</th>
-        </tr></thead>
-        <tbody className="divide-y divide-border/50">
-          {(expanded ? sorted : sorted.slice(0, 10)).map(row => <tr key={row.id} className="hover:bg-secondary/15">
-            <th scope="row" className="px-4 py-3 font-normal">
-              <button type="button" disabled={!onSelect} onClick={() => onSelect?.(row)} className="text-left enabled:hover:text-primary enabled:underline-offset-4 enabled:hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded">
-                {dimension === "character" || dimension === "map_character" ? <CharacterLabel name={row.label} /> : <span className="font-semibold">{dimension === "mode" ? translateMode(row.label) : translateMap(row.label)}</span>}
-                {row.mode && <span className="mt-1 block text-[11px] text-muted-foreground">{row.map ? `${translateMap(row.map)} · ` : ""}{translateMode(row.mode)}</span>}
-              </button>
-            </th>
-            <td className="whitespace-nowrap px-3 py-3 text-xs"><span className="text-emerald-400">{row.wins}勝</span> <span className="text-rose-400">{row.losses}敗</span>{row.draws > 0 && <span className="text-muted-foreground"> {row.draws}分</span>}<span className="mt-1 block text-muted-foreground">{row.matches}試合</span></td>
-            <td className="px-3 py-3 font-bold tabular-nums" title={`目安幅 ${row.interval_low ?? "—"}〜${row.interval_high ?? "—"}%`}>{rate(row.win_rate)}{row.reference_win_rate !== null && row.reference_coverage < 100 && <span className="mt-1 block whitespace-nowrap text-[10px] font-normal text-muted-foreground">比較対象: {rate(row.comparison_win_rate)} / {row.comparison_matches}戦</span>}</td>
-            <td className="px-3 py-3 tabular-nums text-muted-foreground" title={row.reference_win_rate === null ? "同じ条件の全体データが不足しています" : `比較元 ${row.reference_matches.toLocaleString()}件 · 個人戦績の${row.reference_coverage}%に対応`}>{rate(row.reference_win_rate)}</td>
-            <td className={`px-3 py-3 whitespace-nowrap font-medium tabular-nums ${row.gap === null ? "text-muted-foreground" : row.gap >= 0 ? "text-emerald-400" : "text-rose-400"}`}>{points(row.gap)}</td>
-            <td className="px-3 py-3"><Evidence row={row} /></td>
-          </tr>)}
-        </tbody>
-      </table>
+    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      {(expanded ? sorted : sorted.slice(0, 10)).map(row => <Card key={row.id} className="gap-0 border-primary/20 bg-card/80 py-0 shadow-lg">
+        <CardContent className="space-y-4 p-4">
+          <button type="button" disabled={!onSelect} onClick={() => onSelect?.(row)} className="flex w-full items-center justify-between gap-3 rounded-lg text-left transition-colors enabled:hover:text-purple-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+            <span className="min-w-0">
+              {dimension === "character" || dimension === "map_character" ? <CharacterLabel name={row.label} /> : <span className="flex items-center gap-3"><Avatar className="size-10 shrink-0 bg-primary/10"><AvatarImage src={getModeIconUrl(row.mode || row.label)} alt="" /><AvatarFallback><MapPin className="size-5 text-purple-400" /></AvatarFallback></Avatar><span className="font-bold">{dimension === "mode" ? translateMode(row.label) : translateMap(row.label)}</span></span>}
+              {row.mode && <span className="mt-2 block text-xs text-muted-foreground">{row.map ? `${translateMap(row.map)} · ` : ""}{translateMode(row.mode)}</span>}
+            </span>
+            {onSelect && <ChevronRight className="size-4 shrink-0 text-purple-400" />}
+          </button>
+          <WinRateBar row={row} />
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs"><span><strong className="text-green-400">{row.wins}勝</strong> <strong className="text-rose-400">{row.losses}敗</strong>{row.draws > 0 ? ` ${row.draws}分` : ""}<span className="ml-2 text-muted-foreground">{row.matches}試合</span></span><Evidence row={row} /></div>
+          <details className="text-[11px] text-muted-foreground"><summary className="cursor-pointer">データの目安</summary><p className="mt-2">勝率の目安幅 {rate(row.interval_low)}〜{rate(row.interval_high)}{row.reference_win_rate === null ? " · 全体との比較データは不足しています" : ` · 比較元 ${row.reference_matches.toLocaleString()}件`}</p></details>
+        </CardContent>
+      </Card>)}
     </div>
     {rows.length > 10 && <Button variant="outline" size="sm" onClick={() => setExpanded(!expanded)}>{expanded ? "10件に戻す" : `全${rows.length}件を表示`}</Button>}
   </div>
@@ -136,23 +144,48 @@ function TrendChart({ timeline }: { timeline: DailyStats[] }) {
 }
 
 function Advice({ rows, kind, onSelect }: { rows: AnalysisRow[]; kind: "practice" | "strength"; onSelect: (row: AnalysisRow) => void }) {
-  return <Card className={`${panelClass} ${kind === "practice" ? "border-amber-500/20" : "border-emerald-500/20"}`}>
-    <CardHeader><CardTitle className="flex items-center gap-2 text-base">{kind === "practice" ? <Target className="size-4 text-amber-400" /> : <Trophy className="size-4 text-emerald-400" />}{kind === "practice" ? "練習の優先候補" : "得意キャラの候補"}</CardTitle>
-      <CardDescription>試合数と勝率の幅を考慮し、全体データが十分なら同条件でも比較</CardDescription></CardHeader>
+  return <Card className={`relative overflow-hidden bg-gradient-to-br from-card via-card shadow-lg ${kind === "practice" ? "to-red-950/20 border-red-500/40" : "to-purple-950/20 border-purple-500/40"}`}>
+    <div className={`pointer-events-none absolute -right-8 -top-8 size-32 rounded-full blur-2xl ${kind === "practice" ? "bg-red-500/10" : "bg-purple-500/10"}`} />
+    <CardHeader><CardTitle className={`flex items-center gap-2 font-extrabold ${kind === "practice" ? "text-red-400" : "text-purple-400"}`}>{kind === "practice" ? <Target className="size-5 text-red-400" /> : <Sparkles className="size-5 text-yellow-400" />}{kind === "practice" ? "要練習（アドバイス）" : "あなたの得意キャラ"}</CardTitle>
+      <CardDescription>{kind === "practice" ? "次に振り返りたいキャラとマップ" : "試合数と勝率から見つけた、頼れる候補"}</CardDescription></CardHeader>
     <CardContent className="space-y-3">
-      {rows.length ? rows.map((row, index) => <button type="button" key={`${row.dimension}-${row.id}`} onClick={() => onSelect(row)} className="w-full rounded-xl border border-border/50 bg-secondary/15 p-3 text-left hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-        <div className="flex items-center justify-between gap-2"><span className="flex items-center gap-2"><span className="text-xs text-muted-foreground">{index + 1}</span><CharacterLabel name={row.label} /></span><span className={`text-sm font-bold ${kind === "practice" ? "text-amber-400" : "text-emerald-400"}`}>{row.basis === "personal" ? rate(row.win_rate) : points(row.gap)}</span></div>
+      {rows.length ? rows.map(row => <button type="button" key={`${row.dimension}-${row.id}`} onClick={() => onSelect(row)} className={`w-full rounded-xl border bg-card/60 p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${kind === "practice" ? "border-red-500/20 hover:border-red-400/60" : "border-purple-500/25 hover:border-purple-400/60"}`}>
+        <div className="flex items-center justify-between gap-2"><CharacterLabel name={row.label} /><ChevronRight className="size-4 shrink-0 text-muted-foreground" /></div>
         {row.map && <p className="mt-2 text-xs text-muted-foreground">{translateMap(row.map)} · {translateMode(row.mode || "")}</p>}
-        <p className="mt-2 text-xs text-muted-foreground">{row.wins}勝 {row.losses}敗 · {row.basis === "personal" ? `個人成績からの候補 · 目安幅 ${row.interval_low}〜${row.interval_high}%` : `比較対象${row.comparison_matches}戦: 自分 ${rate(row.comparison_win_rate)} / 全体参考 ${rate(row.reference_win_rate)}`}</p>
-        <p className="mt-1 text-xs text-muted-foreground">{row.basis === "personal" ? "全体との比較データは不足しています。押すと個人成績を確認できます。" : row.supported ? (kind === "practice" ? "負けた試合を振り返る候補。押すと詳細を確認できます。" : "同じ条件で継続して使う候補。押すと詳細を確認できます。") : "試合数による振れが残るため、候補として確認してください。"}</p>
-      </button>) : <p className="text-sm leading-relaxed text-muted-foreground">条件を満たす候補はありません。キャラ別・マップ別の成績を確認し、戦績を同期してデータを蓄積しましょう。</p>}
+        <div className="mt-3 flex flex-wrap items-center gap-2"><Badge className={`border font-bold ${kind === "practice" ? "bg-red-500/10 text-red-400 border-red-500/30" : "bg-purple-500/15 text-purple-300 border-purple-500/30"}`}>{row.basis === "personal" ? `勝率 ${rate(row.win_rate)}` : `全体との差 ${points(row.gap)}`}</Badge><span className="text-xs text-muted-foreground">{row.wins}勝 {row.losses}敗 · {row.matches}試合</span></div>
+        <p className="mt-2 text-[11px] text-muted-foreground">{row.basis === "personal" ? "個人成績からの候補 · 全体との比較データは不足" : `同条件の${row.comparison_matches}戦で比較${row.supported ? "" : " · まだ振れのある候補"}`}</p>
+      </button>) : <div className="rounded-xl bg-secondary/20 p-4 text-sm leading-relaxed text-muted-foreground">{kind === "practice" ? "今のデータでは要練習の候補はありません。マップ別の成績から気になる試合を振り返ってみましょう。" : "得意キャラを見つけるには、もう少し戦績が必要です。同期して記録を増やしましょう。"}</div>}
     </CardContent>
   </Card>
 }
 
+function Spotlight({ data, onCharacter, onPairs }: { data: Analysis; onCharacter: (row: AnalysisRow) => void; onPairs: () => void }) {
+  const picks = [...data.characters].sort((a, b) => b.wins - a.wins || b.matches - a.matches).slice(0, 3)
+  return <Card className="overflow-hidden border-2 border-purple-500/30 bg-gradient-to-r from-purple-950/40 via-background to-blue-950/40 shadow-xl backdrop-blur-md">
+    <CardHeader className="pb-4"><div className="flex flex-wrap items-center justify-between gap-3"><div><CardTitle className="flex items-center gap-2 text-xl font-black text-purple-400"><Crown className="size-6 text-yellow-400" />戦績・相性アナライザー</CardTitle><CardDescription className="mt-1 text-xs">あなたの活躍と、対戦したキャラの傾向をひと目で</CardDescription></div><Badge className="border border-purple-500/40 bg-purple-500/10 px-3 py-1 text-purple-300">{data.summary.matches}試合データ</Badge></div></CardHeader>
+    <CardContent><div className="grid gap-6 md:grid-cols-2">
+      {[{ rows: picks, enemy: false }, { rows: data.opponents.slice(0, 3), enemy: true }].map(group => <div key={String(group.enemy)} className={`space-y-3 rounded-2xl border bg-secondary/20 p-4 ${group.enemy ? "border-red-500/20" : "border-green-500/20"}`}>
+        <div className="flex flex-wrap items-center justify-between gap-2"><span className={`flex items-center gap-1.5 text-sm font-bold ${group.enemy ? "text-red-400" : "text-green-400"}`}>{group.enemy ? <ShieldAlert className="size-4" /> : <CheckCircle2 className="size-4" />}{group.enemy ? "敵にいるときの対戦成績" : "あなたの勝利貢献キャラ"}</span><span className="text-[10px] text-muted-foreground">{group.enemy ? "5対戦以上のキャラ" : "勝利数 TOP3"}</span></div>
+        {group.rows.length ? group.rows.map((row, index) => <button type="button" key={row.id} onClick={() => group.enemy ? onPairs() : onCharacter(row)} className={`flex w-full items-center justify-between gap-3 rounded-xl border bg-card/60 p-2.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${group.enemy ? "border-red-500/10 hover:border-red-500/40" : "border-green-500/10 hover:border-green-500/40"}`}>
+          <span className="flex min-w-0 items-center gap-2"><span className={`text-sm font-extrabold ${group.enemy ? "text-red-400" : "text-green-400"}`}>#{index + 1}</span><span><CharacterLabel name={row.label} /><span className="mt-1 block text-[10px] text-muted-foreground">{row.wins}勝 {row.losses}敗 · {row.matches}{group.enemy ? "対戦" : "試合"}</span></span></span>
+          <Badge className={`shrink-0 border text-xs font-black ${group.enemy ? "border-red-500/30 bg-red-500/20 text-red-400" : "border-green-500/30 bg-green-500/20 text-green-400"}`}>{group.enemy ? `敗北率 ${rate(row.decided ? row.losses / row.decided * 100 : null)}` : `勝率 ${rate(row.win_rate)}`}</Badge>
+        </button>) : <p className="py-4 text-center text-xs text-muted-foreground">{group.enemy ? "5対戦以上の3対3データがまだありません。" : "この条件の戦績はまだありません。"}</p>}
+        <button type="button" onClick={group.enemy ? onPairs : () => { if (picks[0]) onCharacter(picks[0]) }} disabled={!group.rows.length} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-purple-400 disabled:opacity-50">{group.enemy ? "味方・敵との相性を詳しく見る" : "キャラを押して成績を見る"}<ChevronRight className="size-3" /></button>
+      </div>)}
+    </div></CardContent>
+  </Card>
+}
+
+function MetaGap({ rows, onSelect }: { rows: AnalysisRow[]; onSelect: (row: AnalysisRow) => void }) {
+  const comparable = rows.filter(row => row.gap !== null).slice(0, 5)
+  return <Card className="border-primary/20 bg-card/80 shadow-lg backdrop-blur-sm"><CardHeader><CardTitle className="flex items-center gap-2"><TrendingUp className="size-5 text-primary" />メタ・ギャップ分析</CardTitle><CardDescription>同じキャラ・マップ・モードで、全体との差を確認</CardDescription></CardHeader><CardContent className="space-y-4">
+    {comparable.length ? comparable.map(row => <div key={row.id} className="space-y-3 rounded-xl border border-border/40 bg-secondary/20 p-3"><button type="button" onClick={() => onSelect(row)} className="flex w-full items-center justify-between gap-3 rounded-lg text-left focus-visible:ring-2 focus-visible:ring-primary"><CharacterLabel name={row.label} /><ChevronRight className="size-4 text-purple-400" /></button><WinRateBar row={row} /><p className="text-[11px] text-muted-foreground">{row.matches}試合 <span className="ml-2"><Evidence row={row} /></span></p></div>) : <div className="space-y-3 rounded-xl bg-secondary/20 p-4"><div className="flex -space-x-2" aria-hidden="true">{rows.slice(0, 3).map(row => <Avatar key={row.id} className="size-10 border-2 border-card"><AvatarImage src={getBrawlerInfo(row.label).imageUrl} /><AvatarFallback>{getBrawlerInfo(row.label).nameJa.slice(0, 1)}</AvatarFallback></Avatar>)}</div><p className="text-sm text-muted-foreground">同条件の全体データがまだ十分ではありません。キャラ別では、自分の勝率と試合数を確認できます。</p></div>}
+  </CardContent></Card>
+}
+
 function PairList({ rows, side }: { rows: AnalysisRow[]; side: "allies" | "opponents" }) {
-  return <Card className={panelClass}><CardHeader><CardTitle className="flex items-center gap-2 text-base">{side === "allies" ? <Users className="size-4 text-emerald-400" /> : <Swords className="size-4 text-rose-400" />}{side === "allies" ? "味方にいるときの成績" : "敵にいるときの成績"}</CardTitle>
-    <CardDescription>{side === "allies" ? "勝率の目安幅の下限が高い順" : "勝率の目安幅の上限が低い順"} · 最大10件</CardDescription></CardHeader>
+  return <Card className={`${panelClass} ${side === "allies" ? "border-green-500/25 bg-gradient-to-br from-card to-green-950/20" : "border-red-500/25 bg-gradient-to-br from-card to-red-950/20"}`}><CardHeader><CardTitle className={`flex items-center gap-2 text-base ${side === "allies" ? "text-green-400" : "text-red-400"}`}>{side === "allies" ? <Users className="size-5" /> : <Swords className="size-5" />}{side === "allies" ? "味方にいるときの成績" : "敵にいるときの成績"}</CardTitle>
+    <CardDescription>{side === "allies" ? "勝ちやすい傾向のある味方から表示" : "勝ちにくい傾向のある敵から表示"} · 試合数による振れも考慮</CardDescription></CardHeader>
     <CardContent className="space-y-3">{rows.length ? rows.map(row => <div key={row.id} className="rounded-xl border border-border/50 bg-secondary/15 p-3">
       <div className="flex items-center justify-between gap-3"><CharacterLabel name={row.label} /><span className="font-bold tabular-nums">{rate(row.win_rate)}</span></div>
       <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground"><span>{row.wins}勝 {row.losses}敗 · {row.matches}対戦</span><Evidence row={row} /></div>
@@ -169,6 +202,7 @@ export default function PlayerAnalysis({ playerTag, revision }: { playerTag: str
   const [map, setMap] = useState("all")
   const [retry, setRetry] = useState(0)
   const [view, setView] = useState("overview")
+  const [trendOpen, setTrendOpen] = useState(false)
   const [result, setResult] = useState<{ key: string; data?: Analysis; error?: string }>({ key: "" })
   const query = new URLSearchParams({ days, match_type: type, hero, mode, map_id: map }).toString()
   const requestKey = `${playerTag}:${revision}:${query}:${retry}`
@@ -201,18 +235,24 @@ export default function PlayerAnalysis({ playerTag, revision }: { playerTag: str
     if (dimension === "map_character") { setMode(row.mode || "all"); setMap(row.map || "all") }
   }
 
-  return <section aria-label="戦績分析" aria-busy={loading} className="space-y-5">
-    <div className="flex flex-wrap items-start justify-between gap-3">
-      <div><h2 className="flex items-center gap-2 text-2xl font-bold"><BarChart3 className="size-6 text-primary" />戦績分析</h2><p className="mt-1 text-sm text-muted-foreground">蓄積した試合から、成長・改善点・編成との相性を確認</p></div>
-      <Badge variant="outline">{type === "gachi" ? "ガチバトル" : type === "normal" ? "通常マッチ" : "通常＋ガチバトル"} · 直近{days}日</Badge>
-    </div>
-    <div className={`grid grid-cols-2 gap-3 rounded-xl border p-4 md:grid-cols-3 xl:grid-cols-5 ${panelClass}`}>
-      <FilterSelect label="分析期間" value={days} onChange={setDays} options={[7, 30, 60].map(value => ({ value: String(value), label: `直近${value}日` }))} />
-      <FilterSelect label="試合種別" value={type} onChange={value => { setType(value); resetContext() }} options={[{ value: "all", label: "通常＋ガチバトル" }, { value: "normal", label: "通常マッチ" }, { value: "gachi", label: "ガチバトル" }]} />
-      <FilterSelect label="分析キャラ" value={hero} disabled={loading} onChange={setHero} options={[{ value: "all", label: "全キャラ" }, ...(data?.options.heroes || []).map(value => ({ value, label: getBrawlerInfo(value).nameJa }))]} />
-      <FilterSelect label="分析モード" value={mode} disabled={loading} onChange={value => { setMode(value); setMap("all") }} options={[{ value: "all", label: "全モード" }, ...(data?.options.modes || []).map(value => ({ value, label: translateMode(value) }))]} />
-      <FilterSelect label="分析マップ" value={map} disabled={loading} onChange={setMap} options={[{ value: "all", label: "全マップ" }, ...(data?.options.maps || []).map(value => ({ value, label: translateMap(value) }))]} />
-      {(hero !== "all" || mode !== "all" || map !== "all") && <Button variant="ghost" size="sm" onClick={resetContext} className="col-span-2 justify-self-start text-xs md:col-span-3 xl:col-span-5">キャラ・モード・マップの絞り込みを解除</Button>}
+  return <section aria-label="戦績分析" aria-busy={loading} className="space-y-6">
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <h2 className="flex items-center gap-2 text-xl font-extrabold"><BarChart3 className="size-5 text-purple-400" />あなたの戦績分析</h2>
+        <div className="grid w-full grid-cols-2 gap-3 sm:w-auto sm:min-w-80">
+          <FilterSelect label="分析期間" value={days} onChange={setDays} options={[7, 30, 60].map(value => ({ value: String(value), label: `直近${value}日` }))} />
+          <FilterSelect label="試合種別" value={type} onChange={value => { setType(value); resetContext() }} options={[{ value: "all", label: "通常＋ガチバトル" }, { value: "normal", label: "通常マッチ" }, { value: "gachi", label: "ガチバトル" }]} />
+        </div>
+      </div>
+      <details className="rounded-xl border border-primary/15 bg-secondary/10 px-4">
+        <summary className="flex cursor-pointer items-center justify-between gap-3 py-3 text-xs font-semibold text-muted-foreground"><span className="flex items-center gap-2"><Filter className="size-3.5 text-purple-400" />キャラ・モード・マップで絞り込む</span><ChevronRight className="size-3.5" /></summary>
+        <div className="grid gap-3 pb-4 sm:grid-cols-3">
+          <FilterSelect label="分析キャラ" value={hero} disabled={loading} onChange={setHero} options={[{ value: "all", label: "全キャラ" }, ...(data?.options.heroes || []).map(value => ({ value, label: getBrawlerInfo(value).nameJa }))]} />
+          <FilterSelect label="分析モード" value={mode} disabled={loading} onChange={value => { setMode(value); setMap("all") }} options={[{ value: "all", label: "全モード" }, ...(data?.options.modes || []).map(value => ({ value, label: translateMode(value) }))]} />
+          <FilterSelect label="分析マップ" value={map} disabled={loading} onChange={setMap} options={[{ value: "all", label: "全マップ" }, ...(data?.options.maps || []).map(value => ({ value, label: translateMap(value) }))]} />
+        </div>
+      </details>
+      {(hero !== "all" || mode !== "all" || map !== "all") && <div className="flex flex-wrap items-center gap-2"><span className="text-xs text-muted-foreground">絞り込み中</span>{[hero !== "all" ? getBrawlerInfo(hero).nameJa : "", mode !== "all" ? translateMode(mode) : "", map !== "all" ? translateMap(map) : ""].filter(Boolean).map(label => <Badge key={label} className="border border-purple-500/30 bg-purple-500/15 text-purple-300">{label}</Badge>)}<Button variant="ghost" size="sm" onClick={resetContext} className="text-xs">絞り込みを解除</Button></div>}
     </div>
     {loading ? <div role="status" className="rounded-xl border border-border/50 p-12 text-center text-sm text-muted-foreground"><RefreshCw className="mx-auto mb-3 size-5 animate-spin" />保存済みの戦績を分析中…</div>
       : result.error ? <div role="alert" className="space-y-3 rounded-xl border border-destructive/30 p-6 text-center"><p className="text-sm">{result.error}</p><Button variant="outline" onClick={() => setRetry(value => value + 1)}>分析を再取得</Button></div>
@@ -220,21 +260,22 @@ export default function PlayerAnalysis({ playerTag, revision }: { playerTag: str
         {data.coverage.truncated && <p role="status" className="rounded-lg border border-amber-500/30 p-3 text-sm text-amber-400">保存済み戦績が多いため、最新10,000試合に限定して分析しています。</p>}
         {!data.coverage.reference_available && <p role="status" className="text-sm text-amber-400">全体の比較データを取得できていません。個人成績のみ表示しています。</p>}
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          {[{ label: "勝率", value: rate(data.summary.win_rate), detail: `${data.summary.wins}勝 ${data.summary.losses}敗 ${data.summary.draws}分` },
-            { label: "分析試合数", value: data.summary.matches.toLocaleString(), detail: `プレイ記録のある日：${data.summary.active_days}日` },
-            { label: "期間内の最長連勝", value: `${data.summary.best_win_streak}連勝`, detail: "保存された試合の順序から集計" },
-            { label: `前${data.trend.days}日との勝率差`, value: points(data.trend.delta), detail: data.trend.comparable ? `直近${data.trend.days}日 ${rate(data.trend.current.win_rate)} / 前${data.trend.days}日 ${rate(data.trend.previous.win_rate)}` : "両期間に勝敗の決まった10試合ずつが必要" }].map(item => <Card key={item.label} className={`gap-0 py-0 ${panelClass}`}><CardContent className="p-4"><p className="text-xs text-muted-foreground">{item.label}</p><p className="mt-2 text-2xl font-black tabular-nums">{item.value}</p><p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">{item.detail}</p></CardContent></Card>)}
+          {[{ label: "勝率", value: rate(data.summary.win_rate), detail: `${data.summary.wins}勝 ${data.summary.losses}敗 ${data.summary.draws}分`, Icon: CheckCircle2, color: "text-green-400 border-green-500/20 bg-green-500/5" },
+            { label: "分析試合数", value: data.summary.matches.toLocaleString(), detail: `${data.summary.active_days}日分のプレイ記録`, Icon: Swords, color: "text-purple-400 border-purple-500/20 bg-purple-500/5" },
+            { label: "最長連勝", value: `${data.summary.best_win_streak}連勝`, detail: "保存された履歴の中で集計", Icon: Trophy, color: "text-yellow-400 border-yellow-500/20 bg-yellow-500/5" },
+            { label: `前${data.trend.days}日との勝率差`, value: points(data.trend.delta), detail: data.trend.comparable ? `直近 ${rate(data.trend.current.win_rate)} / 前期 ${rate(data.trend.previous.win_rate)}` : "比較できる戦績を蓄積中", Icon: TrendingUp, color: "text-blue-400 border-blue-500/20 bg-blue-500/5" }].map(item => <div key={item.label} className={`rounded-xl border p-3 ${item.color}`} title={item.label === "最長連勝" ? "未取得の試合は含まれません" : undefined}><div className="flex items-center gap-2 text-[11px] font-bold"><item.Icon className="size-4 shrink-0" />{item.label}</div><p className="mt-1.5 text-2xl font-black tabular-nums">{item.value}</p><p className="mt-1 text-[10px] text-muted-foreground">{item.detail}</p></div>)}
         </div>
         <Tabs value={view} onValueChange={setView} className="space-y-4">
           <TabsList className="grid w-full grid-cols-2 gap-1 bg-secondary/40 p-1 group-data-horizontal/tabs:h-auto sm:grid-cols-4">
-            <TabsTrigger value="overview" className="h-10">成長・改善点</TabsTrigger><TabsTrigger value="characters" className="h-10">キャラ別</TabsTrigger><TabsTrigger value="contexts" className="h-10">モード・マップ</TabsTrigger><TabsTrigger value="pairs" className="h-10">味方・敵との相性</TabsTrigger>
+            <TabsTrigger value="overview" className="h-10 gap-1.5 font-bold"><Sparkles className="size-4 text-yellow-400" />おすすめ・改善点</TabsTrigger><TabsTrigger value="characters" className="h-10 gap-1.5 font-bold"><Trophy className="size-4 text-purple-400" />キャラ別</TabsTrigger><TabsTrigger value="contexts" className="h-10 gap-1.5 font-bold"><MapPin className="size-4 text-blue-400" />モード・マップ</TabsTrigger><TabsTrigger value="pairs" className="h-10 gap-1.5 font-bold"><Users className="size-4 text-green-400" />味方・敵との相性</TabsTrigger>
           </TabsList>
           <TabsContent value="overview" className="space-y-5">
-            <Card className={panelClass}><CardHeader><CardTitle className="flex items-center gap-2 text-base"><TrendingUp className="size-4 text-primary" />成績の推移</CardTitle><CardDescription>直近{data.trend.days}日：{data.trend.current.wins}勝 {data.trend.current.losses}敗 ／ 前{data.trend.days}日：{data.trend.previous.wins}勝 {data.trend.previous.losses}敗</CardDescription></CardHeader><CardContent><TrendChart timeline={data.timeline} /><p className="mt-3 text-xs leading-relaxed text-muted-foreground">対戦条件が変わると勝率も変わります。キャラ・モード・マップを絞ると同じ条件で推移を確認できます。</p></CardContent></Card>
-            <div className="grid gap-4 lg:grid-cols-2"><Advice rows={data.practice} kind="practice" onSelect={row => focusRow(row, row.dimension || "character")} /><Advice rows={data.strengths} kind="strength" onSelect={row => focusRow(row, "character")} /></div>
+            <Spotlight data={data} onCharacter={row => focusRow(row, "character")} onPairs={() => setView("pairs")} />
+            <div className="grid items-start gap-6 md:grid-cols-2"><MetaGap rows={data.characters} onSelect={row => focusRow(row, "character")} /><div className="space-y-6"><Advice rows={data.strengths} kind="strength" onSelect={row => focusRow(row, "character")} /><Advice rows={data.practice} kind="practice" onSelect={row => focusRow(row, row.dimension || "character")} /></div></div>
+            <details open={trendOpen} onToggle={event => setTrendOpen(event.currentTarget.open)} className="rounded-xl border border-primary/20 bg-card/40 p-4"><summary className="flex cursor-pointer items-center gap-2 font-bold"><TrendingUp className="size-5 text-primary" />成績の推移を見る</summary>{trendOpen && <div className="mt-4 space-y-3"><p className="text-xs text-muted-foreground">直近{data.trend.days}日：{data.trend.current.wins}勝 {data.trend.current.losses}敗 ／ 前{data.trend.days}日：{data.trend.previous.wins}勝 {data.trend.previous.losses}敗</p><TrendChart timeline={data.timeline} /><p className="text-xs leading-relaxed text-muted-foreground">対戦条件が変わると勝率も変わります。キャラ・モード・マップを絞ると同じ条件で推移を確認できます。</p></div>}</details>
           </TabsContent>
-          <TabsContent value="characters" className="space-y-3"><h3 className="font-bold">キャラクター別の成績</h3><p className="text-xs leading-relaxed text-muted-foreground">全体参考は、自分が使ったキャラ・モード・マップ・試合種別と対応する集計です。平均との差はパーセントポイントで表示します。</p><StatsTable rows={data.characters} dimension="character" onSelect={row => focusRow(row, "character")} /></TabsContent>
-          <TabsContent value="contexts" className="space-y-6"><div className="space-y-3"><h3 className="font-bold">モード別</h3><StatsTable rows={data.modes} dimension="mode" onSelect={row => focusRow(row, "mode")} /></div><div className="space-y-3"><h3 className="font-bold">マップ別</h3><StatsTable rows={data.maps} dimension="map" onSelect={row => focusRow(row, "map")} /></div><div className="space-y-3"><h3 className="font-bold">キャラ × マップ</h3><StatsTable rows={data.map_characters} dimension="map_character" onSelect={row => focusRow(row, "map_character")} /></div></TabsContent>
+          <TabsContent value="characters" className="space-y-3"><h3 className="font-bold">キャラクター別の成績</h3><p className="text-xs leading-relaxed text-muted-foreground">キャラを押すとその戦績に絞り込めます。紫の目印は、同じ条件の全体勝率です。</p><StatsCards rows={data.characters} dimension="character" onSelect={row => focusRow(row, "character")} /></TabsContent>
+          <TabsContent value="contexts" className="space-y-6"><div className="space-y-3"><h3 className="flex items-center gap-2 font-bold"><Swords className="size-4 text-purple-400" />モード別</h3><StatsCards rows={data.modes} dimension="mode" onSelect={row => focusRow(row, "mode")} /></div><div className="space-y-3"><h3 className="flex items-center gap-2 font-bold"><MapPin className="size-4 text-blue-400" />マップ別</h3><StatsCards rows={data.maps} dimension="map" onSelect={row => focusRow(row, "map")} /></div><div className="space-y-3"><h3 className="font-bold">キャラ × マップ</h3><StatsCards rows={data.map_characters} dimension="map_character" onSelect={row => focusRow(row, "map_character")} /></div></TabsContent>
           <TabsContent value="pairs" className="space-y-4"><p className="text-sm leading-relaxed text-muted-foreground">勝敗が決まった3対3の{data.pair_matches}試合から集計。5対戦以上のキャラを表示します。味方・敵の編成全体やプレイヤーの影響を含む傾向です。自分のキャラ・モード・マップを絞って確認できます。</p><div className="grid gap-4 lg:grid-cols-2"><PairList rows={data.allies} side="allies" /><PairList rows={data.opponents} side="opponents" /></div></TabsContent>
         </Tabs>
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">

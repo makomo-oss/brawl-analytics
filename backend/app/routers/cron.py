@@ -1,9 +1,10 @@
 import logging
 import re
+import hmac
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Header, BackgroundTasks
-from app.config import CRON_SECRET
+from app.config import CRON_SECRET, AUTO_SYNC_SECRET
 from app.tasks.crawler_task import run_crawler_task
 from app.tasks.cleanup_task import run_cleanup_task
 
@@ -40,6 +41,18 @@ async def ping():
     Wake-up Pingエンドポイント。Renderのスリープ解除用。
     """
     return {"status": "ok"}
+
+
+def verify_auto_sync_secret(auto_sync_secret: str | None = Header(None)):
+    if not AUTO_SYNC_SECRET or not auto_sync_secret or not hmac.compare_digest(auto_sync_secret, AUTO_SYNC_SECRET):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+
+@router.post("/api/cron/auto-sync")
+async def trigger_auto_sync(background_tasks: BackgroundTasks, secret: None = Depends(verify_auto_sync_secret)):
+    from app.services.player_auto_sync import run_auto_sync_task
+    background_tasks.add_task(run_auto_sync_task)
+    return {"status": "accepted"}
 
 @router.post("/api/cron/run-batch")
 async def trigger_batch(background_tasks: BackgroundTasks, secret: str = Depends(verify_cron_secret)):

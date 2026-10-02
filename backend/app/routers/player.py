@@ -1,4 +1,5 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Header
+from pydantic import BaseModel, StrictBool
 from app.services.brawl_api import get_player_battlelog, get_player
 from app.database import get_db
 from app.services.player_profiles import profile_record
@@ -11,6 +12,41 @@ from typing import Literal
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/player", tags=["Player"])
+
+
+class AutoSyncSetting(BaseModel):
+    enabled: StrictBool
+
+
+@router.get("/{player_tag}/auto-sync")
+async def read_auto_sync(player_tag: str, auto_sync_token: str | None = Header(None, max_length=64)):
+    from app.services.player_auto_sync import auto_sync_status, checked_tag
+    try:
+        tag = checked_tag(player_tag)
+        return await asyncio.to_thread(auto_sync_status, get_db(), tag, auto_sync_token)
+    except ValueError:
+        raise HTTPException(status_code=422, detail="プレイヤータグまたは設定キーが不正です。")
+    except Exception:
+        logger.exception("Could not read auto-sync settings")
+        raise HTTPException(status_code=503, detail="自動同期の設定を取得できませんでした。")
+
+
+@router.put("/{player_tag}/auto-sync")
+async def update_auto_sync(player_tag: str, setting: AutoSyncSetting,
+                           auto_sync_token: str = Header(..., min_length=64, max_length=64)):
+    from app.services.player_auto_sync import set_auto_sync, checked_tag
+    try:
+        tag = checked_tag(player_tag)
+        return await asyncio.to_thread(set_auto_sync, get_db(), tag, auto_sync_token, setting.enabled)
+    except ValueError:
+        raise HTTPException(status_code=422, detail="プレイヤータグまたは設定キーが不正です。")
+    except Exception as exc:
+        if "auto_sync_capacity" in str(exc):
+            raise HTTPException(status_code=409, detail="現在、自動同期の登録枠がいっぱいです。時間をおいて再試行してください。")
+        if "player_not_found" in str(exc):
+            raise HTTPException(status_code=404, detail="先にプレイヤーを同期してください。")
+        logger.exception("Could not update auto-sync settings")
+        raise HTTPException(status_code=503, detail="自動同期の設定を保存できませんでした。")
 
 import time
 

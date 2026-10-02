@@ -14,3 +14,4 @@ BRAWL_API_BASE_URL = "https://api.brawlstars.com/v1"
 
 # Cron Secret for automated batch processes
 CRON_SECRET = os.getenv("CRON_SECRET", "default_secret_for_local_dev")
+AUTO_SYNC_SECRET = os.getenv("AUTO_SYNC_SECRET", "")

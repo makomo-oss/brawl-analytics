@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Search, TrendingUp, AlertTriangle, Lightbulb, Trophy, Swords, Star, Building2, Shield, Users, User, ShieldAlert, Sparkles, Filter, CheckCircle2, XCircle, Crown, Target, Zap } from "lucide-react"
+import { Search, Trophy, Swords, Building2, Users, User, Zap } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
@@ -19,6 +19,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { API_URL } from "@/lib/config"
+import PlayerAnalysis from "./player-analysis"
 
 function formatBattleTime(timeStr: string) {
   if (!timeStr) return "";
@@ -117,9 +118,10 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
   const [loading, setLoading] = useState(false)
   const [loadingClub, setLoadingClub] = useState(false)
   const [data, setData] = useState<DashboardData | null>(null)
+  const [analysisRevision, setAnalysisRevision] = useState(0)
   const [clubData, setClubData] = useState<any | null>(null)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
-  const [battleTab, setBattleTab] = useState("battles")
+  const [battleTab, setBattleTab] = useState("all")
   const [resultFilter, setResultFilter] = useState<"all" | "victory" | "defeat">("all")
   const [modeFilter, setModeFilter] = useState<string>("all")
 
@@ -335,6 +337,7 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
       }
       dashboardCacheRef.current[cacheKey] = result
       setData(result)
+      setAnalysisRevision(value => value + 1)
       // URL を現在のタグで更新
       window.history.replaceState(null, '', `/player?tag=${encodeURIComponent(cacheKey)}`)
     } catch (error) {
@@ -797,362 +800,13 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
               </CardHeader>
             </Card>
           )}
-          {(() => {
-            if (!data.recent_battles || data.recent_battles.length === 0) return null;
-            
-            // ガチバトルのログを優先、少なければ全バトルログを使用
-            const rankedBattles = data.recent_battles.filter((b: any) => b.type === "soloRanked" || b.type === "teamRanked");
-            const targetBattles = rankedBattles.length >= 3 ? rankedBattles : data.recent_battles;
-            
-            // 1. 自分が使って勝率が高いキャラ (Top Picks)
-            const myHeroStats: Record<string, { wins: number; matches: number }> = {};
-            // 2. 相手に居て負けた頻度の高い天敵キャラ (Worst Nemesis)
-            const enemyStats: Record<string, { defeats: number; matches: number }> = {};
-            
-            targetBattles.forEach((b: any) => {
-              const hero = (b.hero || "").toLowerCase();
-              if (hero && hero !== "unknown") {
-                if (!myHeroStats[hero]) myHeroStats[hero] = { wins: 0, matches: 0 };
-                myHeroStats[hero].matches += 1;
-                if (b.result === "victory") myHeroStats[hero].wins += 1;
-              }
-              
-              // 相手キャラの集計
-              if (Array.isArray(b.opponent_teams)) {
-                b.opponent_teams.forEach((team: any) => {
-                  if (Array.isArray(team)) {
-                    team.forEach((p: any) => {
-                      const eHero = (p.brawler || "").toLowerCase();
-                      if (eHero && eHero !== "unknown") {
-                        if (!enemyStats[eHero]) enemyStats[eHero] = { defeats: 0, matches: 0 };
-                        enemyStats[eHero].matches += 1;
-                        if (b.result === "defeat") enemyStats[eHero].defeats += 1;
-                      }
-                    });
-                  }
-                });
-              }
-            });
-            
-            // 自キャラ勝率TOP3
-            const topPicks = Object.entries(myHeroStats)
-              .map(([hero, s]) => ({
-                hero,
-                wins: s.wins,
-                matches: s.matches,
-                winRate: Math.round((s.wins / s.matches) * 100)
-              }))
-              .sort((a, b) => b.wins - a.wins || b.winRate - a.winRate)
-              .slice(0, 3);
+          <PlayerAnalysis key={data.player_tag} playerTag={data.player_tag} revision={analysisRevision} />
 
-            // 敵天敵TOP3 (敗北数が多く、対戦数2回以上のキャラ優先)
-            const worstNemeses = Object.entries(enemyStats)
-              .map(([hero, s]) => ({
-                hero,
-                defeats: s.defeats,
-                matches: s.matches,
-                defeatRate: Math.round((s.defeats / s.matches) * 100)
-              }))
-              .filter(item => item.defeats > 0)
-              .sort((a, b) => b.defeats - a.defeats || b.defeatRate - a.defeatRate)
-              .slice(0, 3);
-
-            return (
-              <div className="space-y-8 my-8">
-                {/* ガチバトル相性アナライザー Banner */}
-                <Card className="border-2 border-purple-500/30 bg-gradient-to-r from-purple-950/40 via-background to-blue-950/40 shadow-xl overflow-hidden backdrop-blur-md">
-                  <CardHeader className="pb-4">
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                      <div>
-                        <CardTitle className="text-xl font-black flex items-center gap-2 text-purple-400">
-                          <Crown className="w-6 h-6 text-yellow-400 animate-bounce" />
-                          ガチバトル相性アナライザー
-                        </CardTitle>
-                        <CardDescription className="text-xs">
-                          {rankedBattles.length >= 3 ? "ガチバトルの直近データから算出した相性傾向" : "直近の対戦履歴から算出した相性傾向"}
-                        </CardDescription>
-                      </div>
-                      <Badge variant="outline" className="border-purple-500/40 text-purple-300 bg-purple-500/10 px-3 py-1 font-semibold text-xs">
-                        直近 {targetBattles.length} 試合データ
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {/* 1. ガチバトル得意キャラ (My Top Picks) */}
-                      <div className="space-y-3 bg-secondary/20 p-4 rounded-2xl border border-green-500/20">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-bold text-green-400 flex items-center gap-1.5">
-                            <CheckCircle2 className="w-4 h-4" /> あなたのガチバトル勝利貢献キャラ
-                          </span>
-                          <span className="text-[10px] text-muted-foreground">勝利数 TOP3</span>
-                        </div>
-                        {topPicks.length > 0 ? (
-                          <div className="space-y-2.5">
-                            {topPicks.map((item, idx) => {
-                              const bInfo = getBrawlerInfo(item.hero);
-                              return (
-                                <div key={idx} className="flex items-center justify-between bg-card/60 p-2.5 rounded-xl border border-green-500/10">
-                                  <div className="flex items-center gap-3">
-                                    <span className="font-extrabold text-sm text-green-500 w-4 text-center">#{idx + 1}</span>
-                                    <Avatar className="w-9 h-9 border border-green-500/30 shrink-0">
-                                      <AvatarImage src={bInfo.imageUrl} />
-                                      <AvatarFallback><User className="w-4 h-4" /></AvatarFallback>
-                                    </Avatar>
-                                    <div>
-                                      <div className="font-bold text-sm">{bInfo.nameJa}</div>
-                                      <div className="text-[10px] text-muted-foreground">{item.wins}勝 / {item.matches}試合</div>
-                                    </div>
-                                  </div>
-                                  <div className="text-right">
-                                    <Badge className="bg-green-500/20 text-green-400 border border-green-500/30 text-xs font-black">
-                                      勝率 {item.winRate}%
-                                    </Badge>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        ) : (
-                          <div className="text-xs text-muted-foreground text-center py-4">ガチバトルのデータがまだ十分にありません。</div>
-                        )}
-                      </div>
-
-                      {/* 2. 相手に居ると勝率が低い天敵キャラ (Worst Nemesis) */}
-                      <div className="space-y-3 bg-secondary/20 p-4 rounded-2xl border border-red-500/20">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-bold text-red-400 flex items-center gap-1.5">
-                            <ShieldAlert className="w-4 h-4" /> 敵に居ると危険な天敵キャラ
-                          </span>
-                          <span className="text-[10px] text-muted-foreground">被敗北数 TOP3</span>
-                        </div>
-                        {worstNemeses.length > 0 ? (
-                          <div className="space-y-2.5">
-                            {worstNemeses.map((item, idx) => {
-                              const bInfo = getBrawlerInfo(item.hero);
-                              return (
-                                <div key={idx} className="flex items-center justify-between bg-card/60 p-2.5 rounded-xl border border-red-500/10">
-                                  <div className="flex items-center gap-3">
-                                    <span className="font-extrabold text-sm text-red-500 w-4 text-center">#{idx + 1}</span>
-                                    <Avatar className="w-9 h-9 border border-red-500/30 shrink-0">
-                                      <AvatarImage src={bInfo.imageUrl} />
-                                      <AvatarFallback><User className="w-4 h-4" /></AvatarFallback>
-                                    </Avatar>
-                                    <div>
-                                      <div className="font-bold text-sm">{bInfo.nameJa}</div>
-                                      <div className="text-[10px] text-muted-foreground">敵存在時: {item.defeats}敗 / {item.matches}対戦</div>
-                                    </div>
-                                  </div>
-                                  <div className="text-right">
-                                    <Badge variant="destructive" className="text-xs font-black bg-red-500/20 text-red-400 border border-red-500/30">
-                                      敗北率 {item.defeatRate}%
-                                    </Badge>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        ) : (
-                          <div className="text-xs text-muted-foreground text-center py-4">天敵データはまだ検出されていません。</div>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            );
-          })()}
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Card className="bg-card/80 backdrop-blur-sm shadow-[0_0_15px_rgba(var(--primary),0.1)] border-primary/20">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-primary" />
-                  メタ・ギャップ分析
-                </CardTitle>
-                <CardDescription>世間の平均勝率とあなたの勝率の差（マップ総合）</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {data.insights?.gap_analysis?.map((item: any) => {
-                  const bInfo = getBrawlerInfo(item.char);
-                  const diff = item.personal_win_rate - item.global_win_rate;
-                  const isPositive = diff >= 0;
-                  return (
-                    <div key={item.char} className="space-y-2.5 p-3 rounded-xl bg-secondary/20 border border-border/40">
-                      <div className="flex justify-between items-center text-xs sm:text-sm font-medium">
-                        <div className="flex items-center gap-2.5">
-                          <Avatar className="w-8 h-8 border border-primary/20 shadow-sm">
-                            <AvatarImage src={bInfo.imageUrl} />
-                            <AvatarFallback className="bg-primary/10"><User className="w-4 h-4 text-primary/70" /></AvatarFallback>
-                          </Avatar>
-                          <span className="font-bold text-sm sm:text-base">{bInfo.nameJa}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className={`text-xs font-extrabold ${isPositive ? 'text-green-500 border-green-500/30 bg-green-500/10' : 'text-red-500 border-red-500/30 bg-red-500/10'}`}>
-                            {isPositive ? `+${diff.toFixed(1)}%` : `${diff.toFixed(1)}%`}
-                          </Badge>
-                          <span className={`font-bold ${isPositive ? "text-green-500" : "text-destructive"}`}>
-                            {item.personal_win_rate}% <span className="text-xs opacity-60 text-muted-foreground">(全体: {item.global_win_rate}%)</span>
-                          </span>
-                        </div>
-                      </div>
-                      <div className="relative h-3 w-full bg-secondary rounded-full overflow-hidden shadow-inner">
-                        <div 
-                          className="absolute top-0 left-0 h-full bg-primary/30" 
-                          style={{ width: `${item.global_win_rate}%` }} 
-                        />
-                        <div 
-                          className={`absolute top-0 left-0 h-full ${isPositive ? 'bg-gradient-to-r from-green-600 to-emerald-400' : 'bg-gradient-to-r from-red-600 to-rose-400'}`}
-                          style={{ width: `${item.personal_win_rate}%` }} 
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </CardContent>
-            </Card>
-
-            <div className="space-y-6">
-              <Card className="bg-gradient-to-br from-card via-card to-purple-950/20 border-purple-500/40 shadow-lg relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 rounded-full blur-2xl pointer-events-none" />
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-purple-400 font-extrabold">
-                    <Sparkles className="w-5 h-5 text-yellow-400" />
-                    隠れ武器（おすすめキャラ）
-                  </CardTitle>
-                  <CardDescription>世間的にはマイナーだが、あなたは勝率が高い得意キャラ</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-wrap gap-3">
-                    {data.insights?.hidden_weapons && data.insights.hidden_weapons.length > 0 ? (
-                      data.insights.hidden_weapons.map((char: string) => {
-                        const bInfo = getBrawlerInfo(char);
-                        return (
-                          <Badge key={char} variant="default" className="text-sm px-3.5 py-2 font-bold capitalize bg-gradient-to-r from-purple-600 to-indigo-600 border border-purple-400/30 text-white shadow-lg flex items-center gap-2 hover:scale-105 transition-transform">
-                            <Avatar className="w-6 h-6 border border-white/40">
-                              <AvatarImage src={bInfo.imageUrl} />
-                              <AvatarFallback className="bg-white/20"><User className="w-3.5 h-3.5 text-white" /></AvatarFallback>
-                            </Avatar>
-                            {bInfo.nameJa}
-                          </Badge>
-                        );
-                      })
-                    ) : (
-                      <div className="text-xs text-muted-foreground">検出された隠れ武器はありません。</div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-gradient-to-br from-card via-card to-red-950/20 border-destructive/40 shadow-lg relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/5 rounded-full blur-2xl pointer-events-none" />
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-destructive font-extrabold">
-                    <AlertTriangle className="w-5 h-5 text-red-500" />
-                    要練習（アドバイス）
-                  </CardTitle>
-                  <CardDescription>環境的に強いものの、自身の勝率が伸び悩んでいる注意キャラ</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-wrap gap-3">
-                    {data.insights?.needs_practice && data.insights.needs_practice.length > 0 ? (
-                      data.insights.needs_practice.map((char: string) => {
-                        const bInfo = getBrawlerInfo(char);
-                        return (
-                          <Badge key={char} variant="destructive" className="text-sm px-3.5 py-2 font-bold capitalize shadow-lg flex items-center gap-2 hover:scale-105 transition-transform">
-                            <Avatar className="w-6 h-6 border border-white/40">
-                              <AvatarImage src={bInfo.imageUrl} />
-                              <AvatarFallback className="bg-white/20"><User className="w-3.5 h-3.5 text-white" /></AvatarFallback>
-                            </Avatar>
-                            {bInfo.nameJa}
-                          </Badge>
-                        );
-                      })
-                    ) : (
-                      <div className="text-xs text-muted-foreground">要練習キャラはありません。良好な勝率を維持しています！</div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-
-        {/* タブセクション（バトル履歴、分析、キャラクター） */}
-          <Tabs defaultValue="battles" className="w-full mt-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
-          <TabsList className="grid w-full grid-cols-3 mb-6 bg-secondary/50 p-1">
+        <Tabs defaultValue="battles" className="w-full mt-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
+          <TabsList className="grid w-full grid-cols-2 mb-6 bg-secondary/50 p-1">
             <TabsTrigger value="battles" className="rounded-md font-semibold text-md">バトル履歴</TabsTrigger>
-            <TabsTrigger value="analysis" className="rounded-md font-semibold text-md">モード別分析</TabsTrigger>
             <TabsTrigger value="characters" className="rounded-md font-semibold text-md">キャラクター</TabsTrigger>
           </TabsList>
-
-          <TabsContent value="analysis" className="space-y-6">
-            <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2 text-primary/80">
-              📊 モード別分析
-            </h2>
-            {data.insights?.mode_analysis && data.insights.mode_analysis.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {data.insights.mode_analysis.map((modeStat) => (
-                  <Card key={modeStat.mode} className="bg-card/40 backdrop-blur-md border-primary/20 shadow-xl overflow-hidden hover:shadow-2xl transition-all">
-                    <div className="p-4 bg-secondary/30 flex justify-between items-center border-b border-primary/10">
-                      <h3 className="font-bold text-lg">{translateMode(modeStat.mode)}</h3>
-                      <Badge variant="outline" className="font-mono">{modeStat.matches} 試合</Badge>
-                    </div>
-                    <CardContent className="p-5 space-y-6">
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-end">
-                          <span className="text-sm font-medium text-muted-foreground">勝率</span>
-                          <span className={`text-2xl font-black ${modeStat.win_rate >= 60 ? 'text-green-500' : modeStat.win_rate >= 50 ? 'text-blue-500' : 'text-orange-500'}`}>
-                            {modeStat.win_rate}%
-                          </span>
-                        </div>
-                        <div className="h-3 w-full bg-secondary/50 rounded-full overflow-hidden shadow-inner">
-                          <div 
-                            className={`h-full rounded-full transition-all duration-1000 ${modeStat.win_rate >= 60 ? 'bg-gradient-to-r from-green-500 to-emerald-400' : modeStat.win_rate >= 50 ? 'bg-gradient-to-r from-blue-500 to-cyan-400' : 'bg-gradient-to-r from-orange-500 to-red-400'}`}
-                            style={{ width: `${modeStat.win_rate}%` }}
-                          />
-                        </div>
-                        <div className="flex justify-between text-xs text-muted-foreground font-mono">
-                          <span>{modeStat.wins} 勝</span>
-                          <span>{modeStat.matches - modeStat.wins} 敗</span>
-                        </div>
-                      </div>
-
-                      {modeStat.star_player_count > 0 && (
-                        <div className="flex items-center gap-2 bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 p-2 rounded-lg border border-yellow-500/20">
-                          <Star className="w-4 h-4 fill-current" />
-                          <span className="text-sm font-semibold">MVP獲得: {modeStat.star_player_count}回</span>
-                        </div>
-                      )}
-
-                      <div className="space-y-3">
-                        <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">よく使うキャラクター</span>
-                        <div className="flex gap-3">
-                          {modeStat.top_brawlers.map(brawlerName => {
-                            const bInfo = getBrawlerInfo(brawlerName);
-                            return (
-                              <div key={brawlerName} className="flex flex-col items-center gap-1 group">
-                                <Avatar className="w-12 h-12 border-2 border-primary/20 shadow-sm group-hover:scale-110 transition-transform">
-                                  <AvatarImage src={bInfo.imageUrl} />
-                                  <AvatarFallback className="bg-primary/10"><User className="w-5 h-5 text-primary/70" /></AvatarFallback>
-                                </Avatar>
-                                <span className="text-[10px] font-medium text-muted-foreground truncate w-14 text-center">
-                                  {bInfo.nameJa}
-                                </span>
-                              </div>
-                            )
-                          })}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <div className="py-12 text-center text-muted-foreground bg-secondary/20 rounded-xl border border-dashed">
-                分析データがありません。
-              </div>
-            )}
-          </TabsContent>
 
           <TabsContent value="battles" className="space-y-6">
             <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2 text-primary/80">

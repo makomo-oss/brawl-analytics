@@ -311,7 +311,8 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
         setPlayerTag(formattedTag)
       }
 
-      const cacheKey = finalTag.replace(/^#+/, "").toUpperCase()
+      const cacheKey = finalTag.replace(/^#+/, "").toUpperCase().replace(/O/g, "0")
+      setPlayerTag(`#${cacheKey}`)
       const cached = dashboardCacheRef.current[cacheKey]
       if (cached) {
         // キャッシュがあれば 0ms で即座に表示！
@@ -960,7 +961,7 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                           <div className="flex flex-col gap-2.5">
                             {battle.my_team && battle.my_team.map((p: any, idx: number) => {
                               const bInfo = getBrawlerInfo(p.brawler);
-                              const isMe = (p.brawler || "").toLowerCase() === (battle.hero || "").toLowerCase();
+                              const isMe = (p.tag || "").replace(/^#+/, "").toUpperCase().replace(/O/g, "0") === data.player_tag.replace(/^#+/, "").toUpperCase().replace(/O/g, "0");
                               return (
                                 <div 
                                   key={idx} 

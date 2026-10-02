@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { BarChart3, Target, TrendingUp, Users, Swords, RefreshCw, Trophy, Info, Crown, Sparkles, ShieldAlert, CheckCircle2, Filter, ChevronRight, MapPin } from "lucide-react"
+import { BarChart3, Target, TrendingUp, Users, Swords, RefreshCw, Trophy, Crown, Sparkles, ShieldAlert, CheckCircle2, Filter, ChevronRight, MapPin } from "lucide-react"
 import { API_URL } from "@/lib/config"
 import { getBrawlerInfo } from "@/lib/brawlers"
 import { translateMap, translateMode, getModeIconUrl } from "@/lib/translations"
@@ -262,8 +262,8 @@ export default function PlayerAnalysis({ playerTag, revision }: { playerTag: str
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {[{ label: "勝率", value: rate(data.summary.win_rate), detail: `${data.summary.wins}勝 ${data.summary.losses}敗 ${data.summary.draws}分`, Icon: CheckCircle2, color: "text-green-400 border-green-500/20 bg-green-500/5" },
             { label: "分析試合数", value: data.summary.matches.toLocaleString(), detail: `${data.summary.active_days}日分のプレイ記録`, Icon: Swords, color: "text-purple-400 border-purple-500/20 bg-purple-500/5" },
-            { label: "最長連勝", value: `${data.summary.best_win_streak}連勝`, detail: "保存された履歴の中で集計", Icon: Trophy, color: "text-yellow-400 border-yellow-500/20 bg-yellow-500/5" },
-            { label: `前${data.trend.days}日との勝率差`, value: points(data.trend.delta), detail: data.trend.comparable ? `直近 ${rate(data.trend.current.win_rate)} / 前期 ${rate(data.trend.previous.win_rate)}` : "比較できる戦績を蓄積中", Icon: TrendingUp, color: "text-blue-400 border-blue-500/20 bg-blue-500/5" }].map(item => <div key={item.label} className={`rounded-xl border p-3 ${item.color}`} title={item.label === "最長連勝" ? "未取得の試合は含まれません" : undefined}><div className="flex items-center gap-2 text-[11px] font-bold"><item.Icon className="size-4 shrink-0" />{item.label}</div><p className="mt-1.5 text-2xl font-black tabular-nums">{item.value}</p><p className="mt-1 text-[10px] text-muted-foreground">{item.detail}</p></div>)}
+            { label: "最長連勝", value: `${data.summary.best_win_streak}連勝`, detail: "", Icon: Trophy, color: "text-yellow-400 border-yellow-500/20 bg-yellow-500/5" },
+            { label: `前${data.trend.days}日との勝率差`, value: points(data.trend.delta), detail: data.trend.comparable ? `直近 ${rate(data.trend.current.win_rate)} / 前期 ${rate(data.trend.previous.win_rate)}` : "比較できる戦績を蓄積中", Icon: TrendingUp, color: "text-blue-400 border-blue-500/20 bg-blue-500/5" }].map(item => <div key={item.label} className={`rounded-xl border p-3 ${item.color}`}><div className="flex items-center gap-2 text-[11px] font-bold"><item.Icon className="size-4 shrink-0" />{item.label}</div><p className="mt-1.5 text-2xl font-black tabular-nums">{item.value}</p>{item.detail && <p className="mt-1 text-[10px] text-muted-foreground">{item.detail}</p>}</div>)}
         </div>
         <Tabs value={view} onValueChange={setView} className="space-y-4">
           <TabsList className="grid w-full grid-cols-2 gap-1 bg-secondary/40 p-1 group-data-horizontal/tabs:h-auto sm:grid-cols-4">
@@ -278,10 +278,6 @@ export default function PlayerAnalysis({ playerTag, revision }: { playerTag: str
           <TabsContent value="contexts" className="space-y-6"><div className="space-y-3"><h3 className="flex items-center gap-2 font-bold"><Swords className="size-4 text-purple-400" />モード別</h3><StatsCards rows={data.modes} dimension="mode" onSelect={row => focusRow(row, "mode")} /></div><div className="space-y-3"><h3 className="flex items-center gap-2 font-bold"><MapPin className="size-4 text-blue-400" />マップ別</h3><StatsCards rows={data.maps} dimension="map" onSelect={row => focusRow(row, "map")} /></div><div className="space-y-3"><h3 className="font-bold">キャラ × マップ</h3><StatsCards rows={data.map_characters} dimension="map_character" onSelect={row => focusRow(row, "map_character")} /></div></TabsContent>
           <TabsContent value="pairs" className="space-y-4"><p className="text-sm leading-relaxed text-muted-foreground">勝敗が決まった3対3の{data.pair_matches}試合から集計。5対戦以上のキャラを表示します。味方・敵の編成全体やプレイヤーの影響を含む傾向です。自分のキャラ・モード・マップを絞って確認できます。</p><div className="grid gap-4 lg:grid-cols-2"><PairList rows={data.allies} side="allies" /><PairList rows={data.opponents} side="opponents" /></div></TabsContent>
         </Tabs>
-        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
-          <p className="flex items-start gap-2"><Info className="mt-0.5 size-3.5 shrink-0" /><span>最大{data.coverage.history_days}日以内に保存した{data.coverage.retained_matches.toLocaleString()}試合が対象{data.coverage.earliest ? `（${dayLabel(data.coverage.earliest)}〜${dayLabel(data.coverage.latest!)}）` : ""}。同期で取得した履歴を蓄積しています。未取得の試合は含まれません。</span></p>
-          <details><summary className="cursor-pointer py-2 font-medium">集計について</summary><p className="mt-1">フレンド戦を除き、引き分けは勝率の分母から除外します。勝率の目安幅が広いほど、少数試合による振れが大きくなります。連勝は保存された履歴上の値です。</p><p className="mt-2">全体参考は最大60日の試合を新しさで重み付けした値です。個人成績と期間・プレイヤー層は異なります。対応する比較データが個人戦績の80%未満の場合は「—」を表示します。平均との差は、対応データがある自分の試合だけで計算します。練習・得意候補は比較対象となる10試合以上から抽出し、少数試合の差を弱めて評価しています。全体比較が不足するときは、目安幅が50%を上回る得意候補、3対3で50%を下回るキャラとマップの練習候補を、個人成績から表示します。</p></details>
-        </div>
       </>}
   </section>
 }

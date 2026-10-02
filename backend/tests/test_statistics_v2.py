@@ -157,7 +157,7 @@ def test_sparse_ranked_matchups_use_labeled_ranked_cohort(monkeypatch):
              total_matches=20, total_wins=10, weighted_matches=15, weighted_wins=7.5)
     ])
     calls = []
-    def pairs(db, type, sub_type, selected_id, rank_tier, mode=None):
+    def pairs(db, type, sub_type, selected_id, rank_tier, mode=None, character_id=None):
         calls.append((sub_type, rank_tier))
         if sub_type == 'map':
             return {'colt': [dict(kind='counter', char_b='bull', match_count=2, win_count=2,
@@ -177,6 +177,41 @@ def test_sparse_ranked_matchups_use_labeled_ranked_cohort(monkeypatch):
     assert detail['kamo'][0]['brawler'] == 'shelly'
     assert detail['tenteki'][0]['brawler'] == 'rico'
     assert detail['matchups'] == {}
+
+
+def test_character_pair_rpc_and_cache_are_scoped_to_requested_character():
+    calls = []
+    class Database:
+        def rpc(self, name, params):
+            calls.append((name, params))
+            self.data = [dict(char_a=params['p_character'])]
+            return self
+        def execute(self):
+            return self
+    meta._PAIR_CONTEXT_CACHE.clear()
+    try:
+        db = Database()
+        meta._contextual_pairs(db, 'global', None, None, 'all', character_id='edgar')
+        meta._contextual_pairs(db, 'global', None, None, 'all', character_id='colt')
+        meta._contextual_pairs(db, 'global', None, None, 'all', character_id='EDGAR')
+        assert [name for name, _ in calls] == ['character_pair_stats', 'character_pair_stats']
+        assert [params['p_character'] for _, params in calls] == ['edgar', 'colt']
+    finally:
+        meta._PAIR_CONTEXT_CACHE.clear()
+
+
+def test_character_detail_requests_only_target_pairs_and_preserves_filters(monkeypatch):
+    calls = []
+    monkeypatch.setattr(meta, 'get_db', lambda: None)
+    def tier(**kwargs):
+        calls.append(kwargs)
+        return dict(characters={'r-t': {'kamo': [], 'tenteki': []}}, tiers={'A': ['r-t']})
+    monkeypatch.setattr(meta, 'get_tier_list', tier)
+    detail = meta.get_character_detail('R-T', type='gachi', rank_tier='legendary',
+                                       sub_type='map', id='map', mode='brawlBall')
+    assert calls == [dict(type='gachi', rank_tier='legendary', sub_type='map', id='map',
+                          mode='brawlBall', include_details=True, detail_character='r-t')]
+    assert detail['tier'] == 'A'
 
 
 def test_map_mix_does_not_reward_character_with_easier_schedule(monkeypatch):

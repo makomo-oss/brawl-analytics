@@ -199,16 +199,21 @@ def wilson_lower_bound(wins: int, total: int, z: float = 1.645) -> float:
     spread = z * math.sqrt(inner_val)
     return (center - spread) / denominator
 
-def _contextual_pairs(db, type, sub_type, selected_id, rank_tier, mode=None):
-    key = (type, sub_type, selected_id, rank_tier, mode)
+def _contextual_pairs(db, type, sub_type, selected_id, rank_tier, mode=None, character_id=None):
+    key = (type, sub_type, selected_id, rank_tier, mode, _normalize_id(character_id))
     cached = _PAIR_CONTEXT_CACHE.get(key)
     now = time.time()
     if cached and now - cached[0] < 300:
         return cached[1]
-    rows = db.rpc("contextual_pair_stats", {"p_type": type,
+    params = {"p_type": type,
         "p_mode": selected_id if sub_type == "mode" else mode,
         "p_map": selected_id if sub_type == "map" else None,
-        "p_rank": rank_tier}).execute().data or []
+        "p_rank": rank_tier}
+    rpc_name = "contextual_pair_stats"
+    if character_id:
+        rpc_name = "character_pair_stats"
+        params["p_character"] = character_id
+    rows = db.rpc(rpc_name, params).execute().data or []
     by_char = {}
     for row in rows:
         by_char.setdefault(_normalize_id(row["char_a"]), []).append(row)
@@ -241,7 +246,7 @@ def _display_matchups(pairs):
 
 
 @router.get("/tier-list")
-def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, rank_tier: str = "all", include_details: bool = False, mode: str = None):
+def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, rank_tier: str = "all", include_details: bool = False, mode: str = None, detail_character: str = None):
     db = get_db()
     
     # マッチ数のカウント（キャッシュから高速取得）
@@ -348,9 +353,10 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
     # it with the usage deviation required by the Tier specification.
     weighted_wins = sum(v["weighted_wins"] for v in char_stats.values())
     baseline = weighted_wins / weighted_total if weighted_total else 0.5
-    pair_data = _contextual_pairs(db, type, sub_type, id, rank_tier, mode) if include_details else {}
-    broad_pair_data = (_contextual_pairs(db, "gachi", None, None, "all")
-                       if include_details and type == "gachi" and (sub_type or rank_tier != "all") else {})
+    pair_data = (_contextual_pairs(db, type, sub_type, id, rank_tier, mode, detail_character)
+                 if include_details else {})
+    broad_pair_data = (_contextual_pairs(db, "gachi", None, None, "all", None, detail_character)
+                       if include_details and type == "gachi" and (sub_type in ("map", "mode") or mode or rank_tier != "all") else {})
 
     for cid, stats in char_stats.items():
         tm = stats["total_matches"]
@@ -396,7 +402,7 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
         }
         
         # include_details=True の場合のみ、重い対面マトリクス(matchups/kamo/tenteki)と味方シナジー(synergies)を付与
-        if include_details:
+        if include_details and (not detail_character or _normalize_id(cid) == _normalize_id(detail_character)):
             norm_cid = _normalize_id(cid)
             
             char_pairs = pair_data.get(norm_cid, [])
@@ -501,13 +507,14 @@ def get_categories(type: str = "global"):
     return result
 
 @router.get("/characters/{character_id}")
-def get_character_detail(character_id: str, type: str = "global", rank_tier: str = "all", sub_type: str = None, id: str = None):
+def get_character_detail(character_id: str, type: str = "global", rank_tier: str = "all", sub_type: str = None, id: str = None, mode: str = None):
     db = get_db()
     char_id_raw = character_id.lower().strip()
     norm_target = _normalize_id(char_id_raw)
     
     # 1. 基本情報の取得 (Tier表ロジックと同じく集計)
-    tier_data = get_tier_list(type=type, sub_type=sub_type, id=id, rank_tier=rank_tier, include_details=True)
+    tier_data = get_tier_list(type=type, sub_type=sub_type, id=id, rank_tier=rank_tier,
+                             mode=mode, include_details=True, detail_character=char_id_raw)
     chars = tier_data.get("characters", {})
     tiers = tier_data.get("tiers", {})
     

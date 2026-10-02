@@ -1,4 +1,6 @@
 import os
+import hashlib
+import hmac
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -14,4 +16,9 @@ BRAWL_API_BASE_URL = "https://api.brawlstars.com/v1"
 
 # Cron Secret for automated batch processes
 CRON_SECRET = os.getenv("CRON_SECRET", "default_secret_for_local_dev")
-AUTO_SYNC_SECRET = os.getenv("AUTO_SYNC_SECRET", "")
+# Domain-separated scheduler key; it does not disclose the database credential.
+# An explicit value can override this when configuring environments independently.
+AUTO_SYNC_SECRET = os.getenv("AUTO_SYNC_SECRET") or (
+    hmac.new(SUPABASE_KEY.encode(), b"brawl-analytics:auto-sync:v1", hashlib.sha256).hexdigest()
+    if SUPABASE_KEY else ""
+)

@@ -75,7 +75,7 @@ async def search_players(q: str = Query(..., min_length=1, description="Player t
     """
     clean_q = q.strip()
     if clean_q.startswith("#"):
-        tag_val = clean_q.replace("#", "").upper()
+        tag_val = normalize_player_tag(clean_q)
         # キャッシュがあれば適用
         cached_entry = _PLAYER_SEARCH_ENRICH_CACHE.get(tag_val)
         icon_id = cached_entry[0].get("icon_id", 28000000) if cached_entry else 28000000
@@ -188,7 +188,7 @@ async def sync_player(player_tag: str):
             logger.warning(f"Failed to upsert player data during sync: {db_err}")
             raise HTTPException(status_code=503, detail="Failed to save player")
 
-        return {"player_tag": player_tag, "status": "synced", "name": player_info.get("name"),
+        return {"player_tag": clean_tag, "status": "synced", "name": player_info.get("name"),
                 "battle_records_saved": saved}
     except HTTPException:
         raise
@@ -277,8 +277,6 @@ async def get_dashboard(player_tag: str):
         wins = 0
         recent_battles = []
         
-        player_tag_fmt = f"#{clean_tag}"
-        
         for item in items:
             battle = item.get("battle") or {}
             event = item.get("event") or {}
@@ -294,7 +292,7 @@ async def get_dashboard(player_tag: str):
                 opponent_teams = []
                 
                 # スタープレイヤーの判定
-                star_player_tag = ((battle.get("starPlayer") or {}).get("tag") or "").replace("#", "").upper()
+                star_player_tag = normalize_player_tag((battle.get("starPlayer") or {}).get("tag"))
                 is_star_player = (star_player_tag == clean_tag)
                 
                 teams = battle.get("teams") or []
@@ -305,7 +303,7 @@ async def get_dashboard(player_tag: str):
                         is_my_team = False
                         team_data = []
                         for p in team:
-                            ptag = (p.get("tag") or "").replace("#", "").upper()
+                            ptag = normalize_player_tag(p.get("tag"))
                             brawler_name = ((p.get("brawler") or {}).get("name") or "unknown").lower()
                             team_data.append({
                                 "name": p.get("name", "Unknown"),
@@ -323,7 +321,7 @@ async def get_dashboard(player_tag: str):
                 elif players:
                     # Solo Showdown など
                     for p in players:
-                        ptag = (p.get("tag") or "").replace("#", "").upper()
+                        ptag = normalize_player_tag(p.get("tag"))
                         brawler_name = ((p.get("brawler") or {}).get("name") or "unknown").lower()
                         p_data = {
                             "name": p.get("name", "Unknown"),
@@ -462,7 +460,7 @@ async def get_dashboard(player_tag: str):
                            player_info.get("rankedRank") or 0)
 
         return {
-            "player_tag": player_tag,
+            "player_tag": clean_tag,
             "profile": {
                 "name": player_info.get("name", "Unknown"),
                 "icon_id": (player_info.get("icon") or {}).get("id", 28000000),

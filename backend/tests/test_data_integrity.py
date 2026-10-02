@@ -111,6 +111,55 @@ def test_dashboard_reports_failed_battle_persistence(monkeypatch):
         asyncio.run(player.get_dashboard("ABC"))
     assert error.value.status_code == 503
 
+
+@pytest.mark.parametrize("route", [player.get_dashboard, player.sync_player])
+def test_player_tag_letter_o_alias_preserves_team_and_saved_history(monkeypatch, route):
+    from unittest.mock import Mock
+
+    canonical = "C9PQRGG0P"
+    info = {"tag": f"#{canonical}", "name": "Test"}
+    log = {"items": [{
+        "battleTime": "20261001T042132.000Z", "event": {"mode": "knockout", "map": "Test Map"},
+        "battle": {"type": "ranked", "result": "victory", "starPlayer": {"tag": f"#{canonical}"}, "teams": [
+            [{"tag": f"#{canonical}", "name": "Test", "brawler": {"name": "PIPER"}},
+             {"tag": "#V99J0CCV8", "name": "Teammate", "brawler": {"name": "PIPER"}}],
+            [{"tag": "#2UYRGRQPCU", "name": "Opponent", "brawler": {"name": "COLT"}}],
+        ]},
+    }]}
+    db = Mock()
+    monkeypatch.setattr(player, "get_db", lambda: db)
+    monkeypatch.setattr(player, "get_player", AsyncMock(return_value=info))
+    monkeypatch.setattr(player, "get_player_battlelog", AsyncMock(return_value=log))
+    monkeypatch.setattr(meta, "_get_cached_macro_data", lambda database: [])
+
+    result = asyncio.run(route("#c9pqrggop"))
+    player.get_player.assert_awaited_once_with(canonical)
+    assert result["player_tag"] == canonical
+    profile = db.table.return_value.upsert.call_args_list[0].args[0]
+    records = db.table.return_value.upsert.call_args_list[1].args[0]
+    assert profile["player_tag"] == canonical
+    assert records[0]["player_tag"] == canonical
+    assert records[0]["hero_used"] == "PIPER"
+    assert records[0]["allies"] == ["PIPER"]
+    assert records[0]["opponents"] == ["COLT"]
+    if route is player.get_dashboard:
+        battle = result["recent_battles"][0]
+        assert battle["hero"] == "piper"
+        assert [p["tag"] for p in battle["my_team"]] == [canonical, "V99J0CCV8"]
+        assert len(battle["opponent_teams"]) == 1
+
+
+def test_battle_without_requested_player_is_not_saved():
+    from app.services.battle_records import parse_battlelog
+
+    records, _ = parse_battlelog("C9PQRGG0P", [{
+        "battleTime": "20261001T042132.000Z", "event": {"mode": "knockout"},
+        "battle": {"type": "ranked", "result": "victory", "players": [
+            {"tag": "#V99J0CCV8", "brawler": {"name": "COLT"}},
+        ]},
+    }])
+    assert records == []
+
 def test_tier_counts_observations_without_dividing_by_six(monkeypatch):
     monkeypatch.setattr(meta,"get_db",lambda:None)
     monkeypatch.setattr(meta,"_get_cached_total_analyzed",lambda db:999)

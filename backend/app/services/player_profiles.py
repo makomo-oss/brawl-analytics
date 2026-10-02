@@ -1,10 +1,11 @@
 """One schema for all verified profile writers; syncing must not erase rank data."""
 from datetime import datetime, timezone
+from app.services.battle_records import clean_tag
 
 
 def profile_record(tag: str, info: dict) -> dict:
-    tag = tag.replace('%23', '').replace('#', '').strip().upper()
-    actual = str(info.get('tag', '')).replace('#', '').upper()
+    tag = clean_tag(tag)
+    actual = clean_tag(info.get('tag', ''))
     if actual != tag or not info.get('name'):
         raise ValueError('Profile does not match the requested player')
     current = info.get('rankedRank') or 0

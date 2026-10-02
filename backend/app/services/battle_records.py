@@ -18,7 +18,7 @@ def parse_battle_time(raw: str) -> str:
 
 
 def clean_tag(tag: str) -> str:
-    return str(tag or "").replace("%23", "#").replace("#", "").strip().upper()
+    return str(tag or "").replace("%23", "#").replace("#", "").strip().upper().replace("O", "0")
 
 
 def ranked_encountered_tags(items: list) -> set[str]:
@@ -117,6 +117,10 @@ def parse_battlelog(player_tag: str, items: list) -> tuple[list[dict], set[str]]
                         hero_used = brawler
                     else:
                         opponents.append(brawler)
+
+            # A battle without the requested player is not their observation.
+            if hero_used == "unknown":
+                continue
 
             mode = event.get("mode")
             if not mode or mode == "unknown":

@@ -1,5 +1,6 @@
 "use client"
 
+import { useBrawlerCatalog } from "@/lib/use-brawler-catalog"
 import { useState, useEffect, useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -39,6 +40,7 @@ const WEIGHTS = [
 ]
 
 export default function DraftCompanionPage() {
+  const catalogRevision = useBrawlerCatalog()
   const [phase, setPhase] = useState<Phase>("setup")
   const [categories, setCategories] = useState({ modes: [], maps: [], mode_to_maps: {} as Record<string, string[]> })
   
@@ -119,7 +121,7 @@ export default function DraftCompanionPage() {
         charKey.toLowerCase().includes(q)
       )
     })
-  }, [charSearchQuery])
+  }, [charSearchQuery, catalogRevision])
 
   // ドラフト開始時にメタデータをフェッチ
   const handleStartDraft = async () => {

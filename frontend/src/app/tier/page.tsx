@@ -1,5 +1,6 @@
 "use client"
 
+import { useBrawlerCatalog } from "@/lib/use-brawler-catalog"
 import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -26,6 +27,7 @@ const tierConfig: Record<string, { color: string; label: string; bg: string }> =
 }
 
 export default function TierListPage() {
+  useBrawlerCatalog()
   const [tierData, setTierData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [selectedChar, setSelectedChar] = useState<any>(null)

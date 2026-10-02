@@ -1,5 +1,6 @@
 "use client"
 
+import { useBrawlerCatalog } from "@/lib/use-brawler-catalog"
 import { useEffect, useRef, useState } from "react"
 import { BarChart3, Target, TrendingUp, Users, Swords, RefreshCw, Trophy, Crown, Sparkles, ShieldAlert, CheckCircle2, Filter, ChevronRight, MapPin } from "lucide-react"
 import { API_URL } from "@/lib/config"
@@ -195,6 +196,7 @@ function PairList({ rows, side }: { rows: AnalysisRow[]; side: "allies" | "oppon
 }
 
 export default function PlayerAnalysis({ playerTag, revision }: { playerTag: string; revision: number }) {
+  useBrawlerCatalog()
   const [days, setDays] = useState("30")
   const [type, setType] = useState("all")
   const [hero, setHero] = useState("all")

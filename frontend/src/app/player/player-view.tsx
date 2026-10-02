@@ -2,6 +2,7 @@
 
 
 
+import { useBrawlerCatalog } from "@/lib/use-brawler-catalog"
 import { useState, useEffect, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -109,6 +110,7 @@ interface DashboardData {
 }
 
 export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
+  useBrawlerCatalog()
   const params = useParams()
   const router = useRouter()
   const routeTag = defaultTag || (params?.tag ? decodeURIComponent(String(params.tag)) : "")

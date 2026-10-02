@@ -1,3 +1,5 @@
+import catalogSeed from "./brawler-catalog.json"
+
 export const BRAWLER_MAP: Record<string, { ja: string, imageUrl: string }> = {
   "wendy": { ja: "ウェンディ", imageUrl: "https://cdn.brawlify.com/brawlers/borders/16000108.png" },
   "nori": { ja: "ノリ", imageUrl: "https://cdn.brawlify.com/brawlers/borders/16000107.png" },
@@ -108,13 +110,18 @@ export const BRAWLER_MAP: Record<string, { ja: string, imageUrl: string }> = {
   "shelly": { ja: "シェリー", imageUrl: "https://cdn.brawlify.com/brawlers/borders/16000000.png" },
 }
 
-export function getBrawlerInfo(name: any): { nameJa: string; imageUrl: string } {
+// Bundled last-known data is immediately available, including when offline.
+for (const row of catalogSeed) {
+  BRAWLER_MAP[row.name.toLowerCase()] = { ja: row.nameJa, imageUrl: row.imageUrl }
+}
+
+export function getBrawlerInfo(name: unknown): { nameJa: string; imageUrl: string } {
   if (!name || typeof name !== 'string') {
-    return { nameJa: "Unknown", imageUrl: "https://cdn.brawlify.com/brawler/shelly.png" };
+    return { nameJa: "Unknown", imageUrl: "" };
   }
   const trimmed = name.trim();
   if (!trimmed) {
-    return { nameJa: "Unknown", imageUrl: "https://cdn.brawlify.com/brawler/shelly.png" };
+    return { nameJa: "Unknown", imageUrl: "" };
   }
   
   const lowerName = trimmed.toLowerCase();
@@ -122,23 +129,22 @@ export function getBrawlerInfo(name: any): { nameJa: string; imageUrl: string } 
   if (info) {
     return {
       nameJa: info.ja || trimmed,
-      imageUrl: info.imageUrl || "https://cdn.brawlify.com/brawler/shelly.png"
+      imageUrl: info.imageUrl || ""
     };
   }
   
-  // マップにない場合のフォールバック（安全なサニタイズ）
-  const defaultId = trimmed.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9\-]/g, '');
+  // 未掲載のキャラは元の名前を表示し、画像はAvatar側の代替表示に任せる。
   const capitalized = trimmed.length > 0 ? (Array.from(trimmed)[0] || "").toUpperCase() + Array.from(trimmed).slice(1).join('') : trimmed;
   return {
     nameJa: capitalized || trimmed,
-    imageUrl: defaultId ? `https://cdn.brawlify.com/brawler/${defaultId}.png` : "https://cdn.brawlify.com/brawler/shelly.png"
+    imageUrl: ""
   };
 }
 
 /**
  * ガチバトルのランク数値（1〜19）からランク名・バッジ画像URL・サブティア（I, II, III）を取得する共通関数
  */
-export function getRankImage(rankValue: any): { name: string; url: string; tier: string } | null {
+export function getRankImage(rankValue: unknown): { name: string; url: string; tier: string } | null {
   try {
     const num = Number(rankValue);
     if (isNaN(num) || num <= 0) return null;

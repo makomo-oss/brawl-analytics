@@ -1,5 +1,6 @@
 "use client";
 
+import { useBrawlerCatalog } from "@/lib/use-brawler-catalog"
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -22,6 +23,7 @@ interface RecentSearch {
 }
 
 export default function CockpitHomePage() {
+  useBrawlerCatalog()
   const router = useRouter();
   const [searchInput, setSearchInput] = useState("");
   const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);

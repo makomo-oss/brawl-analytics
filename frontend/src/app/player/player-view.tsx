@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Search, TrendingUp, AlertTriangle, Lightbulb, Trophy, Swords, Star, Building2, Shield, Users, User, ShieldAlert, Sparkles, Filter, CheckCircle2, XCircle, Crown, Target } from "lucide-react"
+import { Search, TrendingUp, AlertTriangle, Lightbulb, Trophy, Swords, Star, Building2, Shield, Users, User, ShieldAlert, Sparkles, Filter, CheckCircle2, XCircle, Crown, Target, Zap } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
@@ -1451,9 +1451,13 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                           <span className="text-[9px] font-bold text-purple-500">ハイパー</span>
                           <div className="flex gap-1 justify-center flex-wrap">
                             {hyperCharges.length > 0 ? hyperCharges.map((h) => (
-                              <div key={h.id} className="w-6 h-6 rounded border border-purple-500/50 bg-gradient-to-tr from-purple-600 to-fuchsia-500 flex items-center justify-center shadow-sm">
-                                <span className="text-[8px] font-black text-white">HC</span>
-                              </div>
+                              <Avatar key={h.id} size="sm" title={h.name} className="rounded-full border border-purple-500/50 shadow-sm">
+                                {/* Brawlify does not serve hypercharge assets; BSInfo uses the API item IDs. */}
+                                <AvatarImage src={`https://cdn.bsinfox.com/hypercharges/${h.id}.png`} alt={h.name} className="rounded-full object-contain" />
+                                <AvatarFallback role="img" aria-label={h.name} className="rounded-full bg-purple-600 text-white">
+                                  <Zap className="w-4 h-4" aria-hidden="true" />
+                                </AvatarFallback>
+                              </Avatar>
                             )) : <span className="text-muted-foreground text-[10px]">-</span>}
                           </div>
                         </div>

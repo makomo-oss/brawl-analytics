@@ -3,9 +3,11 @@ from app.services.brawl_api import get_player_battlelog, get_player
 from app.database import get_db
 from app.services.player_profiles import profile_record
 from app.services.battle_records import clean_tag as normalize_player_tag, parse_battlelog
+from app.services.player_analysis import get_saved_player_analysis, invalidate_player_analysis
 import logging
 import asyncio
 from datetime import datetime, timezone
+from typing import Literal
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/player", tags=["Player"])
@@ -23,6 +25,7 @@ def _save_synced_player(db, tag: str, player_info: dict, battlelog: dict) -> int
     db.table("players").upsert(profile_record(tag, player_info)).execute()
     if records:
         db.table("match_raw_history").upsert(records).execute()
+    invalidate_player_analysis(tag)
     return len(records)
 
 @router.get("/search")
@@ -102,6 +105,25 @@ async def search_players(q: str = Query(..., min_length=1, description="Player t
     except Exception as e:
         logger.error(f"Failed to search players by name: {e}")
         return []
+
+@router.get("/{player_tag}/analysis")
+async def analyze_player(player_tag: str, days: int = Query(30, ge=7, le=60),
+                         match_type: Literal["all", "normal", "gachi"] = "all",
+                         hero: str = Query("all", max_length=50),
+                         mode: str = Query("all", max_length=50),
+                         map_id: str = Query("all", max_length=100)):
+    """Read only this player's saved 60-day history; filters never call the game API."""
+    if days not in (7, 30, 60):
+        raise HTTPException(status_code=422, detail="分析期間は7日・30日・60日から選択してください。")
+    try:
+        tag = normalize_player_tag(player_tag)
+        return await asyncio.to_thread(get_saved_player_analysis, get_db(), tag,
+                                       days=days, match_type=match_type, hero=hero,
+                                       mode=mode, map_id=map_id)
+    except Exception:
+        logger.exception("Could not load saved analysis for player")
+        raise HTTPException(status_code=503, detail="保存済みの戦績を分析できませんでした。時間をおいて再試行してください。")
+
 
 @router.get("/{player_tag}/sync")
 async def sync_player(player_tag: str):
@@ -322,7 +344,7 @@ async def get_dashboard(player_tag: str):
                     "time": item.get("battleTime", ""),
                     "mode": raw_mode,
                     "map": event.get("map", "Unknown"),
-                    "type": battle.get("type", "unknown"),
+                    "type": match_type,
                     "result": result_str,
                     "hero": hero_used,
                     "trophy_change": battle.get("trophyChange"),

@@ -14,7 +14,7 @@ import { translateMode, translateMap, getModeIconUrl } from "@/lib/translations"
 import { getBrawlerInfo, BRAWLER_MAP } from "@/lib/brawlers"
 import { Swords, Ban, Check, RefreshCw, Trophy, Target, User, Search, X } from "lucide-react"
 import { API_URL } from "@/lib/config"
-import { matchupRate, synergyLift, signedPoints, type DraftPrediction } from "@/lib/draft-analysis"
+import { normalizeDraftCharacter, signedPoints, type DraftPrediction } from "@/lib/draft-analysis"
 
 function toKatakana(str: string): string {
   return str.replace(/[\u3041-\u3096]/g, match =>
@@ -30,6 +30,10 @@ function toHiragana(str: string): string {
 
 type Phase = "setup" | "ban" | "pick" | "done"
 type Team = "blue" | "red"
+
+function catalogName(name: string) {
+  return Object.keys(BRAWLER_MAP).find(key => normalizeDraftCharacter(key) === normalizeDraftCharacter(name)) ?? name
+}
 
 export default function DraftCompanionPage() {
   const catalogRevision = useBrawlerCatalog()
@@ -58,6 +62,8 @@ export default function DraftCompanionPage() {
   const [predictionStats, setPredictionStats] = useState<DraftPrediction | null>(null)
   const [predictionError, setPredictionError] = useState("")
   const [predictionRetry, setPredictionRetry] = useState(0)
+  const [recommendation, setRecommendation] = useState<{ key: string; suggestions: any[]; error?: string } | null>(null)
+  const [recommendationRetry, setRecommendationRetry] = useState(0)
 
   // 初期ロード：カテゴリの取得
   useEffect(() => {
@@ -123,17 +129,10 @@ export default function DraftCompanionPage() {
     setLoading(true)
     setError("")
     try {
-      const [mapRes, modeRes] = await Promise.all([
-        fetch(`${API_URL}/meta/tier-list?type=gachi&sub_type=map&id=${encodeURIComponent(selectedMap)}&mode=${encodeURIComponent(selectedMode)}&include_details=true&include_matchup_fallback=false`),
-        fetch(`${API_URL}/meta/tier-list?type=gachi&sub_type=mode&id=${encodeURIComponent(selectedMode)}`)
-      ])
-      if (!mapRes.ok || !modeRes.ok) throw new Error("分析データを取得できませんでした。再試行してください。")
+      const mapRes = await fetch(`${API_URL}/meta/tier-list?type=gachi&sub_type=map&id=${encodeURIComponent(selectedMap)}&mode=${encodeURIComponent(selectedMode)}&include_details=false`)
+      if (!mapRes.ok) throw new Error("分析データを取得できませんでした。再試行してください。")
       const data = await mapRes.json()
-      const modeData = await modeRes.json()
       if (!Object.keys(data.characters ?? {}).length) throw new Error("このマップのガチバトルデータが不足しています。別のマップを選択してください。")
-      for (const [name, stats] of Object.entries<any>(data.characters)) {
-        stats.mode_score = modeData.characters?.[name]?.score ?? 50
-      }
       setMetaData(data)
       setPhase("ban")
     } catch (err) {
@@ -179,6 +178,7 @@ export default function DraftCompanionPage() {
 
   // キャラクターを選択したときの処理
   const handleSelectCharacter = (charName: string) => {
+    charName = catalogName(charName)
     if (phase === "ban") {
       if (currentTurnTeam === myTeam) {
         const newBans = [...allyBans, charName]
@@ -220,162 +220,55 @@ export default function DraftCompanionPage() {
   const allyPicks = myTeam === "blue" ? bluePicks : redPicks
   const enemyPicks = myTeam === "blue" ? redPicks : bluePicks
 
-  // 推薦と編成分析は同じ、十分な標本数のある相性行列を使う。
-  const getMatchupWinRate = (own: string, enemy: string) => matchupRate(metaData?.characters ?? {}, own, enemy) ?? 50
-  const getPairSynergyLift = (first: string, second: string) => synergyLift(metaData?.characters ?? {}, first, second) ?? 0
-
-  // サジェスト計算ロジック (4軸統合エンジン: マップ・モード・対面・味方シナジー)
-  const suggestions = useMemo(() => {
-    if (!metaData || !metaData.characters) return []
-    
-    const chars = metaData.characters
-    const results = []
-
-    if (phase === "ban") {
-      // おすすめBAN: マップ適性 (score) が高く、まだ除外されていないキャラ
-      for (const [name, stats] of Object.entries<any>(chars)) {
-        if (isExcluded(name) || stats.sample_sufficient === false) continue
-        const sMap = stats.score ?? 50.0
-        results.push({ name, score: sMap, reason: "マップTier高", type: "ban" })
-      }
-      results.sort((a, b) => b.score - a.score)
-      return results.slice(0, 10)
-    } 
-    
-    if (phase === "pick") {
-      const allyCount = allyPicks.length
-      const enemyCount = enemyPicks.length
-
-      // 盤面に応じた動的4軸ウェイトの決定 (合計は常に1.0)
-      let W_map = 0.55
-      let W_mode = 0.45
-      let W_counter = 0.00
-      let W_syn = 0.00
-
-      if (enemyCount === 0 && allyCount === 1) {
-        W_map = 0.40; W_mode = 0.25; W_counter = 0.00; W_syn = 0.35
-      } else if (enemyCount === 0 && allyCount === 2) {
-        W_map = 0.35; W_mode = 0.20; W_counter = 0.00; W_syn = 0.45
-      } else if (enemyCount === 1 && allyCount === 0) {
-        W_map = 0.35; W_mode = 0.20; W_counter = 0.45; W_syn = 0.00
-      } else if (enemyCount === 1 && allyCount >= 1) {
-        W_map = 0.30; W_mode = 0.20; W_counter = 0.30; W_syn = 0.20
-      } else if (enemyCount === 2 && allyCount === 0) {
-        W_map = 0.25; W_mode = 0.15; W_counter = 0.60; W_syn = 0.00
-      } else if (enemyCount === 2 && allyCount >= 1) {
-        W_map = 0.20; W_mode = 0.15; W_counter = 0.40; W_syn = 0.25
-      } else if (enemyCount === 3 && allyCount >= 1) {
-        W_map = 0.15; W_mode = 0.10; W_counter = 0.45; W_syn = 0.30
-      }
-
-      for (const [name, stats] of Object.entries<any>(chars)) {
-        if (isExcluded(name) || stats.sample_sufficient === false) continue
-        
-        // 1. S_map (マップ適性: 50点基準)
-        const S_map = stats.score ?? 50.0
-        
-        // 2. S_mode (モード適性: 50点基準)
-        const S_mode = stats.mode_score ?? stats.score ?? 50.0
-        
-        // 3. S_counter (対面カウンター相性: 50点基準)
-        let S_counter = 50.0
-        let bestCounterName = ""
-        let bestCounterWr = 50.0
-        
-        if (enemyCount > 0) {
-          let totalCounterDiff = 0
-          for (const enemy of enemyPicks) {
-            const wr = getMatchupWinRate(name, enemy)
-            const diff = wr - 50.0
-            totalCounterDiff += diff
-            if (wr > bestCounterWr) {
-              bestCounterWr = wr
-              bestCounterName = enemy
-            }
-          }
-          S_counter = 50.0 + (totalCounterDiff / enemyCount) * 1.5
-        }
-        
-        // 4. S_syn (味方ペア共起シナジー: 50点基準)
-        let S_syn = 50.0
-        let bestSynergyAlly = ""
-        let bestSynergyLift = 0.0
-        
-        if (allyCount > 0) {
-          let totalLift = 0
-          for (const ally of allyPicks) {
-            const lift = getPairSynergyLift(name, ally)
-            totalLift += lift
-            if (lift > bestSynergyLift) {
-              bestSynergyLift = lift
-              bestSynergyAlly = ally
-            }
-          }
-          S_syn = 50.0 + (totalLift / allyCount) * 1.5
-        }
-        
-        // 4軸スコアの合成
-        const finalScore = (W_map * S_map) + (W_mode * S_mode) + (W_counter * S_counter) + (W_syn * S_syn)
-        
-        // スマート推薦理由バッジの動的生成（説得力特化・多重タグ）
-        const badges: Array<{ label: string; type: "counter" | "synergy" | "map" | "mode" | "general" }> = []
-        
-        // 1. カウンターバッジ (敵への有利性)
-        if (bestCounterName) {
-          const enemyInfo = getBrawlerInfo(bestCounterName)
-          if (bestCounterWr >= 64.0) {
-            badges.push({ label: `🔥 ${enemyInfo.nameJa}に有利 (${bestCounterWr.toFixed(0)}%)`, type: "counter" })
-          } else if (bestCounterWr >= 56.0) {
-            badges.push({ label: `⚔️ ${enemyInfo.nameJa}に有利 (${bestCounterWr.toFixed(0)}%)`, type: "counter" })
-          }
-        }
-        
-        // 2. シナジーバッジ (味方との相乗効果)
-        if (bestSynergyAlly) {
-          const allyInfo = getBrawlerInfo(bestSynergyAlly)
-          if (bestSynergyLift >= 5.0) {
-            badges.push({ label: `⚡ ${allyInfo.nameJa}と好相性 (+${bestSynergyLift.toFixed(1)}pt)`, type: "synergy" })
-          } else if (bestSynergyLift >= 2.5) {
-            badges.push({ label: `🤝 ${allyInfo.nameJa}と好相性 (+${bestSynergyLift.toFixed(1)}pt)`, type: "synergy" })
-          }
-        }
-        
-        // 3. マップ & モード適性バッジ
-        if (metaData.tiers?.["S+"]?.includes(name)) {
-          badges.push({ label: "👑 マップS+ Tier", type: "map" })
-        } else if (metaData.tiers?.["S"]?.includes(name) || metaData.tiers?.["A+"]?.includes(name)) {
-          badges.push({ label: "🗺️ マップ高適性", type: "map" })
-        }
-        
-        if (S_mode >= 60.0 && S_mode > S_map) {
-          badges.push({ label: `🎯 ${translateMode(selectedMode)}特化`, type: "mode" })
-        }
-
-        // デフォルトフォールバック
-        if (badges.length === 0) {
-          badges.push({ label: "安定ピック", type: "general" })
-        }
-        
-        results.push({ 
-          name, 
-          score: finalScore, 
-          badges,
-          type: "pick",
-          baseScore: S_map,
-          modeScore: S_mode,
-          counterScore: S_counter,
-          synScore: S_syn,
-          bestCounterWr,
-          bestSynergyLift
+  // Score the team whose turn it is, including opponent picks.
+  const recommendationKey = JSON.stringify({
+    allies: currentTurnTeam === "blue" ? bluePicks : redPicks,
+    enemies: currentTurnTeam === "blue" ? redPicks : bluePicks,
+    excluded: [...allyBans, ...enemyBans], mode: selectedMode, map: selectedMap,
+  })
+  useEffect(() => {
+    if (phase !== "pick") return
+    const controller = new AbortController()
+    setRecommendation(null)
+    const load = async () => {
+      try {
+        const response = await fetch(`${API_URL}/meta/draft-recommendations`, {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: recommendationKey, signal: controller.signal,
         })
+        if (!response.ok) throw new Error("おすすめを取得できませんでした。再試行してください。")
+        const data = await response.json()
+        if (!controller.signal.aborted) setRecommendation({ key: recommendationKey, suggestions: data.suggestions })
+      } catch (err) {
+        if (!controller.signal.aborted) setRecommendation({ key: recommendationKey, suggestions: [],
+          error: err instanceof Error && !(err instanceof TypeError) ? err.message : "通信に失敗しました。再試行してください。" })
       }
-      
-      results.sort((a, b) => b.score - a.score)
-      return results.slice(0, 10)
     }
-    
-    return []
-  }, [phase, allyBans, enemyBans, bluePicks, redPicks, metaData, enemyPicks, allyPicks, selectedMode])
+    load()
+    return () => controller.abort()
+  }, [phase, recommendationKey, recommendationRetry])
+
+  const recommendationPending = phase === "pick" && recommendation?.key !== recommendationKey
+  const recommendationError = recommendation?.key === recommendationKey ? recommendation.error : undefined
+  const suggestions = useMemo(() => {
+    if (!metaData?.characters) return []
+    if (phase === "ban") {
+      return Object.entries<any>(metaData.characters)
+        .filter(([name, stats]) => !isExcluded(name) && stats.sample_sufficient !== false)
+        .map(([name, stats]) => ({ name, score: stats.score ?? 50, reason: "マップTier高" }))
+        .sort((a, b) => b.score - a.score).slice(0, 10)
+    }
+    if (phase !== "pick" || recommendation?.key !== recommendationKey) return []
+    return recommendation.suggestions.map(item => {
+      const name = catalogName(item.name)
+      const badges = (item.counterEffects ?? []).map((effect: { enemy: string; points: number }) => ({
+        label: `${effect.points < 0 ? "⚠️" : "⚔️"} 対${getBrawlerInfo(catalogName(effect.enemy)).nameJa} ${signedPoints(effect.points)}`,
+        type: effect.points < 0 ? "caution" : "counter",
+      }))
+      if (!badges.length) badges.push({ label: "編成に合わせた候補", type: "general" })
+      return { ...item, name, badges }
+    })
+  }, [phase, allyBans, enemyBans, bluePicks, redPicks, metaData, recommendation, recommendationKey, catalogRevision])
 
   useEffect(() => {
     setPredictionStats(null)
@@ -820,7 +713,7 @@ export default function DraftCompanionPage() {
               <CardDescription>
                 {phase === "ban" 
                   ? "現在のマップで驚異となるキャラクター" 
-                  : "マップ適性と敵へのカウンター補正から算出"}
+                  : "マップと現在の編成に合わせた候補"}
               </CardDescription>
             </CardHeader>
             <CardContent className="flex-1 pt-4 p-0">
@@ -832,7 +725,9 @@ export default function DraftCompanionPage() {
               ) : (
                 <ScrollArea className="h-[400px] lg:h-[600px] px-4">
                   <div className="space-y-3 pb-4">
-                    {suggestions.length === 0 && <p className="p-4 text-sm text-muted-foreground">この条件で推薦できる十分なデータがありません。キャラクターは手動で選択できます。</p>}
+                    {recommendationPending && <p className="p-4 text-sm text-muted-foreground">編成に合う候補を分析中…</p>}
+                    {recommendationError && <div className="p-4 space-y-2"><p className="text-sm text-destructive">{recommendationError}</p><Button variant="outline" size="sm" onClick={() => setRecommendationRetry(value => value + 1)}>再試行する</Button></div>}
+                    {!recommendationPending && !recommendationError && suggestions.length === 0 && <p className="p-4 text-sm text-muted-foreground">この条件で推薦できる十分なデータがありません。キャラクターは手動で選択できます。</p>}
                     {suggestions.map((sug: any, index: number) => {
                       const info = getBrawlerInfo(sug.name)
                       return (
@@ -858,7 +753,8 @@ export default function DraftCompanionPage() {
                               {sug.badges ? (
                                 sug.badges.map((b: any, bIdx: number) => {
                                   let badgeStyle = "bg-secondary text-secondary-foreground border-border"
-                                  if (b.type === "counter") badgeStyle = "bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30"
+                                  if (b.type === "caution") badgeStyle = "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30"
+                                  else if (b.type === "counter") badgeStyle = "bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30"
                                   else if (b.type === "synergy") badgeStyle = "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30"
                                   else if (b.type === "map") badgeStyle = "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30"
                                   else if (b.type === "mode") badgeStyle = "bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/30"

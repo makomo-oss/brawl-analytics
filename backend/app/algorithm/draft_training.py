@@ -17,17 +17,18 @@ MODES = {"brawlBall", "gemGrab", "hotZone", "heist", "bounty", "knockout"}
 PENALTIES = {"c_global": 10, "c_mode": 20, "c_map": 40, "pair_global": 160, "pair_mode": 320}
 
 
-def canonical_games(records, eligible_tags, now=None):
+def canonical_games(records, eligible_tags, now=None, population="gachi"):
     now = now or datetime.now(timezone.utc)
     games, contradictions = {}, set()
     for row in records:
-        if row.get("player_tag") not in eligible_tags or row.get("match_type") not in ("soloRanked", "teamRanked"):
+        allowed = ("soloRanked", "teamRanked") if population == "gachi" else ("ranked", "soloRanked", "teamRanked")
+        if row.get("player_tag") not in eligible_tags or row.get("match_type") not in allowed:
             continue
         if row.get("result") not in ("victory", "defeat") or row.get("mode") not in MODES:
             continue
         own = tuple(sorted(normalize(c) for c in [row.get("hero_used")] + (row.get("allies") or [])))
         enemy = tuple(sorted(normalize(c) for c in (row.get("opponents") or [])))
-        if len(own) != 3 or len(enemy) != 3 or len(set(own + enemy)) != 6 or any(c in ("", "unknown", "none") for c in own + enemy):
+        if len(own) != 3 or len(enemy) != 3 or (population == "gachi" and len(set(own + enemy)) != 6) or any(c in ("", "unknown", "none") for c in own + enemy):
             continue
         try:
             date = datetime.fromisoformat(str(row["match_at"]).replace("Z", "+00:00")).replace(tzinfo=timezone.utc)
@@ -44,7 +45,7 @@ def canonical_games(records, eligible_tags, now=None):
         key = row.get("battle_uid")
         if not key:
             continue
-        value = dict(own=own, enemy=enemy, win=win, date=date,
+        value = dict(own=own, enemy=enemy, win=win, date=date, game=key, match_type=row["match_type"],
                      mode=row["mode"], map=row["map_id"], observers={observer},
                      weight=2 ** (-min(age, 30) / 30 - max(age - 30, 0) / 7))
         if key in games:
@@ -66,18 +67,20 @@ def _penalty(key):
     return PENALTIES[f"c_{scope}" if kind == "c" else f"pair_{scope}"]
 
 
-def _fit(indices, values, outcomes, weights, penalties):
+def _fit(indices, values, outcomes, weights, penalties, offset=None, prior=None):
     size = len(penalties)
     flat = indices.ravel()
     coef = np.zeros(size)
+    offset = np.zeros(len(outcomes)) if offset is None else offset
+    prior = np.zeros(size) if prior is None else prior
     def objective(beta):
-        z = np.sum(beta[indices] * values, axis=1)
-        return np.dot(weights, np.logaddexp(0, z) - outcomes * z) + .5 * np.dot(penalties, beta ** 2)
+        z = np.sum(beta[indices] * values, axis=1) + offset
+        return np.dot(weights, np.logaddexp(0, z) - outcomes * z) + .5 * np.dot(penalties, (beta - prior) ** 2)
     loss = objective(coef)
     for _ in range(100):
-        z = np.sum(coef[indices] * values, axis=1)
+        z = np.sum(coef[indices] * values, axis=1) + offset
         probability = 1 / (1 + np.exp(-np.clip(z, -25, 25)))
-        gradient = np.bincount(flat, weights=(((probability - outcomes) * weights)[:, None] * values).ravel(), minlength=size) + penalties * coef
+        gradient = np.bincount(flat, weights=(((probability - outcomes) * weights)[:, None] * values).ravel(), minlength=size) + penalties * (coef - prior)
         diagonal = np.bincount(flat, weights=((probability * (1 - probability) * weights)[:, None] * values ** 2).ravel(), minlength=size) + penalties
         step = gradient / diagonal
         rate = 1.0

@@ -294,21 +294,27 @@ def draft_analysis(request: DraftAnalysisRequest):
         scopes = cached_evidence[1]
     else:
         try:
-            rows = db.rpc("selected_draft_evidence", {
-                "p_characters": names, "p_mode": request.mode, "p_map": request.map,
-            }).execute().data or []
+            rows = []
+            for scope_name in ("map", "mode", "global"):
+                rows.extend(db.rpc("selected_draft_evidence_slice", {
+                    "p_characters": names, "p_mode": request.mode, "p_map": request.map,
+                    "p_scope": scope_name,
+                }).execute().data or [])
         except Exception as exc:
             logger.exception("Could not load selected draft evidence")
             raise HTTPException(status_code=503, detail="編成の分析に失敗しました。再試行してください。") from exc
         scopes = [{"characters": {}, "pairs": {}, "totals": {"matches": 0.0, "wins": 0.0}} for _ in range(3)]
         for row in rows:
-            scope = scopes[{"global": 0, "mode": 1, "map": 2}[row["scope"]]]
             name, other = row["char_a"], row["char_b"]
-            stats = {"matches": row["weighted_matches"], "wins": row["weighted_wins"]}
-            if row["kind"] == "character":
-                scope["characters"][name] = stats
-            else:
-                scope["pairs"].setdefault(name, {}).setdefault(row["kind"], {})[other] = stats
+            # The SQL slices never overlap. Rebuild nested global/mode/map
+            # scopes so the estimator can subtract narrower data exactly once.
+            for scope in scopes[:{"global": 1, "mode": 2, "map": 3}[row["scope"]]]:
+                if row["kind"] == "character":
+                    stats = scope["characters"].setdefault(name, {"matches": 0.0, "wins": 0.0})
+                else:
+                    stats = scope["pairs"].setdefault(name, {}).setdefault(row["kind"], {}).setdefault(other, {"matches": 0.0, "wins": 0.0})
+                stats["matches"] += row["weighted_matches"]
+                stats["wins"] += row["weighted_wins"]
         # Both full teams are observed for every game: the neutral population
         # win rate is 50%, independent of which players supplied the logs.
         if len(_DRAFT_EVIDENCE_CACHE) >= 128:

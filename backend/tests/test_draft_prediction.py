@@ -85,19 +85,26 @@ def test_endpoint_loads_only_selected_ranked_characters_and_caches_result(monkey
     class Database:
         def rpc(self, name, params):
             calls.append((name, params))
+            self.scope = params["p_scope"]
             return self
 
         def execute(self):
             class Result:
                 data = []
+            n = {"map": 10, "mode": 20, "global": 40}[self.scope]
+            Result.data = [dict(scope=self.scope, kind="character", char_a="elprimo", char_b="",
+                                weighted_matches=n, weighted_wins=n / 2)]
             return Result()
 
     monkeypatch.setattr(meta, "get_db", Database)
     request = meta.DraftAnalysisRequest(allies=["el primo", "damian", "frank"], enemies=ENEMIES, mode="brawlBall", map="Triple Dribble")
     result = meta.draft_analysis(request)
     assert result["winRate"] == 50  # Normal games cannot contaminate ranked.
+    scopes = next(iter(meta._DRAFT_EVIDENCE_CACHE.values()))[1]
+    assert [scope["characters"]["elprimo"]["matches"] for scope in scopes] == [70, 30, 10]
+    assert [scope["characters"]["elprimo"]["wins"] for scope in scopes] == [35, 15, 5]
     assert meta.draft_analysis(request) == result
-    assert calls == [("selected_draft_evidence", {"p_characters": ALLIES + ENEMIES, "p_mode": "brawlBall", "p_map": "Triple Dribble"})]
+    assert calls == [("selected_draft_evidence_slice", {"p_characters": ALLIES + ENEMIES, "p_mode": "brawlBall", "p_map": "Triple Dribble", "p_scope": scope}) for scope in ("map", "mode", "global")]
 
 
 def test_endpoint_rejects_incomplete_duplicate_or_incompatible_drafts(monkeypatch):

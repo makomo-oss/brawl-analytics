@@ -568,9 +568,8 @@ def run_daily_calculation(client: Client = None, train_models: bool = False):
             candidate = train_composition_model(df.to_dict("records"), rank_segments["all_elite"], population=population,
                                                 observations=observations, snapshots=snapshots)
             if candidate:
-                from app.algorithm.composition_model import effect_rows
-                supabase.rpc("publish_composition_model", {"p_id": model_id, "p_model": candidate,
-                                                            "p_effects": effect_rows(candidate) if candidate["accepted"] else []}).execute()
+                from app.services.model_publication import publish_model
+                publish_model(supabase, model_id, candidate)
                 if candidate["accepted"]:
                     active = candidate
         models[population] = active

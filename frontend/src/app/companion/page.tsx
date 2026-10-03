@@ -250,8 +250,8 @@ export default function DraftCompanionPage() {
           error: err instanceof Error && !(err instanceof TypeError) ? err.message : "通信に失敗しました。再試行してください。" })
       }
     }
-    load()
-    return () => controller.abort()
+    const pending = setTimeout(load, 250)
+    return () => { clearTimeout(pending); controller.abort() }
   }, [phase, recommendationKey, recommendationRetry])
 
   const recommendationPending = (phase === "pick" || phase === "ban") && recommendation?.key !== recommendationKey
@@ -713,7 +713,7 @@ export default function DraftCompanionPage() {
               </CardTitle>
               <CardDescription>
                 {phase === "ban" 
-                  ? "現在のマップで驚異となるキャラクター" 
+                  ? "BAN後のピックを考慮した候補" 
                   : "マップと現在の編成に合わせた候補"}
               </CardDescription>
             </CardHeader>

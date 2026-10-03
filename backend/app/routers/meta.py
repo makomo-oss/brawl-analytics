@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Response
 from pydantic import BaseModel, Field
 from typing import Literal
+from threading import RLock
 import math
 import time
 import logging
@@ -33,6 +34,7 @@ _COUNTERS_CACHE = {"data": None, "by_char": {}, "timestamp": 0, "ttl": 3600}
 _SYNERGIES_CACHE = {"data": None, "by_char": {}, "timestamp": 0, "ttl": 3600}
 _PAIR_CONTEXT_CACHE = {}
 _MODE_MAPS_CACHE = {} # mode -> (set of map_ids, timestamp)
+_SNAPSHOT_LOAD_LOCK = RLock()
 
 def clear_meta_cache():
     """日次バッチ完了時やデータ更新時にキャッシュを即座に破棄・最新化する"""
@@ -139,6 +141,11 @@ def _get_cached_counters_for_char(db, char_a: str) -> list[dict]:
             return []
 
 def _get_cached_macro_data(db) -> list[dict]:
+    with _SNAPSHOT_LOAD_LOCK:
+        return _load_cached_macro_data(db)
+
+
+def _load_cached_macro_data(db) -> list[dict]:
     """macro_map_stats をインメモリキャッシュから超高速に取得 (DB通信を99%削減)"""
     now = time.time()
     if _MACRO_CACHE["data"] is not None and (now - _MACRO_CACHE["timestamp"]) < _MACRO_CACHE["ttl"]:
@@ -288,6 +295,13 @@ _OVERALL_MODEL_CACHE = {"model": None, "timestamp": 0}
 
 
 def _get_draft_model(db, population="gachi"):
+    # A cache miss must not download/parse a large snapshot once per concurrent
+    # request on the Free instance. Readers share the same immutable model.
+    with _SNAPSHOT_LOAD_LOCK:
+        return _load_draft_model(db, population)
+
+
+def _load_draft_model(db, population="gachi"):
     from app.algorithm.draft_outcome import MODEL_VERSION
     cache = _DRAFT_MODEL_CACHE if population == "gachi" else _OVERALL_MODEL_CACHE
     cached = cache["model"]

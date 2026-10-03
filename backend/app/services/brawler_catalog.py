@@ -16,6 +16,11 @@ _next_refresh = 0.0
 _refresh_lock = asyncio.Lock()
 
 
+def cached_brawler_names():
+    """Read the weekly display catalog without a network call during a draft."""
+    return [row["name"] for row in _catalog]
+
+
 def localized_rows(listing: dict, characters: dict, japanese: dict) -> list[dict]:
     by_id = {row.get("id"): row for row in characters.values() if isinstance(row, dict)}
     rows = []

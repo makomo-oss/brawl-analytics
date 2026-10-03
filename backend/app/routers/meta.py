@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Response
 from pydantic import BaseModel, Field
+from typing import Literal
 import math
 import time
 import logging
@@ -295,7 +296,7 @@ def _get_draft_model(db, population="gachi"):
     try:
         rows = db.table("draft_outcome_models").select("model").eq("id", "current" if population == "gachi" else "overall").limit(1).execute().data
         model = rows[0]["model"] if rows else None
-        if not model or model.get("version") not in (MODEL_VERSION, "composition_set_v3") or not model.get("weights"):
+        if not model or model.get("version") not in (MODEL_VERSION, "composition_set_v3", "ranked_joint_v4") or not model.get("weights"):
             raise ValueError("Validated draft model is unavailable")
     except Exception as exc:
         logger.exception("Could not load draft outcome model")
@@ -305,7 +306,7 @@ def _get_draft_model(db, population="gachi"):
             previous_id = "previous" if population == "gachi" else "overall_previous"
             previous = db.table("draft_outcome_models").select("model").eq("id", previous_id).limit(1).execute().data or []
             model = previous[0]["model"] if previous else None
-            if not model or model.get("version") not in (MODEL_VERSION, "composition_set_v3") or not model.get("weights"):
+            if not model or model.get("version") not in (MODEL_VERSION, "composition_set_v3", "ranked_joint_v4") or not model.get("weights"):
                 raise ValueError("No previous model")
         except Exception:
             raise HTTPException(status_code=503, detail="編成の分析に失敗しました。再試行してください。") from exc
@@ -357,6 +358,65 @@ class DraftRecommendationRequest(BaseModel):
     excluded: list[str] = Field(default_factory=list, max_length=12)
     mode: str = Field(min_length=1, max_length=40)
     map: str = Field(min_length=1, max_length=100)
+
+
+class OrderedPick(BaseModel):
+    team: Literal["blue", "red"]
+    name: str = Field(min_length=1, max_length=40)
+
+
+class DraftSessionRequest(BaseModel):
+    phase: Literal["ban", "pick", "done"]
+    first_pick_team: Literal["blue", "red"]
+    viewing_team: Literal["blue", "red"]
+    picks: list[OrderedPick] = Field(default_factory=list, max_length=6)
+    blue_bans: list[str] = Field(default_factory=list, max_length=3)
+    red_bans: list[str] = Field(default_factory=list, max_length=3)
+    # Optional known Power 11 roster. Omitted/None means unknown, [] means none.
+    available: dict[Literal["blue", "red"], list[str] | None] = Field(default_factory=dict)
+    mode: str = Field(min_length=1, max_length=40)
+    map: str = Field(min_length=1, max_length=100)
+
+
+@router.post("/draft-session")
+def draft_session(request: DraftSessionRequest):
+    from app.algorithm.draft_rules import DraftState, other
+    from app.algorithm.draft_search import DraftSearch
+    from app.algorithm.draft_outcome import predict_draft
+    from app.services.brawler_catalog import cached_brawler_names
+    db = get_db()
+    _draft_context(db, request.mode, request.map)
+    model = _get_draft_model(db)
+    catalog = {k.split("|", 2)[2] for k in model["weights"] if k.startswith("c|global|")}
+    # The weekly official catalog includes new brawlers before they have support.
+    catalog.update(_normalize_id(name) for name in cached_brawler_names())
+    state = DraftState(request.first_pick_team, tuple((p.team, _normalize_id(p.name)) for p in request.picks),
+                       tuple(_normalize_id(n) for n in request.blue_bans), tuple(_normalize_id(n) for n in request.red_bans))
+    try:
+        state.validate(catalog)
+        if request.phase == "ban" and state.picks:
+            raise ValueError("BANフェーズにピックが含まれています。")
+        if request.phase == "done" and (len(state.picks) != 6 or len(state.blue_bans) != 3 or len(state.red_bans) != 3):
+            raise ValueError("6体のピックを完了してください。")
+        if request.phase == "pick" and (state.turn is None or len(state.blue_bans) != 3 or len(state.red_bans) != 3):
+            raise ValueError("BANとピックの状態を確認してください。")
+        available = {side: None if names is None else {_normalize_id(n) for n in names}
+                     for side, names in request.available.items()}
+        if any(names is not None and (len(names) > 200 or not names <= catalog) for names in available.values()):
+            raise ValueError("使用できるキャラクター情報を確認してください。")
+        if any(available.get(side) is not None and name not in available[side] for side, name in state.picks):
+            raise ValueError("使用できないキャラクターがピックされています。")
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    if request.phase == "done":
+        return predict_draft(model, state.team(request.viewing_team), state.team(other(request.viewing_team)), request.mode, request.map)
+    search = DraftSearch(model, catalog, request.mode, request.map, available)
+    if request.phase == "ban":
+        own_bans = state.blue_bans if request.viewing_team == "blue" else state.red_bans
+        if len(own_bans) >= 3:
+            return {"suggestions": [], "search": {"exact": False, "method": "blind_ban_complete"}}
+        return search.bans(state, request.viewing_team)
+    return search.recommend(state)
 
 
 @router.post("/draft-recommendations")

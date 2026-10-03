@@ -51,6 +51,7 @@ export default function DraftCompanionPage() {
   const [enemyBans, setEnemyBans] = useState<string[]>([])
   const [bluePicks, setBluePicks] = useState<string[]>([])
   const [redPicks, setRedPicks] = useState<string[]>([])
+  const [pickHistory, setPickHistory] = useState<{ team: Team; name: string }[]>([])
   
   // Character Search State
   const [charSearchQuery, setCharSearchQuery] = useState("")
@@ -148,6 +149,7 @@ export default function DraftCompanionPage() {
     setEnemyBans([])
     setBluePicks([])
     setRedPicks([])
+    setPickHistory([])
     setCharSearchQuery("")
     setMetaData(null)
   }
@@ -191,6 +193,8 @@ export default function DraftCompanionPage() {
         }
       }
     } else if (phase === "pick") {
+      if (isExcluded(charName)) return
+      setPickHistory(history => [...history, { team: currentTurnTeam, name: charName }])
       if (currentTurnTeam === "blue") {
         const newBlue = [...bluePicks, charName]
         setBluePicks(newBlue)
@@ -222,17 +226,19 @@ export default function DraftCompanionPage() {
 
   // Score the team whose turn it is, including opponent picks.
   const recommendationKey = JSON.stringify({
-    allies: currentTurnTeam === "blue" ? bluePicks : redPicks,
-    enemies: currentTurnTeam === "blue" ? redPicks : bluePicks,
-    excluded: [...allyBans, ...enemyBans], mode: selectedMode, map: selectedMap,
+    phase, first_pick_team: firstPickTeam, viewing_team: currentTurnTeam,
+    picks: pickHistory,
+    blue_bans: myTeam === "blue" ? allyBans : enemyBans,
+    red_bans: myTeam === "red" ? allyBans : enemyBans,
+    mode: selectedMode, map: selectedMap,
   })
   useEffect(() => {
-    if (phase !== "pick") return
+    if (phase !== "pick" && phase !== "ban") return
     const controller = new AbortController()
     setRecommendation(null)
     const load = async () => {
       try {
-        const response = await fetch(`${API_URL}/meta/draft-recommendations`, {
+        const response = await fetch(`${API_URL}/meta/draft-session`, {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: recommendationKey, signal: controller.signal,
         })
@@ -248,24 +254,17 @@ export default function DraftCompanionPage() {
     return () => controller.abort()
   }, [phase, recommendationKey, recommendationRetry])
 
-  const recommendationPending = phase === "pick" && recommendation?.key !== recommendationKey
+  const recommendationPending = (phase === "pick" || phase === "ban") && recommendation?.key !== recommendationKey
   const recommendationError = recommendation?.key === recommendationKey ? recommendation.error : undefined
   const suggestions = useMemo(() => {
-    if (!metaData?.characters) return []
-    if (phase === "ban") {
-      return Object.entries<any>(metaData.characters)
-        .filter(([name, stats]) => !isExcluded(name) && stats.sample_sufficient !== false)
-        .map(([name, stats]) => ({ name, score: stats.score ?? 50, reason: "マップTier高" }))
-        .sort((a, b) => b.score - a.score).slice(0, 10)
-    }
-    if (phase !== "pick" || recommendation?.key !== recommendationKey) return []
+    if ((phase !== "pick" && phase !== "ban") || recommendation?.key !== recommendationKey) return []
     return recommendation.suggestions.map(item => {
       const name = catalogName(item.name)
       const badges = (item.counterEffects ?? []).map((effect: { enemy: string; points: number }) => ({
         label: `${effect.points < 0 ? "⚠️" : "⚔️"} 対${getBrawlerInfo(catalogName(effect.enemy)).nameJa} ${signedPoints(effect.points)}`,
         type: effect.points < 0 ? "caution" : "counter",
       }))
-      if (!badges.length) badges.push({ label: "編成に合わせた候補", type: "general" })
+      if (!badges.length) badges.push({ label: phase === "ban" ? "BAN後の編成を比較" : "相手の次のピックを考慮", type: "general" })
       return { ...item, name, badges }
     })
   }, [phase, allyBans, enemyBans, bluePicks, redPicks, metaData, recommendation, recommendationKey, catalogRevision])
@@ -277,9 +276,11 @@ export default function DraftCompanionPage() {
     const controller = new AbortController()
     const analyze = async () => {
       try {
-        const response = await fetch(`${API_URL}/meta/draft-analysis`, {
+        const response = await fetch(`${API_URL}/meta/draft-session`, {
           method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ allies: allyPicks, enemies: enemyPicks, mode: selectedMode, map: selectedMap }),
+          body: JSON.stringify({ phase: "done", first_pick_team: firstPickTeam, viewing_team: myTeam,
+            picks: pickHistory, blue_bans: myTeam === "blue" ? allyBans : enemyBans,
+            red_bans: myTeam === "red" ? allyBans : enemyBans, mode: selectedMode, map: selectedMap }),
           signal: controller.signal,
         })
         if (!response.ok) throw new Error("編成の分析に失敗しました。再試行してください。")
@@ -291,7 +292,7 @@ export default function DraftCompanionPage() {
     }
     analyze()
     return () => controller.abort()
-  }, [phase, allyPicks, enemyPicks, selectedMode, selectedMap, predictionRetry])
+  }, [phase, pickHistory, firstPickTeam, myTeam, allyBans, enemyBans, selectedMode, selectedMap, predictionRetry])
 
   // ================= UI Components =================
 
@@ -776,7 +777,7 @@ export default function DraftCompanionPage() {
                           
                           <div className="text-right shrink-0">
                             <Badge variant={phase === "ban" ? "destructive" : "default"} className="font-mono text-xs shadow-sm">
-                              {sug.score.toFixed(1)}点
+                              {index + 1}位
                             </Badge>
                           </div>
                         </div>

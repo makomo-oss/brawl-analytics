@@ -227,7 +227,7 @@ def test_cleanup_deletes_only_expired_battles_and_checks_remaining(monkeypatch):
     ]
     monkeypatch.setattr(cleanup_task, "get_db", lambda: db)
     assert asyncio.run(cleanup_task.run_cleanup_task()) == {"deleted_count": 2, "remaining_expired": 0}
-    assert db.table.return_value.delete.call_count == 2
+    assert db.table.return_value.delete.call_count == 3
     cutoff = db.table.return_value.delete.return_value.lt.call_args.args
     assert cutoff[0] == "match_at"
     assert (pd.Timestamp.now(tz="UTC") - pd.Timestamp(cutoff[1])).days == 60

@@ -14,6 +14,7 @@ async def run_cleanup_task():
 
 def _delete_expired_battles(db, threshold: str) -> dict:
     db.table("battle_features").delete().lt("match_at", threshold).execute()
+    db.table("profile_rank_snapshots").delete().lt("observed_at", threshold).execute()
     def expired_count() -> int:
         response = (db.table("match_raw_history")
                     .select("match_id", count="exact", head=True)

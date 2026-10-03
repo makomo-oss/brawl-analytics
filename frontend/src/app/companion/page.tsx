@@ -14,6 +14,7 @@ import { translateMode, translateMap, getModeIconUrl } from "@/lib/translations"
 import { getBrawlerInfo, BRAWLER_MAP } from "@/lib/brawlers"
 import { Swords, Ban, Check, RefreshCw, Trophy, Target, User, Search, X } from "lucide-react"
 import { API_URL } from "@/lib/config"
+import { draftPrediction, matchupRate, synergyLift, signedPoints } from "@/lib/draft-analysis"
 
 function toKatakana(str: string): string {
   return str.replace(/[\u3041-\u3096]/g, match =>
@@ -29,15 +30,6 @@ function toHiragana(str: string): string {
 
 type Phase = "setup" | "ban" | "pick" | "done"
 type Team = "blue" | "red"
-
-// フェーズ進行と動的ウェイト定義
-// 敵確定数 = enemyPicks.length
-const WEIGHTS = [
-  { W_map: 0.7, W_counter: 0.0, W_syn: 0.3 }, // 敵0体
-  { W_map: 0.5, W_counter: 0.2, W_syn: 0.3 }, // 敵1体
-  { W_map: 0.3, W_counter: 0.4, W_syn: 0.3 }, // 敵2体
-  { W_map: 0.2, W_counter: 0.5, W_syn: 0.3 }, // 敵3体
-]
 
 export default function DraftCompanionPage() {
   const catalogRevision = useBrawlerCatalog()
@@ -225,56 +217,9 @@ export default function DraftCompanionPage() {
   const allyPicks = myTeam === "blue" ? bluePicks : redPicks
   const enemyPicks = myTeam === "blue" ? redPicks : bluePicks
 
-  // キャラクターのメタ統計を正規化キーで安全に取得
-  const getCharStats = (charId: string) => {
-    if (!metaData?.characters) return null
-    const norm = charId.toLowerCase().replace(/[\s_\-&.]/g, "")
-    if (metaData.characters[charId]) return metaData.characters[charId]
-    for (const [k, v] of Object.entries<any>(metaData.characters)) {
-      if (k.toLowerCase().replace(/[\s_\-&.]/g, "") === norm) return v
-    }
-    return null
-  }
-
-  // 2キャラ間の直接対面勝率を取得 (双方向解決)
-  const getMatchupWinRate = (myChar: string, enemyChar: string): number => {
-    const myStats = getCharStats(myChar)
-    const enemyStats = getCharStats(enemyChar)
-    const normMy = myChar.toLowerCase().replace(/[\s_\-&.]/g, "")
-    const normEnemy = enemyChar.toLowerCase().replace(/[\s_\-&.]/g, "")
-
-    if (myStats?.matchups && typeof myStats.matchups[normEnemy] === "number") {
-      return myStats.matchups[normEnemy]
-    }
-    if (enemyStats?.matchups && typeof enemyStats.matchups[normMy] === "number") {
-      return 100.0 - enemyStats.matchups[normMy]
-    }
-    if (myStats?.kamo) {
-      const k = myStats.kamo.find((item: any) => item.brawler.toLowerCase().replace(/[\s_\-&.]/g, "") === normEnemy)
-      if (k) return k.win_rate
-    }
-    if (myStats?.tenteki) {
-      const t = myStats.tenteki.find((item: any) => item.brawler.toLowerCase().replace(/[\s_\-&.]/g, "") === normEnemy)
-      if (t) return t.win_rate
-    }
-    return 50.0
-  }
-
-  // 2キャラ間の味方ペア共起シナジー（リフト値）を取得 (双方向解決)
-  const getPairSynergyLift = (myChar: string, allyChar: string): number => {
-    const myStats = getCharStats(myChar)
-    const allyStats = getCharStats(allyChar)
-    const normMy = myChar.toLowerCase().replace(/[\s_\-&.]/g, "")
-    const normAlly = allyChar.toLowerCase().replace(/[\s_\-&.]/g, "")
-
-    if (myStats?.synergies && myStats.synergies[normAlly]?.lift !== undefined) {
-      return myStats.synergies[normAlly].lift
-    }
-    if (allyStats?.synergies && allyStats.synergies[normMy]?.lift !== undefined) {
-      return allyStats.synergies[normMy].lift
-    }
-    return 0.0
-  }
+  // 推薦と編成分析は同じ、十分な標本数のある相性行列を使う。
+  const getMatchupWinRate = (own: string, enemy: string) => matchupRate(metaData?.characters ?? {}, own, enemy) ?? 50
+  const getPairSynergyLift = (first: string, second: string) => synergyLift(metaData?.characters ?? {}, first, second) ?? 0
 
   // サジェスト計算ロジック (4軸統合エンジン: マップ・モード・対面・味方シナジー)
   const suggestions = useMemo(() => {
@@ -376,7 +321,7 @@ export default function DraftCompanionPage() {
         if (bestCounterName) {
           const enemyInfo = getBrawlerInfo(bestCounterName)
           if (bestCounterWr >= 64.0) {
-            badges.push({ label: `🔥 ${enemyInfo.nameJa}を完封 (${bestCounterWr.toFixed(0)}%)`, type: "counter" })
+            badges.push({ label: `🔥 ${enemyInfo.nameJa}に有利 (${bestCounterWr.toFixed(0)}%)`, type: "counter" })
           } else if (bestCounterWr >= 56.0) {
             badges.push({ label: `⚔️ ${enemyInfo.nameJa}に有利 (${bestCounterWr.toFixed(0)}%)`, type: "counter" })
           }
@@ -386,16 +331,16 @@ export default function DraftCompanionPage() {
         if (bestSynergyAlly) {
           const allyInfo = getBrawlerInfo(bestSynergyAlly)
           if (bestSynergyLift >= 5.0) {
-            badges.push({ label: `⚡ ${allyInfo.nameJa}と黄金連携 (+${bestSynergyLift.toFixed(1)}%)`, type: "synergy" })
+            badges.push({ label: `⚡ ${allyInfo.nameJa}と好相性 (+${bestSynergyLift.toFixed(1)}pt)`, type: "synergy" })
           } else if (bestSynergyLift >= 2.5) {
-            badges.push({ label: `🤝 ${allyInfo.nameJa}と好相性 (+${bestSynergyLift.toFixed(1)}%)`, type: "synergy" })
+            badges.push({ label: `🤝 ${allyInfo.nameJa}と好相性 (+${bestSynergyLift.toFixed(1)}pt)`, type: "synergy" })
           }
         }
         
         // 3. マップ & モード適性バッジ
-        if (S_map >= 62.0) {
+        if (metaData.tiers?.["S+"]?.includes(name)) {
           badges.push({ label: "👑 マップS+ Tier", type: "map" })
-        } else if (S_map >= 58.0) {
+        } else if (metaData.tiers?.["S"]?.includes(name) || metaData.tiers?.["A+"]?.includes(name)) {
           badges.push({ label: "🗺️ マップ高適性", type: "map" })
         }
         
@@ -429,78 +374,9 @@ export default function DraftCompanionPage() {
     return []
   }, [phase, allyBans, enemyBans, bluePicks, redPicks, metaData, enemyPicks, allyPicks, selectedMode])
 
-  // 4軸統合による高精度勝率予測計算 (詳細メトリクス付き)
-  const predictionStats = useMemo(() => {
-    const defaultStats = {
-      winRate: 50,
-      allyEnvAvg: 50.0,
-      enemyEnvAvg: 50.0,
-      matchupAdvantage: 0.0,
-      allySynergyTotal: 0.0
-    }
-    if (phase !== "done" || !metaData || !metaData.characters) return defaultStats
-    
-    let allyEnvTotal = 0
-    let enemyEnvTotal = 0
-    
-    allyPicks.forEach(c => {
-      const stats = getCharStats(c)
-      allyEnvTotal += (stats?.score ?? 50.0)
-    })
-    enemyPicks.forEach(c => {
-      const stats = getCharStats(c)
-      enemyEnvTotal += (stats?.score ?? 50.0)
-    })
-
-    const allyEnvAvg = allyEnvTotal / (allyPicks.length || 1)
-    const enemyEnvAvg = enemyEnvTotal / (enemyPicks.length || 1)
-
-    // 対面マトリクス (味方3 vs 敵3 = 9対面) の総合アドバンテージ
-    let matchupAdvantage = 0
-    allyPicks.forEach(a => {
-      enemyPicks.forEach(e => {
-        const wr = getMatchupWinRate(a, e)
-        matchupAdvantage += (wr - 50.0)
-      })
-    })
-    matchupAdvantage = matchupAdvantage / 9.0 // 1対面あたりの平均勝率乖離
-
-    // 味方シナジー総和 vs 敵シナジー総和
-    let allySynergyTotal = 0
-    if (allyPicks.length >= 2) {
-      allySynergyTotal += getPairSynergyLift(allyPicks[0], allyPicks[1])
-      if (allyPicks.length >= 3) {
-        allySynergyTotal += getPairSynergyLift(allyPicks[0], allyPicks[2])
-        allySynergyTotal += getPairSynergyLift(allyPicks[1], allyPicks[2])
-      }
-    }
-
-    let enemySynergyTotal = 0
-    if (enemyPicks.length >= 2) {
-      enemySynergyTotal += getPairSynergyLift(enemyPicks[0], enemyPicks[1])
-      if (enemyPicks.length >= 3) {
-        enemySynergyTotal += getPairSynergyLift(enemyPicks[0], enemyPicks[2])
-        enemySynergyTotal += getPairSynergyLift(enemyPicks[1], enemyPicks[2])
-      }
-    }
-
-    // 環境適性の差分 (40%) + 対面相性アドバンテージ (40%) + チームシナジー差分 (20%)
-    const envDiff = allyEnvTotal - enemyEnvTotal
-    const synDiff = allySynergyTotal - enemySynergyTotal
-    const totalAdvantage = (envDiff * 0.40) + (matchupAdvantage * 1.5 * 0.40) + (synDiff * 1.2 * 0.20)
-
-    // シグモイド関数で勝率に変換
-    const p = 1 / (1 + Math.exp(-0.15 * totalAdvantage))
-    const winRate = Math.min(Math.max(Math.round(p * 100), 5), 95)
-
-    return {
-      winRate,
-      allyEnvAvg,
-      enemyEnvAvg,
-      matchupAdvantage,
-      allySynergyTotal
-    }
-  }, [phase, allyPicks, enemyPicks, metaData])
+  const predictionStats = useMemo(() => draftPrediction(
+    metaData?.characters ?? {}, phase === "done" ? allyPicks : [], phase === "done" ? enemyPicks : []
+  ), [phase, allyPicks, enemyPicks, metaData])
 
   // ================= UI Components =================
 
@@ -778,7 +654,7 @@ export default function DraftCompanionPage() {
               <CardContent className="p-8 flex flex-col items-center justify-center space-y-4">
                 <div className="flex items-center gap-3 text-primary">
                   <Trophy className="w-8 h-8 text-yellow-500" />
-                  <h2 className="text-2xl font-bold">編成有利度（参考値）</h2>
+                  <h2 className="text-2xl font-bold">予想勝率</h2>
                 </div>
                 <div className="relative">
                   <svg className="w-48 h-48 transform -rotate-90">
@@ -786,12 +662,12 @@ export default function DraftCompanionPage() {
                     <circle 
                       cx="96" cy="96" r="80" stroke="currentColor" strokeWidth="12" fill="transparent" 
                       strokeDasharray="502" 
-                      strokeDashoffset={502 - (502 * predictionStats.winRate) / 100}
-                      className={predictionStats.winRate >= 50 ? "text-blue-500 transition-all duration-1000 ease-out" : "text-red-500 transition-all duration-1000 ease-out"} 
+                      strokeDashoffset={502 - (502 * (predictionStats.winRate ?? 50)) / 100}
+                      className={(predictionStats.winRate ?? 50) >= 50 ? "text-blue-500 transition-all duration-1000 ease-out" : "text-red-500 transition-all duration-1000 ease-out"} 
                     />
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-5xl font-extrabold">{predictionStats.winRate}%</span>
+                    <span className="text-5xl font-extrabold">{predictionStats.winRate === null ? "—" : `${predictionStats.winRate}%`}</span>
                   </div>
                 </div>
                 <div className="grid grid-cols-3 gap-2 w-full max-w-md bg-secondary/30 p-3 rounded-lg border border-primary/10 text-center">
@@ -804,19 +680,19 @@ export default function DraftCompanionPage() {
                   <div className="space-y-1">
                     <div className="text-[10px] text-muted-foreground font-medium">対面相性優位</div>
                     <div className={`text-xs font-bold ${predictionStats.matchupAdvantage >= 0 ? 'text-blue-500' : 'text-red-500'}`}>
-                      {predictionStats.matchupAdvantage >= 0 ? `+${(predictionStats.matchupAdvantage * 100 / 50).toFixed(1)}%` : `${(predictionStats.matchupAdvantage * 100 / 50).toFixed(1)}%`}
+                      {signedPoints(predictionStats.matchupAdvantage)}
                     </div>
                   </div>
                   <div className="space-y-1">
                     <div className="text-[10px] text-muted-foreground font-medium">味方シナジー</div>
-                    <div className={`text-xs font-bold ${predictionStats.allySynergyTotal >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                      {predictionStats.allySynergyTotal >= 0 ? `+${predictionStats.allySynergyTotal.toFixed(1)}%` : `${predictionStats.allySynergyTotal.toFixed(1)}%`}
+                    <div className={`text-xs font-bold ${predictionStats.allySynergyAvg >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                      {signedPoints(predictionStats.allySynergyAvg)} vs {signedPoints(predictionStats.enemySynergyAvg)}
                     </div>
                   </div>
                 </div>
 
                 <p className="text-xs text-muted-foreground text-center max-w-[340px]">
-                  集計スコアから算出した参考指標です。実際の勝率を保証するものではありません。対面・味方相性も選択したマップ・モードの集計を使用し、少数例は補正しています。
+                  マップ・対面・味方相性のデータから推定しています。
                 </p>
                 <Button className="mt-2" size="lg" onClick={handleReset}>
                   <RefreshCw className="w-4 h-4 mr-2" /> 新しいドラフトを始める

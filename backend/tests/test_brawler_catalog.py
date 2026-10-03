@@ -20,9 +20,10 @@ def test_localization_joins_game_ids_instead_of_translating_english_names():
         catalog.localized_rows({"list": []}, {}, {})
 
 
-def test_missing_or_corrupt_localization_is_not_published_as_a_translation():
+@pytest.mark.parametrize("label", [None, "", "\ufffd", "COSMO"])
+def test_missing_or_corrupt_localization_is_not_published_as_a_translation(label):
     row = catalog.localized_rows({"list": [{"id": 16000109, "name": "Cosmo"}]},
-        {"Attractor": {"id": 16000109, "TID": "TID_ATTRACTOR"}}, {"TID_ATTRACTOR": {"JP": "\ufffd"}})[0]
+        {"Attractor": {"id": 16000109, "TID": "TID_ATTRACTOR"}}, {"TID_ATTRACTOR": {"JP": label}})[0]
     assert row["nameJa"] is None
 
 

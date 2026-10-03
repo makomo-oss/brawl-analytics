@@ -26,7 +26,7 @@ def localized_rows(listing: dict, characters: dict, japanese: dict) -> list[dict
         character = by_id.get(identifier, {})
         label = japanese.get(character.get("TID"), {}).get("JP")
         # Never replace a known translation with corrupt/missing upstream text.
-        if not isinstance(label, str) or not label.strip() or "\ufffd" in label:
+        if not isinstance(label, str) or not label.strip() or "\ufffd" in label or label.strip().casefold() == name.strip().casefold():
             label = None
         rows.append({"id": identifier, "name": name.strip(), "nameJa": label,
                      "imageUrl": brawler.get("imageUrl"), "avatarId": brawler.get("avatarId")})

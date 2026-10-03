@@ -24,7 +24,7 @@ export function applyBrawlerCatalog(payload: unknown): boolean {
     const key = row.name.trim().toLowerCase()
     if (["__proto__", "constructor", "prototype"].includes(key)) continue
     const old = BRAWLER_MAP[key]
-    const name = typeof row.nameJa === "string" && row.nameJa.trim() && !row.nameJa.includes("\ufffd") ? row.nameJa.trim() : old?.ja || row.name
+    const name = typeof row.nameJa === "string" && row.nameJa.trim() && !row.nameJa.includes("\ufffd") && row.nameJa.trim().toLowerCase() !== key ? row.nameJa.trim() : old?.ja || row.name
     let image = old?.imageUrl || ""
     if (typeof row.imageUrl === "string" && row.imageUrl) {
       try {

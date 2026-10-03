@@ -14,7 +14,7 @@ import { translateMode, translateMap, getModeIconUrl } from "@/lib/translations"
 import { getBrawlerInfo, BRAWLER_MAP } from "@/lib/brawlers"
 import { Swords, Ban, Check, RefreshCw, Trophy, Target, User, Search, X } from "lucide-react"
 import { API_URL } from "@/lib/config"
-import { draftPrediction, matchupRate, synergyLift, signedPoints } from "@/lib/draft-analysis"
+import { matchupRate, synergyLift, signedPoints, type DraftPrediction } from "@/lib/draft-analysis"
 
 function toKatakana(str: string): string {
   return str.replace(/[\u3041-\u3096]/g, match =>
@@ -55,6 +55,9 @@ export default function DraftCompanionPage() {
   const [metaData, setMetaData] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [predictionStats, setPredictionStats] = useState<DraftPrediction | null>(null)
+  const [predictionError, setPredictionError] = useState("")
+  const [predictionRetry, setPredictionRetry] = useState(0)
 
   // 初期ロード：カテゴリの取得
   useEffect(() => {
@@ -374,9 +377,28 @@ export default function DraftCompanionPage() {
     return []
   }, [phase, allyBans, enemyBans, bluePicks, redPicks, metaData, enemyPicks, allyPicks, selectedMode])
 
-  const predictionStats = useMemo(() => draftPrediction(
-    metaData?.characters ?? {}, phase === "done" ? allyPicks : [], phase === "done" ? enemyPicks : []
-  ), [phase, allyPicks, enemyPicks, metaData])
+  useEffect(() => {
+    setPredictionStats(null)
+    setPredictionError("")
+    if (phase !== "done") return
+    const controller = new AbortController()
+    const analyze = async () => {
+      try {
+        const response = await fetch(`${API_URL}/meta/draft-analysis`, {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ allies: allyPicks, enemies: enemyPicks, mode: selectedMode, map: selectedMap }),
+          signal: controller.signal,
+        })
+        if (!response.ok) throw new Error("編成の分析に失敗しました。再試行してください。")
+        const data: DraftPrediction = await response.json()
+        if (!controller.signal.aborted) setPredictionStats(data)
+      } catch (err) {
+        if (!controller.signal.aborted) setPredictionError(err instanceof Error && !(err instanceof TypeError) ? err.message : "通信に失敗しました。再試行してください。")
+      }
+    }
+    analyze()
+    return () => controller.abort()
+  }, [phase, allyPicks, enemyPicks, selectedMode, selectedMap, predictionRetry])
 
   // ================= UI Components =================
 
@@ -662,38 +684,48 @@ export default function DraftCompanionPage() {
                     <circle 
                       cx="96" cy="96" r="80" stroke="currentColor" strokeWidth="12" fill="transparent" 
                       strokeDasharray="502" 
-                      strokeDashoffset={502 - (502 * (predictionStats.winRate ?? 50)) / 100}
-                      className={(predictionStats.winRate ?? 50) >= 50 ? "text-blue-500 transition-all duration-1000 ease-out" : "text-red-500 transition-all duration-1000 ease-out"} 
+                      strokeDashoffset={502 - (502 * (predictionStats?.winRate ?? 0)) / 100}
+                      className={!predictionStats ? "text-muted" : predictionStats.winRate >= 50 ? "text-blue-500 transition-all duration-1000 ease-out" : "text-red-500 transition-all duration-1000 ease-out"}
                     />
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-5xl font-extrabold">{predictionStats.winRate === null ? "—" : `${predictionStats.winRate}%`}</span>
+                    <span className={`${!predictionStats ? "text-lg text-muted-foreground" : "text-5xl"} font-extrabold`}>
+                      {predictionStats ? `${predictionStats.winRate}%` : predictionError ? "取得失敗" : "分析中…"}
+                    </span>
                   </div>
                 </div>
+                {predictionStats && (
+                  <Badge variant="outline" className={predictionStats.confidence === "low" ? "text-amber-500 border-amber-500/30" : "text-muted-foreground"}>
+                    推定の確かさ：{({ low: "低", medium: "中", high: "高" })[predictionStats.confidence]}
+                  </Badge>
+                )}
                 <div className="grid grid-cols-3 gap-2 w-full max-w-md bg-secondary/30 p-3 rounded-lg border border-primary/10 text-center">
                   <div className="space-y-1">
                     <div className="text-[10px] text-muted-foreground font-medium">マップ適性</div>
                     <div className="text-xs font-bold text-foreground">
-                      {predictionStats.allyEnvAvg.toFixed(1)} vs {predictionStats.enemyEnvAvg.toFixed(1)}
+                      {predictionStats?.allyEnvAvg.toFixed(1) ?? "—"} vs {predictionStats?.enemyEnvAvg.toFixed(1) ?? "—"}
                     </div>
                   </div>
                   <div className="space-y-1">
                     <div className="text-[10px] text-muted-foreground font-medium">対面相性優位</div>
-                    <div className={`text-xs font-bold ${predictionStats.matchupAdvantage >= 0 ? 'text-blue-500' : 'text-red-500'}`}>
-                      {signedPoints(predictionStats.matchupAdvantage)}
+                    <div className={`text-xs font-bold ${!predictionStats ? 'text-muted-foreground' : predictionStats.matchupAdvantage >= 0 ? 'text-blue-500' : 'text-red-500'}`}>
+                      {predictionStats ? signedPoints(predictionStats.matchupAdvantage) : "—"}
                     </div>
                   </div>
                   <div className="space-y-1">
                     <div className="text-[10px] text-muted-foreground font-medium">味方シナジー</div>
-                    <div className={`text-xs font-bold ${predictionStats.allySynergyAvg >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                      {signedPoints(predictionStats.allySynergyAvg)} vs {signedPoints(predictionStats.enemySynergyAvg)}
+                    <div className={`text-xs font-bold ${!predictionStats ? 'text-muted-foreground' : predictionStats.allySynergyAvg >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                      {predictionStats ? signedPoints(predictionStats.allySynergyAvg) : "—"} vs {predictionStats ? signedPoints(predictionStats.enemySynergyAvg) : "—"}
                     </div>
                   </div>
                 </div>
 
                 <p className="text-xs text-muted-foreground text-center max-w-[340px]">
-                  マップ・対面・味方相性のデータから推定しています。
+                  {predictionError || "マップ・対面・味方相性のデータから推定しています。"}
                 </p>
+                {predictionError && (
+                  <Button variant="outline" onClick={() => setPredictionRetry(value => value + 1)}>再試行する</Button>
+                )}
                 <Button className="mt-2" size="lg" onClick={handleReset}>
                   <RefreshCw className="w-4 h-4 mr-2" /> 新しいドラフトを始める
                 </Button>

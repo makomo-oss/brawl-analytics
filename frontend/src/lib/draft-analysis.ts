@@ -33,50 +33,14 @@ export function synergyLift(characters: DraftCharacters, first: string, second: 
   return lifts.length ? mean(lifts) : null
 }
 
-function teamSynergy(characters: DraftCharacters, picks: string[]) {
-  const pairs: number[] = []
-  let supported = 0
-  for (let first = 0; first < picks.length; first++) {
-    for (let second = first + 1; second < picks.length; second++) {
-      const lift = synergyLift(characters, picks[first], picks[second])
-      if (lift !== null) supported += 1
-      pairs.push(lift ?? 0)
-    }
-  }
-  return { average: mean(pairs), supported }
-}
-
-export function draftPrediction(characters: DraftCharacters, allies: string[], enemies: string[]) {
-  const stats = [...allies, ...enemies].map(name => characterStats(characters, name))
-  const scores = stats.map(value => value?.sample_sufficient !== false && validRate(value?.score) ? value.score : 50)
-  const allyEnvAvg = allies.length ? mean(scores.slice(0, allies.length)) : 50
-  const enemyEnvAvg = enemies.length ? mean(scores.slice(allies.length)) : 50
-  const matchups: number[] = []
-  let supportedMatchups = 0
-  for (const own of allies) {
-    for (const enemy of enemies) {
-      const rate = matchupRate(characters, own, enemy)
-      if (rate !== null) supportedMatchups += 1
-      matchups.push((rate ?? 50) - 50)
-    }
-  }
-  const matchupAdvantage = mean(matchups)
-  const allySynergy = teamSynergy(characters, allies)
-  const enemySynergy = teamSynergy(characters, enemies)
-  const supportedMaps = stats.filter(value => value?.sample_sufficient !== false && validRate(value?.score)).length
-  const hasEvidence = supportedMaps + supportedMatchups + allySynergy.supported + enemySynergy.supported > 0
-
-  // This remains an uncalibrated composition estimate, not a fitted outcome
-  // model. Use team/pair averages consistently so displayed factors have
-  // the same scale as their contributions, independent of slot count.
-  const advantage = (allyEnvAvg - enemyEnvAvg) * 0.4 + matchupAdvantage * 1.5 * 0.4
-    + (allySynergy.average - enemySynergy.average) * 1.2 * 0.2
-  const winRate = allies.length === 3 && enemies.length === 3 && hasEvidence
-    ? Math.min(95, Math.max(5, Math.round(100 / (1 + Math.exp(-0.15 * advantage)))))
-    : null
-
-  return { winRate, allyEnvAvg, enemyEnvAvg, matchupAdvantage,
-    allySynergyAvg: allySynergy.average, enemySynergyAvg: enemySynergy.average }
+export interface DraftPrediction {
+  winRate: number
+  allyEnvAvg: number
+  enemyEnvAvg: number
+  matchupAdvantage: number
+  allySynergyAvg: number
+  enemySynergyAvg: number
+  confidence: "low" | "medium" | "high"
 }
 
 export function signedPoints(value: number) {

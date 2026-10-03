@@ -140,8 +140,25 @@ def parse_battlelog(player_tag: str, items: list) -> tuple[list[dict], set[str]]
                 "hero_used": hero_used,
                 "allies": allies,
                 "opponents": opponents,
+                "features": {
+                    "collected_at": datetime.now(timezone.utc).isoformat(),
+                    "teams": sorted([sorted([
+                        {"tag": clean_tag(p.get("tag")),
+                         "brawler_id": (p.get("brawler") or {}).get("id"),
+                         "name": (p.get("brawler") or {}).get("name"),
+                         "power": (p.get("brawler") or {}).get("power"),
+                         "trophies": (p.get("brawler") or {}).get("trophies")}
+                        for p in team], key=lambda p: p["tag"]) for team in teams],
+                        key=lambda team: [p["tag"] for p in team]),
+                },
             })
             encountered.update(participants)
         except (AttributeError, TypeError, ValueError, KeyError) as exc:
             logger.warning("Skipping invalid battle for %s: %s", tag, exc)
     return deduplicate_battle_records(records), encountered
+
+
+def save_battle_records(db, records):
+    """Atomically save observations and one thin feature record per real game."""
+    if records:
+        db.rpc("save_battle_observations", {"p_records": deduplicate_battle_records(records)}).execute()

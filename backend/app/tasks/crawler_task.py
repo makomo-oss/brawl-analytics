@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Callable
 from app.database import get_db
 from app.services.player_profiles import profile_record
-from app.services.battle_records import (deduplicate_battle_records, parse_battlelog,
+from app.services.battle_records import (deduplicate_battle_records, parse_battlelog, save_battle_records,
                                          ranked_encountered_tags)
 from app.services.brawl_api import get_player_battlelog, get_player, get_club_members, get_club
 
@@ -298,7 +298,7 @@ async def run_crawler_task(report_stage: Callable[[str], None] | None = None, ag
             logger.info(f"Bulk upserting {len(upsert_matches)} matches...")
             for offset in range(0, len(upsert_matches), MATCH_WRITE_BATCH):
                 batch = upsert_matches[offset:offset + MATCH_WRITE_BATCH]
-                await asyncio.to_thread(lambda: db.table("match_raw_history").upsert(batch).execute())
+                await asyncio.to_thread(save_battle_records, db, batch)
         except Exception:
             logger.exception("Failed to persist matches; aggregation cancelled")
             raise

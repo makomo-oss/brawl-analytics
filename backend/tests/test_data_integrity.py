@@ -85,8 +85,9 @@ def test_player_sync_persists_crawler_compatible_battles(monkeypatch, route):
     monkeypatch.setattr(meta, "_get_cached_macro_data", lambda database: [])
 
     result = asyncio.run(route("ABC"))
-    assert db.table.call_args_list[:2] == [call("players"), call("match_raw_history")]
-    records = db.table.return_value.upsert.call_args_list[-1].args[0]
+    assert db.table.call_args_list[0] == call("players")
+    records = db.rpc.call_args.args[1]["p_records"]
+    assert db.rpc.call_args.args[0] == "save_battle_observations"
     assert records[0]["match_id"] == "ABC_20260918T120000.000Z"
     assert records[0]["match_type"] == "soloRanked"
     assert records[0]["hero_used"] == "COLT"
@@ -98,7 +99,7 @@ def test_dashboard_reports_failed_battle_persistence(monkeypatch):
     from unittest.mock import Mock
 
     db = Mock()
-    db.table.return_value.upsert.return_value.execute.side_effect = [None, RuntimeError("write failed")]
+    db.rpc.return_value.execute.side_effect = RuntimeError("write failed")
     monkeypatch.setattr(player, "get_db", lambda: db)
     monkeypatch.setattr(player, "get_player", AsyncMock(return_value={"tag": "#ABC", "name": "Test"}))
     monkeypatch.setattr(player, "get_player_battlelog", AsyncMock(return_value={"items": [{
@@ -136,7 +137,7 @@ def test_player_tag_letter_o_alias_preserves_team_and_saved_history(monkeypatch,
     player.get_player.assert_awaited_once_with(canonical)
     assert result["player_tag"] == canonical
     profile = db.table.return_value.upsert.call_args_list[0].args[0]
-    records = db.table.return_value.upsert.call_args_list[1].args[0]
+    records = db.rpc.call_args.args[1]["p_records"]
     assert profile["player_tag"] == canonical
     assert records[0]["player_tag"] == canonical
     assert records[0]["hero_used"] == "PIPER"
@@ -226,7 +227,7 @@ def test_cleanup_deletes_only_expired_battles_and_checks_remaining(monkeypatch):
     ]
     monkeypatch.setattr(cleanup_task, "get_db", lambda: db)
     assert asyncio.run(cleanup_task.run_cleanup_task()) == {"deleted_count": 2, "remaining_expired": 0}
-    db.table.return_value.delete.assert_called_once_with()
+    assert db.table.return_value.delete.call_count == 2
     cutoff = db.table.return_value.delete.return_value.lt.call_args.args
     assert cutoff[0] == "match_at"
     assert (pd.Timestamp.now(tz="UTC") - pd.Timestamp(cutoff[1])).days == 60

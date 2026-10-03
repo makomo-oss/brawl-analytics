@@ -526,7 +526,7 @@ def calc_dynamic_synergies(df: pd.DataFrame):
         
     return synergy_list
 
-def run_daily_calculation(client: Client = None):
+def run_daily_calculation(client: Client = None, train_models: bool = False):
     """
     マッチ履歴を集計し、macro_map_stats, dynamic_counters, dynamic_synergies を最新化する関数。
     クローラー完了時やcronバッチから呼び出される。
@@ -540,11 +540,33 @@ def run_daily_calculation(client: Client = None):
     # the batch host IP or on an AsyncClient created on another event loop.
     rank_segments = fetch_player_rank_segments(supabase, match_df=None)
     # Reuse loaded history on the batch runner. Public requests never train.
-    from app.algorithm.draft_training import train_draft_model
-    draft_model = train_draft_model(df.to_dict("records"), rank_segments["all_elite"])
+    models = {}
+    for model_id, population in (("current", "gachi"), ("overall", "overall")):
+        rows = supabase.table("draft_outcome_models").select("model,updated_at").eq("id", model_id).limit(1).execute().data or []
+        active = rows[0]["model"] if rows else None
+        recent = False
+        if rows:
+            updated = datetime.fromisoformat(rows[0]["updated_at"].replace("Z", "+00:00"))
+            recent = datetime.now(timezone.utc) - updated < timedelta(hours=24)
+        if train_models and (not active or active.get("version") != "composition_set_v3" or not recent):
+            from app.algorithm.composition_training import train_composition_model
+            candidate = train_composition_model(df.to_dict("records"), rank_segments["all_elite"], population=population)
+            if candidate:
+                supabase.rpc("publish_composition_model", {"p_id": model_id, "p_model": candidate}).execute()
+                if candidate["accepted"]:
+                    active = candidate
+        models[population] = active
     macro_stats = calc_macro_map_stats(df, rank_segments)
     dynamic_counters = calc_dynamic_counters(df)
     dynamic_synergies = calc_dynamic_synergies(df)
+    # Store adjusted conditional associations, preserving observed counts/wins.
+    if models.get("overall"):
+        from app.algorithm.composition_model import pair_points
+        from app.algorithm.draft_outcome import normalize
+        for row in dynamic_counters:
+            row["counter_coefficient"] = round(pair_points(models["overall"], normalize(row["char_a"]), normalize(row["char_b"])) / 100, 4)
+        for row in dynamic_synergies:
+            row["lift"] = round(pair_points(models["overall"], normalize(row["char_a"]), normalize(row["char_b"]), kind="s"), 2)
     
     # Publish all derived tables in one transaction, including removal of expired rows.
     # Requires the analytics_snapshot_and_clubs migration; fail closed if absent.
@@ -556,10 +578,6 @@ def run_daily_calculation(client: Client = None):
         "counter_rows": dynamic_counters,
         "synergy_rows": dynamic_synergies,
     }).execute()
-    if draft_model:
-        supabase.table("draft_outcome_models").upsert({
-            "id": "current", "model": draft_model, "updated_at": now,
-        }).execute()
 
     # キャッシュを即座に破棄して最新データをAPIに反映
     try:
@@ -571,14 +589,14 @@ def run_daily_calculation(client: Client = None):
 
     logger.info("Daily Calculation Batch completed successfully.")
     return {
-        "draft_model_games": draft_model["games"] if draft_model else None,
+        "draft_model_games": models["gachi"]["games"] if models.get("gachi") else None,
         "macro_stats_count": len(macro_stats),
         "dynamic_counters_count": len(dynamic_counters),
         "dynamic_synergies_count": len(dynamic_synergies)
     }
 
 def main():
-    run_daily_calculation()
+    run_daily_calculation(train_models=True)
 
 if __name__ == "__main__":
     main()

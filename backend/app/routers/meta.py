@@ -45,6 +45,7 @@ def clear_meta_cache():
     _MODE_MAPS_CACHE.clear()
     _PAIR_CONTEXT_CACHE.clear()
     _DRAFT_MODEL_CACHE.update(model=None, timestamp=0)
+    _OVERALL_MODEL_CACHE.update(model=None, timestamp=0)
 
 @router.post("/clear-cache")
 def api_clear_cache():
@@ -282,23 +283,63 @@ def _draft_names(allies, enemies):
 
 
 _DRAFT_MODEL_CACHE = {"model": None, "timestamp": 0}
+_OVERALL_MODEL_CACHE = {"model": None, "timestamp": 0}
 
 
-def _get_draft_model(db):
+def _get_draft_model(db, population="gachi"):
     from app.algorithm.draft_outcome import MODEL_VERSION
-    cached = _DRAFT_MODEL_CACHE["model"]
-    if cached is not None and time.time() - _DRAFT_MODEL_CACHE["timestamp"] < 300:
+    cache = _DRAFT_MODEL_CACHE if population == "gachi" else _OVERALL_MODEL_CACHE
+    cached = cache["model"]
+    if cached is not None and time.time() - cache["timestamp"] < 300:
         return cached
     try:
-        rows = db.table("draft_outcome_models").select("model").eq("id", "current").limit(1).execute().data
+        rows = db.table("draft_outcome_models").select("model").eq("id", "current" if population == "gachi" else "overall").limit(1).execute().data
         model = rows[0]["model"] if rows else None
-        if not model or model.get("version") != MODEL_VERSION or not model.get("weights"):
+        if not model or model.get("version") not in (MODEL_VERSION, "composition_set_v3") or not model.get("weights"):
             raise ValueError("Validated draft model is unavailable")
     except Exception as exc:
         logger.exception("Could not load draft outcome model")
-        raise HTTPException(status_code=503, detail="編成の分析に失敗しました。再試行してください。") from exc
-    _DRAFT_MODEL_CACHE.update(model=model, timestamp=time.time())
+        if cached is not None:
+            return cached
+        try:
+            previous_id = "previous" if population == "gachi" else "overall_previous"
+            previous = db.table("draft_outcome_models").select("model").eq("id", previous_id).limit(1).execute().data or []
+            model = previous[0]["model"] if previous else None
+            if not model or model.get("version") not in (MODEL_VERSION, "composition_set_v3") or not model.get("weights"):
+                raise ValueError("No previous model")
+        except Exception:
+            raise HTTPException(status_code=503, detail="編成の分析に失敗しました。再試行してください。") from exc
+    cache.update(model=model, timestamp=time.time())
     return model
+
+
+def _adjusted_pair_details(model, character, pairs, mode=None, map_id=None):
+    from app.algorithm.composition_model import pair_points
+    matchups, synergies, favorable, unfavorable = {}, {}, [], []
+    for pair in pairs:
+        other = _normalize_id(pair["char_b"])
+        count = pair["match_count"]
+        if other == character or count < MIN_DISPLAY_MATCHUP_MATCHES or pair["weighted_matches"] < MIN_DISPLAY_MATCHUP_WEIGHT:
+            continue
+        kind = "e" if pair["kind"] == "counter" else "s"
+        support = model.get("support", {}).get(f"{kind}|global|{':'.join(sorted((character, other)))}", 0)
+        if support < MIN_DISPLAY_MATCHUP_WEIGHT:
+            continue
+        effect = round(pair_points(model, character, other, mode, map_id, kind), 1)
+        if kind == "e":
+            matchups[other] = effect
+            entry = {"brawler": pair["char_b"], "name": format_char_name(pair["char_b"]),
+                     "effect_points": effect, "matches": count}
+            if effect > 0:
+                favorable.append(entry)
+            elif effect < 0:
+                unfavorable.append(entry)
+        else:
+            synergies[other] = {"effect_points": effect, "lift": effect, "matches": count}
+    favorable.sort(key=lambda v: (-v["effect_points"], -v["matches"]))
+    unfavorable.sort(key=lambda v: (v["effect_points"], -v["matches"]))
+    return {"kamo": favorable[:5], "tenteki": unfavorable[:5], "matchups": matchups,
+            "synergies": synergies, "matchup_measure": "adjusted_effect_points", "matchup_method": model["version"]}
 
 
 @router.post("/draft-analysis")
@@ -444,6 +485,13 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
                  if include_details else {})
     broad_pair_data = (_contextual_pairs(db, "gachi", None, None, "all", None, detail_character)
                        if include_details and include_matchup_fallback and type == "gachi" and (sub_type in ("map", "mode") or mode or rank_tier != "all") else {})
+    adjusted_model = None
+    if include_details:
+        try:
+            adjusted_model = _get_draft_model(db, "gachi" if type == "gachi" else "overall")
+        except HTTPException:
+            # A rolling deployment can precede the first overall snapshot.
+            logger.warning("Adjusted pair model is not available for this population yet")
 
     for cid, stats in char_stats.items():
         tm = stats["total_matches"]
@@ -528,6 +576,19 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
             char_entry.update({"kamo": kamo, "tenteki": tenteki,
                                "kamo_scope": kamo_scope, "tenteki_scope": tenteki_scope,
                                "matchups": matchups, "synergies": synergies})
+            if adjusted_model:
+                selected_mode = id if sub_type == "mode" else mode
+                selected_map = id if sub_type == "map" else None
+                corrected = _adjusted_pair_details(adjusted_model, norm_cid, char_pairs, selected_mode, selected_map)
+                scope = "エリート以上全体" if not selected_mode else "選択条件・エリート以上"
+                corrected.update(kamo_scope=scope, tenteki_scope=scope)
+                if broad_pair_data:
+                    broad = _adjusted_pair_details(adjusted_model, norm_cid, broad_pair_data.get(norm_cid, []))
+                    for key in ("kamo", "tenteki"):
+                        if len(corrected[key]) < 2 and len(broad[key]) > len(corrected[key]):
+                            corrected[key] = broad[key]
+                            corrected[key + "_scope"] = "ガチバトル・エリート以上全体"
+                char_entry.update(corrected)
 
         characters_detail[cid] = char_entry
             

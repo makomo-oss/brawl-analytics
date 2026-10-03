@@ -77,7 +77,7 @@ export default function DraftCompanionPage() {
           if (data.maps?.length > 0) setSelectedMap(data.maps[0])
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : "データを取得できませんでした")
+        setError(err instanceof TypeError ? "通信に失敗しました。時間をおいて再読み込みしてください。" : err instanceof Error ? err.message : "データを取得できませんでした")
       }
     }
     fetchCategories()
@@ -129,7 +129,7 @@ export default function DraftCompanionPage() {
     setError("")
     try {
       const [mapRes, modeRes] = await Promise.all([
-        fetch(`${API_URL}/meta/tier-list?type=gachi&sub_type=map&id=${encodeURIComponent(selectedMap)}&mode=${encodeURIComponent(selectedMode)}&include_details=true`),
+        fetch(`${API_URL}/meta/tier-list?type=gachi&sub_type=map&id=${encodeURIComponent(selectedMap)}&mode=${encodeURIComponent(selectedMode)}&include_details=true&include_matchup_fallback=false`),
         fetch(`${API_URL}/meta/tier-list?type=gachi&sub_type=mode&id=${encodeURIComponent(selectedMode)}`)
       ])
       if (!mapRes.ok || !modeRes.ok) throw new Error("分析データを取得できませんでした。再試行してください。")
@@ -142,7 +142,7 @@ export default function DraftCompanionPage() {
       setMetaData(data)
       setPhase("ban")
     } catch (err) {
-      setError(err instanceof Error ? err.message : "データを取得できませんでした")
+      setError(err instanceof TypeError ? "通信に失敗しました。時間をおいて再試行してください。" : err instanceof Error ? err.message : "データを取得できませんでした")
     } finally {
       setLoading(false)
     }

@@ -222,7 +222,11 @@ def _contextual_pairs(db, type, sub_type, selected_id, rank_tier, mode=None, cha
     if character_id:
         rpc_name = "character_pair_stats"
         params["p_character"] = character_id
-    rows = db.rpc(rpc_name, params).execute().data or []
+    try:
+        rows = db.rpc(rpc_name, params).execute().data or []
+    except Exception as exc:
+        logger.exception("Could not load contextual pair statistics")
+        raise HTTPException(status_code=503, detail="相性データを取得できませんでした。時間をおいて再試行してください。") from exc
     by_char = {}
     for row in rows:
         by_char.setdefault(_normalize_id(row["char_a"]), []).append(row)
@@ -255,7 +259,7 @@ def _display_matchups(pairs):
 
 
 @router.get("/tier-list")
-def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, rank_tier: str = "all", include_details: bool = False, mode: str = None, detail_character: str = None):
+def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, rank_tier: str = "all", include_details: bool = False, mode: str = None, detail_character: str = None, include_matchup_fallback: bool = True):
     db = get_db()
     
     # マッチ数のカウント（キャッシュから高速取得）
@@ -365,7 +369,7 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
     pair_data = (_contextual_pairs(db, type, sub_type, id, rank_tier, mode, detail_character)
                  if include_details else {})
     broad_pair_data = (_contextual_pairs(db, "gachi", None, None, "all", None, detail_character)
-                       if include_details and type == "gachi" and (sub_type in ("map", "mode") or mode or rank_tier != "all") else {})
+                       if include_details and include_matchup_fallback and type == "gachi" and (sub_type in ("map", "mode") or mode or rank_tier != "all") else {})
 
     for cid, stats in char_stats.items():
         tm = stats["total_matches"]

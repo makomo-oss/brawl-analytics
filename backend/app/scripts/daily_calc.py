@@ -539,6 +539,21 @@ def run_daily_calculation(client: Client = None, train_models: bool = False):
     # Collection owns API refresh. Aggregation is deterministic and never depends on
     # the batch host IP or on an AsyncClient created on another event loop.
     rank_segments = fetch_player_rank_segments(supabase, match_df=None)
+    observations, snapshots = [], []
+    if train_models:
+        threshold = (datetime.now(timezone.utc) - timedelta(days=ANALYSIS_WINDOW_DAYS)).isoformat()
+        for table, column, ordering, target in (("battle_features", "match_at", "battle_uid", observations),
+                                                ("profile_rank_snapshots", "observed_at", "player_tag,observed_at", snapshots)):
+            offset = 0
+            while True:
+                query = supabase.table(table).select("*").gte(column, threshold)
+                for order_column in ordering.split(","):
+                    query = query.order(order_column)
+                page = query.range(offset, offset + 999).execute().data or []
+                target.extend(page)
+                if len(page) < 1000:
+                    break
+                offset += 1000
     # Reuse loaded history on the batch runner. Public requests never train.
     models = {}
     for model_id, population in (("current", "gachi"), ("overall", "overall")):
@@ -548,11 +563,14 @@ def run_daily_calculation(client: Client = None, train_models: bool = False):
         if rows:
             updated = datetime.fromisoformat(rows[0]["updated_at"].replace("Z", "+00:00"))
             recent = datetime.now(timezone.utc) - updated < timedelta(hours=24)
-        if train_models and (not active or active.get("version") != "composition_set_v3" or not recent):
+        if train_models and (not active or active.get("version") != "ranked_joint_v4" or not recent):
             from app.algorithm.composition_training import train_composition_model
-            candidate = train_composition_model(df.to_dict("records"), rank_segments["all_elite"], population=population)
+            candidate = train_composition_model(df.to_dict("records"), rank_segments["all_elite"], population=population,
+                                                observations=observations, snapshots=snapshots)
             if candidate:
-                supabase.rpc("publish_composition_model", {"p_id": model_id, "p_model": candidate}).execute()
+                from app.algorithm.composition_model import effect_rows
+                supabase.rpc("publish_composition_model", {"p_id": model_id, "p_model": candidate,
+                                                            "p_effects": effect_rows(candidate) if candidate["accepted"] else []}).execute()
                 if candidate["accepted"]:
                     active = candidate
         models[population] = active

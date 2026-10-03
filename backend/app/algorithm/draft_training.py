@@ -17,14 +17,14 @@ MODES = {"brawlBall", "gemGrab", "hotZone", "heist", "bounty", "knockout"}
 PENALTIES = {"c_global": 10, "c_mode": 20, "c_map": 40, "pair_global": 160, "pair_mode": 320}
 
 
-def canonical_games(records, eligible_tags, now=None, population="gachi"):
+def canonical_games(records, eligible_tags, now=None, population="gachi", include_draws=False):
     now = now or datetime.now(timezone.utc)
     games, contradictions = {}, set()
     for row in records:
         allowed = ("soloRanked", "teamRanked") if population == "gachi" else ("ranked", "soloRanked", "teamRanked")
         if row.get("player_tag") not in eligible_tags or row.get("match_type") not in allowed:
             continue
-        if row.get("result") not in ("victory", "defeat") or row.get("mode") not in MODES:
+        if row.get("result") not in (("victory", "defeat", "draw") if include_draws else ("victory", "defeat")) or row.get("mode") not in MODES:
             continue
         own = tuple(sorted(normalize(c) for c in [row.get("hero_used")] + (row.get("allies") or [])))
         enemy = tuple(sorted(normalize(c) for c in (row.get("opponents") or [])))
@@ -37,7 +37,7 @@ def canonical_games(records, eligible_tags, now=None, population="gachi"):
         age = max(0, (now - date).total_seconds() / 86400)
         if age > ANALYSIS_WINDOW_DAYS:
             continue
-        win, observer = int(row["result"] == "victory"), 1
+        win, observer = (.5 if row["result"] == "draw" else int(row["result"] == "victory")), 1
         if own > enemy:
             own, enemy, win, observer = enemy, own, 1 - win, -1
         # Only identified battles can be safely deduplicated across observers.
@@ -46,7 +46,7 @@ def canonical_games(records, eligible_tags, now=None, population="gachi"):
         if not key:
             continue
         value = dict(own=own, enemy=enemy, win=win, date=date, game=key, match_type=row["match_type"],
-                     mode=row["mode"], map=row["map_id"], observers={observer},
+                     mode=row["mode"], map=row["map_id"], observers={observer}, draw=row["result"] == "draw",
                      weight=2 ** (-min(age, 30) / 30 - max(age - 30, 0) / 7))
         if key in games:
             old = games[key]
@@ -67,7 +67,7 @@ def _penalty(key):
     return PENALTIES[f"c_{scope}" if kind == "c" else f"pair_{scope}"]
 
 
-def _fit(indices, values, outcomes, weights, penalties, offset=None, prior=None):
+def _fit(indices, values, outcomes, weights, penalties, offset=None, prior=None, draw_strength=None):
     size = len(penalties)
     flat = indices.ravel()
     coef = np.zeros(size)
@@ -75,13 +75,23 @@ def _fit(indices, values, outcomes, weights, penalties, offset=None, prior=None)
     prior = np.zeros(size) if prior is None else prior
     def objective(beta):
         z = np.sum(beta[indices] * values, axis=1) + offset
+        if draw_strength is not None:
+            denominator = np.logaddexp(np.logaddexp(z / 2, -z / 2), np.log(draw_strength))
+            loss = denominator - (outcomes - .5) * z - (outcomes == .5) * np.log(draw_strength)
+            return np.dot(weights, loss) + .5 * np.dot(penalties, (beta - prior) ** 2)
         return np.dot(weights, np.logaddexp(0, z) - outcomes * z) + .5 * np.dot(penalties, (beta - prior) ** 2)
     loss = objective(coef)
     for _ in range(100):
         z = np.sum(coef[indices] * values, axis=1) + offset
         probability = 1 / (1 + np.exp(-np.clip(z, -25, 25)))
-        gradient = np.bincount(flat, weights=(((probability - outcomes) * weights)[:, None] * values).ravel(), minlength=size) + penalties * (coef - prior)
-        diagonal = np.bincount(flat, weights=((probability * (1 - probability) * weights)[:, None] * values ** 2).ravel(), minlength=size) + penalties
+        error, curvature = probability - outcomes, probability * (1 - probability)
+        if draw_strength is not None:
+            denominator = np.logaddexp(np.logaddexp(z / 2, -z / 2), np.log(draw_strength))
+            pwin, ploss = np.exp(z / 2 - denominator), np.exp(-z / 2 - denominator)
+            error = .5 * (pwin - ploss) - (outcomes - .5)
+            curvature = .25 * (pwin + ploss - (pwin - ploss) ** 2)
+        gradient = np.bincount(flat, weights=((error * weights)[:, None] * values).ravel(), minlength=size) + penalties * (coef - prior)
+        diagonal = np.bincount(flat, weights=((curvature * weights)[:, None] * values ** 2).ravel(), minlength=size) + penalties
         step = gradient / diagonal
         rate = 1.0
         for _ in range(14):

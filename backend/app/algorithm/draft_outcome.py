@@ -45,14 +45,14 @@ def contribution(model, features, kind=None):
 
 
 def draft_score(model, allies, enemies, mode, map_id):
-    if model.get("version") == "composition_set_v3":
+    if model.get("version") in ("composition_set_v3", "ranked_joint_v4"):
         from app.algorithm.composition_model import score
         return score(model, allies, enemies, mode, map_id)
     return contribution(model, composition_features(allies, enemies, mode, map_id))
 
 
 def predict_draft(model, allies, enemies, mode, map_id):
-    if model.get("version") == "composition_set_v3":
+    if model.get("version") in ("composition_set_v3", "ranked_joint_v4"):
         from app.algorithm.composition_model import predict
         return predict(model, allies, enemies, mode, map_id)
     features = composition_features(allies, enemies, mode, map_id)
@@ -80,7 +80,7 @@ def predict_draft(model, allies, enemies, mode, map_id):
 
 
 def recommend_picks(model, allies, enemies, candidates, excluded, mode, map_id):
-    if model.get("version") == "composition_set_v3":
+    if model.get("version") in ("composition_set_v3", "ranked_joint_v4"):
         from app.algorithm.composition_model import recommendations
         return recommendations(model, allies, enemies, candidates, excluded, mode, map_id)
     results = []

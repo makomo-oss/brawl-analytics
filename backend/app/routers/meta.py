@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, Response
+from pydantic import BaseModel, Field
 import math
 import time
 import logging
@@ -30,6 +31,8 @@ _CATEGORIES_CACHE = {"data": {}, "timestamp": 0, "ttl": 3600}
 _COUNTERS_CACHE = {"data": None, "by_char": {}, "timestamp": 0, "ttl": 3600}
 _SYNERGIES_CACHE = {"data": None, "by_char": {}, "timestamp": 0, "ttl": 3600}
 _PAIR_CONTEXT_CACHE = {}
+_DRAFT_CACHE = {}
+_DRAFT_EVIDENCE_CACHE = {}
 _MODE_MAPS_CACHE = {} # mode -> (set of map_ids, timestamp)
 
 def clear_meta_cache():
@@ -43,6 +46,8 @@ def clear_meta_cache():
     _SYNERGIES_CACHE["by_char"] = {}
     _MODE_MAPS_CACHE.clear()
     _PAIR_CONTEXT_CACHE.clear()
+    _DRAFT_CACHE.clear()
+    _DRAFT_EVIDENCE_CACHE.clear()
 
 @router.post("/clear-cache")
 def api_clear_cache():
@@ -256,6 +261,64 @@ def _display_matchups(pairs):
     favorable.sort(key=lambda item: (-item["win_rate"], -item["matches"], item["brawler"]))
     unfavorable.sort(key=lambda item: (item["win_rate"], -item["matches"], item["brawler"]))
     return favorable[:5], unfavorable[:5]
+
+
+class DraftAnalysisRequest(BaseModel):
+    allies: list[str] = Field(min_length=3, max_length=3)
+    enemies: list[str] = Field(min_length=3, max_length=3)
+    mode: str = Field(min_length=1, max_length=40)
+    map: str = Field(min_length=1, max_length=100)
+
+
+@router.post("/draft-analysis")
+def draft_analysis(request: DraftAnalysisRequest):
+    from app.algorithm.draft import predict_draft
+
+    allies = [_normalize_id(name) for name in request.allies]
+    enemies = [_normalize_id(name) for name in request.enemies]
+    names = allies + enemies
+    if len(set(names)) != 6 or any(not name.isascii() or not name.isalnum() or len(name) > 40 for name in names):
+        raise HTTPException(status_code=422, detail="異なる6キャラクターを選択してください。")
+    key = (request.mode, request.map, tuple(sorted(allies)), tuple(sorted(enemies)))
+    cached = _DRAFT_CACHE.get(key)
+    if cached and time.time() - cached[0] < 300:
+        return cached[1]
+    db = get_db()
+    macro = [row for row in _get_cached_macro_data(db) if row.get("match_type") == "gachi"]
+    if not any(row.get("mode") == request.mode and str(row.get("map_id", "")).removeprefix("gachi_") == request.map for row in macro):
+        raise HTTPException(status_code=422, detail="モードとマップを選択し直してください。")
+
+    evidence_key = (request.mode, request.map, tuple(sorted(names)))
+    cached_evidence = _DRAFT_EVIDENCE_CACHE.get(evidence_key)
+    if cached_evidence and time.time() - cached_evidence[0] < 300:
+        scopes = cached_evidence[1]
+    else:
+        try:
+            rows = db.rpc("selected_draft_evidence", {
+                "p_characters": names, "p_mode": request.mode, "p_map": request.map,
+            }).execute().data or []
+        except Exception as exc:
+            logger.exception("Could not load selected draft evidence")
+            raise HTTPException(status_code=503, detail="編成の分析に失敗しました。再試行してください。") from exc
+        scopes = [{"characters": {}, "pairs": {}, "totals": {"matches": 0.0, "wins": 0.0}} for _ in range(3)]
+        for row in rows:
+            scope = scopes[{"global": 0, "mode": 1, "map": 2}[row["scope"]]]
+            name, other = row["char_a"], row["char_b"]
+            stats = {"matches": row["weighted_matches"], "wins": row["weighted_wins"]}
+            if row["kind"] == "character":
+                scope["characters"][name] = stats
+            else:
+                scope["pairs"].setdefault(name, {}).setdefault(row["kind"], {})[other] = stats
+        # Both full teams are observed for every game: the neutral population
+        # win rate is 50%, independent of which players supplied the logs.
+        if len(_DRAFT_EVIDENCE_CACHE) >= 128:
+            _DRAFT_EVIDENCE_CACHE.clear()
+        _DRAFT_EVIDENCE_CACHE[evidence_key] = (time.time(), scopes)
+    result = predict_draft(scopes, allies, enemies)
+    if len(_DRAFT_CACHE) >= 128:
+        _DRAFT_CACHE.clear()
+    _DRAFT_CACHE[key] = (time.time(), result)
+    return result
 
 
 @router.get("/tier-list")

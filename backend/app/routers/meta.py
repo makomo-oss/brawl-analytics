@@ -31,8 +31,6 @@ _CATEGORIES_CACHE = {"data": {}, "timestamp": 0, "ttl": 3600}
 _COUNTERS_CACHE = {"data": None, "by_char": {}, "timestamp": 0, "ttl": 3600}
 _SYNERGIES_CACHE = {"data": None, "by_char": {}, "timestamp": 0, "ttl": 3600}
 _PAIR_CONTEXT_CACHE = {}
-_DRAFT_CACHE = {}
-_DRAFT_EVIDENCE_CACHE = {}
 _MODE_MAPS_CACHE = {} # mode -> (set of map_ids, timestamp)
 
 def clear_meta_cache():
@@ -46,8 +44,7 @@ def clear_meta_cache():
     _SYNERGIES_CACHE["by_char"] = {}
     _MODE_MAPS_CACHE.clear()
     _PAIR_CONTEXT_CACHE.clear()
-    _DRAFT_CACHE.clear()
-    _DRAFT_EVIDENCE_CACHE.clear()
+    _DRAFT_MODEL_CACHE.update(model=None, timestamp=0)
 
 @router.post("/clear-cache")
 def api_clear_cache():
@@ -270,61 +267,69 @@ class DraftAnalysisRequest(BaseModel):
     map: str = Field(min_length=1, max_length=100)
 
 
-@router.post("/draft-analysis")
-def draft_analysis(request: DraftAnalysisRequest):
-    from app.algorithm.draft import predict_draft
-
-    allies = [_normalize_id(name) for name in request.allies]
-    enemies = [_normalize_id(name) for name in request.enemies]
-    names = allies + enemies
-    if len(set(names)) != 6 or any(not name.isascii() or not name.isalnum() or len(name) > 40 for name in names):
-        raise HTTPException(status_code=422, detail="異なる6キャラクターを選択してください。")
-    key = (request.mode, request.map, tuple(sorted(allies)), tuple(sorted(enemies)))
-    cached = _DRAFT_CACHE.get(key)
-    if cached and time.time() - cached[0] < 300:
-        return cached[1]
-    db = get_db()
-    macro = [row for row in _get_cached_macro_data(db) if row.get("match_type") == "gachi"]
-    if not any(row.get("mode") == request.mode and str(row.get("map_id", "")).removeprefix("gachi_") == request.map for row in macro):
+def _draft_context(db, mode, map_id):
+    if not any(row.get("match_type") == "gachi" and row.get("mode") == mode
+               and str(row.get("map_id", "")).removeprefix("gachi_") == map_id
+               for row in _get_cached_macro_data(db)):
         raise HTTPException(status_code=422, detail="モードとマップを選択し直してください。")
 
-    evidence_key = (request.mode, request.map, tuple(sorted(names)))
-    cached_evidence = _DRAFT_EVIDENCE_CACHE.get(evidence_key)
-    if cached_evidence and time.time() - cached_evidence[0] < 300:
-        scopes = cached_evidence[1]
-    else:
-        try:
-            rows = []
-            for scope_name in ("map", "mode", "global"):
-                rows.extend(db.rpc("selected_draft_evidence_slice", {
-                    "p_characters": names, "p_mode": request.mode, "p_map": request.map,
-                    "p_scope": scope_name,
-                }).execute().data or [])
-        except Exception as exc:
-            logger.exception("Could not load selected draft evidence")
-            raise HTTPException(status_code=503, detail="編成の分析に失敗しました。再試行してください。") from exc
-        scopes = [{"characters": {}, "pairs": {}, "totals": {"matches": 0.0, "wins": 0.0}} for _ in range(3)]
-        for row in rows:
-            name, other = row["char_a"], row["char_b"]
-            # The SQL slices never overlap. Rebuild nested global/mode/map
-            # scopes so the estimator can subtract narrower data exactly once.
-            for scope in scopes[:{"global": 1, "mode": 2, "map": 3}[row["scope"]]]:
-                if row["kind"] == "character":
-                    stats = scope["characters"].setdefault(name, {"matches": 0.0, "wins": 0.0})
-                else:
-                    stats = scope["pairs"].setdefault(name, {}).setdefault(row["kind"], {}).setdefault(other, {"matches": 0.0, "wins": 0.0})
-                stats["matches"] += row["weighted_matches"]
-                stats["wins"] += row["weighted_wins"]
-        # Both full teams are observed for every game: the neutral population
-        # win rate is 50%, independent of which players supplied the logs.
-        if len(_DRAFT_EVIDENCE_CACHE) >= 128:
-            _DRAFT_EVIDENCE_CACHE.clear()
-        _DRAFT_EVIDENCE_CACHE[evidence_key] = (time.time(), scopes)
-    result = predict_draft(scopes, allies, enemies)
-    if len(_DRAFT_CACHE) >= 128:
-        _DRAFT_CACHE.clear()
-    _DRAFT_CACHE[key] = (time.time(), result)
-    return result
+
+def _draft_names(allies, enemies):
+    names = [_normalize_id(name.strip()) for name in allies + enemies]
+    if len(set(names)) != len(names) or any(not name.isascii() or not name.isalnum() or len(name) > 40 for name in names):
+        raise HTTPException(status_code=422, detail="異なるキャラクターを選択してください。")
+    return names[:len(allies)], names[len(allies):]
+
+
+_DRAFT_MODEL_CACHE = {"model": None, "timestamp": 0}
+
+
+def _get_draft_model(db):
+    from app.algorithm.draft_outcome import MODEL_VERSION
+    cached = _DRAFT_MODEL_CACHE["model"]
+    if cached is not None and time.time() - _DRAFT_MODEL_CACHE["timestamp"] < 300:
+        return cached
+    try:
+        rows = db.table("draft_outcome_models").select("model").eq("id", "current").limit(1).execute().data
+        model = rows[0]["model"] if rows else None
+        if not model or model.get("version") != MODEL_VERSION or not model.get("weights"):
+            raise ValueError("Validated draft model is unavailable")
+    except Exception as exc:
+        logger.exception("Could not load draft outcome model")
+        raise HTTPException(status_code=503, detail="編成の分析に失敗しました。再試行してください。") from exc
+    _DRAFT_MODEL_CACHE.update(model=model, timestamp=time.time())
+    return model
+
+
+@router.post("/draft-analysis")
+def draft_analysis(request: DraftAnalysisRequest):
+    from app.algorithm.draft_outcome import predict_draft
+    allies, enemies = _draft_names(request.allies, request.enemies)
+    db = get_db()
+    _draft_context(db, request.mode, request.map)
+    return predict_draft(_get_draft_model(db), allies, enemies, request.mode, request.map)
+
+
+class DraftRecommendationRequest(BaseModel):
+    allies: list[str] = Field(default_factory=list, max_length=2)
+    enemies: list[str] = Field(default_factory=list, max_length=3)
+    excluded: list[str] = Field(default_factory=list, max_length=12)
+    mode: str = Field(min_length=1, max_length=40)
+    map: str = Field(min_length=1, max_length=100)
+
+
+@router.post("/draft-recommendations")
+def draft_recommendations(request: DraftRecommendationRequest):
+    from app.algorithm.draft_outcome import recommend_picks
+    allies, enemies = _draft_names(request.allies, request.enemies)
+    db = get_db()
+    _draft_context(db, request.mode, request.map)
+    model = _get_draft_model(db)
+    candidates = [key.split("|", 2)[2] for key, count in model["support"].items()
+                  if key.startswith("c|global|") and count >= 50]
+    excluded = {_normalize_id(name.strip()) for name in request.excluded}
+    return {"suggestions": recommend_picks(model, allies, enemies, candidates,
+                                           excluded, request.mode, request.map)}
 
 
 @router.get("/tier-list")

@@ -169,13 +169,17 @@ def test_tier_counts_observations_without_dividing_by_six(monkeypatch):
     assert result["updated_at"] == "2026-09-16"
 
 
-def test_recommendation_uses_data_and_excludes_bans(monkeypatch):
+def test_recommendation_uses_shared_model_and_passes_bans(monkeypatch):
     from app.algorithm.recommender import recommend_picks
-    def tier(**kwargs):
-        return {"characters": {"colt": {"score": 80}, "shelly": {"score": 60}, "el primo": {"score": 90}}}
-    monkeypatch.setattr(meta, "get_tier_list", tier)
+    calls = []
+    def recommendations(request):
+        calls.append(request)
+        return {"suggestions": [{"name": "shelly", "score": 60, "counterEffects": []}]}
+    monkeypatch.setattr(meta, "draft_recommendations", recommendations)
     result = recommend_picks("map", "brawlBall", ["el_primo"], [], 1, True, ["COLT"])
     assert [r["character_id"] for r in result] == ["shelly"]
+    assert calls[0].excluded == ["COLT"]
+    assert calls[0].allies == ["el_primo"]
 
 
 def test_empty_recommendation_has_no_fabricated_characters(monkeypatch):

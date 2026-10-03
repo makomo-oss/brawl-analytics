@@ -8,9 +8,9 @@ router = APIRouter(prefix="/match", tags=["Match"])
 class PickRequest(BaseModel):
     map_id: str
     mode: str
-    allies: list[str]
-    opponents: list[str]
-    bans: list[str] = Field(default_factory=list)
+    allies: list[str] = Field(max_length=2)
+    opponents: list[str] = Field(max_length=3)
+    bans: list[str] = Field(default_factory=list, max_length=12)
     pick_turn: int = Field(ge=1, le=6)
     is_proxy_pick: bool
 

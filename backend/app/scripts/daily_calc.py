@@ -539,6 +539,9 @@ def run_daily_calculation(client: Client = None):
     # Collection owns API refresh. Aggregation is deterministic and never depends on
     # the batch host IP or on an AsyncClient created on another event loop.
     rank_segments = fetch_player_rank_segments(supabase, match_df=None)
+    # Reuse loaded history on the batch runner. Public requests never train.
+    from app.algorithm.draft_training import train_draft_model
+    draft_model = train_draft_model(df.to_dict("records"), rank_segments["all_elite"])
     macro_stats = calc_macro_map_stats(df, rank_segments)
     dynamic_counters = calc_dynamic_counters(df)
     dynamic_synergies = calc_dynamic_synergies(df)
@@ -553,6 +556,10 @@ def run_daily_calculation(client: Client = None):
         "counter_rows": dynamic_counters,
         "synergy_rows": dynamic_synergies,
     }).execute()
+    if draft_model:
+        supabase.table("draft_outcome_models").upsert({
+            "id": "current", "model": draft_model, "updated_at": now,
+        }).execute()
 
     # キャッシュを即座に破棄して最新データをAPIに反映
     try:
@@ -564,6 +571,7 @@ def run_daily_calculation(client: Client = None):
 
     logger.info("Daily Calculation Batch completed successfully.")
     return {
+        "draft_model_games": draft_model["games"] if draft_model else None,
         "macro_stats_count": len(macro_stats),
         "dynamic_counters_count": len(dynamic_counters),
         "dynamic_synergies_count": len(dynamic_synergies)

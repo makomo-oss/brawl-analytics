@@ -128,14 +128,16 @@ def train_draft_model(records, eligible_tags, now=None):
     # Measure public forecasts without knowing which side supplied the log.
     unbiased = z - coef[names["o|global|bias"]] * values[validation, -1]
     composition_loss = float(np.average(np.logaddexp(0, unbiased) - actual * unbiased, weights=weights[validation]))
+    public_probability = 1 / (1 + np.exp(-np.clip(unbiased, -25, 25)))
     if not math.isfinite(loss) or not math.isfinite(composition_loss) or max(loss, composition_loss) >= math.log(2):
         logger.warning("Keeping previous draft model: temporal loss does not beat neutral")
         return None
     validation_metrics = {"training_games": len(train), "validation_games": len(validation),
-                          "split_at": cut_date.isoformat(), "log_loss": loss,
+                          "split_at": cut_date.isoformat(), "log_loss": composition_loss,
+                          "cohort_log_loss": loss,
                           "composition_log_loss": composition_loss,
-                          "brier_score": float(np.average((actual - probability) ** 2, weights=weights[validation])),
-                          "accuracy": float(np.mean((probability >= .5) == actual)),
+                          "brier_score": float(np.average((actual - public_probability) ** 2, weights=weights[validation])),
+                          "accuracy": float(np.mean((public_probability >= .5) == actual)),
                           "neutral_log_loss": math.log(2)}
     coef = _fit(indices, values, outcomes, weights, penalties)
     support = np.bincount(indices.ravel(), weights=(weights[:, None] * values ** 2).ravel(), minlength=len(penalties))

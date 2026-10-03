@@ -3,7 +3,7 @@ from pydantic import BaseModel, StrictBool
 from app.services.brawl_api import get_player_battlelog, get_player
 from app.database import get_db
 from app.services.player_profiles import profile_record
-from app.services.battle_records import clean_tag as normalize_player_tag, parse_battlelog, save_battle_records
+from app.services.battle_records import clean_tag as normalize_player_tag, parse_battlelog
 from app.services.player_analysis import get_saved_player_analysis, invalidate_player_analysis
 import logging
 import asyncio
@@ -60,7 +60,7 @@ def _save_synced_player(db, tag: str, player_info: dict, battlelog: dict) -> int
     records, _ = parse_battlelog(tag, (battlelog or {}).get("items") or [])
     db.table("players").upsert(profile_record(tag, player_info)).execute()
     if records:
-        save_battle_records(db, records)
+        db.table("match_raw_history").upsert(records).execute()
     invalidate_player_analysis(tag)
     return len(records)
 

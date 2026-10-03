@@ -526,7 +526,7 @@ def calc_dynamic_synergies(df: pd.DataFrame):
         
     return synergy_list
 
-def run_daily_calculation(client: Client = None, train_models: bool = False):
+def run_daily_calculation(client: Client = None):
     """
     マッチ履歴を集計し、macro_map_stats, dynamic_counters, dynamic_synergies を最新化する関数。
     クローラー完了時やcronバッチから呼び出される。
@@ -539,51 +539,9 @@ def run_daily_calculation(client: Client = None, train_models: bool = False):
     # Collection owns API refresh. Aggregation is deterministic and never depends on
     # the batch host IP or on an AsyncClient created on another event loop.
     rank_segments = fetch_player_rank_segments(supabase, match_df=None)
-    observations, snapshots = [], []
-    if train_models:
-        threshold = (datetime.now(timezone.utc) - timedelta(days=ANALYSIS_WINDOW_DAYS)).isoformat()
-        for table, column, ordering, target in (("battle_features", "match_at", "battle_uid", observations),
-                                                ("profile_rank_snapshots", "observed_at", "player_tag,observed_at", snapshots)):
-            offset = 0
-            while True:
-                query = supabase.table(table).select("*").gte(column, threshold)
-                for order_column in ordering.split(","):
-                    query = query.order(order_column)
-                page = query.range(offset, offset + 999).execute().data or []
-                target.extend(page)
-                if len(page) < 1000:
-                    break
-                offset += 1000
-    # Reuse loaded history on the batch runner. Public requests never train.
-    models = {}
-    for model_id, population in (("current", "gachi"), ("overall", "overall")):
-        rows = supabase.table("draft_outcome_models").select("model,updated_at").eq("id", model_id).limit(1).execute().data or []
-        active = rows[0]["model"] if rows else None
-        recent = False
-        if rows:
-            updated = datetime.fromisoformat(rows[0]["updated_at"].replace("Z", "+00:00"))
-            recent = datetime.now(timezone.utc) - updated < timedelta(hours=24)
-        if train_models and (not active or active.get("version") != "ranked_joint_v4" or not recent):
-            from app.algorithm.composition_training import train_composition_model
-            candidate = train_composition_model(df.to_dict("records"), rank_segments["all_elite"], population=population,
-                                                observations=observations, snapshots=snapshots)
-            if candidate:
-                from app.services.model_publication import publish_model
-                publish_model(supabase, model_id, candidate)
-                if candidate["accepted"]:
-                    active = candidate
-        models[population] = active
     macro_stats = calc_macro_map_stats(df, rank_segments)
     dynamic_counters = calc_dynamic_counters(df)
     dynamic_synergies = calc_dynamic_synergies(df)
-    # Store adjusted conditional associations, preserving observed counts/wins.
-    if models.get("overall"):
-        from app.algorithm.composition_model import pair_points
-        from app.algorithm.draft_outcome import normalize
-        for row in dynamic_counters:
-            row["counter_coefficient"] = round(pair_points(models["overall"], normalize(row["char_a"]), normalize(row["char_b"])) / 100, 4)
-        for row in dynamic_synergies:
-            row["lift"] = round(pair_points(models["overall"], normalize(row["char_a"]), normalize(row["char_b"]), kind="s"), 2)
     
     # Publish all derived tables in one transaction, including removal of expired rows.
     # Requires the analytics_snapshot_and_clubs migration; fail closed if absent.
@@ -606,14 +564,13 @@ def run_daily_calculation(client: Client = None, train_models: bool = False):
 
     logger.info("Daily Calculation Batch completed successfully.")
     return {
-        "draft_model_games": models["gachi"]["games"] if models.get("gachi") else None,
         "macro_stats_count": len(macro_stats),
         "dynamic_counters_count": len(dynamic_counters),
         "dynamic_synergies_count": len(dynamic_synergies)
     }
 
 def main():
-    run_daily_calculation(train_models=True)
+    run_daily_calculation()
 
 if __name__ == "__main__":
     main()

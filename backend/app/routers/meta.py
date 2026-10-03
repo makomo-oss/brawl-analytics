@@ -1,7 +1,4 @@
 from fastapi import APIRouter, HTTPException, Response
-from pydantic import BaseModel, Field
-from typing import Literal
-from threading import RLock
 import math
 import time
 import logging
@@ -34,7 +31,6 @@ _COUNTERS_CACHE = {"data": None, "by_char": {}, "timestamp": 0, "ttl": 3600}
 _SYNERGIES_CACHE = {"data": None, "by_char": {}, "timestamp": 0, "ttl": 3600}
 _PAIR_CONTEXT_CACHE = {}
 _MODE_MAPS_CACHE = {} # mode -> (set of map_ids, timestamp)
-_SNAPSHOT_LOAD_LOCK = RLock()
 
 def clear_meta_cache():
     """日次バッチ完了時やデータ更新時にキャッシュを即座に破棄・最新化する"""
@@ -47,8 +43,6 @@ def clear_meta_cache():
     _SYNERGIES_CACHE["by_char"] = {}
     _MODE_MAPS_CACHE.clear()
     _PAIR_CONTEXT_CACHE.clear()
-    _DRAFT_MODEL_CACHE.update(model=None, timestamp=0)
-    _OVERALL_MODEL_CACHE.update(model=None, timestamp=0)
 
 @router.post("/clear-cache")
 def api_clear_cache():
@@ -141,11 +135,6 @@ def _get_cached_counters_for_char(db, char_a: str) -> list[dict]:
             return []
 
 def _get_cached_macro_data(db) -> list[dict]:
-    with _SNAPSHOT_LOAD_LOCK:
-        return _load_cached_macro_data(db)
-
-
-def _load_cached_macro_data(db) -> list[dict]:
     """macro_map_stats をインメモリキャッシュから超高速に取得 (DB通信を99%削減)"""
     now = time.time()
     if _MACRO_CACHE["data"] is not None and (now - _MACRO_CACHE["timestamp"]) < _MACRO_CACHE["ttl"]:
@@ -233,11 +222,7 @@ def _contextual_pairs(db, type, sub_type, selected_id, rank_tier, mode=None, cha
     if character_id:
         rpc_name = "character_pair_stats"
         params["p_character"] = character_id
-    try:
-        rows = db.rpc(rpc_name, params).execute().data or []
-    except Exception as exc:
-        logger.exception("Could not load contextual pair statistics")
-        raise HTTPException(status_code=503, detail="相性データを取得できませんでした。時間をおいて再試行してください。") from exc
+    rows = db.rpc(rpc_name, params).execute().data or []
     by_char = {}
     for row in rows:
         by_char.setdefault(_normalize_id(row["char_a"]), []).append(row)
@@ -269,186 +254,8 @@ def _display_matchups(pairs):
     return favorable[:5], unfavorable[:5]
 
 
-class DraftAnalysisRequest(BaseModel):
-    allies: list[str] = Field(min_length=3, max_length=3)
-    enemies: list[str] = Field(min_length=3, max_length=3)
-    mode: str = Field(min_length=1, max_length=40)
-    map: str = Field(min_length=1, max_length=100)
-
-
-def _draft_context(db, mode, map_id):
-    if not any(row.get("match_type") == "gachi" and row.get("mode") == mode
-               and str(row.get("map_id", "")).removeprefix("gachi_") == map_id
-               for row in _get_cached_macro_data(db)):
-        raise HTTPException(status_code=422, detail="モードとマップを選択し直してください。")
-
-
-def _draft_names(allies, enemies):
-    names = [_normalize_id(name.strip()) for name in allies + enemies]
-    if len(set(names)) != len(names) or any(not name.isascii() or not name.isalnum() or len(name) > 40 for name in names):
-        raise HTTPException(status_code=422, detail="異なるキャラクターを選択してください。")
-    return names[:len(allies)], names[len(allies):]
-
-
-_DRAFT_MODEL_CACHE = {"model": None, "timestamp": 0}
-_OVERALL_MODEL_CACHE = {"model": None, "timestamp": 0}
-
-
-def _get_draft_model(db, population="gachi"):
-    # A cache miss must not download/parse a large snapshot once per concurrent
-    # request on the Free instance. Readers share the same immutable model.
-    with _SNAPSHOT_LOAD_LOCK:
-        return _load_draft_model(db, population)
-
-
-def _load_draft_model(db, population="gachi"):
-    from app.algorithm.draft_outcome import MODEL_VERSION
-    cache = _DRAFT_MODEL_CACHE if population == "gachi" else _OVERALL_MODEL_CACHE
-    cached = cache["model"]
-    if cached is not None and time.time() - cache["timestamp"] < 300:
-        return cached
-    try:
-        rows = db.table("draft_outcome_models").select("model").eq("id", "current" if population == "gachi" else "overall").limit(1).execute().data
-        model = rows[0]["model"] if rows else None
-        if not model or model.get("version") not in (MODEL_VERSION, "composition_set_v3", "ranked_joint_v4") or not model.get("weights"):
-            raise ValueError("Validated draft model is unavailable")
-    except Exception as exc:
-        logger.exception("Could not load draft outcome model")
-        if cached is not None:
-            return cached
-        try:
-            previous_id = "previous" if population == "gachi" else "overall_previous"
-            previous = db.table("draft_outcome_models").select("model").eq("id", previous_id).limit(1).execute().data or []
-            model = previous[0]["model"] if previous else None
-            if not model or model.get("version") not in (MODEL_VERSION, "composition_set_v3", "ranked_joint_v4") or not model.get("weights"):
-                raise ValueError("No previous model")
-        except Exception:
-            raise HTTPException(status_code=503, detail="編成の分析に失敗しました。再試行してください。") from exc
-    cache.update(model=model, timestamp=time.time())
-    return model
-
-
-def _adjusted_pair_details(model, character, pairs, mode=None, map_id=None):
-    from app.algorithm.composition_model import pair_points
-    matchups, synergies, favorable, unfavorable = {}, {}, [], []
-    for pair in pairs:
-        other = _normalize_id(pair["char_b"])
-        count = pair["match_count"]
-        if other == character or count < MIN_DISPLAY_MATCHUP_MATCHES or pair["weighted_matches"] < MIN_DISPLAY_MATCHUP_WEIGHT:
-            continue
-        kind = "e" if pair["kind"] == "counter" else "s"
-        support = model.get("support", {}).get(f"{kind}|global|{':'.join(sorted((character, other)))}", 0)
-        if support < MIN_DISPLAY_MATCHUP_WEIGHT:
-            continue
-        effect = round(pair_points(model, character, other, mode, map_id, kind), 1)
-        if kind == "e":
-            matchups[other] = effect
-            entry = {"brawler": pair["char_b"], "name": format_char_name(pair["char_b"]),
-                     "effect_points": effect, "matches": count}
-            if effect > 0:
-                favorable.append(entry)
-            elif effect < 0:
-                unfavorable.append(entry)
-        else:
-            synergies[other] = {"effect_points": effect, "lift": effect, "matches": count}
-    favorable.sort(key=lambda v: (-v["effect_points"], -v["matches"]))
-    unfavorable.sort(key=lambda v: (v["effect_points"], -v["matches"]))
-    return {"kamo": favorable[:5], "tenteki": unfavorable[:5], "matchups": matchups,
-            "synergies": synergies, "matchup_measure": "adjusted_effect_points", "matchup_method": model["version"]}
-
-
-@router.post("/draft-analysis")
-def draft_analysis(request: DraftAnalysisRequest):
-    from app.algorithm.draft_outcome import predict_draft
-    allies, enemies = _draft_names(request.allies, request.enemies)
-    db = get_db()
-    _draft_context(db, request.mode, request.map)
-    return predict_draft(_get_draft_model(db), allies, enemies, request.mode, request.map)
-
-
-class DraftRecommendationRequest(BaseModel):
-    allies: list[str] = Field(default_factory=list, max_length=2)
-    enemies: list[str] = Field(default_factory=list, max_length=3)
-    excluded: list[str] = Field(default_factory=list, max_length=12)
-    mode: str = Field(min_length=1, max_length=40)
-    map: str = Field(min_length=1, max_length=100)
-
-
-class OrderedPick(BaseModel):
-    team: Literal["blue", "red"]
-    name: str = Field(min_length=1, max_length=40)
-
-
-class DraftSessionRequest(BaseModel):
-    phase: Literal["ban", "pick", "done"]
-    first_pick_team: Literal["blue", "red"]
-    viewing_team: Literal["blue", "red"]
-    picks: list[OrderedPick] = Field(default_factory=list, max_length=6)
-    blue_bans: list[str] = Field(default_factory=list, max_length=3)
-    red_bans: list[str] = Field(default_factory=list, max_length=3)
-    # Optional known Power 11 roster. Omitted/None means unknown, [] means none.
-    available: dict[Literal["blue", "red"], list[str] | None] = Field(default_factory=dict)
-    mode: str = Field(min_length=1, max_length=40)
-    map: str = Field(min_length=1, max_length=100)
-
-
-@router.post("/draft-session")
-def draft_session(request: DraftSessionRequest):
-    from app.algorithm.draft_rules import DraftState, other
-    from app.algorithm.draft_search import DraftSearch
-    from app.algorithm.draft_outcome import predict_draft
-    from app.services.brawler_catalog import cached_brawler_names
-    db = get_db()
-    _draft_context(db, request.mode, request.map)
-    model = _get_draft_model(db)
-    catalog = {k.split("|", 2)[2] for k in model["weights"] if k.startswith("c|global|")}
-    # The weekly official catalog includes new brawlers before they have support.
-    catalog.update(_normalize_id(name) for name in cached_brawler_names())
-    state = DraftState(request.first_pick_team, tuple((p.team, _normalize_id(p.name)) for p in request.picks),
-                       tuple(_normalize_id(n) for n in request.blue_bans), tuple(_normalize_id(n) for n in request.red_bans))
-    try:
-        state.validate(catalog)
-        if request.phase == "ban" and state.picks:
-            raise ValueError("BANフェーズにピックが含まれています。")
-        if request.phase == "done" and (len(state.picks) != 6 or len(state.blue_bans) != 3 or len(state.red_bans) != 3):
-            raise ValueError("6体のピックを完了してください。")
-        if request.phase == "pick" and (state.turn is None or len(state.blue_bans) != 3 or len(state.red_bans) != 3):
-            raise ValueError("BANとピックの状態を確認してください。")
-        available = {side: None if names is None else {_normalize_id(n) for n in names}
-                     for side, names in request.available.items()}
-        if any(names is not None and (len(names) > 200 or not names <= catalog) for names in available.values()):
-            raise ValueError("使用できるキャラクター情報を確認してください。")
-        if any(available.get(side) is not None and name not in available[side] for side, name in state.picks):
-            raise ValueError("使用できないキャラクターがピックされています。")
-    except ValueError as exc:
-        raise HTTPException(status_code=422, detail=str(exc)) from exc
-    if request.phase == "done":
-        return predict_draft(model, state.team(request.viewing_team), state.team(other(request.viewing_team)), request.mode, request.map)
-    search = DraftSearch(model, catalog, request.mode, request.map, available)
-    if request.phase == "ban":
-        own_bans = state.blue_bans if request.viewing_team == "blue" else state.red_bans
-        if len(own_bans) >= 3:
-            return {"suggestions": [], "search": {"exact": False, "method": "blind_ban_complete"}}
-        return search.bans(state, request.viewing_team)
-    return search.recommend(state)
-
-
-@router.post("/draft-recommendations")
-def draft_recommendations(request: DraftRecommendationRequest):
-    from app.algorithm.draft_outcome import recommend_picks
-    allies, enemies = _draft_names(request.allies, request.enemies)
-    db = get_db()
-    _draft_context(db, request.mode, request.map)
-    model = _get_draft_model(db)
-    candidates = [key.split("|", 2)[2] for key, count in model["support"].items()
-                  if key.startswith("c|global|") and count >= 50]
-    excluded = {_normalize_id(name.strip()) for name in request.excluded}
-    return {"suggestions": recommend_picks(model, allies, enemies, candidates,
-                                           excluded, request.mode, request.map)}
-
-
 @router.get("/tier-list")
-def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, rank_tier: str = "all", include_details: bool = False, mode: str = None, detail_character: str = None, include_matchup_fallback: bool = True):
+def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, rank_tier: str = "all", include_details: bool = False, mode: str = None, detail_character: str = None):
     db = get_db()
     
     # マッチ数のカウント（キャッシュから高速取得）
@@ -558,14 +365,7 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
     pair_data = (_contextual_pairs(db, type, sub_type, id, rank_tier, mode, detail_character)
                  if include_details else {})
     broad_pair_data = (_contextual_pairs(db, "gachi", None, None, "all", None, detail_character)
-                       if include_details and include_matchup_fallback and type == "gachi" and (sub_type in ("map", "mode") or mode or rank_tier != "all") else {})
-    adjusted_model = None
-    if include_details:
-        try:
-            adjusted_model = _get_draft_model(db, "gachi" if type == "gachi" else "overall")
-        except HTTPException:
-            # A rolling deployment can precede the first overall snapshot.
-            logger.warning("Adjusted pair model is not available for this population yet")
+                       if include_details and type == "gachi" and (sub_type in ("map", "mode") or mode or rank_tier != "all") else {})
 
     for cid, stats in char_stats.items():
         tm = stats["total_matches"]
@@ -650,19 +450,6 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
             char_entry.update({"kamo": kamo, "tenteki": tenteki,
                                "kamo_scope": kamo_scope, "tenteki_scope": tenteki_scope,
                                "matchups": matchups, "synergies": synergies})
-            if adjusted_model:
-                selected_mode = id if sub_type == "mode" else mode
-                selected_map = id if sub_type == "map" else None
-                corrected = _adjusted_pair_details(adjusted_model, norm_cid, char_pairs, selected_mode, selected_map)
-                scope = "エリート以上全体" if not selected_mode else "選択条件・エリート以上"
-                corrected.update(kamo_scope=scope, tenteki_scope=scope)
-                if broad_pair_data:
-                    broad = _adjusted_pair_details(adjusted_model, norm_cid, broad_pair_data.get(norm_cid, []))
-                    for key in ("kamo", "tenteki"):
-                        if len(corrected[key]) < 2 and len(broad[key]) > len(corrected[key]):
-                            corrected[key] = broad[key]
-                            corrected[key + "_scope"] = "ガチバトル・エリート以上全体"
-                char_entry.update(corrected)
 
         characters_detail[cid] = char_entry
             

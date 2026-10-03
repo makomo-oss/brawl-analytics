@@ -472,7 +472,7 @@ export default function TierListPage() {
                 {/* 有利な対面 */}
                 <div className="space-y-3 relative p-4 rounded-xl bg-green-500/5 border border-green-500/20">
                   <h3 className="font-extrabold text-sm flex items-center gap-2 text-green-600 dark:text-green-400">
-                    <TrendingUp className="w-5 h-5" /> 有利な対面 TOP5 <span className="text-[10px] text-muted-foreground font-normal">（{selectedChar.kamo_scope || "選択条件"}・相性補正）</span>
+                    <TrendingUp className="w-5 h-5" /> 有利な対面 TOP5 <span className="text-[10px] text-muted-foreground font-normal">（{selectedChar.kamo_scope || "選択条件"}・補正勝率）</span>
                   </h3>
                   {selectedChar.kamo && selectedChar.kamo.length > 0 ? (
                     <div className="space-y-2">
@@ -488,7 +488,7 @@ export default function TierListPage() {
                               <span className="font-bold text-sm">{info.nameJa}</span>
                             </div>
                             <div className="text-right">
-                              <span className="font-black text-green-500">{typeof k.effect_points === "number" ? `${k.effect_points > 0 ? "+" : ""}${k.effect_points.toFixed(1)}pt` : `${k.win_rate}%`}</span>
+                              <span className="font-black text-green-500">{k.win_rate}%</span>
                               <div className="text-[10px] text-muted-foreground">{k.matches}戦</div>
                             </div>
                           </div>
@@ -509,7 +509,7 @@ export default function TierListPage() {
                 {/* 不利な対面 */}
                 <div className="space-y-3 relative p-4 rounded-xl bg-red-500/5 border border-red-500/20">
                   <h3 className="font-extrabold text-sm flex items-center gap-2 text-red-600 dark:text-red-400">
-                    <TrendingDown className="w-5 h-5" /> 不利な対面 TOP5 <span className="text-[10px] text-muted-foreground font-normal">（{selectedChar.tenteki_scope || "選択条件"}・相性補正）</span>
+                    <TrendingDown className="w-5 h-5" /> 不利な対面 TOP5 <span className="text-[10px] text-muted-foreground font-normal">（{selectedChar.tenteki_scope || "選択条件"}・補正勝率）</span>
                   </h3>
                   {selectedChar.tenteki && selectedChar.tenteki.length > 0 ? (
                     <div className="space-y-2">
@@ -525,7 +525,7 @@ export default function TierListPage() {
                               <span className="font-bold text-sm">{info.nameJa}</span>
                             </div>
                             <div className="text-right">
-                              <span className="font-black text-red-500">{typeof t.effect_points === "number" ? `${t.effect_points > 0 ? "+" : ""}${t.effect_points.toFixed(1)}pt` : `${t.win_rate}%`}</span>
+                              <span className="font-black text-red-500">{t.win_rate}%</span>
                               <div className="text-[10px] text-muted-foreground">{t.matches}戦</div>
                             </div>
                           </div>

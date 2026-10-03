@@ -1,7 +1,6 @@
 fastapi
 uvicorn[standard]
 pandas
-numpy
 supabase
 pydantic
 python-dotenv

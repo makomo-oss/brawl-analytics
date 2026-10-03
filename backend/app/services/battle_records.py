@@ -128,19 +128,6 @@ def parse_battlelog(player_tag: str, items: list) -> tuple[list[dict], set[str]]
             if mode in ("duoShowdown", "duo_showdown") and teams and any(len(t) >= 3 for t in teams):
                 mode = "trioShowdown"
 
-            feature_teams = sorted([sorted([
-                {"tag": clean_tag(p.get("tag")),
-                 "brawler_id": (p.get("brawler") or {}).get("id"),
-                 "name": (p.get("brawler") or {}).get("name"),
-                 "power": (p.get("brawler") or {}).get("power"),
-                 "trophies": (p.get("brawler") or {}).get("trophies")}
-                for p in team], key=lambda p: p["tag"]) for team in teams],
-                key=lambda team: [p["tag"] for p in team])
-            observer_team = next((i for i, team in enumerate(feature_teams)
-                                  if any(p["tag"] == tag for p in team)), None)
-            first_result = result
-            if observer_team == 1 and result in ("victory", "defeat"):
-                first_result = "defeat" if result == "victory" else "victory"
             records.append({
                 "match_id": f"{tag}_{battle_time}",
                 "battle_uid": battle_identity(item),
@@ -153,32 +140,8 @@ def parse_battlelog(player_tag: str, items: list) -> tuple[list[dict], set[str]]
                 "hero_used": hero_used,
                 "allies": allies,
                 "opponents": opponents,
-                "features": {
-                    "collected_at": datetime.now(timezone.utc).isoformat(),
-                    "teams": feature_teams,
-                    "outcome": first_result if observer_team is not None else None,
-                    "event_id": event.get("id"),
-                    "target_unit": "api_record",
-                },
             })
             encountered.update(participants)
         except (AttributeError, TypeError, ValueError, KeyError) as exc:
             logger.warning("Skipping invalid battle for %s: %s", tag, exc)
     return deduplicate_battle_records(records), encountered
-
-
-def save_battle_records(db, records):
-    """Atomically save observations and one thin feature record per real game."""
-    if records:
-        records = deduplicate_battle_records(records)
-        seen, conflicts = {}, set()
-        for row in records:
-            uid, evidence = row.get("battle_uid"), row.get("features") or {}
-            signature = (evidence.get("teams"), evidence.get("outcome"))
-            if uid in seen and seen[uid] != signature:
-                conflicts.add(uid)
-            seen[uid] = signature
-        for row in records:
-            if row.get("battle_uid") in conflicts:
-                row["features"] = dict(row.get("features") or {}, quality_conflict=True)
-        db.rpc("save_battle_observations", {"p_records": records}).execute()

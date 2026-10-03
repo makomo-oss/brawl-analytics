@@ -691,7 +691,7 @@ export default function CockpitHomePage() {
                                   <span className="text-xs font-bold text-zinc-200">{enemy.nameJa}</span>
                                 </div>
                                 <div className="text-right">
-                                  <div className="text-xs font-bold text-emerald-400">{typeof k.effect_points === "number" ? `${k.effect_points > 0 ? "+" : ""}${k.effect_points.toFixed(1)}pt` : `${k.win_rate}%`}</div>
+                                  <div className="text-xs font-bold text-emerald-400">{k.win_rate}%</div>
                                   <div className="text-[10px] text-zinc-500">{k.matches}戦</div>
                                 </div>
                               </div>
@@ -722,7 +722,7 @@ export default function CockpitHomePage() {
                                   <span className="text-xs font-bold text-zinc-200">{enemy.nameJa}</span>
                                 </div>
                                 <div className="text-right">
-                                  <div className="text-xs font-bold text-rose-400">{typeof t.effect_points === "number" ? `${t.effect_points > 0 ? "+" : ""}${t.effect_points.toFixed(1)}pt` : `${t.win_rate}%`}</div>
+                                  <div className="text-xs font-bold text-rose-400">{t.win_rate}%</div>
                                   <div className="text-[10px] text-zinc-500">{t.matches}戦</div>
                                 </div>
                               </div>

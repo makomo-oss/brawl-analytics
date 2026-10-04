@@ -65,7 +65,7 @@ def test_catalog_failure_keeps_last_known_data_and_backs_off(monkeypatch):
     assert client.get.await_count == 3
 
 
-def test_successful_refresh_adds_future_brawler_and_reuses_weekly_cache(monkeypatch):
+def test_successful_refresh_adds_future_brawler_and_reuses_hourly_cache(monkeypatch):
     monkeypatch.setattr(catalog, "_catalog", [])
     monkeypatch.setattr(catalog, "_next_refresh", 0)
     monkeypatch.setattr(catalog, "_refresh_lock", asyncio.Lock())
@@ -90,5 +90,5 @@ def test_successful_refresh_adds_future_brawler_and_reuses_weekly_cache(monkeypa
     assert first == second
     assert first["brawlers"][0]["nameJa"] == "新キャラ"
     assert first["brawlers"][0]["imageUrl"].endswith("28001339.png")
-    assert catalog._next_refresh == 100 + 7 * 24 * 60 * 60
+    assert catalog._next_refresh == 100 + 60 * 60
     assert client.get.await_count == 3

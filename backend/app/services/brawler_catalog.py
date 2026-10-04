@@ -10,7 +10,7 @@ import httpx
 
 logger = logging.getLogger(__name__)
 API_BASE = "https://api.brawlapi.com"
-REFRESH_SECONDS = 7 * 24 * 60 * 60
+REFRESH_SECONDS = 60 * 60
 _catalog = json.loads((Path(__file__).parents[1] / "data" / "brawler_catalog.json").read_text(encoding="utf-8"))
 _next_refresh = 0.0
 _refresh_lock = asyncio.Lock()

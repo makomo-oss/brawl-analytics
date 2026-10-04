@@ -43,6 +43,22 @@ def clear_meta_cache():
     _SYNERGIES_CACHE["by_char"] = {}
     _MODE_MAPS_CACHE.clear()
     _PAIR_CONTEXT_CACHE.clear()
+    from app.services.brawler_pages import clear_cache
+    clear_cache()
+
+
+@router.get("/brawler-pages")
+def brawler_page_index(response: Response):
+    from app.services.brawler_pages import snapshot
+    response.headers["Cache-Control"] = "public, max-age=300"
+    return snapshot()
+
+
+@router.get("/brawler-pages/{character_id}")
+def brawler_page_data(character_id: str, response: Response):
+    from app.services.brawler_pages import snapshot
+    response.headers["Cache-Control"] = "public, max-age=300"
+    return snapshot(character_id)
 
 @router.post("/clear-cache")
 def api_clear_cache():

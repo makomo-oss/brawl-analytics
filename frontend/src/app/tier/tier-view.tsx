@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Trophy, Swords, Info, TrendingUp, TrendingDown, AlertTriangle, User } from "lucide-react"
+import { Trophy, Swords, Info, TrendingUp, TrendingDown, AlertTriangle, User, Users, ArrowRight } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Progress } from "@/components/ui/progress"
@@ -17,6 +17,7 @@ import { API_URL } from "@/lib/config"
 import type { TierListData } from "@/lib/tier-data"
 import Link from "next/link"
 import { brawlerPath } from "@/lib/brawler-paths"
+import { BrawlerDirectoryLink } from "@/components/brawler-directory-link"
 
 const INITIAL_TIER_KEY = "global:all:all:"
 
@@ -256,10 +257,15 @@ export default function TierListPage({ initialTierData }: { initialTierData: Tie
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-7xl mx-auto">
       <div className="flex flex-col gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent flex items-center gap-3">
           <Trophy className="w-8 h-8 text-yellow-500" />
           ブロスタ環境Tier表
         </h1>
+        <BrawlerDirectoryLink className="inline-flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-sm font-bold text-primary hover:bg-primary/10 transition-colors">
+          <Users aria-hidden="true" className="w-4 h-4" />キャラ一覧<ArrowRight aria-hidden="true" className="w-3.5 h-3.5" />
+        </BrawlerDirectoryLink>
+        </div>
         {!loading && (
           <p className="text-muted-foreground text-lg flex items-center gap-2">
             {selectedType === "gachi"

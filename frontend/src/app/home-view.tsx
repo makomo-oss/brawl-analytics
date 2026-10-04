@@ -18,6 +18,7 @@ import { API_URL } from "@/lib/config";
 import { BurolaboIcon } from "@/components/brand-icon";
 import type { TierListData } from "@/lib/tier-data";
 import { brawlerPath } from "@/lib/brawler-paths";
+import { BrawlerDirectoryLink } from "@/components/brawler-directory-link";
 
 interface RecentSearch {
   tag: string;
@@ -559,6 +560,13 @@ export default function CockpitHomePage({ initialTierData }: { initialTierData: 
       {/* ③ 優先度: クイックアクセス (控えめな補助カード) */}
       {/* ========================================================================= */}
       <section className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <BrawlerDirectoryLink className="sm:col-span-2 group flex items-center gap-4 p-4 rounded-2xl bg-zinc-900/40 hover:bg-zinc-900/80 border border-zinc-800/80 hover:border-purple-500/40 transition-all duration-300">
+          <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 group-hover:scale-110 group-hover:bg-purple-500/20 transition-all shrink-0">
+            <Users aria-hidden="true" className="w-6 h-6" />
+          </div>
+          <h3 className="flex-1 font-bold text-sm text-zinc-100 group-hover:text-purple-300 transition-colors">キャラ一覧</h3>
+          <ArrowRight aria-hidden="true" className="w-4 h-4 text-zinc-500 group-hover:text-purple-400 group-hover:translate-x-1 transition-all shrink-0" />
+        </BrawlerDirectoryLink>
         {/* BAN/Pick支援 */}
         <Link
           href="/companion"

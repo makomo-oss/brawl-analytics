@@ -32,3 +32,10 @@ assert.equal(missing.type,'button','unavailable analysis pages have no crawlable
 missing.props.onClick()
 assert.equal(previews,3)
 console.log('PASS: crawlable detail link, existing preview, modified clicks, keyboard and unavailable-page fallback')
+let intents = 0
+const intended = BrawlerPreviewLink({...props,onIntent:()=>{intents++}})
+intended.props.onPointerEnter()
+intended.props.onFocus()
+intended.props.onTouchStart()
+assert.equal(intents,3)
+assert.equal(previews,3,'prefetch intent does not open the panel')

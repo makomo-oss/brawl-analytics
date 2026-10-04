@@ -7,13 +7,15 @@ type Props = {
   name: string
   className: string
   onPreview: () => void
+  onIntent?: () => void
   children: ReactNode
 }
 
 // Keep the quick preview while exposing the full analysis URL to crawlers,
 // JavaScript-free navigation, and the browser's open-in-new-tab controls.
-export function BrawlerPreviewLink({ href, name, className, onPreview, children }: Props) {
-  const props = { className, "aria-label": `${name}の詳細`, "aria-haspopup": "dialog" as const }
+export function BrawlerPreviewLink({ href, name, className, onPreview, onIntent, children }: Props) {
+  const props = { className, "aria-label": `${name}の詳細`, "aria-haspopup": "dialog" as const,
+    onPointerEnter: onIntent, onFocus: onIntent, onTouchStart: onIntent }
   if (!href) return <button type="button" {...props} onClick={onPreview}>{children}</button>
 
   return <a href={href} {...props} onClick={event => {

@@ -4,6 +4,13 @@ const TTL = 5 * 60_000
 const values = new Map<string, { data: unknown; expires: number }>()
 const pending = new Map<string, Promise<unknown>>()
 
+export function getCachedPublicStats<T = any>(url: string): T | undefined {
+  const parsed = new URL(url)
+  parsed.searchParams.sort()
+  const cached = values.get(parsed.href)
+  return cached && cached.expires > Date.now() ? structuredClone(cached.data) as T : undefined
+}
+
 export async function fetchPublicStats<T = any>(url: string): Promise<T> {
   const parsed = new URL(url)
   if (!/^\/(?:api\/)?meta\/(tier-list|categories|characters\/[^/]+)$/.test(parsed.pathname)) throw new Error("Unsupported public statistics URL")

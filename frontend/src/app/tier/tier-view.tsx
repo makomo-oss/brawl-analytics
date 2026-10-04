@@ -20,7 +20,8 @@ import { brawlerPath } from "@/lib/brawler-paths"
 import { BrawlerDirectoryLink } from "@/components/brawler-directory-link"
 import { BrawlerPreviewLink } from "@/components/brawler-preview-link"
 
-import { fetchPublicStats } from "@/lib/public-stats-cache"
+import { characterDetailUrl, initialMatchup, type InitialMatchups } from "@/lib/matchup-preview"
+import { fetchPublicStats, getCachedPublicStats } from "@/lib/public-stats-cache"
 
 const INITIAL_TIER_KEY = "global:all:all:"
 
@@ -35,7 +36,7 @@ const tierConfig: Record<string, { color: string; label: string; bg: string }> =
   "N/A": { color: "from-zinc-500 to-stone-500", label: "データ不足", bg: "bg-zinc-500/10 border-zinc-500/30 border-dashed" }
 }
 
-export default function TierListPage({ initialTierData }: { initialTierData: TierListData }) {
+export default function TierListPage({ initialTierData, initialMatchups }: { initialTierData: TierListData; initialMatchups: InitialMatchups }) {
   useBrawlerCatalog()
   const [tierData, setTierData] = useState<any>(initialTierData)
   const [loading, setLoading] = useState(false)
@@ -52,7 +53,6 @@ export default function TierListPage({ initialTierData }: { initialTierData: Tie
 
   // クライアントサイド・インメモリキャッシュ (0ms即時切り替え用)
   const dataCacheRef = useRef<Record<string, any>>({ [INITIAL_TIER_KEY]: initialTierData })
-  const charDetailCacheRef = useRef<Record<string, any>>({})
   const detailRequestRef = useRef(0)
 
   const fetchWithDedup = async (cacheKey: string, url: string) => {
@@ -160,16 +160,8 @@ export default function TierListPage({ initialTierData }: { initialTierData: Tie
 
   const fetchCharacterDetail = async (charName: string) => {
     const requestId = ++detailRequestRef.current
-    const detailKey = `${charName}:${selectedType}:${selectedRankTier}:${subType}:${selectedId}`
-    const cachedDetail = charDetailCacheRef.current[detailKey]
-
-    if (cachedDetail) {
-      setModalError(false)
-      setSelectedChar(cachedDetail)
-      setSheetOpen(true)
-      setModalLoading(false)
-      return
-    }
+    const url = characterDetailUrl(API_URL, charName, selectedType, selectedRankTier, subType, selectedId)
+    const preview = getCachedPublicStats(url) || initialMatchup(initialMatchups, charName, selectedType, selectedRankTier, subType, selectedId)
 
     // --- Optimistic UI: 手元のTierデータから即時モーダルを展開 (0ms即時表示) ---
     const currentTierChar = tierData?.characters?.[charName] || {
@@ -198,29 +190,28 @@ export default function TierListPage({ initialTierData }: { initialTierData: Tie
       use_rate: currentTierChar.use_rate,
       total_matches: currentTierChar.total_matches,
       kamo: null, // ロード中
-      tenteki: null
+      tenteki: null,
+      ...preview
     })
     setSheetOpen(true)
-    setModalLoading(true)
+    setModalLoading(!preview)
     setModalError(false)
 
     try {
-      let url = `${API_URL}/meta/characters/${charName}?type=${selectedType}`
-      if (selectedType === "gachi") {
-        url += `&rank_tier=${selectedRankTier}`
-        if (subType !== "all" && selectedId) {
-          url += `&sub_type=${subType}&id=${encodeURIComponent(selectedId)}`
-        }
-      }
       const data = await fetchPublicStats(url)
-      charDetailCacheRef.current[detailKey] = data
       if (requestId === detailRequestRef.current) setSelectedChar(data)
     } catch (err) {
       console.error(err)
-      if (requestId === detailRequestRef.current) setModalError(true)
+      if (requestId === detailRequestRef.current) setModalError(!preview)
     } finally {
       if (requestId === detailRequestRef.current) setModalLoading(false)
     }
+  }
+
+  const prefetchCharacterDetail = (name: string) => {
+    // The default cohorts already have TOP5 rows. Warm only unsnapshotted filters.
+    if (initialMatchup(initialMatchups, name, selectedType, selectedRankTier, subType, selectedId)) return
+    void fetchPublicStats(characterDetailUrl(API_URL, name, selectedType, selectedRankTier, subType, selectedId)).catch(() => {})
   }
 
   return (
@@ -365,6 +356,7 @@ export default function TierListPage({ initialTierData }: { initialTierData: Tie
                               href={tierData?.characters?.[charId]?.total_matches > 0 ? brawlerPath(charId) : undefined}
                               key={charId}
                               onPreview={() => { void fetchCharacterDetail(charId) }}
+                              onIntent={() => prefetchCharacterDetail(charId)}
                               className="group relative flex flex-col items-center justify-center p-1.5 sm:p-2 rounded-xl bg-background/60 hover:bg-background/90 border border-primary/10 hover:border-primary/50 transition-all hover:-translate-y-1 cursor-pointer shadow-sm"
                             >
                               <div className="w-11 h-11 sm:w-14 sm:h-14 shrink-0 border-2 border-black/20 dark:border-white/10 group-hover:border-primary transition-colors shadow-sm rounded-md bg-primary/10 relative overflow-hidden flex items-center justify-center">

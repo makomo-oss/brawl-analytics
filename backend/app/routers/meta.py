@@ -2,6 +2,9 @@ from fastapi import APIRouter, HTTPException, Response
 import math
 import time
 import logging
+from collections import OrderedDict
+from concurrent.futures import Future
+from threading import Lock
 from app.database import get_db
 from app.algorithm.statistics import blend_tier_score, normal_tier_boundaries, posterior_rate, supported_win_lift, wilson_interval, MIN_TIER_MATCHES, MIN_TIER_WEIGHT, TIER_EVIDENCE_MATCHES, TIER_WIN_WEIGHT, TIER_USAGE_WEIGHT, ANALYSIS_WINDOW_DAYS, RECENT_WINDOW_DAYS, HALF_LIFE_DAYS, OLDER_HALF_LIFE_DAYS
 
@@ -29,7 +32,12 @@ _TOTAL_MATCHES_CACHE = {"count": 0, "timestamp": 0, "ttl": 3600}
 _CATEGORIES_CACHE = {"data": {}, "timestamp": 0, "ttl": 3600}
 _COUNTERS_CACHE = {"data": None, "by_char": {}, "timestamp": 0, "ttl": 3600}
 _SYNERGIES_CACHE = {"data": None, "by_char": {}, "timestamp": 0, "ttl": 3600}
-_PAIR_CONTEXT_CACHE = {}
+_PAIR_CONTEXT_CACHE = OrderedDict()
+_PAIR_CACHE_LOCK = Lock()
+_PAIR_PENDING = {}
+_PAIR_CACHE_GENERATION = 0
+_PAIR_CACHE_TTL = 3600  # Match the aggregate snapshot; the daily batch clears both.
+_PAIR_CACHE_LIMIT = 256
 _MODE_MAPS_CACHE = {} # mode -> (set of map_ids, timestamp)
 
 def clear_meta_cache():
@@ -42,7 +50,11 @@ def clear_meta_cache():
     _SYNERGIES_CACHE["data"] = None
     _SYNERGIES_CACHE["by_char"] = {}
     _MODE_MAPS_CACHE.clear()
-    _PAIR_CONTEXT_CACHE.clear()
+    global _PAIR_CACHE_GENERATION
+    with _PAIR_CACHE_LOCK:
+        _PAIR_CONTEXT_CACHE.clear()
+        _PAIR_PENDING.clear()
+        _PAIR_CACHE_GENERATION += 1
     from app.services.brawler_pages import clear_cache
     clear_cache()
 
@@ -226,10 +238,19 @@ def wilson_lower_bound(wins: int, total: int, z: float = 1.645) -> float:
 
 def _contextual_pairs(db, type, sub_type, selected_id, rank_tier, mode=None, character_id=None):
     key = (type, sub_type, selected_id, rank_tier, mode, _normalize_id(character_id))
-    cached = _PAIR_CONTEXT_CACHE.get(key)
-    now = time.time()
-    if cached and now - cached[0] < 300:
-        return cached[1]
+    with _PAIR_CACHE_LOCK:
+        cached = _PAIR_CONTEXT_CACHE.get(key)
+        if cached and time.time() - cached[0] < _PAIR_CACHE_TTL:
+            _PAIR_CONTEXT_CACHE.move_to_end(key)
+            return cached[1]
+        pending = _PAIR_PENDING.get(key)
+        owner = pending is None
+        if owner:
+            pending = Future()
+            _PAIR_PENDING[key] = pending
+        generation = _PAIR_CACHE_GENERATION
+    if not owner:
+        return pending.result()
     params = {"p_type": type,
         "p_mode": selected_id if sub_type == "mode" else mode,
         "p_map": selected_id if sub_type == "map" else None,
@@ -240,16 +261,27 @@ def _contextual_pairs(db, type, sub_type, selected_id, rank_tier, mode=None, cha
         params["p_character"] = character_id
     try:
         rows = db.rpc(rpc_name, params).execute().data or []
+        by_char = {}
+        for row in rows:
+            by_char.setdefault(_normalize_id(row["char_a"]), []).append(row)
+        with _PAIR_CACHE_LOCK:
+            # A daily refresh must not be overwritten by a query started earlier.
+            if generation == _PAIR_CACHE_GENERATION:
+                _PAIR_CONTEXT_CACHE[key] = (time.time(), by_char)
+                _PAIR_CONTEXT_CACHE.move_to_end(key)
+                while len(_PAIR_CONTEXT_CACHE) > _PAIR_CACHE_LIMIT:
+                    _PAIR_CONTEXT_CACHE.popitem(last=False)
+        pending.set_result(by_char)
+        return by_char
     except Exception as exc:
         logger.exception("Could not load contextual pair statistics")
-        raise HTTPException(status_code=503, detail="相性データを取得できませんでした。時間をおいて再試行してください。") from exc
-    by_char = {}
-    for row in rows:
-        by_char.setdefault(_normalize_id(row["char_a"]), []).append(row)
-    if len(_PAIR_CONTEXT_CACHE) >= 64:
-        _PAIR_CONTEXT_CACHE.clear()
-    _PAIR_CONTEXT_CACHE[key] = (now, by_char)
-    return by_char
+        error = HTTPException(status_code=503, detail="相性データを取得できませんでした。時間をおいて再試行してください。")
+        pending.set_exception(error)
+        raise error from exc
+    finally:
+        with _PAIR_CACHE_LOCK:
+            if _PAIR_PENDING.get(key) is pending:
+                del _PAIR_PENDING[key]
 
 
 def _display_matchups(pairs):
@@ -536,7 +568,9 @@ def get_categories(type: str = "global"):
     return result
 
 @router.get("/characters/{character_id}")
-def get_character_detail(character_id: str, type: str = "global", rank_tier: str = "all", sub_type: str = None, id: str = None, mode: str = None):
+def get_character_detail(character_id: str, type: str = "global", rank_tier: str = "all", sub_type: str = None, id: str = None, mode: str = None, response: Response = None):
+    if response is not None:
+        response.headers["Cache-Control"] = "public, max-age=300"
     db = get_db()
     char_id_raw = character_id.lower().strip()
     norm_target = _normalize_id(char_id_raw)

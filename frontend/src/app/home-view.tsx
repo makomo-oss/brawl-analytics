@@ -21,14 +21,15 @@ import { brawlerPath } from "@/lib/brawler-paths";
 import { BrawlerDirectoryLink } from "@/components/brawler-directory-link";
 import { BrawlerPreviewLink } from "@/components/brawler-preview-link";
 
-import { fetchPublicStats } from "@/lib/public-stats-cache";
+import { characterDetailUrl, initialMatchup, type InitialMatchups } from "@/lib/matchup-preview";
+import { fetchPublicStats, getCachedPublicStats } from "@/lib/public-stats-cache";
 
 interface RecentSearch {
   tag: string;
   name?: string;
 }
 
-export default function CockpitHomePage({ initialTierData }: { initialTierData: TierListData }) {
+export default function CockpitHomePage({ initialTierData, initialMatchups }: { initialTierData: TierListData; initialMatchups: InitialMatchups }) {
   useBrawlerCatalog()
   const router = useRouter();
   const [searchInput, setSearchInput] = useState("");
@@ -54,7 +55,7 @@ export default function CockpitHomePage({ initialTierData }: { initialTierData: 
 
   // クライアントサイド・インメモリキャッシュ (0ms即時表示用)
   const metaCacheRef = useRef<any>(initialTierData);
-  const charDetailCacheRef = useRef<Record<string, any>>({});
+  const detailRequestRef = useRef(0);
 
   // 1. 最近の検索履歴を localStorage から読み込み
   useEffect(() => {
@@ -230,44 +231,30 @@ export default function CockpitHomePage({ initialTierData }: { initialTierData: 
       total_matches: 0
     };
 
-    const cachedDetail = charDetailCacheRef.current[charName];
-    if (cachedDetail) {
-      setSelectedChar({
-        id: charName,
-        tier,
-        ...baseInfo,
-        ...cachedDetail
-      });
-      setSheetOpen(true);
-      setModalLoading(false);
-      return;
-    }
+    const requestId = ++detailRequestRef.current;
+    const url = characterDetailUrl(API_URL, charName);
+    const preview = getCachedPublicStats(url) || initialMatchup(initialMatchups, charName, "gachi");
 
     setSelectedChar({
       id: charName,
       tier,
       ...baseInfo,
       kamo: [],
-      tenteki: []
+      tenteki: [],
+      ...preview
     });
     setSheetOpen(true);
-    setModalLoading(true);
+    setModalLoading(!preview);
 
     try {
-      const res = await fetch(`${API_URL}/meta/characters/${encodeURIComponent(charName)}?type=gachi&rank_tier=all`);
-      if (res.ok) {
-        const detail = await res.json();
-        charDetailCacheRef.current[charName] = detail;
-        setSelectedChar((prev: any) => ({
-          ...prev,
-          ...detail,
-          tier
-        }));
+      const detail = await fetchPublicStats(url);
+      if (requestId === detailRequestRef.current) {
+        setSelectedChar({ id: charName, ...baseInfo, ...detail, tier });
       }
     } catch (err) {
       console.error("Failed to load character detail", err);
     } finally {
-      setModalLoading(false);
+      if (requestId === detailRequestRef.current) setModalLoading(false);
     }
   };
 
@@ -514,6 +501,7 @@ export default function CockpitHomePage({ initialTierData }: { initialTierData: 
                   key={char.id}
                   href={tierData?.characters?.[char.id]?.total_matches > 0 ? brawlerPath(char.id) : undefined}
                   onPreview={() => { void handleCharClick(char.id, char.tier) }}
+                  onIntent={() => { if (!initialMatchup(initialMatchups, char.id, "gachi")) void fetchPublicStats(characterDetailUrl(API_URL, char.id)).catch(() => {}); }}
                   className={`group relative flex flex-col items-center p-3 rounded-2xl border backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl text-left ${
                     isSp
                       ? "bg-purple-950/20 border-purple-500/40 hover:border-purple-400 hover:shadow-purple-500/20"

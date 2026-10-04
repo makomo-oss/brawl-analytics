@@ -357,7 +357,7 @@ export function translateMap(mapName: string): string {
   return cleanName;
 }
 
-export function getModeIconUrl(mode: string) {
+export function getModeIconUrl(mode: string, fallback = true) {
   if (!mode) return ""
   const normalizedMode = mode.replace(/[\s\-_]/g, '').toLowerCase()
   
@@ -386,6 +386,7 @@ export function getModeIconUrl(mode: string) {
   }
   
   let iconId = MODE_ICON_MAP[normalizedMode]
+  if (!iconId && !fallback) return ""
   if (!iconId) {
     if (normalizedMode.includes("showdown")) {
       iconId = "48000038" // Trio/Showdown fallback

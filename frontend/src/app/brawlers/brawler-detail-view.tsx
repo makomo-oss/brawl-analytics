@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { getModeIconUrl } from "@/lib/translations"
+import { getModeIconUrl, translateMode } from "@/lib/translations"
 import { ArrowLeft, ArrowRight, BarChart3, MapPin, Swords, TrendingUp, TrendingDown, Trophy, Users } from "lucide-react"
 import type { BrawlerPageData, Cohort, CohortData, ConditionRow, PairRow } from "@/lib/server-brawler-pages"
 
@@ -31,10 +31,21 @@ function ConditionTable({ rows, kind }: { rows: ConditionRow[]; kind: "モード
       <th scope="col" className="text-right py-3 font-medium whitespace-nowrap">集計件数</th>
     </tr></thead>
     <tbody>{rows.map(row => <tr key={row.id} className="border-b border-border/30 last:border-0 hover:bg-secondary/20 transition-colors">
-      <th scope="row" className="text-left py-3 font-bold text-zinc-200"><span className="flex items-center gap-2">
-        {kind === "モード" && <Image src={getModeIconUrl(row.id)} alt="" width={24} height={24} className="w-6 h-6 object-contain shrink-0 drop-shadow-md" />}
-        <span>{row.label}</span>
-      </span></th>
+      <th scope="row" className="text-left py-3 font-bold text-zinc-200">
+        <span className="flex items-center gap-2">
+          {kind === "モード" && <Image src={getModeIconUrl(row.id)} alt="" width={24} height={24} className="w-6 h-6 object-contain shrink-0 drop-shadow-md" />}
+          <span>{row.label}</span>
+        </span>
+        {kind === "マップ" && <span className="flex flex-wrap gap-x-3 gap-y-1 mt-1 text-[10px] sm:text-xs font-normal text-muted-foreground">
+          {row.modeIds?.length ? row.modeIds.map(mode => {
+            const iconUrl = getModeIconUrl(mode, false)
+            return <span key={mode} className="inline-flex items-center gap-1">
+              {iconUrl ? <Image src={iconUrl} alt="" width={16} height={16} className="w-4 h-4 object-contain shrink-0" /> : <MapPin aria-hidden="true" className="w-4 h-4 shrink-0" />}
+              {translateMode(mode)}
+            </span>
+          }) : <span>モード不明</span>}
+        </span>}
+      </th>
       <td className={`text-right px-3 py-3 font-black tabular-nums whitespace-nowrap ${winColor(row.win_rate)}`}>{percent(row.win_rate)}{!row.sample_sufficient && <span className="block text-[10px] font-normal text-muted-foreground">データ不足</span>}</td>
       <td className="text-right py-3 text-xs text-muted-foreground tabular-nums">{count(row.total_matches)}</td>
     </tr>)}</tbody>

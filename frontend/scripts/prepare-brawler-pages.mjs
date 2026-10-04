@@ -29,7 +29,7 @@ export async function prepareBrawlerPages(api, directory) {
   if (!api) throw new Error('NEXT_PUBLIC_API_URL is required to build character pages')
   const catalog = await fetchData(api, '/meta/brawlers', data => Array.isArray(data?.brawlers) && data.brawlers.length > 0 && data.brawlers.every(row =>
     typeof row.name === 'string' && typeof row.nameJa === 'string' && typeof row.imageUrl === 'string' && /^https:\/\/cdn\.brawlify\.com\/.*\.png$/.test(row.imageUrl)))
-  const snapshot = { overview: {}, details: {}, contexts: {}, catalog: catalog.brawlers }
+  const snapshot = { overview: {}, details: {}, contexts: {}, mapModes: {}, catalog: catalog.brawlers }
   const jobs = []
   for (const type of ['global', 'gachi']) {
     const overview = await fetchData(api, `/meta/tier-list?type=${type}&rank_tier=all`, validTier)
@@ -38,7 +38,16 @@ export async function prepareBrawlerPages(api, directory) {
     snapshot.details[type] = {}
     snapshot.contexts[type] = { modes: {}, maps: {} }
     const categories = await fetchData(api, `/meta/categories?type=${type}`, data =>
-      Array.isArray(data?.modes) && Array.isArray(data?.maps) && [...data.modes, ...data.maps].every(id => typeof id === 'string'))
+      Array.isArray(data?.modes) && Array.isArray(data?.maps) && [...data.modes, ...data.maps].every(id => typeof id === 'string') &&
+      !!data.mode_to_maps && typeof data.mode_to_maps === 'object' && !Array.isArray(data.mode_to_maps) &&
+      Object.values(data.mode_to_maps).every(maps => Array.isArray(maps) && maps.every(id => typeof id === 'string')))
+    snapshot.mapModes[type] = {}
+    for (const [mode, maps] of Object.entries(categories.mode_to_maps)) {
+      for (const map of maps) {
+        const modes = snapshot.mapModes[type][map] ||= []
+        if (!modes.includes(mode)) modes.push(mode)
+      }
+    }
     for (const name of Object.keys(overview.characters).filter(name => overview.characters[name].total_matches > 0)) {
       jobs.push(async () => {
         snapshot.details[type][name] = await fetchData(api, `/meta/characters/${encodeURIComponent(name)}?type=${type}&rank_tier=all`, data =>

@@ -23,8 +23,9 @@ interface Snapshot {
   overview: Record<Cohort, TierListData>
   details: Record<Cohort, Record<string, CharacterDetail>>
   contexts: Record<Cohort, Record<"modes" | "maps", Record<string, Record<string, CharacterStats>>>>
+  mapModes?: Record<Cohort, Record<string, string[]>>
 }
-export interface ConditionRow extends CharacterStats { id: string; label: string }
+export interface ConditionRow extends CharacterStats { id: string; label: string; modeIds?: string[] }
 export interface PairRow { name: string; slug: string; nameJa: string; imageUrl: string; win_rate: number; matches: number; lift?: number }
 export interface CohortData {
   stats: CharacterStats | null; tier: string; updatedAt: string | null; updatedLabel: string; windowDays: number
@@ -76,7 +77,9 @@ export const getBrawlerPage = cache(async (slug: string): Promise<BrawlerPageDat
     const updatedAt = Number.isFinite(timestamp) ? new Date(timestamp).toISOString() : null
     const conditions = (kind: "modes" | "maps") => Object.entries(snapshot.contexts[type][kind]).flatMap(([id, characters]) => {
       const stats = characters[entry!.name]
-      return stats?.total_matches > 0 ? [{ ...stats, id, label: kind === "modes" ? translateMode(id) : translateMap(id) }] : []
+      return stats?.total_matches > 0 ? [{ ...stats, id, label: kind === "modes" ? translateMode(id) : translateMap(id),
+        ...(kind === "maps" ? { modeIds: snapshot.mapModes?.[type]?.[id] || [] } : {}),
+      }] : []
     })
     return {
       stats: stats?.total_matches ? stats : null,

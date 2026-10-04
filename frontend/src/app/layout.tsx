@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Inter } from "next/font/google";
 import { MainNav } from "@/components/main-nav";
-import Link from "next/link";
 import { SITE_URL } from "@/lib/seo";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -203,14 +202,6 @@ export default function RootLayout({
         <MainNav />
         <main className="container mx-auto px-3 py-4 sm:p-6 lg:p-8 max-w-7xl pb-24 lg:pb-8">
           {children}
-          <footer className="mt-12 border-t border-border pt-5 text-sm text-muted-foreground">
-            <nav aria-label="関連ページ" className="flex flex-wrap gap-x-5 gap-y-3">
-              <Link href="/player" className="hover:text-primary">ブロスタ戦績検索</Link>
-              <Link href="/tier" className="hover:text-primary">環境Tier表</Link>
-              <Link href="/companion" className="hover:text-primary">BAN/Pick支援</Link>
-              <Link href="/guide" className="hover:text-primary">使い方・データの見方</Link>
-            </nav>
-          </footer>
         </main>
       </body>
     </html>

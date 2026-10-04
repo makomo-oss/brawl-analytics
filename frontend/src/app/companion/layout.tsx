@@ -1,5 +1,4 @@
 import { pageMetadata } from "@/lib/seo";
-import { FeatureGuide } from "@/components/feature-guide";
 
 export const metadata = pageMetadata(
   "ブロスタピックツール・BAN/Pick支援",
@@ -8,5 +7,5 @@ export const metadata = pageMetadata(
 );
 
 export default function CompanionLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}<FeatureGuide feature="companion" /></>;
+  return <>{children}</>;
 }

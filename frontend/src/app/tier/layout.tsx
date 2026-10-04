@@ -1,5 +1,4 @@
 import { pageMetadata } from "@/lib/seo";
-import { FeatureGuide } from "@/components/feature-guide";
 
 export const metadata = pageMetadata(
   "ブロスタTier表・キャラ勝率ランキング",
@@ -8,5 +7,5 @@ export const metadata = pageMetadata(
 );
 
 export default function TierLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}<FeatureGuide feature="tier" /></>;
+  return <>{children}</>;
 }

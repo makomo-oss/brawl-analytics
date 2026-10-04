@@ -71,7 +71,7 @@ function StatsPanel({ data }: { data: CohortData }) {
       </section>
     </div>
     <p className="text-xs text-muted-foreground">相性：{data.matchupScope}の補正勝率。敵・味方にそのキャラがいる試合のチーム成績です。</p>
-    <p className="text-xs text-muted-foreground">集計：直近{data.windowDays}日・記録されたプレイヤーごとの対戦件数。更新：{data.updatedAt ? new Date(data.updatedAt).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" }) : "—"}</p>
+    <p className="text-xs text-muted-foreground">集計：直近{data.windowDays}日・記録されたプレイヤーごとの対戦件数。更新：{data.updatedLabel}（日本時間）</p>
   </div>
 }
 

@@ -26,7 +26,7 @@ interface Snapshot {
 export interface ConditionRow extends CharacterStats { id: string; label: string }
 export interface PairRow { name: string; slug: string; nameJa: string; win_rate: number; matches: number; lift?: number }
 export interface CohortData {
-  stats: CharacterStats | null; tier: string; updatedAt: string | null; windowDays: number
+  stats: CharacterStats | null; tier: string; updatedAt: string | null; updatedLabel: string; windowDays: number
   modes: ConditionRow[]; maps: ConditionRow[]
   favorable: PairRow[]; unfavorable: PairRow[]; allies: PairRow[]
   matchupScope: string
@@ -68,6 +68,11 @@ export const getBrawlerPage = cache(async (slug: string): Promise<BrawlerPageDat
     const overview = snapshot.overview[type]
     const stats = overview.characters[entry!.name] as CharacterStats | undefined
     const detail = snapshot.details[type][entry!.name]
+    // Older aggregate rows omit the UTC suffix. Normalize on the server so
+    // deployment and browser timezones cannot change dates during hydration.
+    const rawDate = overview.updated_at
+    const timestamp = rawDate ? Date.parse(/(?:Z|[+-]\d{2}:?\d{2})$/i.test(rawDate) ? rawDate : `${rawDate}Z`) : NaN
+    const updatedAt = Number.isFinite(timestamp) ? new Date(timestamp).toISOString() : null
     const conditions = (kind: "modes" | "maps") => Object.entries(snapshot.contexts[type][kind]).flatMap(([id, characters]) => {
       const stats = characters[entry!.name]
       return stats?.total_matches > 0 ? [{ ...stats, id, label: kind === "modes" ? translateMode(id) : translateMap(id) }] : []
@@ -75,7 +80,8 @@ export const getBrawlerPage = cache(async (slug: string): Promise<BrawlerPageDat
     return {
       stats: stats?.total_matches ? stats : null,
       tier: Object.entries(overview.tiers).find(([, names]) => names.includes(entry!.name))?.[0] || "N/A",
-      updatedAt: overview.updated_at,
+      updatedAt,
+      updatedLabel: updatedAt ? new Date(updatedAt).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" }) : "—",
       windowDays: Number(overview.metrics.analysis_window_days) || 60,
       modes: conditions("modes").sort((a, b) => b.total_matches - a.total_matches),
       // Use the lower confidence bound to avoid recommending tiny, lucky samples.

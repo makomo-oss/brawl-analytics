@@ -7,6 +7,7 @@ import type { TierListData } from "./tier-data"
 import { translateMap, translateMode } from "./translations"
 
 export type Cohort = "global" | "gachi"
+const MAIN_MODES = new Set(["soloShowdown", "duoShowdown", "brawlBall", "hotZone", "knockout", "gemGrab", "heist", "bounty"])
 export interface CharacterStats {
   score: number; win_rate: number; use_rate: number; total_matches: number
   rank_position?: number; sample_sufficient?: boolean
@@ -83,7 +84,7 @@ export const getBrawlerPage = cache(async (slug: string): Promise<BrawlerPageDat
       updatedAt,
       updatedLabel: updatedAt ? new Date(updatedAt).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" }) : "—",
       windowDays: Number(overview.metrics.analysis_window_days) || 60,
-      modes: conditions("modes").sort((a, b) => b.total_matches - a.total_matches),
+      modes: conditions("modes").filter(row => MAIN_MODES.has(row.id)).sort((a, b) => b.total_matches - a.total_matches),
       // Use the lower confidence bound to avoid recommending tiny, lucky samples.
       maps: conditions("maps").filter(row => row.sample_sufficient && row.confidence_interval)
         .sort((a, b) => b.confidence_interval![0] - a.confidence_interval![0] || b.total_matches - a.total_matches).slice(0, 5),

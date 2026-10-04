@@ -3,6 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
+import { getModeIconUrl } from "@/lib/translations"
 import { ArrowLeft, ArrowRight, BarChart3, MapPin, Swords, TrendingUp, TrendingDown, Trophy, Users } from "lucide-react"
 import type { BrawlerPageData, Cohort, CohortData, ConditionRow, PairRow } from "@/lib/server-brawler-pages"
 
@@ -30,7 +31,10 @@ function ConditionTable({ rows, kind }: { rows: ConditionRow[]; kind: "モード
       <th scope="col" className="text-right py-3 font-medium whitespace-nowrap">集計件数</th>
     </tr></thead>
     <tbody>{rows.map(row => <tr key={row.id} className="border-b border-border/30 last:border-0 hover:bg-secondary/20 transition-colors">
-      <th scope="row" className="text-left py-3 font-bold text-zinc-200">{row.label}</th>
+      <th scope="row" className="text-left py-3 font-bold text-zinc-200"><span className="flex items-center gap-2">
+        {kind === "モード" && <Image src={getModeIconUrl(row.id)} alt="" width={24} height={24} className="w-6 h-6 object-contain shrink-0 drop-shadow-md" />}
+        <span>{row.label}</span>
+      </span></th>
       <td className={`text-right px-3 py-3 font-black tabular-nums whitespace-nowrap ${winColor(row.win_rate)}`}>{percent(row.win_rate)}{!row.sample_sufficient && <span className="block text-[10px] font-normal text-muted-foreground">データ不足</span>}</td>
       <td className="text-right py-3 text-xs text-muted-foreground tabular-nums">{count(row.total_matches)}</td>
     </tr>)}</tbody>

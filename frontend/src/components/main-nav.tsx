@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Trophy, BarChart3, Cpu, Home, Users } from "lucide-react";
+import { Trophy, BarChart3, Cpu, Users } from "lucide-react";
 import { NavigationMenu, NavigationMenuItem, NavigationMenuList, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu";
 import { BurolaboIcon } from "@/components/brand-icon";
 import { BrawlerDirectoryLink } from "@/components/brawler-directory-link";
@@ -80,17 +80,13 @@ export function MainNav() {
 
       {/* Mobile Top Header (Just Logo) */}
       <div className="lg:hidden border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
-        <div className="relative flex h-14 items-center justify-center px-4">
+        <div className="flex h-14 items-center justify-center px-4">
           <Link href="/" className="flex items-center space-x-2 group">
             <BurolaboIcon size={24} className="group-hover:scale-110 transition-transform duration-300" />
             <span className="font-extrabold text-lg tracking-tight bg-gradient-to-r from-primary via-purple-400 to-cyan-400 bg-clip-text text-transparent">
               ブロラボ
             </span>
           </Link>
-          <BrawlerDirectoryLink aria-current={pathname === "/brawlers" ? "page" : undefined}
-            className={`absolute right-3 top-1/2 -translate-y-1/2 inline-flex items-center gap-1 rounded-lg border px-1.5 py-2 text-[11px] font-bold transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${brawlersActive ? "border-primary/40 bg-primary/10 text-primary" : "border-border/60 text-muted-foreground hover:border-primary/40 hover:text-primary"}`}>
-            <Users aria-hidden="true" className="w-3.5 h-3.5" />キャラ一覧
-          </BrawlerDirectoryLink>
         </div>
       </div>
 
@@ -101,13 +97,13 @@ export function MainNav() {
         }`}
       >
         <div className="flex justify-around items-center h-16 px-2">
-          <Link 
-            href="/" 
-            className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname === "/" ? "text-primary" : "text-muted-foreground"}`}
+          <BrawlerDirectoryLink
+            aria-current={pathname === "/brawlers" ? "page" : undefined}
+            className={`flex flex-col items-center justify-center w-full h-full space-y-1 focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-[-2px] ${brawlersActive ? "text-primary" : "text-muted-foreground"}`}
           >
-            <Home className="w-5 h-5" />
-            <span className="text-[10px] font-medium">ホーム</span>
-          </Link>
+            <Users aria-hidden="true" className="w-5 h-5" />
+            <span className="text-[10px] font-medium">キャラ一覧</span>
+          </BrawlerDirectoryLink>
           <Link 
             href="/player" 
             className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname.startsWith("/player") || pathname.startsWith("/dashboard") ? "text-primary" : "text-muted-foreground"}`}

@@ -16,6 +16,15 @@ _next_refresh = 0.0
 _refresh_lock = asyncio.Lock()
 
 
+def valid_rarity(value) -> dict | None:
+    if not isinstance(value, dict):
+        return None
+    identifier, name = value.get("id"), value.get("name")
+    if type(identifier) is not int or not 1 <= identifier <= 1000 or not isinstance(name, str) or not name.strip() or len(name) > 80:
+        return None
+    return {"id": identifier, "name": name.strip()}
+
+
 def localized_rows(listing: dict, characters: dict, japanese: dict) -> list[dict]:
     by_id = {row.get("id"): row for row in characters.values() if isinstance(row, dict)}
     rows = []
@@ -29,7 +38,8 @@ def localized_rows(listing: dict, characters: dict, japanese: dict) -> list[dict
         if not isinstance(label, str) or not label.strip() or "\ufffd" in label or label.strip().casefold() == name.strip().casefold():
             label = None
         rows.append({"id": identifier, "name": name.strip(), "nameJa": label,
-                     "imageUrl": brawler.get("imageUrl"), "avatarId": brawler.get("avatarId")})
+                     "imageUrl": brawler.get("imageUrl"), "avatarId": brawler.get("avatarId"),
+                     "rarity": valid_rarity(brawler.get("rarity"))})
     if not rows:
         raise ValueError("Empty brawler catalog")
     return rows
@@ -92,7 +102,7 @@ async def get_brawler_catalog() -> dict:
                         image = await resolve_image(client, row, old)
                         updated[row["id"]] = {"id": row["id"], "name": row["name"],
                             "nameJa": row["nameJa"] or old.get("nameJa") or row["name"],
-                            "imageUrl": image or ""}
+                            "imageUrl": image or "", "rarity": row["rarity"] or valid_rarity(old.get("rarity"))}
 
                 await asyncio.wait_for(asyncio.gather(*(enrich(row) for row in rows)), timeout=30)
                 _catalog = sorted(updated.values(), key=lambda row: row["id"], reverse=True)

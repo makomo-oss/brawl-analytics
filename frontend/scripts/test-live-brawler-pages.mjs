@@ -25,7 +25,7 @@ globalThis.fetch = async input => {
   if (offline) return new Response("offline", { status: 503 })
   if (failures > 0) { failures--; return new Response("transient failure", { status: 503 }) }
   const path = new URL(input).pathname
-  if (path === "/meta/brawlers") return Response.json({ brawlers: [...snapshot.catalog, { name: "Future New Hero", nameJa: "新キャラ<テスト>", imageUrl: "" }] })
+  if (path === "/meta/brawlers") return Response.json({ brawlers: [...snapshot.catalog, { name: "Future New Hero", nameJa: "新キャラ<テスト>", imageUrl: "", rarity: {id:7,name:"Ultra Legendary"} }] })
   const data = structuredClone(snapshot)
   if (future) {
     for (const cohort of ["global", "gachi"]) {
@@ -63,7 +63,12 @@ try {
   assert.match(html, /BreadcrumbList/)
   assert.match(html, /brawler-runtime-[a-f0-9]+\.js/)
   assert.doesNotMatch(html, /self\.__next_f/)
-  assert.match(await (await request("/brawlers")).text(), /href="\/brawlers\/future-new-hero"/)
+  const directoryHtml = await (await request("/brawlers")).text()
+  assert.match(directoryHtml, /href="\/brawlers\/future-new-hero"/)
+  assert.match(directoryHtml, /レア度が高い順/)
+  assert.doesNotMatch(directoryHtml, /名前（英語順）|集計件数が多い順/)
+  const directoryData = JSON.parse(directoryHtml.match(/id="brawler-page-data" type="application\/json">([^<]+)<\/script>/)[1])
+  assert.deepEqual(directoryData.entries.find(row => row.slug === "future-new-hero").rarity, {id:7,name:"Ultra Legendary"})
   assert.match(await (await request("/sitemap.xml")).text(), /\/brawlers\/future-new-hero/)
   await Promise.all(pending.splice(0))
   now += 301_000

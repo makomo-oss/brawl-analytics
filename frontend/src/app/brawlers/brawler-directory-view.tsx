@@ -5,15 +5,15 @@ import Link from "next/link"
 import Image from "next/image"
 import { ArrowLeft, Search, Users, X } from "lucide-react"
 import type { brawlerEntries, Cohort } from "@/lib/brawler-page-data"
-import { directorySorts, filterAndSortBrawlers, type DirectorySort } from "@/lib/brawler-directory"
+import { brawlerRarityLabel, directorySorts, filterAndSortBrawlers, type DirectorySort } from "@/lib/brawler-directory"
 
 const controlStyle = "h-11 w-full rounded-xl border border-zinc-700/80 bg-zinc-950/70 text-sm text-zinc-200 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-colors"
 
 export default function BrawlerDirectoryView({ entries }: { entries: ReturnType<typeof brawlerEntries> }) {
   const [query, setQuery] = useState("")
-  const [sort, setSort] = useState<DirectorySort>("english")
+  const [sort, setSort] = useState<DirectorySort>("japanese")
   const [cohort, setCohort] = useState<Cohort>("global")
-  const statistical = sort !== "english" && sort !== "japanese"
+  const statistical = sort === "win_rate" || sort === "use_rate"
   const visible = filterAndSortBrawlers(entries, query, sort, cohort)
   return <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
     <nav aria-label="パンくず" className="text-xs text-muted-foreground"><Link href="/" className="hover:text-primary">ホーム</Link><span aria-hidden="true"> / </span><span aria-current="page">キャラ一覧</span></nav>
@@ -48,10 +48,10 @@ export default function BrawlerDirectoryView({ entries }: { entries: ReturnType<
       {visible.map(entry => <Link key={entry.slug} prefetch={false} href={`/brawlers/${entry.slug}`} className="group flex flex-col items-center gap-3 rounded-2xl border border-zinc-800/80 bg-zinc-900/40 backdrop-blur-md p-3 sm:p-4 hover:bg-purple-950/20 hover:border-purple-500/40 hover:-translate-y-1 hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-300">
         {entry.imageUrl && <Image src={entry.imageUrl} alt={entry.nameJa} width={56} height={56} className="w-14 h-14 rounded-xl shadow-md transition-transform duration-300 group-hover:scale-105" />}
         <span className="text-xs sm:text-sm font-bold text-zinc-200 group-hover:text-white text-center transition-colors">{entry.nameJa}</span>
+        {sort === "rarity" && <span className="text-[10px] sm:text-xs font-bold text-purple-300 text-center">{brawlerRarityLabel(entry)}</span>}
         {statistical && <span className="text-xs font-bold tabular-nums text-cyan-400 text-center">{(() => {
           const stats = entry.directoryStats[cohort]
           if (!stats) return "データなし"
-          if (sort === "total_matches") return `${stats.total_matches.toLocaleString("ja-JP")}件`
           const value = sort === "use_rate" ? stats.use_rate.toFixed(2) : stats.win_rate.toFixed(1)
           return <>{value}%{sort === "win_rate" && !stats.sample_sufficient && <span className="block text-[10px] font-normal text-muted-foreground">データ不足</span>}</>
         })()}</span>}

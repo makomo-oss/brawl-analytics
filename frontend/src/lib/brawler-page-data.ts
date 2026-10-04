@@ -16,7 +16,7 @@ interface CharacterDetail extends CharacterStats {
   synergies: Record<string, { win_rate: number; lift: number; matches: number }>
 }
 export interface BrawlerSnapshot {
-  catalog: { name: string; nameJa: string; imageUrl: string }[]
+  catalog: { name: string; nameJa: string; imageUrl: string; rarity?: { id: number; name: string } | null }[]
   overview: Record<Cohort, TierListData>
   details: Record<Cohort, Record<string, CharacterDetail>>
   contexts: Record<Cohort, Record<"modes" | "maps", Record<string, Record<string, CharacterStats>>>>
@@ -51,7 +51,7 @@ export function brawlerEntries(snapshot: BrawlerSnapshot) {
       } : null
     }
     return { name, slug: brawlerSlug(name), nameJa: live?.nameJa || info.nameJa, imageUrl: live?.imageUrl || info.imageUrl,
-      directoryStats: { global: directoryStats("global"), gachi: directoryStats("gachi") },
+      rarity: live?.rarity || null, directoryStats: { global: directoryStats("global"), gachi: directoryStats("gachi") },
     }
   })
   if (entries.some(entry => !entry.slug) || new Set(entries.map(entry => entry.slug)).size !== entries.length) throw new Error("Invalid or duplicate character URLs")

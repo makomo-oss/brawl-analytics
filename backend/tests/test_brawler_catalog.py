@@ -20,6 +20,16 @@ def test_localization_joins_game_ids_instead_of_translating_english_names():
         catalog.localized_rows({"list": []}, {}, {})
 
 
+@pytest.mark.parametrize("value", [None, {}, {"id": True, "name": "Rare"}, {"id": -1, "name": "Rare"}, {"id": 2, "name": ""}])
+def test_invalid_rarity_is_not_published(value):
+    assert catalog.valid_rarity(value) is None
+
+
+def test_catalog_includes_valid_rarity_for_future_characters():
+    row = catalog.localized_rows({"list": [{"id": 16000111, "name": "Future", "rarity": {"id": 7, "name": "Ultra Legendary", "color": "#fff"}}]}, {}, {})[0]
+    assert row["rarity"] == {"id": 7, "name": "Ultra Legendary"}
+
+
 @pytest.mark.parametrize("label", [None, "", "\ufffd", "COSMO"])
 def test_missing_or_corrupt_localization_is_not_published_as_a_translation(label):
     row = catalog.localized_rows({"list": [{"id": 16000109, "name": "Cosmo"}]},
@@ -74,7 +84,7 @@ def test_successful_refresh_adds_future_brawler_and_reuses_hourly_cache(monkeypa
     client.__aenter__.return_value = client
     request = httpx.Request("GET", catalog.API_BASE)
     client.get.side_effect = [httpx.Response(200, request=request, json=payload) for payload in (
-        {"list": [{"id": 16000111, "name": "Future", "avatarId": 28001339}]},
+        {"list": [{"id": 16000111, "name": "Future", "avatarId": 28001339, "rarity": {"id": 5, "name": "Mythic"}}]},
         {"Internal": {"id": 16000111, "TID": "TID_FUTURE"}},
         {"TID_FUTURE": {"JP": "新キャラ"}},
     )]
@@ -90,5 +100,6 @@ def test_successful_refresh_adds_future_brawler_and_reuses_hourly_cache(monkeypa
     assert first == second
     assert first["brawlers"][0]["nameJa"] == "新キャラ"
     assert first["brawlers"][0]["imageUrl"].endswith("28001339.png")
+    assert first["brawlers"][0]["rarity"] == {"id": 5, "name": "Mythic"}
     assert catalog._next_refresh == 100 + 60 * 60
     assert client.get.await_count == 3

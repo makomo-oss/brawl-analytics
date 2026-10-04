@@ -18,6 +18,7 @@ import type { TierListData } from "@/lib/tier-data"
 import Link from "next/link"
 import { brawlerPath } from "@/lib/brawler-paths"
 import { BrawlerDirectoryLink } from "@/components/brawler-directory-link"
+import { BrawlerPreviewLink } from "@/components/brawler-preview-link"
 
 const INITIAL_TIER_KEY = "global:all:all:"
 
@@ -392,9 +393,10 @@ export default function TierListPage({ initialTierData }: { initialTierData: Tie
                         {chars.map((charId: string) => {
                           const info = getBrawlerInfo(charId);
                           return (
-                            <button type="button" aria-label={`${info.nameJa}の詳細`}
+                            <BrawlerPreviewLink name={info.nameJa}
+                              href={tierData?.characters?.[charId]?.total_matches > 0 ? brawlerPath(charId) : undefined}
                               key={charId}
-                              onClick={() => fetchCharacterDetail(charId)}
+                              onPreview={() => { void fetchCharacterDetail(charId) }}
                               className="group relative flex flex-col items-center justify-center p-1.5 sm:p-2 rounded-xl bg-background/60 hover:bg-background/90 border border-primary/10 hover:border-primary/50 transition-all hover:-translate-y-1 cursor-pointer shadow-sm"
                             >
                               <div className="w-11 h-11 sm:w-14 sm:h-14 shrink-0 border-2 border-black/20 dark:border-white/10 group-hover:border-primary transition-colors shadow-sm rounded-md bg-primary/10 relative overflow-hidden flex items-center justify-center">
@@ -408,7 +410,7 @@ export default function TierListPage({ initialTierData }: { initialTierData: Tie
                                 <User className="w-6 h-6 text-primary/40" />
                               </div>
                               <span className="text-xs font-medium text-center truncate w-full px-1 mt-2">{info.nameJa}</span>
-                            </button>
+                            </BrawlerPreviewLink>
                           )
                         })}
                       </CardContent>

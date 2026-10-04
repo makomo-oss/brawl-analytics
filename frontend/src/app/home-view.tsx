@@ -19,6 +19,7 @@ import { BurolaboIcon } from "@/components/brand-icon";
 import type { TierListData } from "@/lib/tier-data";
 import { brawlerPath } from "@/lib/brawler-paths";
 import { BrawlerDirectoryLink } from "@/components/brawler-directory-link";
+import { BrawlerPreviewLink } from "@/components/brawler-preview-link";
 
 interface RecentSearch {
   tag: string;
@@ -508,10 +509,10 @@ export default function CockpitHomePage({ initialTierData }: { initialTierData: 
               const info = getBrawlerInfo(char.id);
               const isSp = char.tier === "S+";
               return (
-                <button
+                <BrawlerPreviewLink name={info.nameJa}
                   key={char.id}
-                  type="button"
-                  onClick={() => handleCharClick(char.id, char.tier)}
+                  href={tierData?.characters?.[char.id]?.total_matches > 0 ? brawlerPath(char.id) : undefined}
+                  onPreview={() => { void handleCharClick(char.id, char.tier) }}
                   className={`group relative flex flex-col items-center p-3 rounded-2xl border backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl text-left ${
                     isSp
                       ? "bg-purple-950/20 border-purple-500/40 hover:border-purple-400 hover:shadow-purple-500/20"
@@ -545,7 +546,7 @@ export default function CockpitHomePage({ initialTierData }: { initialTierData: 
                       勝率 {char.win_rate}%
                     </div>
                   </div>
-                </button>
+                </BrawlerPreviewLink>
               );
             })}
           </div>

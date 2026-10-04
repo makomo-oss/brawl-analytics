@@ -22,7 +22,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { API_URL } from "@/lib/config"
 import PlayerAnalysis from "./player-analysis"
 import PlayerAutoSync from "./player-auto-sync"
-import { BrawlerDirectoryLink } from "@/components/brawler-directory-link"
+import { brawlerPath } from "@/lib/brawler-paths"
 
 function formatBattleTime(timeStr: string) {
   if (!timeStr) return "";
@@ -1027,14 +1027,8 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
             )}
           </TabsContent>
           <TabsContent value="characters" className="space-y-6">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <h3 className="flex items-center gap-2 font-bold"><Users aria-hidden="true" className="w-5 h-5 text-primary" />所持キャラクター</h3>
-              <BrawlerDirectoryLink className="inline-flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-sm font-bold text-primary hover:border-primary/60 hover:bg-primary/20 transition-colors focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2">
-                <Users aria-hidden="true" className="w-4 h-4" />キャラ一覧を見る
-              </BrawlerDirectoryLink>
-            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {Array.isArray(data.brawlers) && [...data.brawlers].sort((a, b) => (b.trophies || 0) - (a.trophies || 0)).map((brawler, idx) => {
+              {Array.isArray(data.brawlers) && [...data.brawlers].sort((a, b) => (b.trophies || 0) - (a.trophies || 0)).map((brawler) => {
                 const maxPower = 11;
                 const power = brawler.power || 1;
                 const powerRatio = (power / maxPower) * 100;
@@ -1044,7 +1038,10 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                 const hyperCharges = Array.isArray(brawler.hyperCharges) ? brawler.hyperCharges : [];
                 
                 return (
-                  <Card key={idx} className="overflow-hidden hover:border-primary/50 transition-colors bg-gradient-to-br from-card to-card/50">
+                  // Detail pages run in Pages Functions, outside Next's static RSC router.
+                  // eslint-disable-next-line @next/next/no-html-link-for-pages
+                  <a key={brawler.id} href={brawlerPath(brawler.name)} aria-label={`${getBrawlerInfo(brawler.name).nameJa}の詳細を見る`} className="block min-w-0 rounded-xl focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2">
+                  <Card className="h-full overflow-hidden hover:border-primary/50 transition-colors bg-gradient-to-br from-card to-card/50">
                     <div className="p-3 pb-2 flex gap-3 items-center border-b border-border/50">
                       <div className="relative">
                         <img 
@@ -1121,6 +1118,7 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                       </div>
                     </div>
                   </Card>
+                  </a>
                 )
               })}
               {(!data.brawlers || data.brawlers.length === 0) && (

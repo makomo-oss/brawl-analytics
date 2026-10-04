@@ -11,7 +11,7 @@ const output = await build({ entryPoints: ["edge/worker.ts"], bundle: true, mini
 })
 const { default: worker } = await import(`data:text/javascript;base64,${Buffer.from(output.outputFiles[0].contents).toString("base64")}`)
 const snapshot = JSON.parse(await readFile(".seo-data/brawler-pages.json", "utf8"))
-let future = false, sufficient = true, offline = false, now = 1_800_000_000_000
+let future = false, sufficient = true, offline = false, failures = 0, now = 1_800_000_000_000
 const realNow = Date.now
 Date.now = () => now
 const originalFetch = globalThis.fetch
@@ -23,6 +23,7 @@ const context = { waitUntil: promise => { pending.push(promise) } }
 const env = { NEXT_PUBLIC_API_URL: "https://test-statistics.example", ASSETS: { fetch: async () => new Response("<h1>404</h1>", { status: 404, headers: { "Content-Type": "text/html" } }) } }
 globalThis.fetch = async input => {
   if (offline) return new Response("offline", { status: 503 })
+  if (failures > 0) { failures--; return new Response("transient failure", { status: 503 }) }
   const path = new URL(input).pathname
   if (path === "/meta/brawlers") return Response.json({ brawlers: [...snapshot.catalog, { name: "Future New Hero", nameJa: "新キャラ<テスト>", imageUrl: "" }] })
   const data = structuredClone(snapshot)
@@ -50,8 +51,10 @@ const request = path => worker.fetch(new Request(`https://example.com${path}`), 
 try {
   assert.equal((await request("/brawlers/future-new-hero")).status, 404)
   future = true
+  failures = 1
   const response = await request("/brawlers/future-new-hero")
   assert.equal(response.status, 200)
+  assert.equal(failures, 0)
   const html = await response.text()
   assert.match(html, /新キャラ&lt;テスト&gt;の勝率・相性/)
   assert.match(html, /id="global-panel"/)

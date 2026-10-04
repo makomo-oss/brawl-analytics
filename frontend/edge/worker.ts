@@ -33,7 +33,21 @@ function validateSnapshot(value: unknown): asserts value is BrawlerSnapshot {
 async function api(env: Env, path: string) {
   const base = new URL(env.NEXT_PUBLIC_API_URL)
   if (base.protocol !== "https:" && base.hostname !== "127.0.0.1") throw new Error("Invalid statistics origin")
-  return readJson(await fetch(new URL(path, base), { signal: AbortSignal.timeout(45_000) }))
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const response = await fetch(new URL(path, base), { signal: AbortSignal.timeout(45_000) })
+      if (attempt === 0 && (response.status >= 500 || response.status === 429)) {
+        await response.body?.cancel()
+        await new Promise(resolve => setTimeout(resolve, 250))
+        continue
+      }
+      return await readJson(response)
+    } catch (error) {
+      if (attempt === 1) throw error
+      await new Promise(resolve => setTimeout(resolve, 250))
+    }
+  }
+  throw new Error("Statistics fetch failed")
 }
 
 async function inputs(env: Env) {

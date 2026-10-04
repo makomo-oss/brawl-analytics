@@ -1,4 +1,6 @@
 import pytest
+from concurrent.futures import ThreadPoolExecutor
+from threading import Event
 from fastapi import HTTPException
 
 from app.routers import meta
@@ -57,3 +59,24 @@ def test_unavailable_statistics_are_not_mistaken_for_unknown_character(rows):
     with pytest.raises(HTTPException) as error:
         brawler_pages.snapshot("amber")
     assert error.value.status_code == 503
+
+
+def test_index_does_not_wait_for_another_characters_matchup_query(rows, monkeypatch):
+    started, release = Event(), Event()
+    original = meta.get_character_detail
+
+    def slow_detail(*args, **kwargs):
+        started.set()
+        assert release.wait(timeout=5)
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(meta, "get_character_detail", slow_detail)
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        page = pool.submit(brawler_pages.snapshot, "amber")
+        try:
+            assert started.wait(timeout=2)
+            index = pool.submit(brawler_pages.snapshot)
+            assert "amber" in index.result(timeout=1)["overview"]["global"]["characters"]
+        finally:
+            release.set()
+        assert page.result(timeout=2)["details"]["global"]["amber"]

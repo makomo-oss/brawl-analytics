@@ -7,6 +7,7 @@
     "build": "wrangler types && tsc --project edge/tsconfig.json --noEmit && next build && node scripts/build-live-brawler-pages.mjs",
     "start": "next start",
     "test:live-brawlers": "node scripts/test-live-brawler-pages.mjs",
+    "test:brawler-directory": "node scripts/test-brawler-directory.mjs",
     "lint": "eslint"
   },
   "dependencies": {

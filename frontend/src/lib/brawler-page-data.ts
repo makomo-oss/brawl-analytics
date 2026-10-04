@@ -43,7 +43,16 @@ export function brawlerEntries(snapshot: BrawlerSnapshot) {
   })).map(name => {
     const info = getBrawlerInfo(canonicalBrawlerName(name))
     const live = snapshot.catalog.find(row => brawlerSlug(row.name) === brawlerSlug(name))
-    return { name, slug: brawlerSlug(name), nameJa: live?.nameJa || info.nameJa, imageUrl: live?.imageUrl || info.imageUrl }
+    const directoryStats = (type: Cohort) => {
+      const stats = snapshot.overview[type].characters[name]
+      return stats?.total_matches > 0 ? {
+        win_rate: stats.win_rate, use_rate: stats.use_rate, total_matches: stats.total_matches,
+        sample_sufficient: stats.sample_sufficient === true,
+      } : null
+    }
+    return { name, slug: brawlerSlug(name), nameJa: live?.nameJa || info.nameJa, imageUrl: live?.imageUrl || info.imageUrl,
+      directoryStats: { global: directoryStats("global"), gachi: directoryStats("gachi") },
+    }
   })
   if (entries.some(entry => !entry.slug) || new Set(entries.map(entry => entry.slug)).size !== entries.length) throw new Error("Invalid or duplicate character URLs")
   return entries.sort((a, b) => a.slug.localeCompare(b.slug))

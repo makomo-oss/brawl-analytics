@@ -24,7 +24,7 @@ interface Snapshot {
   contexts: Record<Cohort, Record<"modes" | "maps", Record<string, Record<string, CharacterStats>>>>
 }
 export interface ConditionRow extends CharacterStats { id: string; label: string }
-export interface PairRow { name: string; slug: string; nameJa: string; win_rate: number; matches: number; lift?: number }
+export interface PairRow { name: string; slug: string; nameJa: string; imageUrl: string; win_rate: number; matches: number; lift?: number }
 export interface CohortData {
   stats: CharacterStats | null; tier: string; updatedAt: string | null; updatedLabel: string; windowDays: number
   modes: ConditionRow[]; maps: ConditionRow[]
@@ -61,7 +61,7 @@ export const getBrawlerPage = cache(async (slug: string): Promise<BrawlerPageDat
   function pairs(rows: Pair[]): PairRow[] {
     return rows.flatMap(row => {
       const target = entries.find(entry => entry.slug === brawlerSlug(row.brawler))
-      return target ? [{ name: target.name, slug: target.slug, nameJa: target.nameJa, win_rate: row.win_rate, matches: row.matches }] : []
+      return target ? [{ name: target.name, slug: target.slug, nameJa: target.nameJa, imageUrl: target.imageUrl, win_rate: row.win_rate, matches: row.matches }] : []
     })
   }
   function cohort(type: Cohort): CohortData {

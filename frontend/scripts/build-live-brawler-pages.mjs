@@ -4,6 +4,21 @@ import { resolve } from "node:path"
 import { createHash } from "node:crypto"
 
 const root = process.cwd()
+// Ship bounded per-character snapshots for an immediate first response while
+// the Worker refreshes live data. Newly discovered URLs still resolve via API.
+const snapshot = JSON.parse(await readFile(resolve(root, ".seo-data/brawler-pages.json"), "utf8"))
+const snapshotDir = resolve(root, "out/__brawler-snapshots")
+await mkdir(snapshotDir, { recursive: true })
+const compact = name => ({ ...snapshot,
+  details: Object.fromEntries(["global", "gachi"].map(type => [type, name ? { [name]: snapshot.details[type][name] } : {}])),
+  contexts: Object.fromEntries(["global", "gachi"].map(type => [type, Object.fromEntries(["modes", "maps"].map(kind => [kind, name ? Object.fromEntries(Object.entries(snapshot.contexts[type][kind]).map(([id, rows]) => [id, rows[name] ? { [name]: rows[name] } : {}])) : {}]))])),
+})
+await writeFile(resolve(snapshotDir, "index.json"), JSON.stringify(compact()))
+const dataModule = await build({ entryPoints: ["src/lib/brawler-page-data.ts"], bundle: true, format: "esm", platform: "node", write: false })
+const { brawlerEntries } = await import(`data:text/javascript;base64,${Buffer.from(dataModule.outputFiles[0].contents).toString("base64")}`)
+for (const { name, slug } of brawlerEntries(snapshot)) {
+  await writeFile(resolve(snapshotDir, `${slug}.json`), JSON.stringify(compact(name)))
+}
 const hash = value => createHash("sha256").update(value).digest("hex").slice(0, 16)
 const common = {
   bundle: true, minify: true, format: "esm", platform: "browser", jsx: "automatic",

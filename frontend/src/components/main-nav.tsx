@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Trophy, BarChart3, Cpu, Users } from "lucide-react";
-import { NavigationMenu, NavigationMenuItem, NavigationMenuList, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu";
+const headerLinkClass = "group/navigation-menu-trigger inline-flex h-9 w-max items-center justify-center rounded-lg px-2.5 py-1.5 text-sm font-medium transition-all outline-none hover:bg-muted focus:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50";
 import { BurolaboIcon } from "@/components/brand-icon";
 import { BrawlerDirectoryLink } from "@/components/brawler-directory-link";
 
@@ -12,28 +12,26 @@ export function MainNav() {
   const pathname = usePathname();
   const brawlersActive = pathname === "/brawlers" || pathname.startsWith("/brawlers/");
   const [isVisible, setIsVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
+  const lastScrollY = useRef(0);
 
   useEffect(() => {
+    let frame = 0;
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      // ページ最下部付近ではナビを常時表示（回遊性確保）
-      const isAtBottom = (window.innerHeight + currentScrollY) >= (document.documentElement.scrollHeight - 50);
-      
-      if (isAtBottom) {
-        setIsVisible(true);
-      } else if (currentScrollY > lastScrollY && currentScrollY > 50) {
-        setIsVisible(false);
-      } else {
-        setIsVisible(true);
-      }
-      
-      setLastScrollY(currentScrollY);
+      if (frame) return;
+      frame = window.requestAnimationFrame(() => {
+        frame = 0;
+        const currentScrollY = window.scrollY;
+        const isAtBottom = window.innerHeight + currentScrollY >= document.documentElement.scrollHeight - 50;
+        setIsVisible(isAtBottom || currentScrollY <= lastScrollY.current || currentScrollY <= 50);
+        lastScrollY.current = currentScrollY;
+      });
     };
-
     window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [lastScrollY]);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.cancelAnimationFrame(frame);
+    };
+  }, []);
 
   return (
     <>
@@ -46,35 +44,35 @@ export function MainNav() {
               ブロラボ
             </span>
           </Link>
-          <NavigationMenu>
-            <NavigationMenuList className="gap-2">
-              <NavigationMenuItem>
-                <Link href="/" className={navigationMenuTriggerStyle()}>
+          <nav aria-label="メインナビゲーション" className="relative flex max-w-max flex-1 items-center justify-center">
+            <ul className="flex flex-1 list-none items-center justify-center gap-2">
+              <li className="relative">
+                <Link href="/" className={headerLinkClass}>
                   ホーム
                 </Link>
-              </NavigationMenuItem>
-              <NavigationMenuItem>
-                <Link href="/player" className={navigationMenuTriggerStyle()}>
+              </li>
+              <li className="relative">
+                <Link href="/player" className={headerLinkClass}>
                   ダッシュボード
                 </Link>
-              </NavigationMenuItem>
-              <NavigationMenuItem>
-                <Link href="/tier" className={navigationMenuTriggerStyle()}>
+              </li>
+              <li className="relative">
+                <Link href="/tier" className={headerLinkClass}>
                   Tier表
                 </Link>
-              </NavigationMenuItem>
-              <NavigationMenuItem>
-                <BrawlerDirectoryLink aria-current={pathname === "/brawlers" ? "page" : undefined} className={`${navigationMenuTriggerStyle()} gap-2 ${brawlersActive ? "text-primary bg-primary/10" : ""}`}>
+              </li>
+              <li className="relative">
+                <BrawlerDirectoryLink aria-current={pathname === "/brawlers" ? "page" : undefined} className={`${headerLinkClass} gap-2 ${brawlersActive ? "text-primary bg-primary/10" : ""}`}>
                   <Users aria-hidden="true" className="w-4 h-4" />キャラ一覧
                 </BrawlerDirectoryLink>
-              </NavigationMenuItem>
-              <NavigationMenuItem>
-                <Link href="/companion" className={navigationMenuTriggerStyle()}>
+              </li>
+              <li className="relative">
+                <Link href="/companion" className={headerLinkClass}>
                   ピック支援 (BAN/Pick)
                 </Link>
-              </NavigationMenuItem>
-            </NavigationMenuList>
-          </NavigationMenu>
+              </li>
+            </ul>
+          </nav>
         </div>
       </div>
 

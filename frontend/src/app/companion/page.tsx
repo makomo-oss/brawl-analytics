@@ -1,5 +1,7 @@
 "use client"
 
+import { fetchPublicStats } from "@/lib/public-stats-cache"
+
 import { useBrawlerCatalog } from "@/lib/use-brawler-catalog"
 import { useState, useEffect, useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -68,10 +70,8 @@ export default function DraftCompanionPage() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await fetch(`${API_URL}/meta/categories?type=gachi`)
-        if (!res.ok) throw new Error("カテゴリを取得できませんでした。再読み込みしてください。")
-        if (res.ok) {
-          const data = await res.json()
+        const data = await fetchPublicStats(`${API_URL}/meta/categories?type=gachi`)
+        if (data) {
           setCategories(data)
           if (data.modes?.length > 0) setSelectedMode(data.modes[0])
           if (data.maps?.length > 0) setSelectedMap(data.maps[0])
@@ -128,13 +128,10 @@ export default function DraftCompanionPage() {
     setLoading(true)
     setError("")
     try {
-      const [mapRes, modeRes] = await Promise.all([
-        fetch(`${API_URL}/meta/tier-list?type=gachi&sub_type=map&id=${encodeURIComponent(selectedMap)}&mode=${encodeURIComponent(selectedMode)}&include_details=true&include_matchup_fallback=false`),
-        fetch(`${API_URL}/meta/tier-list?type=gachi&sub_type=mode&id=${encodeURIComponent(selectedMode)}`)
+      const [data, modeData] = await Promise.all([
+        fetchPublicStats(`${API_URL}/meta/tier-list?type=gachi&sub_type=map&id=${encodeURIComponent(selectedMap)}&mode=${encodeURIComponent(selectedMode)}&include_details=true&include_matchup_fallback=false`),
+        fetchPublicStats(`${API_URL}/meta/tier-list?type=gachi&sub_type=mode&id=${encodeURIComponent(selectedMode)}`)
       ])
-      if (!mapRes.ok || !modeRes.ok) throw new Error("分析データを取得できませんでした。再試行してください。")
-      const data = await mapRes.json()
-      const modeData = await modeRes.json()
       if (!Object.keys(data.characters ?? {}).length) throw new Error("このマップのガチバトルデータが不足しています。別のマップを選択してください。")
       for (const [name, stats] of Object.entries<any>(data.characters)) {
         stats.mode_score = modeData.characters?.[name]?.score ?? 50

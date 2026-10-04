@@ -20,6 +20,8 @@ import { brawlerPath } from "@/lib/brawler-paths"
 import { BrawlerDirectoryLink } from "@/components/brawler-directory-link"
 import { BrawlerPreviewLink } from "@/components/brawler-preview-link"
 
+import { fetchPublicStats } from "@/lib/public-stats-cache"
+
 const INITIAL_TIER_KEY = "global:all:all:"
 
 const tierConfig: Record<string, { color: string; label: string; bg: string }> = {
@@ -50,65 +52,33 @@ export default function TierListPage({ initialTierData }: { initialTierData: Tie
 
   // クライアントサイド・インメモリキャッシュ (0ms即時切り替え用)
   const dataCacheRef = useRef<Record<string, any>>({ [INITIAL_TIER_KEY]: initialTierData })
-  const initialSnapshotNeedsRefresh = useRef(true)
   const charDetailCacheRef = useRef<Record<string, any>>({})
-  const pendingRequestsRef = useRef<Record<string, Promise<any> | undefined>>({})
+  const detailRequestRef = useRef(0)
 
-  // キャッシュまたは進行中リクエストを共有するフェッチヘルパー
   const fetchWithDedup = async (cacheKey: string, url: string) => {
-    if (dataCacheRef.current[cacheKey] && !(cacheKey === INITIAL_TIER_KEY && initialSnapshotNeedsRefresh.current)) {
-      return dataCacheRef.current[cacheKey]
-    }
-    if (pendingRequestsRef.current[cacheKey]) {
-      return pendingRequestsRef.current[cacheKey]
-    }
-    const promise = (async () => {
-      try {
-        const res = await fetch(url)
-        if (res.ok) {
-          const data = await res.json()
-          dataCacheRef.current[cacheKey] = data
-          return data
-        }
-      } catch (err) {
-        console.error(err)
-      } finally {
-        if (cacheKey === INITIAL_TIER_KEY) initialSnapshotNeedsRefresh.current = false
-        delete pendingRequestsRef.current[cacheKey]
-      }
+    try {
+      const data = await fetchPublicStats(url)
+      dataCacheRef.current[cacheKey] = data
+      return data
+    } catch (error) {
+      console.error(error)
       return null
-    })()
-    pendingRequestsRef.current[cacheKey] = promise
-    return promise
+    }
   }
 
-  // 初回マウント時: ガチバトルの各ランク帯をバックグラウンドで事前プリフェッチ
-  useEffect(() => {
-    const prefetchKeyTiers = async () => {
-      const keys = [
-        { key: "global:all:all:", url: `${API_URL}/meta/tier-list?type=global` },
-        { key: "gachi:all:all:", url: `${API_URL}/meta/tier-list?type=gachi&rank_tier=all` },
-        { key: "gachi:mythic:all:", url: `${API_URL}/meta/tier-list?type=gachi&rank_tier=mythic` },
-        { key: "gachi:legendary:all:", url: `${API_URL}/meta/tier-list?type=gachi&rank_tier=legendary` },
-        { key: "gachi:masters:all:", url: `${API_URL}/meta/tier-list?type=gachi&rank_tier=masters` },
-      ]
-      keys.forEach(({ key, url }) => {
-        fetchWithDedup(key, url)
-      })
-    }
-    prefetchKeyTiers()
-  }, [])
+  // Fetch only the selected cohort/rank; cached responses are shared with home.
 
   useEffect(() => {
+    if (selectedType !== "gachi") return
+    let active = true
     const fetchCategories = async () => {
       try {
         const cacheKey = `categories:${selectedType}`
         if (dataCacheRef.current[cacheKey]) {
           setCategories(dataCacheRef.current[cacheKey])
         }
-        const res = await fetch(`${API_URL}/meta/categories?type=${selectedType}`)
-        if (res.ok) {
-          const data = await res.json()
+        const data = await fetchPublicStats(`${API_URL}/meta/categories?type=${selectedType}`)
+        if (active) {
           dataCacheRef.current[cacheKey] = data
           setCategories(data)
 
@@ -127,12 +97,13 @@ export default function TierListPage({ initialTierData }: { initialTierData: Tie
       }
     }
     fetchCategories()
+    return () => { active = false }
   }, [selectedType])
 
   // 選択に応じたTierデータの取得 (キャッシュ最優先・0ms即時切り替え)
   useEffect(() => {
     let active = true
-    const cacheKey = `${selectedType}:${selectedRankTier}:${subType}:${selectedId}`
+    const cacheKey = selectedType === "global" ? INITIAL_TIER_KEY : `${selectedType}:${selectedRankTier}:${subType}:${selectedId}`
     const cachedData = dataCacheRef.current[cacheKey]
 
     // キャッシュが存在する場合は即座に表示（ローディングスピナーを出さない！）
@@ -188,6 +159,7 @@ export default function TierListPage({ initialTierData }: { initialTierData: Tie
   }
 
   const fetchCharacterDetail = async (charName: string) => {
+    const requestId = ++detailRequestRef.current
     const detailKey = `${charName}:${selectedType}:${selectedRankTier}:${subType}:${selectedId}`
     const cachedDetail = charDetailCacheRef.current[detailKey]
 
@@ -195,6 +167,7 @@ export default function TierListPage({ initialTierData }: { initialTierData: Tie
       setModalError(false)
       setSelectedChar(cachedDetail)
       setSheetOpen(true)
+      setModalLoading(false)
       return
     }
 
@@ -239,19 +212,14 @@ export default function TierListPage({ initialTierData }: { initialTierData: Tie
           url += `&sub_type=${subType}&id=${encodeURIComponent(selectedId)}`
         }
       }
-      const res = await fetch(url)
-      if (res.ok) {
-        const data = await res.json()
-        charDetailCacheRef.current[detailKey] = data
-        setSelectedChar(data)
-      } else {
-        setModalError(true)
-      }
+      const data = await fetchPublicStats(url)
+      charDetailCacheRef.current[detailKey] = data
+      if (requestId === detailRequestRef.current) setSelectedChar(data)
     } catch (err) {
       console.error(err)
-      setModalError(true)
+      if (requestId === detailRequestRef.current) setModalError(true)
     } finally {
-      setModalLoading(false)
+      if (requestId === detailRequestRef.current) setModalLoading(false)
     }
   }
 
@@ -401,7 +369,7 @@ export default function TierListPage({ initialTierData }: { initialTierData: Tie
                             >
                               <div className="w-11 h-11 sm:w-14 sm:h-14 shrink-0 border-2 border-black/20 dark:border-white/10 group-hover:border-primary transition-colors shadow-sm rounded-md bg-primary/10 relative overflow-hidden flex items-center justify-center">
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img
+                                <img loading="lazy" decoding="async"
                                   src={info.imageUrl}
                                   alt={info.nameJa}
                                   className="object-cover w-full h-full rounded-sm absolute inset-0 z-10"

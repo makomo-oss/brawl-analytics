@@ -21,6 +21,8 @@ import { brawlerPath } from "@/lib/brawler-paths";
 import { BrawlerDirectoryLink } from "@/components/brawler-directory-link";
 import { BrawlerPreviewLink } from "@/components/brawler-preview-link";
 
+import { fetchPublicStats } from "@/lib/public-stats-cache";
+
 interface RecentSearch {
   tag: string;
   name?: string;
@@ -70,9 +72,8 @@ export default function CockpitHomePage({ initialTierData }: { initialTierData: 
   useEffect(() => {
     const fetchTopMeta = async () => {
       try {
-        const res = await fetch(`${API_URL}/meta/tier-list?type=gachi&rank_tier=all`);
-        if (res.ok) {
-          const data = await res.json();
+        const data = await fetchPublicStats(`${API_URL}/meta/tier-list?type=gachi&rank_tier=all`);
+        if (data) {
           metaCacheRef.current = data;
           setTierData(data);
         }
@@ -528,7 +529,7 @@ export default function CockpitHomePage({ initialTierData }: { initialTierData: 
                   </div>
 
                   <div className="relative w-14 h-14 my-1 rounded-xl overflow-hidden shadow-md group-hover:scale-105 transition-transform">
-                    <img
+                    <img loading="lazy" decoding="async"
                       src={info.imageUrl}
                       alt={info.nameJa}
                       className="w-full h-full object-cover"

@@ -12,6 +12,7 @@ const output = await build({ entryPoints: ["edge/worker.ts"], bundle: true, mini
 const { default: worker } = await import(`data:text/javascript;base64,${Buffer.from(output.outputFiles[0].contents).toString("base64")}`)
 const snapshot = JSON.parse(await readFile(".seo-data/brawler-pages.json", "utf8"))
 let future = false, sufficient = true, offline = false, failures = 0, now = 1_800_000_000_000
+let hold = null, snapshotAssets = false
 const realNow = Date.now
 Date.now = () => now
 const originalFetch = globalThis.fetch
@@ -20,8 +21,19 @@ const storage = new Map()
 globalThis.caches = { open: async () => ({ match: async request => storage.get(request.url)?.clone(), put: async (request, response) => { storage.set(request.url, response.clone()) } }) }
 const pending = []
 const context = { waitUntil: promise => { pending.push(promise) } }
-const env = { NEXT_PUBLIC_API_URL: "https://test-statistics.example", ASSETS: { fetch: async () => new Response("<h1>404</h1>", { status: 404, headers: { "Content-Type": "text/html" } }) } }
+const env = { NEXT_PUBLIC_API_URL: "https://test-statistics.example", ASSETS: { fetch: async request => {
+  if (snapshotAssets && new URL(request.url).pathname === "/__brawler-snapshots/amber.json") {
+    const data = structuredClone(snapshot)
+    for (const type of ["global", "gachi"]) {
+      data.details[type] = { amber: data.details[type].amber }
+      data.contexts[type] = { modes: {}, maps: {} }
+    }
+    return Response.json(data)
+  }
+  return new Response("<h1>404</h1>", { status: 404, headers: { "Content-Type": "text/html" } })
+} } }
 globalThis.fetch = async input => {
+  if (hold) await hold
   if (offline) return new Response("offline", { status: 503 })
   if (failures > 0) { failures--; return new Response("transient failure", { status: 503 }) }
   const path = new URL(input).pathname
@@ -73,7 +85,17 @@ try {
   await Promise.all(pending.splice(0))
   now += 301_000
   sufficient = false
+  let release
+  hold = new Promise(resolve => { release = resolve })
+  const stale = await Promise.race([request("/brawlers/future-new-hero"), new Promise((_, reject) => setTimeout(() => reject(new Error("Stale response blocked on API")), 100))])
+  assert.doesNotMatch(await stale.text(), /name="robots" content="noindex, follow"/)
+  release()
+  hold = null
+  await Promise.all(pending.splice(0))
   assert.match(await (await request("/brawlers/future-new-hero")).text(), /name="robots" content="noindex, follow"/)
+  // Sitemap also serves its previous result while regenerating in the background.
+  await request("/sitemap.xml")
+  await Promise.all(pending.splice(0))
   assert.doesNotMatch(await (await request("/sitemap.xml")).text(), /\/brawlers\/future-new-hero/)
   await Promise.all(pending.splice(0))
   now += 301_000
@@ -84,12 +106,20 @@ try {
   assert.equal(head.status, 200)
   assert.equal(await head.text(), "")
   assert.equal((await request("/brawlers/future-new-hero/")).status, 308)
-  console.log("PASS: new URLs, directory, sitemap, initial HTML, metadata, sample gates, stale fallback, HEAD and canonical redirects without rebuilding")
+  snapshotAssets = true
+  hold = new Promise(resolve => { release = resolve })
+  const cold = await Promise.race([request("/brawlers/amber"), new Promise((_, reject) => setTimeout(() => reject(new Error("Snapshot response blocked on API")), 100))])
+  assert.equal(cold.status, 200)
+  assert.equal(cold.headers.get("X-Brawler-Rendering"), "snapshot")
+  assert.match(await cold.text(), /アンバー/)
+  release()
+  hold = null
+  console.log("PASS: cold snapshot and stale responses never block on API; new URLs, metadata, sample gates, sitemap, HEAD and redirects remain correct")
 } finally {
+  await Promise.all(pending)
   Date.now = realNow
   globalThis.fetch = originalFetch
   globalThis.caches = originalCaches
-  await Promise.all(pending)
 }
 // React's browser server renderer keeps its scheduler MessageChannel alive in
 // Node. Assertions have completed; close this standalone test process.

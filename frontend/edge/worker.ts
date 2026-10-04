@@ -30,12 +30,12 @@ function validateSnapshot(value: unknown): asserts value is BrawlerSnapshot {
       !snapshot.details?.global || !snapshot.details.gachi || !snapshot.contexts?.global || !snapshot.contexts.gachi) throw new Error("Invalid statistics")
 }
 
-async function api(env: Env, path: string) {
+async function api(env: Env, path: string, signal = AbortSignal.timeout(45_000)) {
   const base = new URL(env.NEXT_PUBLIC_API_URL)
   if (base.protocol !== "https:" && base.hostname !== "127.0.0.1") throw new Error("Invalid statistics origin")
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      const response = await fetch(new URL(path, base), { signal: AbortSignal.timeout(45_000) })
+      const response = await fetch(new URL(path, base), { signal })
       if (attempt === 0 && (response.status >= 500 || response.status === 429)) {
         await response.body?.cancel()
         await new Promise(resolve => setTimeout(resolve, 250))
@@ -43,15 +43,15 @@ async function api(env: Env, path: string) {
       }
       return await readJson(response)
     } catch (error) {
-      if (attempt === 1) throw error
+      if (attempt === 1 || signal.aborted) throw error
       await new Promise(resolve => setTimeout(resolve, 250))
     }
   }
   throw new Error("Statistics fetch failed")
 }
 
-async function inputs(env: Env) {
-  const [index, catalog] = await Promise.all([api(env, "/meta/brawler-pages"), api(env, "/meta/brawlers")])
+async function inputs(env: Env, signal: AbortSignal) {
+  const [index, catalog] = await Promise.all([api(env, "/meta/brawler-pages", signal), api(env, "/meta/brawlers", signal)])
   validateSnapshot(index)
   const rows = catalog && typeof catalog === "object" && "brawlers" in catalog ? catalog.brawlers : null
   if (!Array.isArray(rows) || rows.some(row => !row || typeof row.name !== "string" || typeof row.nameJa !== "string" || typeof row.imageUrl !== "string")) throw new Error("Invalid character catalog")
@@ -82,16 +82,16 @@ export default {
     if (!/^\/brawlers(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)?$/.test(path) && path !== "/sitemap.xml") return env.ASSETS.fetch(new Request(`${url.origin}/404.html`)).then(response => new Response(request.method === "HEAD" ? null : response.body, { status: 404, headers: response.headers }))
     const key = new Request(`${url.origin}/__brawler-cache/${runtimeVersion}${path}`)
     const cache = await caches.open("brawler-pages")
-    const cached = await cache.match(key)
+    let cached = await cache.match(key)
     const fresh = cached && Date.now() - Number(cached.headers.get("X-Brawler-Generated")) < FRESH_SECONDS * 1000
     const serve = (response: Response) => {
       const headers = new Headers(response.headers)
       headers.set("Cache-Control", "public, max-age=0, must-revalidate")
       return new Response(request.method === "HEAD" ? null : response.body, { status: response.status, headers })
     }
-    if (fresh) return serve(cached)
-    try {
-      const index = await inputs(env)
+    if (cached && fresh) return serve(cached)
+    const regenerate = async (signal: AbortSignal) => {
+      const index = await inputs(env, signal)
       let body: string
       if (path === "/sitemap.xml") body = xml(index)
       else if (path === "/brawlers") body = renderPage({ kind: "directory", path, entries: brawlerEntries(index) })
@@ -102,7 +102,7 @@ export default {
           const missing = await env.ASSETS.fetch(new Request(`${url.origin}/404.html`))
           return new Response(request.method === "HEAD" ? null : missing.body, { status: 404, headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" } })
         }
-        const snapshot = await api(env, `/meta/brawler-pages/${encodeURIComponent(entry.name)}`)
+        const snapshot = await api(env, `/meta/brawler-pages/${encodeURIComponent(entry.name)}`, signal)
         validateSnapshot(snapshot)
         snapshot.catalog = index.catalog
         const data = brawlerPage(snapshot, entry.slug)
@@ -114,8 +114,36 @@ export default {
         "Cache-Control": `public, max-age=${STALE_SECONDS}`,
         "X-Brawler-Generated": String(Date.now()), "X-Brawler-Rendering": "live",
       } })
-      ctx.waitUntil(cache.put(key, response.clone()).catch((error: unknown) => console.error("Character cache write failed", String(error))))
-      return serve(response)
+      await cache.put(key, response.clone()).catch((error: unknown) => console.error("Character cache write failed", String(error)))
+      return response
+    }
+    // The build snapshot uses the same renderer and real statistics as live
+    // pages. It avoids blocking a first visit on a cold statistics backend.
+    if (!cached) {
+      try {
+        const assetName = path.startsWith("/brawlers/") ? path.slice("/brawlers/".length) : "index"
+        const snapshot = await readJson(await env.ASSETS.fetch(new Request(`${url.origin}/__brawler-snapshots/${assetName}.json`)))
+        validateSnapshot(snapshot)
+        const data = path.startsWith("/brawlers/") ? brawlerPage(snapshot, assetName) : null
+        const body = path === "/sitemap.xml" ? xml(snapshot) : path === "/brawlers" ? renderPage({ kind: "directory", path, entries: brawlerEntries(snapshot) }) : data ? renderPage({ kind: "detail", path, data }) : null
+        if (body) cached = new Response(body, { headers: {
+          "Content-Type": path === "/sitemap.xml" ? "application/xml; charset=utf-8" : "text/html; charset=utf-8",
+          "Cache-Control": `public, max-age=${STALE_SECONDS}`,
+          "X-Brawler-Generated": "0", "X-Brawler-Rendering": "snapshot",
+        } })
+      } catch { /* New characters have no build snapshot: fetch them live. */ }
+    }
+    if (cached) {
+      const fallback = cached.clone()
+      ctx.waitUntil((async () => {
+        if (fallback.headers.get("X-Brawler-Rendering") === "snapshot") await cache.put(key, fallback).catch((error: unknown) => console.error("Character snapshot cache write failed", String(error)))
+        // waitUntil has a 30-second post-response budget. Bound the whole refresh.
+        await regenerate(AbortSignal.timeout(25_000))
+      })().catch((error: unknown) => console.error("Character refresh failed", path, String(error))))
+      return serve(cached)
+    }
+    try {
+      return serve(await regenerate(AbortSignal.timeout(45_000)))
     } catch (error) {
       console.error("Character page unavailable", path, String(error))
       if (cached) return serve(cached)

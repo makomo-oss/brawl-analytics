@@ -16,7 +16,7 @@ import { translateMode, translateMap } from "@/lib/translations"
 import { API_URL } from "@/lib/config"
 import type { TierListData } from "@/lib/tier-data"
 import Link from "next/link"
-import { brawlerPath, brawlerSlug } from "@/lib/brawler-paths"
+import { brawlerPath } from "@/lib/brawler-paths"
 
 const INITIAL_TIER_KEY = "global:all:all:"
 
@@ -31,7 +31,7 @@ const tierConfig: Record<string, { color: string; label: string; bg: string }> =
   "N/A": { color: "from-zinc-500 to-stone-500", label: "データ不足", bg: "bg-zinc-500/10 border-zinc-500/30 border-dashed" }
 }
 
-export default function TierListPage({ initialTierData, detailSlugs }: { initialTierData: TierListData; detailSlugs: string[] }) {
+export default function TierListPage({ initialTierData }: { initialTierData: TierListData }) {
   useBrawlerCatalog()
   const [tierData, setTierData] = useState<any>(initialTierData)
   const [loading, setLoading] = useState(false)
@@ -442,7 +442,7 @@ export default function TierListPage({ initialTierData, detailSlugs }: { initial
                       </Badge>
                       <span className="text-xs font-mono text-muted-foreground">スコア: {selectedChar.score} / {selectedChar.total_matches}試合</span>
                     </SheetDescription>
-                    {detailSlugs.includes(brawlerSlug(selectedChar.character_id)) && <Link href={brawlerPath(selectedChar.character_id)} prefetch={false} className="inline-block mt-2 text-xs text-primary hover:underline">詳細ページを見る</Link>}
+                    {selectedChar.total_matches > 0 && <a href={brawlerPath(selectedChar.character_id)} className="inline-block mt-2 text-xs text-primary hover:underline">詳細ページを見る</a>}
                   </div>
                 </div>
               </SheetHeader>

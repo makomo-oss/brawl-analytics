@@ -17,14 +17,14 @@ import { getBrawlerInfo, getRankImage } from "@/lib/brawlers";
 import { API_URL } from "@/lib/config";
 import { BurolaboIcon } from "@/components/brand-icon";
 import type { TierListData } from "@/lib/tier-data";
-import { brawlerPath, brawlerSlug } from "@/lib/brawler-paths";
+import { brawlerPath } from "@/lib/brawler-paths";
 
 interface RecentSearch {
   tag: string;
   name?: string;
 }
 
-export default function CockpitHomePage({ initialTierData, detailSlugs }: { initialTierData: TierListData; detailSlugs: string[] }) {
+export default function CockpitHomePage({ initialTierData }: { initialTierData: TierListData }) {
   useBrawlerCatalog()
   const router = useRouter();
   const [searchInput, setSearchInput] = useState("");
@@ -632,9 +632,9 @@ export default function CockpitHomePage({ initialTierData, detailSlugs }: { init
                   <SheetDescription className="text-xs text-zinc-400">
                     環境スコア: {selectedChar.score} / {selectedChar.total_matches?.toLocaleString()}試合
                   </SheetDescription>
-                  {detailSlugs.includes(brawlerSlug(selectedChar.id)) && <Link href={brawlerPath(selectedChar.id)} prefetch={false} className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                  {tierData?.characters?.[selectedChar.id]?.total_matches > 0 && <a href={brawlerPath(selectedChar.id)} className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
                     詳細ページを見る<ArrowRight className="w-3 h-3" />
-                  </Link>}
+                  </a>}
                 </div>
               </SheetHeader>
 

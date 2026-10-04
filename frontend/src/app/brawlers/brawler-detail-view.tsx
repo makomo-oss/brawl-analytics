@@ -5,7 +5,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { getModeIconUrl, translateMode } from "@/lib/translations"
 import { ArrowLeft, ArrowRight, BarChart3, MapPin, Swords, TrendingUp, TrendingDown, Trophy, Users } from "lucide-react"
-import type { BrawlerPageData, Cohort, CohortData, ConditionRow, PairRow } from "@/lib/server-brawler-pages"
+import type { BrawlerPageData, Cohort, CohortData, ConditionRow, PairRow } from "@/lib/brawler-page-data"
 
 const count = (value: number) => value.toLocaleString("ja-JP")
 const percent = (value: number) => `${value.toFixed(1)}%`

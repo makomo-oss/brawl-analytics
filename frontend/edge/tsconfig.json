@@ -1,0 +1,6 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": { "incremental": false, "plugins": [], "paths": { "@/*": ["../src/*"] } },
+  "include": ["./**/*.ts", "./**/*.tsx", "../worker-configuration.d.ts"],
+  "exclude": ["../node_modules"]
+}

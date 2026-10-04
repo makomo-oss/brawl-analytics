@@ -5,7 +5,7 @@ import { API_URL } from "./config"
 import { BRAWLER_MAP } from "./brawlers"
 
 const CACHE_KEY = "brawl:brawler-catalog:v1"
-const REFRESH_MS = 7 * 24 * 60 * 60 * 1000
+const REFRESH_MS = 60 * 60 * 1000
 let version = 0
 let nextRefresh = 0
 let restored = false

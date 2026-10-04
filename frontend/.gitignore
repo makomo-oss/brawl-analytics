@@ -40,3 +40,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+/edge/generated-shell.json
+/worker-configuration.d.ts
+/.wrangler/

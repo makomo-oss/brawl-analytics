@@ -2,7 +2,7 @@
 
 import { useEffect, useSyncExternalStore } from "react"
 import { API_URL } from "./config"
-import { BRAWLER_MAP } from "./brawlers"
+import { BRAWLER_MAP, type BrawlerRarity } from "./brawlers"
 
 const CACHE_KEY = "brawl:brawler-catalog:v1"
 const REFRESH_MS = 60 * 60 * 1000
@@ -34,8 +34,11 @@ export function applyBrawlerCatalog(payload: unknown): boolean {
       } catch { continue }
     }
     accepted += 1
-    if (!old || old.ja !== name || old.imageUrl !== image) {
-      BRAWLER_MAP[key] = { ja: name, imageUrl: image }
+    const value = row.rarity
+    const rarity: BrawlerRarity | null = value && Number.isInteger(value.id) && value.id >= 1 && value.id <= 1000 && typeof value.name === "string" && value.name.trim() && value.name.length <= 80
+      ? { id: value.id, name: value.name.trim() } : old?.rarity || null
+    if (!old || old.ja !== name || old.imageUrl !== image || old.rarity?.id !== rarity?.id || old.rarity?.name !== rarity?.name) {
+      BRAWLER_MAP[key] = { ja: name, imageUrl: image, rarity }
       changed = true
     }
   }

@@ -1,6 +1,8 @@
 import catalogSeed from "./brawler-catalog.json"
 
-export const BRAWLER_MAP: Record<string, { ja: string, imageUrl: string }> = {
+export interface BrawlerRarity { id: number; name: string }
+
+export const BRAWLER_MAP: Record<string, { ja: string, imageUrl: string, rarity?: BrawlerRarity | null }> = {
   "wendy": { ja: "ウェンディ", imageUrl: "https://cdn.brawlify.com/brawlers/borders/16000108.png" },
   "nori": { ja: "ノリ", imageUrl: "https://cdn.brawlify.com/brawlers/borders/16000107.png" },
   "bolt": { ja: "ボルト", imageUrl: "https://cdn.brawlify.com/brawlers/borders/16000106.png" },
@@ -112,7 +114,11 @@ export const BRAWLER_MAP: Record<string, { ja: string, imageUrl: string }> = {
 
 // Bundled last-known data is immediately available, including when offline.
 for (const row of catalogSeed) {
-  BRAWLER_MAP[row.name.toLowerCase()] = { ja: row.nameJa, imageUrl: row.imageUrl }
+  BRAWLER_MAP[row.name.toLowerCase()] = { ja: row.nameJa, imageUrl: row.imageUrl, rarity: row.rarity }
+}
+
+export function getBrawlerRarity(name: string): BrawlerRarity | null {
+  return BRAWLER_MAP[name.trim().toLowerCase()]?.rarity || null
 }
 
 export function getBrawlerInfo(name: unknown): { nameJa: string; imageUrl: string } {

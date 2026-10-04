@@ -23,6 +23,7 @@ import { API_URL } from "@/lib/config"
 import PlayerAnalysis from "./player-analysis"
 import PlayerAutoSync from "./player-auto-sync"
 import { brawlerPath } from "@/lib/brawler-paths"
+import { playerBrawlerSorts, sortPlayerBrawlers, type PlayerBrawlerSort } from "@/lib/player-brawler-sort"
 
 function formatBattleTime(timeStr: string) {
   if (!timeStr) return "";
@@ -128,6 +129,7 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
   const [battleTab, setBattleTab] = useState("all")
   const [resultFilter, setResultFilter] = useState<"all" | "victory" | "defeat">("all")
   const [modeFilter, setModeFilter] = useState<string>("all")
+  const [brawlerSort, setBrawlerSort] = useState<PlayerBrawlerSort>("trophies")
 
   // プレイヤー名検索サジェスト用ステート
   const [suggestions, setSuggestions] = useState<any[]>([])
@@ -1027,8 +1029,19 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
             )}
           </TabsContent>
           <TabsContent value="characters" className="space-y-6">
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <span id="player-brawler-sort-label" className="text-sm font-semibold text-muted-foreground">並び替え</span>
+              <Select value={brawlerSort} onValueChange={(value) => { if (value && Object.hasOwn(playerBrawlerSorts, value)) setBrawlerSort(value as PlayerBrawlerSort) }}>
+                <SelectTrigger aria-labelledby="player-brawler-sort-label" className="w-[220px] h-10 bg-secondary/40 border border-border/40">
+                  <SelectValue>{playerBrawlerSorts[brawlerSort]}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(playerBrawlerSorts).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {Array.isArray(data.brawlers) && [...data.brawlers].sort((a, b) => (b.trophies || 0) - (a.trophies || 0)).map((brawler) => {
+              {sortPlayerBrawlers(Array.isArray(data.brawlers) ? data.brawlers : [], brawlerSort).map((brawler) => {
                 const maxPower = 11;
                 const power = brawler.power || 1;
                 const powerRatio = (power / maxPower) * 100;

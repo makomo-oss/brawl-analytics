@@ -8,6 +8,7 @@
     "start": "next start",
     "test:live-brawlers": "node scripts/test-live-brawler-pages.mjs",
     "test:brawler-directory": "node scripts/test-brawler-directory.mjs",
+    "test:player-brawler-sort": "node scripts/test-player-brawler-sort.mjs",
     "lint": "eslint"
   },
   "dependencies": {

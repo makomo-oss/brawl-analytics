@@ -260,7 +260,7 @@ export default function TierListPage({ initialTierData }: { initialTierData: Tie
         <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent flex items-center gap-3">
           <Trophy className="w-8 h-8 text-yellow-500" />
-          ブロスタ環境Tier表
+          ブロスタ最強キャラ・ティア表
         </h1>
         <BrawlerDirectoryLink className="inline-flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-sm font-bold text-primary hover:bg-primary/10 transition-colors">
           <Users aria-hidden="true" className="w-4 h-4" />キャラ一覧<ArrowRight aria-hidden="true" className="w-3.5 h-3.5" />

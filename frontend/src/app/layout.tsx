@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Inter } from "next/font/google";
 import { MainNav } from "@/components/main-nav";
-import { SITE_URL } from "@/lib/seo";
+import { SITE_URL, searchCopy } from "@/lib/seo";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -16,11 +16,10 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   // ─── 基本メタ ───
   title: {
-    default: "ブロスタ戦績検索・Tier表・ピックツール | ブロラボ",
+    default: `${searchCopy.home.title} | ブロラボ`,
     template: "%s | ブロラボ",
   },
-  description:
-    "ブロスタの戦績・勝率をプレイヤータグや名前で検索。キャラ勝率ランキングの環境Tier表、ガチバトルのBAN/Pick支援を無料で使える分析ツール「ブロラボ」。",
+  description: searchCopy.home.description,
   keywords: [
     "ブロラボ",
     "ブロスタ",
@@ -72,9 +71,8 @@ export const metadata: Metadata = {
     locale: "ja_JP",
     url: SITE_URL,
     siteName: "ブロラボ",
-    title: "ブロスタ戦績検索・Tier表・ピックツール | ブロラボ",
-    description:
-      "ブロスタのガチバトル戦績検索・環境Tier表・BAN/Pick支援を提供する無料分析ツール。プレイヤー検索、キャラ勝率ランキング、リアルタイム環境速報で勝率UP。",
+    title: `${searchCopy.home.title} | ブロラボ`,
+    description: searchCopy.home.description,
     images: [
       {
         url: "/icon-512.png",
@@ -88,9 +86,8 @@ export const metadata: Metadata = {
   // ─── Twitter Card ───
   twitter: {
     card: "summary",
-    title: "ブロスタ戦績検索・Tier表・ピックツール | ブロラボ",
-    description:
-      "ブロスタのガチバトル戦績検索・環境Tier表・BAN/Pick支援を提供する無料分析ツール。",
+    title: `${searchCopy.home.title} | ブロラボ`,
+    description: searchCopy.home.description,
     images: ["/icon-512.png"],
   },
 
@@ -138,8 +135,7 @@ function JsonLdStructuredData() {
     name: "ブロラボ",
     alternateName: ["Brawl Lab", "burolabo"],
     url: SITE_URL,
-    description:
-      "ブロスタ（Brawl Stars）のガチバトル戦績検索・環境Tier表・BAN/Pick支援を提供する無料ゲーム分析ツール",
+    description: searchCopy.home.description,
     applicationCategory: "GameApplication",
     operatingSystem: "Web",
     offers: {
@@ -157,7 +153,7 @@ function JsonLdStructuredData() {
     name: "ブロラボ",
     alternateName: "Brawl Lab",
     url: SITE_URL,
-    description: "ブロスタ（Brawl Stars）ガチバトル分析ツール",
+    description: searchCopy.home.description,
     inLanguage: "ja",
     potentialAction: {
       "@type": "SearchAction",

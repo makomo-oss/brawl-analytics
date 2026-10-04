@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation"
-import { pageMetadata, SITE_URL } from "@/lib/seo"
+import { pageMetadata, brawlerSearchCopy, SITE_URL } from "@/lib/seo"
 import { getBrawlerEntries, getBrawlerPage } from "@/lib/server-brawler-pages"
 import BrawlerDetailView from "../brawler-detail-view"
 
@@ -13,7 +13,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params
   const data = await getBrawlerPage(slug)
   if (!data) notFound()
-  const metadata = pageMetadata(`ブロスタ ${data.nameJa}の勝率・相性・おすすめマップ`, `${data.nameJa}のTier・勝率・使用率を対戦データから分析。モード別の成績、おすすめマップ、有利・不利な敵キャラ、相性のよい味方を集計件数とともに確認できます。`, `/brawlers/${slug}`)
+  const copy = brawlerSearchCopy(data.nameJa)
+  const metadata = pageMetadata(copy.title, copy.description, `/brawlers/${slug}`)
   if (![data.cohorts.global, data.cohorts.gachi].some(cohort => cohort.stats?.sample_sufficient)) metadata.robots = { index: false, follow: true, googleBot: { index: false, follow: true } }
   return metadata
 }

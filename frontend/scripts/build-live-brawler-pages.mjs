@@ -23,7 +23,7 @@ const links = [...html.matchAll(/<link\b[^>]*>/g)].map(match => match[0]).filter
   /rel="(?:stylesheet|icon|apple-touch-icon|shortcut icon)"/.test(link) || /as="font"/.test(link)).join("")
 const bodyClass = html.match(/<body class="([^"]*)"/)?.[1]
 if (!links.includes('rel="stylesheet"') || !bodyClass) throw new Error("Could not find the existing app stylesheet or font")
-const sources = await Promise.all(["edge/server.tsx", "edge/worker.ts", "src/lib/brawler-page-data.ts"].map(path => readFile(resolve(root, path), "utf8")))
+const sources = await Promise.all(["edge/server.tsx", "edge/worker.ts", "src/lib/brawler-page-data.ts", "src/lib/seo.ts"].map(path => readFile(resolve(root, path), "utf8")))
 await mkdir(resolve(root, "edge"), { recursive: true })
 await writeFile(resolve(root, "edge/generated-shell.json"), JSON.stringify({ links, bodyClass, client: clientPath, version: hash(output.toString() + sources.join("") + links + bodyClass) }))
 await build({ ...common, entryPoints: ["edge/worker.ts"], outfile: "out/_worker.js" })

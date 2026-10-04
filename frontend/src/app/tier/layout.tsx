@@ -1,8 +1,8 @@
-import { pageMetadata } from "@/lib/seo";
+import { pageMetadata, searchCopy } from "@/lib/seo";
 
 export const metadata = pageMetadata(
-  "ブロスタTier表・キャラ勝率ランキング",
-  "ブロスタのキャラを勝率・使用率で比較する環境Tier表。全体・ガチバトル、モード別・マップ別・ランク帯別に絞り込み。観測件数と相性を確認してキャラ選びの参考に。",
+  searchCopy.tier.title,
+  searchCopy.tier.description,
   "/tier",
 );
 

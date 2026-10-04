@@ -1,8 +1,8 @@
-import { pageMetadata } from "@/lib/seo";
+import { pageMetadata, searchCopy } from "@/lib/seo";
 
 export const metadata = pageMetadata(
-  "ブロスタ戦績検索・勝率確認",
-  "ブロスタの戦績をプレイヤータグ・名前で検索。ガチバトルの勝率、キャラ別・モード別の成績、バトル履歴を無料で確認できます。",
+  searchCopy.player.title,
+  searchCopy.player.description,
   "/player",
 );
 

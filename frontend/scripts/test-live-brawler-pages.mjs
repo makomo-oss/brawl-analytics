@@ -56,7 +56,7 @@ try {
   assert.equal(response.status, 200)
   assert.equal(failures, 0)
   const html = await response.text()
-  assert.match(html, /新キャラ&lt;テスト&gt;の勝率・相性/)
+  assert.match(html, /<title>ブロスタ 新キャラ&lt;テスト&gt;の評価・相性・おすすめマップ \| ブロラボ<\/title>/)
   assert.match(html, /id="global-panel"/)
   assert.match(html, /id="gachi-panel"/)
   assert.match(html, /rel="canonical" href="https:\/\/brawl-lab.sozai-hub.com\/brawlers\/future-new-hero"/)

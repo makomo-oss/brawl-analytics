@@ -1,6 +1,6 @@
 import { renderToString } from "react-dom/server.browser"
 import { App, type RuntimePage } from "./app"
-import { SITE_URL } from "@/lib/seo"
+import { SITE_URL, searchCopy, brawlerSearchCopy } from "@/lib/seo"
 import shell from "./generated-shell.json"
 
 export const escapeHtml = (text: string) => text.replace(/[&<>"']/g, value => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[value]!)
@@ -9,8 +9,9 @@ const safeJson = (value: unknown) => JSON.stringify(value).replace(/</g, "\\u003
 export function renderPage(page: RuntimePage) {
   const isDetail = page.kind === "detail"
   const name = isDetail ? page.data.nameJa : ""
-  const title = isDetail ? `ブロスタ ${name}の勝率・相性・おすすめマップ | ブロラボ` : "ブロスタ キャラ一覧・勝率と相性 | ブロラボ"
-  const description = isDetail ? `${name}のTier・勝率・使用率を対戦データから分析。モード別の成績、おすすめマップ、有利・不利な敵キャラ、相性のよい味方を集計件数とともに確認できます。` : "ブロスタのキャラ別Tier・勝率・使用率・おすすめマップ・敵味方との相性を対戦データで確認。各キャラの分析ページを一覧から探せます。"
+  const copy = isDetail ? brawlerSearchCopy(name) : searchCopy.brawlers
+  const title = `${copy.title} | ブロラボ`
+  const description = copy.description
   const index = !isDetail || Object.values(page.data.cohorts).some(cohort => cohort.stats?.sample_sufficient)
   const url = `${SITE_URL}${page.path}`
   const breadcrumb = { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [

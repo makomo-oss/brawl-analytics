@@ -295,7 +295,7 @@ export default function CockpitHomePage({ initialTierData }: { initialTierData: 
         <div className="flex items-center justify-center gap-2.5 mb-3">
           <BurolaboIcon size={36} className="shadow-lg" />
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">
-            ブロラボ - ブロスタ戦績・Tier表・ピック支援
+            ブロラボ - ブロスタ攻略・分析ツール
           </h1>
         </div>
         <p className="text-xs sm:text-sm text-zinc-400 max-w-md mb-6">

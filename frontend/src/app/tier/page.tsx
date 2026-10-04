@@ -251,7 +251,7 @@ export default function TierListPage() {
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent flex items-center gap-3">
           <Trophy className="w-8 h-8 text-yellow-500" />
-          環境分析 (Tier表)
+          ブロスタ環境Tier表
         </h1>
         {!loading && (
           <p className="text-muted-foreground text-lg flex items-center gap-2">

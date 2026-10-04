@@ -2,11 +2,10 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Inter } from "next/font/google";
 import { MainNav } from "@/components/main-nav";
+import Link from "next/link";
+import { SITE_URL } from "@/lib/seo";
 
 const inter = Inter({ subsets: ["latin"] });
-
-/** サイトの正規 URL（Cloudflare Pages のカスタムドメイン） */
-const SITE_URL = "https://brawl-lab.sozai-hub.com";
 
 /**
  * Next.js Metadata API による包括的 SEO 設定
@@ -18,11 +17,11 @@ const SITE_URL = "https://brawl-lab.sozai-hub.com";
 export const metadata: Metadata = {
   // ─── 基本メタ ───
   title: {
-    default: "ブロラボ | ブロスタ戦績・Tier表・ピック支援ツール",
+    default: "ブロスタ戦績検索・Tier表・ピックツール | ブロラボ",
     template: "%s | ブロラボ",
   },
   description:
-    "ブロラボはブロスタ（Brawl Stars）のガチバトル戦績検索・環境Tier表・BAN/Pick支援を提供する無料分析ツール。プレイヤー戦績のメタギャップ診断、キャラ勝率ランキング、リアルタイム環境速報でガチバトルの勝率を上げよう。",
+    "ブロスタの戦績・勝率をプレイヤータグや名前で検索。キャラ勝率ランキングの環境Tier表、ガチバトルのBAN/Pick支援を無料で使える分析ツール「ブロラボ」。",
   keywords: [
     "ブロラボ",
     "ブロスタ",
@@ -74,7 +73,7 @@ export const metadata: Metadata = {
     locale: "ja_JP",
     url: SITE_URL,
     siteName: "ブロラボ",
-    title: "ブロラボ | ブロスタ戦績・Tier表・ピック支援ツール",
+    title: "ブロスタ戦績検索・Tier表・ピックツール | ブロラボ",
     description:
       "ブロスタのガチバトル戦績検索・環境Tier表・BAN/Pick支援を提供する無料分析ツール。プレイヤー検索、キャラ勝率ランキング、リアルタイム環境速報で勝率UP。",
     images: [
@@ -90,7 +89,7 @@ export const metadata: Metadata = {
   // ─── Twitter Card ───
   twitter: {
     card: "summary",
-    title: "ブロラボ | ブロスタ戦績・Tier表・ピック支援ツール",
+    title: "ブロスタ戦績検索・Tier表・ピックツール | ブロラボ",
     description:
       "ブロスタのガチバトル戦績検索・環境Tier表・BAN/Pick支援を提供する無料分析ツール。",
     images: ["/icon-512.png"],
@@ -204,6 +203,14 @@ export default function RootLayout({
         <MainNav />
         <main className="container mx-auto px-3 py-4 sm:p-6 lg:p-8 max-w-7xl pb-24 lg:pb-8">
           {children}
+          <footer className="mt-12 border-t border-border pt-5 text-sm text-muted-foreground">
+            <nav aria-label="関連ページ" className="flex flex-wrap gap-x-5 gap-y-3">
+              <Link href="/player" className="hover:text-primary">ブロスタ戦績検索</Link>
+              <Link href="/tier" className="hover:text-primary">環境Tier表</Link>
+              <Link href="/companion" className="hover:text-primary">BAN/Pick支援</Link>
+              <Link href="/guide" className="hover:text-primary">使い方・データの見方</Link>
+            </nav>
+          </footer>
         </main>
       </body>
     </html>

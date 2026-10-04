@@ -509,7 +509,7 @@ export default function DraftCompanionPage() {
       <div className="max-w-3xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="text-center space-y-4">
           <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            BAN/Pick ピック支援
+            ブロスタ BAN/Pick ピック支援
           </h1>
           <p className="text-muted-foreground">
             マップ適性と敵の編成から、リアルタイムで最適なキャラクターを弾き出します。

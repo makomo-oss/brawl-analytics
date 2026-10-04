@@ -1,17 +1,19 @@
-import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
+import { FeatureGuide } from "@/components/feature-guide";
 
-export const metadata: Metadata = {
-  title: "プレイヤー戦績検索 - メタギャップ診断・バトル履歴分析",
-  description:
-    "ブロスタ（Brawl Stars）プレイヤーの戦績をタグまたは名前で即時検索。ガチバトル勝率、メタギャップ診断、隠れ得意キャラ、モード別分析、バトル履歴を一括表示。",
-  alternates: { canonical: "/player" },
-  openGraph: {
-    title: "ブロスタ戦績検索 | ブロラボ",
-    description: "プレイヤータグを入力してガチバトル戦績・メタギャップ・バトル履歴を即時分析。",
-    url: "/player",
-  },
-};
+export const metadata = pageMetadata(
+  "ブロスタ戦績検索・勝率確認",
+  "ブロスタの戦績をプレイヤータグ・名前で検索。ガチバトルの勝率、キャラ別・モード別の成績、バトル履歴を無料で確認できます。プレイヤータグの調べ方も解説。",
+  "/player",
+);
 
 export default function PlayerLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+  return <>
+    <header className="mb-8 space-y-2">
+      <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">ブロスタ戦績検索・勝率確認</h1>
+      <p className="text-muted-foreground">プレイヤータグや名前から戦績を検索。キャラ別・モード別の成績とバトル履歴を確認できます。</p>
+    </header>
+    {children}
+    <FeatureGuide feature="player" />
+  </>;
 }

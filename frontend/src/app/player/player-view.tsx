@@ -423,15 +423,6 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-          マイダッシュボード
-        </h1>
-        <p className="text-muted-foreground text-lg">
-          個人の戦績をメタ環境と比較し、勝率を上げるためのインサイトを獲得します。
-        </p>
-      </div>
-
       <Card className="relative z-50 bg-card border-primary/20 shadow-sm overflow-visible">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">

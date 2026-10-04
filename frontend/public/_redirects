@@ -1,3 +1,5 @@
 /tier-list  /tier  301
 /dashboard  /  301
-/player/*  /player  200
+/ai-coach  /companion  301
+# Preserve tags in legacy player links and avoid duplicate HTML at each tag URL.
+/player/:tag  /player?tag=:tag  301

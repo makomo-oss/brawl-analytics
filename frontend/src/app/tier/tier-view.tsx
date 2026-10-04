@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Trophy, Swords, Info, TrendingUp, TrendingDown, AlertTriangle, User, Users, ArrowRight } from "lucide-react"
+import { Trophy, Swords, Info, TrendingUp, TrendingDown, AlertTriangle, User, Users, ArrowRight, Clock3 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Progress } from "@/components/ui/progress"
@@ -214,6 +214,14 @@ export default function TierListPage({ initialTierData, initialMatchups }: { ini
     void fetchPublicStats(characterDetailUrl(API_URL, name, selectedType, selectedRankTier, subType, selectedId)).catch(() => {})
   }
 
+  const updatedAt = tierData?.updated_at ? new Date(tierData.updated_at) : null
+  const updatedLabel = updatedAt && Number.isFinite(updatedAt.getTime())
+    ? new Intl.DateTimeFormat("ja-JP", {
+        timeZone: "Asia/Tokyo", year: "numeric", month: "2-digit", day: "2-digit",
+        hour: "2-digit", minute: "2-digit", hourCycle: "h23"
+      }).format(updatedAt)
+    : null
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-7xl mx-auto">
       <div className="flex flex-col gap-2">
@@ -232,6 +240,14 @@ export default function TierListPage({ initialTierData, initialMatchups }: { ini
               ? `直近60日のガチバトル・エリート以上の戦績（${(tierData?.metrics?.analyzed_matches ?? 0).toLocaleString()} 件のプレイヤー戦績）から算出。直近30日を重視したランキング。`
               : `上位プレイヤーの直近60日のバトルログ（${(tierData?.metrics?.analyzed_matches ?? 0).toLocaleString()} 件のプレイヤー戦績）から算出。直近30日を重視したランキング。`
             }
+          </p>
+        )}
+        {!loading && tierData && (
+          <p className="text-muted-foreground text-sm flex items-center gap-1.5">
+            <Clock3 aria-hidden="true" className="w-3.5 h-3.5" />
+            最終更新：{updatedLabel
+              ? <time dateTime={updatedAt!.toISOString()}>{updatedLabel}（日本時間）</time>
+              : "—"}
           </p>
         )}
       </div>

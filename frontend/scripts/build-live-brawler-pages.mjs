@@ -4,6 +4,13 @@ import { resolve } from "node:path"
 import { createHash } from "node:crypto"
 
 const root = process.cwd()
+const llmModule = await build({ entryPoints: ["src/lib/llm-data.ts"], bundle: true, format: "esm", platform: "node", write: false })
+const { publicData, publicCatalog, dataPath } = await import(`data:text/javascript;base64,${Buffer.from(llmModule.outputFiles[0].contents).toString("base64")}`)
+async function writeData(page) {
+  const path = dataPath(page.path)
+  await mkdir(resolve(root, `out${path.slice(0, path.lastIndexOf("/"))}`), { recursive: true })
+  await writeFile(resolve(root, `out${path}`), JSON.stringify(publicData(page)))
+}
 // Ship bounded per-character snapshots for an immediate first response while
 // the Worker refreshes live data. Newly discovered URLs still resolve via API.
 const snapshot = JSON.parse(await readFile(resolve(root, ".seo-data/brawler-pages.json"), "utf8"))
@@ -15,9 +22,12 @@ const compact = name => ({ ...snapshot,
 })
 await writeFile(resolve(snapshotDir, "index.json"), JSON.stringify(compact()))
 const dataModule = await build({ entryPoints: ["src/lib/brawler-page-data.ts"], bundle: true, format: "esm", platform: "node", write: false })
-const { brawlerEntries } = await import(`data:text/javascript;base64,${Buffer.from(dataModule.outputFiles[0].contents).toString("base64")}`)
+const { brawlerEntries, brawlerPage } = await import(`data:text/javascript;base64,${Buffer.from(dataModule.outputFiles[0].contents).toString("base64")}`)
+const directories = [{ kind: "directory", path: "/brawlers", entries: brawlerEntries(snapshot) }]
+await writeData(directories[0])
 for (const { name, slug } of brawlerEntries(snapshot)) {
   await writeFile(resolve(snapshotDir, `${slug}.json`), JSON.stringify(compact(name)))
+  await writeData({ kind: "detail", path: `/brawlers/${slug}`, data: brawlerPage(snapshot, slug) })
 }
 const conditionModule = await build({ entryPoints: ["src/lib/condition-pages.ts"], bundle: true, format: "esm", platform: "node", write: false })
 const { conditionIndex, conditionPage } = await import(`data:text/javascript;base64,${Buffer.from(conditionModule.outputFiles[0].contents).toString("base64")}`)
@@ -27,9 +37,18 @@ await mkdir(conditionDir, { recursive: true })
 await writeFile(resolve(conditionDir, "index.json"), JSON.stringify(conditionDirectory))
 for (const category of ["modes", "maps"]) {
   await mkdir(resolve(conditionDir, category), { recursive: true })
-  await writeFile(resolve(conditionDir, `${category}.json`), JSON.stringify({ kind: "conditions", path: `/${category}`, category, index: conditionDirectory }))
-  for (const entry of conditionDirectory[category]) await writeFile(resolve(conditionDir, `${category}/${entry.slug}.json`), JSON.stringify({ kind: "condition", path: entry.path, data: conditionPage(snapshot, entry, conditionDirectory) }))
+  const directory = { kind: "conditions", path: `/${category}`, category, index: conditionDirectory }
+  directories.push(directory)
+  await writeFile(resolve(conditionDir, `${category}.json`), JSON.stringify(directory))
+  await writeData(directory)
+  for (const entry of conditionDirectory[category]) {
+    const page = { kind: "condition", path: entry.path, data: conditionPage(snapshot, entry, conditionDirectory) }
+    await writeFile(resolve(conditionDir, `${category}/${entry.slug}.json`), JSON.stringify(page))
+    await writeData(page)
+  }
 }
+await writeFile(resolve(root, "out/data/index.json"), JSON.stringify(publicCatalog(directories)))
+await writeFile(resolve(root, "out/data/catalog.jsonld"), JSON.stringify(publicCatalog(directories).schema))
 const hash = value => createHash("sha256").update(value).digest("hex").slice(0, 16)
 const common = {
   bundle: true, minify: true, format: "esm", platform: "browser", jsx: "automatic",
@@ -49,9 +68,9 @@ const links = [...html.matchAll(/<link\b[^>]*>/g)].map(match => match[0]).filter
   /rel="(?:stylesheet|icon|apple-touch-icon|shortcut icon)"/.test(link) || /as="font"/.test(link)).join("")
 const bodyClass = html.match(/<body class="([^"]*)"/)?.[1]
 if (!links.includes('rel="stylesheet"') || !bodyClass) throw new Error("Could not find the existing app stylesheet or font")
-const sources = await Promise.all(["edge/server.tsx", "edge/worker.ts", "src/lib/brawler-page-data.ts", "src/lib/condition-pages.ts", "src/lib/seo.ts"].map(path => readFile(resolve(root, path), "utf8")))
+const sources = await Promise.all(["edge/server.tsx", "edge/worker.ts", "edge/public-data.ts", "src/lib/llm-data.ts", "src/lib/site-schema.ts", "src/lib/brawler-page-data.ts", "src/lib/condition-pages.ts", "src/lib/seo.ts"].map(path => readFile(resolve(root, path), "utf8")))
 await mkdir(resolve(root, "edge"), { recursive: true })
 await writeFile(resolve(root, "edge/generated-shell.json"), JSON.stringify({ links, bodyClass, client: clientPath, version: hash(output.toString() + sources.join("") + links + bodyClass) }))
 await build({ ...common, entryPoints: ["edge/worker.ts"], outfile: "out/_worker.js" })
-await writeFile(resolve(root, "out/_routes.json"), JSON.stringify({ version: 1, include: ["/brawlers", "/brawlers/*", "/modes", "/modes/*", "/maps", "/maps/*", "/sitemap.xml"], exclude: [] }))
+await writeFile(resolve(root, "out/_routes.json"), JSON.stringify({ version: 1, include: ["/brawlers", "/brawlers/*", "/modes", "/modes/*", "/maps", "/maps/*", "/data/*", "/sitemap.xml"], exclude: [] }))
 console.log(`Live character pages built: ${clientPath}`)

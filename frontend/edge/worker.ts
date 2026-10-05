@@ -5,6 +5,7 @@ import { renderPage, escapeHtml, runtimeVersion } from "./server"
 import { conditionPage, MODE_SLUGS, mapSlug, type ConditionEntry, type ConditionIndex } from "@/lib/condition-pages"
 import { translateMap, translateMode } from "@/lib/translations"
 import type { RuntimePage } from "./app"
+import { dataResponse } from "./public-data"
 
 const FRESH_SECONDS = 300
 const STALE_SECONDS = 86400
@@ -121,9 +122,10 @@ function xml(index: BrawlerSnapshot, conditions: ConditionIndex = { modes: [], m
   return `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${paths.map(path => `<url><loc>${SITE_URL}${path}</loc></url>`).join("")}${conditionUrls}${entries.map(entry => `<url><loc>${SITE_URL}/brawlers/${escapeHtml(entry.slug)}</loc>${dates[0] ? `<lastmod>${dates[0]}</lastmod>` : ""}</url>`).join("")}</urlset>`
 }
 
-export default {
-  async fetch(request, env, ctx) {
+const worker = {
+  async fetch(request: Request, env, ctx): Promise<Response> {
     const url = new URL(request.url)
+    if (url.pathname.startsWith("/data/")) return dataResponse(request, source => worker.fetch(source, env, ctx))
     const isCondition = /^\/(?:modes|maps)(?:\/|$)/.test(url.pathname)
     const isDynamic = isCondition || url.pathname === "/brawlers" || url.pathname.startsWith("/brawlers/") || url.pathname === "/sitemap.xml"
     if (!isDynamic) return env.ASSETS.fetch(request)
@@ -217,3 +219,4 @@ export default {
     }
   },
 } satisfies ExportedHandler<Parameters<PagesFunction<Env>>[0]["env"]>
+export default worker

@@ -38,7 +38,7 @@ export function pageMetadata(title: string, description: string, path: string): 
   return {
     title,
     description,
-    alternates: { canonical: path },
+    alternates: { canonical: path, ...(/^\/(brawlers|modes|maps)(\/|$)/.test(path) ? { types: { "application/json": `/data${path}${/^\/(brawlers|modes|maps)$/.test(path) ? "/index" : ""}.json` } } : {}) },
     openGraph: {
       type: "website",
       locale: "ja_JP",

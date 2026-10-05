@@ -1,14 +1,17 @@
 import type { MetadataRoute } from "next"
-import { getBrawlerEntries, getBrawlerPage } from "@/lib/server-brawler-pages"
+import { getSnapshot } from "@/lib/server-brawler-pages"
+import { brawlerEntries, brawlerPage } from "@/lib/brawler-page-data"
 import { SITE_URL } from "@/lib/seo"
-import { getConditionIndex } from "@/lib/server-condition-pages"
+import { conditionIndex } from "@/lib/condition-pages"
 
 export const dynamic = "force-static"
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const entries = await getBrawlerEntries()
-  const details = await Promise.all(entries.map(entry => getBrawlerPage(entry.slug)))
-  const conditions = await getConditionIndex()
+  // Route handlers do not share the component render cache: read the snapshot
+  // once rather than reading/parsing it again for every character URL.
+  const snapshot = await getSnapshot()
+  const details = brawlerEntries(snapshot).map(entry => brawlerPage(snapshot, entry.slug))
+  const conditions = conditionIndex(snapshot)
   return [
     ...["", "/tier", "/player", "/companion", "/brawlers", "/modes", "/maps"].map(path => ({ url: `${SITE_URL}${path || "/"}` })),
     ...[...conditions.modes, ...conditions.maps].map(entry => ({ url: `${SITE_URL}${entry.path}`, ...(entry.updatedAt ? { lastModified: new Date(entry.updatedAt) } : {}) })),

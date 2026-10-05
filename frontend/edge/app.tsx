@@ -1,17 +1,11 @@
 import { MainNav } from "@/components/main-nav"
 import BrawlerDetailView from "@/app/brawlers/brawler-detail-view"
 import BrawlerDirectoryView from "@/app/brawlers/brawler-directory-view"
-import type { BrawlerPageData, brawlerEntries } from "@/lib/brawler-page-data"
 import { RuntimePathname } from "./navigation"
 import { ConditionDirectoryView, ConditionDetailView } from "@/components/condition-pages"
-import type { ConditionIndex, ConditionPageData } from "@/lib/condition-pages"
+import type { PublicPage } from "@/lib/llm-data"
 
-export type RuntimePage = { path: string } & (
-  { kind: "detail"; data: BrawlerPageData } |
-  { kind: "directory"; entries: ReturnType<typeof brawlerEntries> } |
-  { kind: "condition"; data: ConditionPageData } |
-  { kind: "conditions"; index: ConditionIndex; category: "modes" | "maps" }
-)
+export type RuntimePage = PublicPage
 
 export function App({ page }: { page: RuntimePage }) {
   return <RuntimePathname.Provider value={page.path}>

@@ -2,6 +2,7 @@ import { notFound } from "next/navigation"
 import { pageMetadata, brawlerSearchCopy, SITE_URL } from "@/lib/seo"
 import { getBrawlerEntries, getBrawlerPage } from "@/lib/server-brawler-pages"
 import BrawlerDetailView from "../brawler-detail-view"
+import { pageSchema } from "@/lib/llm-data"
 
 export const dynamicParams = false
 
@@ -32,7 +33,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
     ],
   }
   return <>
-    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(pageSchema({ kind: "detail", path: `/brawlers/${slug}`, data }, jsonLd)).replace(/</g, "\\u003c") }} />
     <BrawlerDetailView data={data} />
   </>
 }

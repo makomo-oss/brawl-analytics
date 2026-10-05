@@ -19,7 +19,7 @@ export interface ConditionIndex { modes: ConditionEntry[]; maps: ConditionEntry[
 type RankingRow = CharacterStats & { name: string; slug: string; nameJa: string; imageUrl: string }
 export interface ConditionPageData {
   entry: ConditionEntry; related: ConditionEntry[]
-  cohorts: Record<Cohort, { rows: RankingRow[]; updatedAt: string | null }>
+  cohorts: Record<Cohort, { rows: RankingRow[]; updatedAt: string | null; windowDays: number }>
 }
 export const normalizeDate = (date: string | null) => {
   if (!date) return null
@@ -63,7 +63,7 @@ export function conditionPage(snapshot: BrawlerSnapshot, entry: ConditionEntry, 
     const stats = id ? snapshot.contexts[type][entry.kind][id] || {} : {}
     const rows = catalog.flatMap(character => stats[character.name]?.total_matches > 0 ? [{ ...stats[character.name], name: character.name, slug: character.slug, nameJa: character.nameJa, imageUrl: character.imageUrl }] : [])
       .sort((a, b) => Number(!!b.sample_sufficient) - Number(!!a.sample_sufficient) || b.score - a.score || b.total_matches - a.total_matches || a.slug.localeCompare(b.slug))
-    return { rows, updatedAt: id ? normalizeDate(snapshot.contextUpdatedAt?.[type]?.[entry.kind]?.[id] ?? snapshot.overview[type].updated_at) : null }
+    return { rows, updatedAt: id ? normalizeDate(snapshot.contextUpdatedAt?.[type]?.[entry.kind]?.[id] ?? snapshot.overview[type].updated_at) : null, windowDays: Number(snapshot.overview[type].metrics.analysis_window_days) || 60 }
   }
   return { entry, cohorts: { global: cohort("global"), gachi: cohort("gachi") }, related: entry.kind === "modes"
     ? index.maps.filter(map => map.modeIds.some(id => entry.modeIds.includes(id)))
@@ -79,7 +79,7 @@ export const conditionBreadcrumbs = (entry?: ConditionEntry, kind: "modes" | "ma
 export function collectionSchema(path: string, name: string, breadcrumbs: { name: string; path: string }[], items: { name: string; path: string }[]) {
   return { "@context": "https://schema.org", "@graph": [
     { "@type": "BreadcrumbList", itemListElement: breadcrumbs.map((item, index) => ({ "@type": "ListItem", position: index + 1, name: item.name, item: `${SITE_URL}${item.path}` })) },
-    { "@type": "CollectionPage", "@id": `${SITE_URL}${path}`, url: `${SITE_URL}${path}`, name, inLanguage: "ja", mainEntity: { "@type": "ItemList", itemListElement: items.map((item, index) => ({ "@type": "ListItem", position: index + 1, name: item.name, url: `${SITE_URL}${item.path}` })) } },
+    { "@type": "CollectionPage", "@id": `${SITE_URL}${path}`, url: `${SITE_URL}${path}`, name, inLanguage: "ja", mainEntity: { "@type": "ItemList", itemListElement: items.map((item, index) => ({ "@type": "ListItem", position: index + 1, name: item.name, url: `${SITE_URL}${item.path}`, item: { "@id": `${SITE_URL}${item.path}#entity` } })) } },
   ] }
 }
 export function conditionSchema(data: ConditionPageData) {

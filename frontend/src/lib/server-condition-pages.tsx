@@ -4,6 +4,7 @@ import { getSnapshot } from "./server-brawler-pages"
 import { conditionIndex, conditionPage, conditionCopy, conditionSchema, conditionBreadcrumbs, collectionSchema } from "./condition-pages"
 import { pageMetadata } from "./seo"
 import { ConditionDetailView, ConditionDirectoryView } from "@/components/condition-pages"
+import { pageSchema } from "./llm-data"
 
 export const getConditionIndex = cache(async () => conditionIndex(await getSnapshot()))
 export const conditionParams = async (kind: "modes" | "maps") => (await getConditionIndex())[kind].map(({ slug }) => ({ slug }))
@@ -21,9 +22,10 @@ export async function ConditionPage({ kind, slug }: { kind: "modes" | "maps"; sl
   const entry = index[kind].find(row => row.slug === slug)
   if (!entry) notFound()
   const data = conditionPage(await getSnapshot(), entry, index)
-  return <><JsonLd value={conditionSchema(data)} /><ConditionDetailView data={data} /></>
+  return <><JsonLd value={pageSchema({ kind: "condition", path: entry.path, data }, conditionSchema(data))} /><ConditionDetailView data={data} /></>
 }
 export async function ConditionDirectory({ kind }: { kind: "modes" | "maps" }) {
   const index = await getConditionIndex()
-  return <><JsonLd value={collectionSchema(`/${kind}`, kind === "modes" ? "モード別キャラランキング" : "マップ別キャラランキング", conditionBreadcrumbs(undefined, kind), index[kind].map(row => ({ name: row.label, path: row.path })))} /><ConditionDirectoryView index={index} kind={kind} /></>
+  const schema = collectionSchema(`/${kind}`, kind === "modes" ? "モード別キャラランキング" : "マップ別キャラランキング", conditionBreadcrumbs(undefined, kind), index[kind].map(row => ({ name: row.label, path: row.path })))
+  return <><JsonLd value={pageSchema({ kind: "conditions", path: `/${kind}`, category: kind, index }, schema)} /><ConditionDirectoryView index={index} kind={kind} /></>
 }

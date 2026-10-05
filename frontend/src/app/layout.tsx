@@ -3,6 +3,7 @@ import "./globals.css";
 import { Inter } from "next/font/google";
 import { MainNav } from "@/components/main-nav";
 import { SITE_URL, searchCopy } from "@/lib/seo";
+import { siteNodes } from "@/lib/site-schema";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -121,64 +122,10 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-/**
- * JSON-LD 構造化データ (WebApplication + WebSite)
- *
- * Why: Google のリッチリザルトやナレッジパネルに
- * アプリ情報を正しく表示させるため。
- * WebSite の SearchAction は Google サイトリンク検索ボックスの候補になる。
- */
+/** Stable site, publisher, app and game identities shared with live pages. */
 function JsonLdStructuredData() {
-  const webAppSchema = {
-    "@context": "https://schema.org",
-    "@type": "WebApplication",
-    name: "ブロラボ",
-    alternateName: ["Brawl Lab", "burolabo"],
-    url: SITE_URL,
-    description: searchCopy.home.description,
-    applicationCategory: "GameApplication",
-    operatingSystem: "Web",
-    offers: {
-      "@type": "Offer",
-      price: "0",
-      priceCurrency: "JPY",
-    },
-    inLanguage: "ja",
-    image: `${SITE_URL}/icon-512.png`,
-  };
-
-  const webSiteSchema = {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    name: "ブロラボ",
-    alternateName: "Brawl Lab",
-    url: SITE_URL,
-    description: searchCopy.home.description,
-    inLanguage: "ja",
-    potentialAction: {
-      "@type": "SearchAction",
-      target: {
-        "@type": "EntryPoint",
-        urlTemplate: `${SITE_URL}/player?tag={search_term_string}`,
-      },
-      "query-input": "required name=search_term_string",
-    },
-  };
-
-  return (
-    <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(webAppSchema) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteSchema) }}
-      />
-    </>
-  );
+  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ "@context": "https://schema.org", "@graph": siteNodes() }).replace(/</g, "\\u003c") }} />;
 }
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -192,6 +139,8 @@ export default function RootLayout({
         <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png?v=4" />
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=4" />
         <link rel="shortcut icon" href="/favicon.ico?v=4" />
+        <link rel="describedby" type="application/json" href="/data/index.json" />
+        <link rel="describedby" type="application/ld+json" href="/data/catalog.jsonld" />
         <JsonLdStructuredData />
       </head>
       <body className={`${inter.className} min-h-screen bg-background text-foreground antialiased`}>

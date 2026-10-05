@@ -1,4 +1,6 @@
 User-agent: *
 Allow: /
+Disallow: /__brawler-snapshots/
+Disallow: /__condition-snapshots/
 
 Sitemap: https://brawl-lab.sozai-hub.com/sitemap.xml

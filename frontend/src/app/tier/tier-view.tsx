@@ -19,6 +19,7 @@ import Link from "next/link"
 import { brawlerPath } from "@/lib/brawler-paths"
 import { BrawlerDirectoryLink } from "@/components/brawler-directory-link"
 import { BrawlerPreviewLink } from "@/components/brawler-preview-link"
+import DocumentLink from "@/components/document-link"
 
 import { characterDetailUrl, initialMatchup, type InitialMatchups } from "@/lib/matchup-preview"
 import { fetchPublicStats, getCachedPublicStats } from "@/lib/public-stats-cache"
@@ -230,9 +231,13 @@ export default function TierListPage({ initialTierData, initialMatchups }: { ini
           <Trophy className="w-8 h-8 text-yellow-500" />
           ブロスタ最強キャラ・ティア表
         </h1>
+        <div className="flex flex-wrap gap-2">
+        <DocumentLink href="/modes" className="inline-flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-sm font-bold text-primary hover:bg-primary/10 transition-colors">モード別</DocumentLink>
+        <DocumentLink href="/maps" className="inline-flex items-center gap-2 rounded-lg border border-cyan-500/20 bg-cyan-500/5 px-3 py-2 text-sm font-bold text-cyan-400 hover:bg-cyan-500/10 transition-colors">マップ別</DocumentLink>
         <BrawlerDirectoryLink className="inline-flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-sm font-bold text-primary hover:bg-primary/10 transition-colors">
           <Users aria-hidden="true" className="w-4 h-4" />キャラ一覧<ArrowRight aria-hidden="true" className="w-3.5 h-3.5" />
         </BrawlerDirectoryLink>
+        </div>
         </div>
         {!loading && (
           <p className="text-muted-foreground text-lg flex items-center gap-2">

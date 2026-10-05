@@ -111,7 +111,7 @@ export function MainNav() {
           </Link>
           <Link 
             href="/tier" 
-            className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname === "/tier" || pathname === "/tier-list" ? "text-primary" : "text-muted-foreground"}`}
+            className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname === "/tier" || pathname === "/tier-list" || pathname.startsWith("/modes") || pathname.startsWith("/maps") ? "text-primary" : "text-muted-foreground"}`}
           >
             <Trophy className="w-5 h-5" />
             <span className="text-[10px] font-medium">Tier表</span>

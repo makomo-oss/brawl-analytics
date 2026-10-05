@@ -6,6 +6,8 @@ import Image from "next/image"
 import { getModeIconUrl, translateMode } from "@/lib/translations"
 import { ArrowLeft, ArrowRight, BarChart3, MapPin, Swords, TrendingUp, TrendingDown, Trophy, Users } from "lucide-react"
 import type { BrawlerPageData, Cohort, CohortData, ConditionRow, PairRow } from "@/lib/brawler-page-data"
+import { conditionPath, MODE_SLUGS } from "@/lib/condition-pages"
+import DocumentLink from "@/components/document-link"
 
 const count = (value: number) => value.toLocaleString("ja-JP")
 const percent = (value: number) => `${value.toFixed(1)}%`
@@ -34,7 +36,8 @@ function ConditionTable({ rows, kind }: { rows: ConditionRow[]; kind: "モード
       <th scope="row" className="text-left py-3 font-bold text-zinc-200">
         <span className="flex items-center gap-2">
           {kind === "モード" && <Image src={getModeIconUrl(row.id)} alt="" width={24} height={24} className="w-6 h-6 object-contain shrink-0 drop-shadow-md" />}
-          <span>{row.label}</span>
+          {(kind === "モード" || row.modeIds?.some(mode => MODE_SLUGS[mode])) && conditionPath(kind === "モード" ? "modes" : "maps", row.id)
+            ? <DocumentLink href={conditionPath(kind === "モード" ? "modes" : "maps", row.id)!} className="hover:text-primary hover:underline">{row.label}</DocumentLink> : <span>{row.label}</span>}
         </span>
         {kind === "マップ" && <span className="flex flex-wrap gap-x-3 gap-y-1 mt-1 text-[10px] sm:text-xs font-normal text-muted-foreground">
           {row.modeIds?.length ? row.modeIds.map(mode => {

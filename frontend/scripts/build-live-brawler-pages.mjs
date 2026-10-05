@@ -19,6 +19,17 @@ const { brawlerEntries } = await import(`data:text/javascript;base64,${Buffer.fr
 for (const { name, slug } of brawlerEntries(snapshot)) {
   await writeFile(resolve(snapshotDir, `${slug}.json`), JSON.stringify(compact(name)))
 }
+const conditionModule = await build({ entryPoints: ["src/lib/condition-pages.ts"], bundle: true, format: "esm", platform: "node", write: false })
+const { conditionIndex, conditionPage } = await import(`data:text/javascript;base64,${Buffer.from(conditionModule.outputFiles[0].contents).toString("base64")}`)
+const conditionDirectory = conditionIndex(snapshot)
+const conditionDir = resolve(root, "out/__condition-snapshots")
+await mkdir(conditionDir, { recursive: true })
+await writeFile(resolve(conditionDir, "index.json"), JSON.stringify(conditionDirectory))
+for (const category of ["modes", "maps"]) {
+  await mkdir(resolve(conditionDir, category), { recursive: true })
+  await writeFile(resolve(conditionDir, `${category}.json`), JSON.stringify({ kind: "conditions", path: `/${category}`, category, index: conditionDirectory }))
+  for (const entry of conditionDirectory[category]) await writeFile(resolve(conditionDir, `${category}/${entry.slug}.json`), JSON.stringify({ kind: "condition", path: entry.path, data: conditionPage(snapshot, entry, conditionDirectory) }))
+}
 const hash = value => createHash("sha256").update(value).digest("hex").slice(0, 16)
 const common = {
   bundle: true, minify: true, format: "esm", platform: "browser", jsx: "automatic",
@@ -38,9 +49,9 @@ const links = [...html.matchAll(/<link\b[^>]*>/g)].map(match => match[0]).filter
   /rel="(?:stylesheet|icon|apple-touch-icon|shortcut icon)"/.test(link) || /as="font"/.test(link)).join("")
 const bodyClass = html.match(/<body class="([^"]*)"/)?.[1]
 if (!links.includes('rel="stylesheet"') || !bodyClass) throw new Error("Could not find the existing app stylesheet or font")
-const sources = await Promise.all(["edge/server.tsx", "edge/worker.ts", "src/lib/brawler-page-data.ts", "src/lib/seo.ts"].map(path => readFile(resolve(root, path), "utf8")))
+const sources = await Promise.all(["edge/server.tsx", "edge/worker.ts", "src/lib/brawler-page-data.ts", "src/lib/condition-pages.ts", "src/lib/seo.ts"].map(path => readFile(resolve(root, path), "utf8")))
 await mkdir(resolve(root, "edge"), { recursive: true })
 await writeFile(resolve(root, "edge/generated-shell.json"), JSON.stringify({ links, bodyClass, client: clientPath, version: hash(output.toString() + sources.join("") + links + bodyClass) }))
 await build({ ...common, entryPoints: ["edge/worker.ts"], outfile: "out/_worker.js" })
-await writeFile(resolve(root, "out/_routes.json"), JSON.stringify({ version: 1, include: ["/brawlers", "/brawlers/*", "/sitemap.xml"], exclude: [] }))
+await writeFile(resolve(root, "out/_routes.json"), JSON.stringify({ version: 1, include: ["/brawlers", "/brawlers/*", "/modes", "/modes/*", "/maps", "/maps/*", "/sitemap.xml"], exclude: [] }))
 console.log(`Live character pages built: ${clientPath}`)

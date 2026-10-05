@@ -21,6 +21,7 @@ export interface BrawlerSnapshot {
   details: Record<Cohort, Record<string, CharacterDetail>>
   contexts: Record<Cohort, Record<"modes" | "maps", Record<string, Record<string, CharacterStats>>>>
   mapModes?: Record<Cohort, Record<string, string[]>>
+  contextUpdatedAt?: Record<Cohort, Record<"modes" | "maps", Record<string, string | null>>>
 }
 export interface ConditionRow extends CharacterStats { id: string; label: string; modeIds?: string[] }
 export interface PairRow { name: string; slug: string; nameJa: string; imageUrl: string; win_rate: number; matches: number; lift?: number }

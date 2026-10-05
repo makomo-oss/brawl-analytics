@@ -29,7 +29,7 @@ export async function prepareBrawlerPages(api, directory) {
   if (!api) throw new Error('NEXT_PUBLIC_API_URL is required to build character pages')
   const catalog = await fetchData(api, '/meta/brawlers', data => Array.isArray(data?.brawlers) && data.brawlers.length > 0 && data.brawlers.every(row =>
     typeof row.name === 'string' && typeof row.nameJa === 'string' && typeof row.imageUrl === 'string' && /^https:\/\/cdn\.brawlify\.com\/.*\.png$/.test(row.imageUrl)))
-  const snapshot = { overview: {}, details: {}, contexts: {}, mapModes: {}, catalog: catalog.brawlers }
+  const snapshot = { overview: {}, details: {}, contexts: {}, contextUpdatedAt: {}, mapModes: {}, catalog: catalog.brawlers }
   const jobs = []
   for (const type of ['global', 'gachi']) {
     const overview = await fetchData(api, `/meta/tier-list?type=${type}&rank_tier=all`, validTier)
@@ -37,6 +37,7 @@ export async function prepareBrawlerPages(api, directory) {
     snapshot.overview[type] = overview
     snapshot.details[type] = {}
     snapshot.contexts[type] = { modes: {}, maps: {} }
+    snapshot.contextUpdatedAt[type] = { modes: {}, maps: {} }
     const categories = await fetchData(api, `/meta/categories?type=${type}`, data =>
       Array.isArray(data?.modes) && Array.isArray(data?.maps) && [...data.modes, ...data.maps].every(id => typeof id === 'string') &&
       !!data.mode_to_maps && typeof data.mode_to_maps === 'object' && !Array.isArray(data.mode_to_maps) &&
@@ -61,6 +62,7 @@ export async function prepareBrawlerPages(api, directory) {
         jobs.push(async () => {
           const data = await fetchData(api, `/meta/tier-list?type=${type}&rank_tier=all&sub_type=${kind}&id=${encodeURIComponent(id)}`, validTier)
           snapshot.contexts[type][`${kind}s`][id] = data.characters
+          snapshot.contextUpdatedAt[type][`${kind}s`][id] = data.updated_at
         })
       }
     }

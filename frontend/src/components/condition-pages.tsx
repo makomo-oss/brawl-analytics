@@ -1,0 +1,61 @@
+"use client"
+
+import { useState } from "react"
+import Link from "@/components/document-link"
+import Image from "next/image"
+import { ArrowRight, MapPin, Trophy } from "lucide-react"
+import type { Cohort } from "@/lib/brawler-page-data"
+import { conditionBreadcrumbs, type ConditionEntry, type ConditionIndex, type ConditionPageData } from "@/lib/condition-pages"
+import { getModeIconUrl, translateMode } from "@/lib/translations"
+
+const card = "rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-4 sm:p-6"
+const heading = "text-2xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-primary via-purple-400 to-cyan-400 bg-clip-text text-transparent"
+function Breadcrumbs({ entry, kind }: { entry?: ConditionEntry; kind: "modes" | "maps" }) {
+  const items = conditionBreadcrumbs(entry, kind)
+  return <nav aria-label="パンくず" className="flex flex-wrap gap-2 text-xs text-muted-foreground">{items.map((item, i) => <span key={item.path} className="inline-flex gap-2">
+    {i > 0 && <span aria-hidden="true">/</span>}{i === items.length - 1 ? <span aria-current="page">{item.name}</span> : <Link prefetch={false} className="hover:text-primary" href={item.path}>{item.name}</Link>}
+  </span>)}</nav>
+}
+function ModeIcons({ entry }: { entry: ConditionEntry }) {
+  return <span className="flex flex-wrap gap-2">{entry.modeIds.map(id => <span key={id} className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+    <Image src={getModeIconUrl(id)} alt="" width={20} height={20} className="w-5 h-5 object-contain" />{entry.kind === "maps" && translateMode(id)}
+  </span>)}</span>
+}
+function EntryLinks({ entries }: { entries: ConditionEntry[] }) {
+  return <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">{entries.map(entry => <li key={entry.path}>
+    <Link prefetch={false} href={entry.path} className="group flex items-center gap-3 rounded-xl border border-zinc-800/80 bg-zinc-900/40 p-4 hover:border-purple-500/40 hover:bg-primary/5 transition-colors h-full">
+      <span className="min-w-0 space-y-1"><span className="block font-bold text-zinc-200 group-hover:text-primary">{entry.label}</span><ModeIcons entry={entry} /></span><ArrowRight aria-hidden="true" className="w-4 h-4 ml-auto shrink-0 text-muted-foreground" />
+    </Link>
+  </li>)}</ul>
+}
+export function ConditionDirectoryView({ index, kind }: { index: ConditionIndex; kind: "modes" | "maps" }) {
+  return <div className="space-y-6 sm:space-y-8"><Breadcrumbs kind={kind} /><h1 className={heading}>{kind === "modes" ? "モード別キャラランキング" : "マップ別キャラランキング"}</h1>
+    <div className="flex gap-3 text-sm font-bold"><Link prefetch={false} href="/modes" aria-current={kind === "modes" ? "page" : undefined} className="rounded-lg border border-primary/20 px-4 py-2 text-primary hover:bg-primary/10">モード一覧</Link><Link prefetch={false} href="/maps" aria-current={kind === "maps" ? "page" : undefined} className="rounded-lg border border-cyan-500/20 px-4 py-2 text-cyan-400 hover:bg-cyan-500/10">マップ一覧</Link></div>
+    <EntryLinks entries={index[kind]} />
+  </div>
+}
+export function ConditionDetailView({ data }: { data: ConditionPageData }) {
+  const [selected, setSelected] = useState<Cohort>(data.cohorts.global.rows.length ? "global" : "gachi")
+  return <div className="space-y-6 sm:space-y-8"><Breadcrumbs entry={data.entry} kind={data.entry.kind} />
+    <header className="space-y-3"><h1 className={`${heading} flex items-center gap-3`}>{data.entry.kind === "modes" && <Image src={getModeIconUrl(data.entry.modeIds[0])} alt="" width={40} height={40} className="w-10 h-10 object-contain shrink-0 drop-shadow-md" />}<span>{data.entry.label}のキャラランキング</span></h1>{data.entry.kind === "maps" && <ModeIcons entry={data.entry} />}</header>
+    <div role="tablist" aria-label="集計対象" className="grid grid-cols-2 gap-1.5 max-w-[600px] mx-auto rounded-xl bg-card/80 border border-border/50 p-1.5">
+      {(["global", "gachi"] as const).map(type => <button key={type} type="button" role="tab" id={`${type}-tab`} aria-selected={selected === type} aria-controls={`${type}-panel`} tabIndex={selected === type ? 0 : -1} onClick={() => setSelected(type)}
+        onKeyDown={event => { if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return; event.preventDefault(); const next = event.key === "Home" ? "global" : event.key === "End" ? "gachi" : selected === "global" ? "gachi" : "global"; setSelected(next); document.getElementById(`${next}-tab`)?.focus() }}
+        className={`rounded-lg px-2 py-3 text-sm font-bold transition-colors ${selected === type ? "bg-secondary/60 text-foreground" : "text-muted-foreground hover:bg-secondary/30"}`}>{type === "global" ? "全体" : "ガチバトル（エリート以上）"}</button>)}
+    </div>
+    {(["global", "gachi"] as const).map(type => <section key={type} role="tabpanel" id={`${type}-panel`} aria-labelledby={`${type}-tab`} hidden={selected !== type} className={card}>
+      <h2 className="flex items-center gap-2 font-bold text-lg"><Trophy aria-hidden="true" className="w-5 h-5 text-yellow-500" />最強キャラ・勝率</h2>
+      {data.cohorts[type].updatedAt && <p className="text-xs text-muted-foreground mt-2">最終更新：<time dateTime={data.cohorts[type].updatedAt!}>{new Date(data.cohorts[type].updatedAt!).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })}（日本時間）</time></p>}
+      {data.cohorts[type].rows.length ? <div className="overflow-x-auto mt-3"><table className="w-full text-sm"><thead><tr className="text-xs text-muted-foreground border-b border-border/50">
+        {["順位", "キャラ", "勝率", "使用率", "集計件数"].map((name, i) => <th key={name} scope="col" className={`py-3 px-2 font-medium whitespace-nowrap ${i < 2 ? "text-left" : "text-right"}`}>{name}</th>)}
+      </tr></thead><tbody>{data.cohorts[type].rows.map((row, i) => <tr key={row.slug} className="border-b border-border/30 last:border-0 hover:bg-primary/5">
+        <td className="py-3 px-2 font-black text-primary tabular-nums">{row.sample_sufficient ? i + 1 : "—"}</td>
+        <th scope="row" className="py-3 px-2 text-left"><Link prefetch={false} href={`/brawlers/${row.slug}`} className="inline-flex items-center gap-2 font-bold hover:text-primary whitespace-nowrap">{row.imageUrl && <Image src={row.imageUrl} alt="" width={32} height={32} loading="lazy" className="w-8 h-8 rounded-lg border border-primary/20" />}{row.nameJa}</Link></th>
+        <td className={`py-3 px-2 text-right font-black tabular-nums ${row.win_rate >= 50 ? "text-green-500" : "text-orange-500"}`}>{row.win_rate.toFixed(1)}%{!row.sample_sufficient && <span className="block text-[10px] font-normal text-muted-foreground whitespace-nowrap">データ不足</span>}</td>
+        <td className="py-3 px-2 text-right tabular-nums whitespace-nowrap">{row.use_rate.toFixed(2)}%</td><td className="py-3 px-2 text-right tabular-nums text-muted-foreground">{row.total_matches.toLocaleString("ja-JP")}</td>
+      </tr>)}</tbody></table></div> : <p className="py-6 text-sm text-muted-foreground">データ不足</p>}
+    </section>)}
+    {data.related.length > 0 && <section className="space-y-3"><h2 className="font-bold text-lg flex items-center gap-2"><MapPin aria-hidden="true" className="w-5 h-5 text-cyan-400" />{data.entry.kind === "modes" ? "マップ別ランキング" : "モード別ランキング"}</h2><EntryLinks entries={data.related} /></section>}
+    <Link href="/tier" className="inline-block text-sm font-bold text-primary hover:underline">Tier表</Link>
+  </div>
+}

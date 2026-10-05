@@ -7,6 +7,7 @@
     "build": "wrangler types && tsc --project edge/tsconfig.json --noEmit && next build && node scripts/build-live-brawler-pages.mjs",
     "start": "next start",
     "test:live-brawlers": "node scripts/test-live-brawler-pages.mjs",
+    "test:condition-pages": "node scripts/test-condition-pages.mjs",
     "test:public-stats-cache": "node scripts/test-public-stats-cache.mjs",
     "test:matchup-preview": "node scripts/test-matchup-preview.mjs",
     "test:draft-data": "node scripts/test-draft-data.mjs",

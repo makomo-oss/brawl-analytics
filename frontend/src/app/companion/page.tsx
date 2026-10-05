@@ -1,9 +1,10 @@
 "use client"
 
-import { fetchPublicStats } from "@/lib/public-stats-cache"
+import { fetchPublicStats, getCachedPublicStats } from "@/lib/public-stats-cache"
+import { draftDataUrls, cachedDraftDetails, fetchDraftBase, fetchDraftDetails, prefetchDraftData } from "@/lib/draft-data"
 
 import { useBrawlerCatalog } from "@/lib/use-brawler-catalog"
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useRef } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
@@ -65,6 +66,11 @@ export default function DraftCompanionPage() {
   const [metaData, setMetaData] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [detailsReady, setDetailsReady] = useState(false)
+  const [detailsError, setDetailsError] = useState("")
+  const draftRequestRef = useRef(0)
+
+  useEffect(() => () => { ++draftRequestRef.current }, [])
 
   // 初期ロード：カテゴリの取得
   useEffect(() => {
@@ -97,6 +103,12 @@ export default function DraftCompanionPage() {
     }
   }, [availableMaps, selectedMap])
 
+  useEffect(() => {
+    if (phase !== "setup" || !selectedMode || !selectedMap || !availableMaps.includes(selectedMap)) return
+    const timer = setTimeout(() => prefetchDraftData(draftDataUrls(API_URL, selectedMode, selectedMap)), 150)
+    return () => clearTimeout(timer)
+  }, [phase, selectedMode, selectedMap, availableMaps])
+
   // 検索クエリに基づきキャラクターを高速フィルタリング (ひらがな・カタカナ・英語・ローマ字対応)
   const filteredBrawlers = useMemo(() => {
     const allChars = Object.keys(BRAWLER_MAP)
@@ -123,29 +135,65 @@ export default function DraftCompanionPage() {
     })
   }, [charSearchQuery, catalogRevision])
 
-  // ドラフト開始時にメタデータをフェッチ
+  const dataErrorMessage = (err: unknown) => err instanceof TypeError
+    ? "通信に失敗しました。時間をおいて再試行してください。"
+    : err instanceof Error && (err.message.startsWith("Statistics API") || err.name === "TimeoutError")
+      ? "データを取得できませんでした。時間をおいて再試行してください。"
+    : err instanceof Error ? err.message : "データを取得できませんでした"
+
+  // BAN needs map scores only. Load Pick's pair matrix in the background.
   const handleStartDraft = async () => {
+    const requestId = ++draftRequestRef.current
+    const urls = draftDataUrls(API_URL, selectedMode, selectedMap)
     setLoading(true)
     setError("")
+    setDetailsError("")
+    setDetailsReady(false)
+    const ready = cachedDraftDetails(urls)
+    // Attach both handlers immediately, including when the base request fails.
+    const details = ready ? Promise.resolve({ data: ready, error: null })
+      : fetchDraftDetails(urls).then(data => ({ data, error: null }), error => ({ data: null, error }))
     try {
-      const [data, modeData] = await Promise.all([
-        fetchPublicStats(`${API_URL}/meta/tier-list?type=gachi&sub_type=map&id=${encodeURIComponent(selectedMap)}&mode=${encodeURIComponent(selectedMode)}&include_details=true&include_matchup_fallback=false`),
-        fetchPublicStats(`${API_URL}/meta/tier-list?type=gachi&sub_type=mode&id=${encodeURIComponent(selectedMode)}`)
-      ])
+      const data = ready || getCachedPublicStats(urls.base) || await fetchDraftBase(urls)
+      if (requestId !== draftRequestRef.current) return
       if (!Object.keys(data.characters ?? {}).length) throw new Error("このマップのガチバトルデータが不足しています。別のマップを選択してください。")
-      for (const [name, stats] of Object.entries<any>(data.characters)) {
-        stats.mode_score = modeData.characters?.[name]?.score ?? 50
-      }
       setMetaData(data)
+      setDetailsReady(!!ready)
       setPhase("ban")
+      void details.then(result => {
+        if (requestId !== draftRequestRef.current) return
+        if (result.error) setDetailsError(dataErrorMessage(result.error))
+        else {
+          setMetaData(result.data)
+          setDetailsReady(true)
+        }
+      })
     } catch (err) {
-      setError(err instanceof TypeError ? "通信に失敗しました。時間をおいて再試行してください。" : err instanceof Error ? err.message : "データを取得できませんでした")
+      if (requestId === draftRequestRef.current) setError(dataErrorMessage(err))
     } finally {
-      setLoading(false)
+      if (requestId === draftRequestRef.current) setLoading(false)
+    }
+  }
+
+  const retryDraftDetails = async () => {
+    const requestId = ++draftRequestRef.current
+    setDetailsError("")
+    try {
+      const data = await fetchDraftDetails(draftDataUrls(API_URL, selectedMode, selectedMap))
+      if (requestId !== draftRequestRef.current) return
+      setMetaData(data)
+      setDetailsReady(true)
+    } catch (err) {
+      if (requestId === draftRequestRef.current) setDetailsError(dataErrorMessage(err))
     }
   }
 
   const handleReset = () => {
+    ++draftRequestRef.current
+    setLoading(false)
+    setError("")
+    setDetailsReady(false)
+    setDetailsError("")
     setPhase("setup")
     setAllyBans([])
     setEnemyBans([])
@@ -181,6 +229,7 @@ export default function DraftCompanionPage() {
 
   // キャラクターを選択したときの処理
   const handleSelectCharacter = (charName: string) => {
+    if (phase === "pick" && !detailsReady) return
     if (phase === "ban") {
       if (currentTurnTeam === myTeam) {
         const newBans = [...allyBans, charName]
@@ -276,6 +325,7 @@ export default function DraftCompanionPage() {
   // サジェスト計算ロジック (4軸統合エンジン: マップ・モード・対面・味方シナジー)
   const suggestions = useMemo(() => {
     if (!metaData || !metaData.characters) return []
+    if (phase === "pick" && !detailsReady) return []
     
     const chars = metaData.characters
     const results = []
@@ -424,7 +474,7 @@ export default function DraftCompanionPage() {
     }
     
     return []
-  }, [phase, allyBans, enemyBans, bluePicks, redPicks, metaData, enemyPicks, allyPicks, selectedMode])
+  }, [phase, allyBans, enemyBans, bluePicks, redPicks, metaData, enemyPicks, allyPicks, selectedMode, detailsReady])
 
   // 4軸統合による高精度勝率予測計算 (詳細メトリクス付き)
   const predictionStats = useMemo(() => {
@@ -523,7 +573,7 @@ export default function DraftCompanionPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-3">
                 <label className="text-sm font-bold">モード</label>
-                <Select value={selectedMode} onValueChange={(val) => setSelectedMode(val || "")}>
+                <Select disabled={loading} value={selectedMode} onValueChange={(val) => setSelectedMode(val || "")}>
                   <SelectTrigger className="bg-secondary/50">
                     <SelectValue placeholder="モードを選択">
                       {selectedMode ? translateMode(selectedMode) : "モードを選択"}
@@ -538,7 +588,7 @@ export default function DraftCompanionPage() {
               </div>
               <div className="space-y-3">
                 <label className="text-sm font-bold">マップ</label>
-                <Select value={selectedMap} onValueChange={(val) => setSelectedMap(val || "")}>
+                <Select disabled={loading} value={selectedMap} onValueChange={(val) => setSelectedMap(val || "")}>
                   <SelectTrigger className="bg-secondary/50">
                     <SelectValue placeholder="マップを選択">
                       {selectedMap ? translateMap(selectedMap) : "マップを選択"}
@@ -868,7 +918,7 @@ export default function DraftCompanionPage() {
                         const info = getBrawlerInfo(charName)
                         const excluded = isExcluded(charName)
                         return (
-                          <button type="button" disabled={excluded} aria-label={info.nameJa}
+                          <button type="button" disabled={excluded || (phase === "pick" && !detailsReady)} aria-label={info.nameJa}
                             key={charName} 
                             onClick={() => !excluded && handleSelectCharacter(charName)}
                             className={`flex flex-col items-center justify-center min-h-[44px] min-w-[44px] gap-1 cursor-pointer transition-all hover:scale-105 group ${excluded ? 'opacity-20 cursor-not-allowed grayscale' : ''}`}
@@ -917,6 +967,13 @@ export default function DraftCompanionPage() {
                 <div className="p-8 text-center text-muted-foreground">
                   ドラフトが完了しました。試合の健闘を祈ります！
                   <Button className="mt-4" onClick={handleReset}>新しいドラフトを始める</Button>
+                </div>
+              ) : phase === "pick" && !detailsReady ? (
+                <div className="p-4 text-sm text-muted-foreground" role="status">
+                  {detailsError ? <>
+                    <p role="alert" className="text-destructive">{detailsError}</p>
+                    <Button variant="outline" size="sm" className="mt-3" onClick={retryDraftDetails}>再試行</Button>
+                  </> : "データ読み込み中..."}
                 </div>
               ) : (
                 <ScrollArea className="h-[400px] lg:h-[600px] px-4">

@@ -9,6 +9,7 @@
     "test:live-brawlers": "node scripts/test-live-brawler-pages.mjs",
     "test:public-stats-cache": "node scripts/test-public-stats-cache.mjs",
     "test:matchup-preview": "node scripts/test-matchup-preview.mjs",
+    "test:draft-data": "node scripts/test-draft-data.mjs",
     "test:brawler-directory": "node scripts/test-brawler-directory.mjs",
     "test:player-brawler-sort": "node scripts/test-player-brawler-sort.mjs",
     "test:brawler-preview-link": "node scripts/test-brawler-preview-link.mjs",

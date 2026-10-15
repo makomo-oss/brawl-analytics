@@ -247,6 +247,13 @@ const worker = {
     // pages. It avoids blocking a first visit on a cold statistics backend.
     if (!cached) {
       try {
+        // Export caches can contain an old document for a now-ineligible map.
+        // Only current inventory members may use a build fallback; other URLs
+        // resolve live, preserving their current noindex or missing status.
+        if (isCondition && path !== "/modes" && path !== "/maps") {
+          const inventory = await buildConditionManifest(env, url.origin)
+          if (![...inventory.modes, ...inventory.maps].some(entry => entry.path === path)) throw new Error("No eligible build fallback")
+        }
         // Ready-to-serve documents avoid parsing and rendering the same build
         // snapshot on every cold edge location (including during API outages).
         const document = path === "/sitemap.xml" ? null : await env.ASSETS.fetch(new Request(`${url.origin}/__rendered-pages${path === "/" ? "/index" : path}.document`))

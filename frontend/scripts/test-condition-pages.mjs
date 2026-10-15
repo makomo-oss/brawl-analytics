@@ -3,8 +3,8 @@ import { readFile } from "node:fs/promises"
 import { build } from "esbuild"
 import { fileURLToPath } from "node:url"
 
-const module = await build({ entryPoints: ["src/lib/condition-pages.ts"], bundle: true, format: "esm", platform: "node", write: false })
-const { conditionIndex, conditionPage, conditionSchema, mapSlug } = await import(`data:text/javascript;base64,${Buffer.from(module.outputFiles[0].contents).toString("base64")}`)
+const conditionBundle = await build({ entryPoints: ["src/lib/condition-pages.ts"], bundle: true, format: "esm", platform: "node", write: false })
+const { conditionIndex, conditionPage, conditionSchema, mapSlug } = await import(`data:text/javascript;base64,${Buffer.from(conditionBundle.outputFiles[0].contents).toString("base64")}`)
 const snapshot = JSON.parse(await readFile(".seo-data/brawler-pages.json", "utf8"))
 const index = conditionIndex(snapshot)
 const entries = [...index.modes, ...index.maps]
@@ -34,6 +34,9 @@ globalThis.caches = { open: async () => ({ match: async request => cache.get(req
 const ctx = { waitUntil: promise => pending.push(promise) }
 const env = { NEXT_PUBLIC_API_URL: "https://test-statistics.example", ASSETS: { fetch: async request => {
   const path = new URL(request.url).pathname
+  // Simulate a stale export left by a previous deployment. This URL is absent
+  // from the current build inventory and must be evaluated against live data.
+  if (path === "/__rendered-pages/maps/future-arena.document") return new Response('<title>Retired export</title><meta name="robots" content="index, follow">')
   try { return new Response(await readFile(`out${path}`), { headers: { "Content-Type": path.endsWith(".json") ? "application/json" : "text/html" } }) }
   catch { return new Response("<h1>404</h1>", { status: 404 }) }
 } } }

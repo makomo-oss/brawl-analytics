@@ -1,9 +1,16 @@
 import { build } from "esbuild"
-import { readFile, writeFile, mkdir } from "node:fs/promises"
+import { readFile, writeFile, mkdir, rm } from "node:fs/promises"
 import { resolve } from "node:path"
 import { createHash } from "node:crypto"
 
 const root = process.cwd()
+// Next's export can retain directories that this script generated previously.
+// Remove only our generated assets so retired/low-sample URLs cannot reuse them.
+for (const name of ["__overview-snapshots", "__brawler-snapshots", "__condition-snapshots", "__rendered-pages", "data"]) {
+  const target = resolve(root, "out", name)
+  if (!target.startsWith(resolve(root, "out") + (process.platform === "win32" ? "\\" : "/"))) throw new Error("Invalid generated asset directory")
+  await rm(target, { recursive: true, force: true })
+}
 const llmModule = await build({ entryPoints: ["src/lib/llm-data.ts"], bundle: true, format: "esm", platform: "node", write: false })
 const { publicData, publicCatalog, dataPath } = await import(`data:text/javascript;base64,${Buffer.from(llmModule.outputFiles[0].contents).toString("base64")}`)
 async function writeData(page) {

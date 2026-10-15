@@ -428,8 +428,8 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <Card className="relative z-50 bg-card border-primary/20 shadow-sm overflow-visible">
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle>{searchMode === "player" ? "プレイヤー同期" : "クラブ検索"}</CardTitle>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <CardTitle>{searchMode === "player" ? "戦績検索" : "クラブ検索"}</CardTitle>
             <div className="flex bg-secondary/80 p-1 rounded-lg border border-primary/10">
               <Button
                 variant={searchMode === "player" ? "default" : "ghost"}
@@ -466,9 +466,9 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
         <CardContent>
           <div className="flex flex-col gap-4 max-w-md relative z-50" ref={searchContainerRef}>
             {searchMode === "player" ? (
-              <div className="relative flex gap-4 w-full">
+              <div className="relative flex gap-2 sm:gap-4 w-full">
                 <Input 
-                  placeholder="プレイヤータグまたは名前" 
+                  aria-label="プレイヤータグまたは名前" placeholder="プレイヤータグまたは名前"
                   value={playerTag}
                   onChange={(e) => {
                     setPlayerTag(e.target.value)
@@ -490,11 +490,11 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                   }}
                   className="bg-background"
                 />
-                <Button onClick={() => handleSync()} disabled={loading} className="px-8 shadow-lg shadow-primary/20">
+                <Button onClick={() => handleSync()} disabled={loading} className="px-4 sm:px-8 shrink-0 shadow-lg shadow-primary/20">
                   {loading ? "取得中..." : (
                     <>
                       <Search className="w-4 h-4 mr-2" />
-                      同期
+                      検索
                     </>
                   )}
                 </Button>
@@ -561,7 +561,7 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                 )}
               </div>
             ) : (
-              <div className="relative flex gap-4 w-full">
+              <div className="relative flex gap-2 sm:gap-4 w-full">
                 <Input 
                   placeholder="クラブ名 または タグ(#CLUB123)" 
                   value={clubInput}
@@ -585,7 +585,7 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                   }}
                   className="bg-background"
                 />
-                <Button onClick={() => handleSyncClub()} disabled={loadingClub} className="px-8 shadow-lg shadow-primary/20">
+                <Button onClick={() => handleSyncClub()} disabled={loadingClub} className="px-4 sm:px-8 shrink-0 shadow-lg shadow-primary/20">
                   {loadingClub ? "検索中..." : (
                     <>
                       <Search className="w-4 h-4 mr-2" />

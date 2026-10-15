@@ -2,5 +2,7 @@ User-agent: *
 Allow: /
 Disallow: /__brawler-snapshots/
 Disallow: /__condition-snapshots/
+Disallow: /__overview-snapshots/
+Disallow: /__rendered-pages/
 
 Sitemap: https://brawl-lab.sozai-hub.com/sitemap.xml

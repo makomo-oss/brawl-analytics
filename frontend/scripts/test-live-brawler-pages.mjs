@@ -36,7 +36,9 @@ globalThis.fetch = async input => {
   if (hold) await hold
   if (offline) return new Response("offline", { status: 503 })
   if (failures > 0) { failures--; return new Response("transient failure", { status: 503 }) }
-  const path = new URL(input).pathname
+  const url = new URL(input), path = url.pathname
+  const type = url.searchParams.get("type") || "global"
+  if (path === "/meta/categories") return Response.json({mode_to_maps:{}})
   if (path === "/meta/brawlers") return Response.json({ brawlers: [...snapshot.catalog, { name: "Future New Hero", nameJa: "新キャラ<テスト>", imageUrl: "", rarity: {id:7,name:"Ultra Legendary"} }] })
   const data = structuredClone(snapshot)
   if (future) {

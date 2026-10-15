@@ -63,6 +63,11 @@ globalThis.fetch = async input => {
   if (held) await held
   if (offline) return new Response("offline", { status: 503 })
   const url = new URL(input), type = url.searchParams.get("type") || "global"
+  if (url.pathname === "/meta/categories") {
+    const mode_to_maps = Object.fromEntries(Object.keys(snapshot.contexts[type].modes).map(mode => [mode, []]))
+    for (const [id, modes] of Object.entries(snapshot.mapModes[type])) for (const mode of modes) if (mode_to_maps[mode] && snapshot.contexts[type].maps[id]) mode_to_maps[mode].push(id)
+    return Response.json({ mode_to_maps })
+  }
   if (url.pathname === "/meta/brawlers") return Response.json({ brawlers: [...snapshot.catalog, { name: "Future New Hero", nameJa: "新キャラ<テスト>", imageUrl: "" }] })
   const data = structuredClone(snapshot)
   for (const cohort of ["global", "gachi"]) {

@@ -1,5 +1,8 @@
 "use client"
 
+import { RankingNav } from "@/components/feature-entrances"
+import { normalizeDate } from "@/lib/condition-pages"
+
 import { useBrawlerCatalog } from "@/lib/use-brawler-catalog"
 import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -15,7 +18,7 @@ import { getBrawlerInfo, BRAWLER_MAP } from "@/lib/brawlers"
 import { translateMode, translateMap } from "@/lib/translations"
 import { API_URL } from "@/lib/config"
 import type { TierListData } from "@/lib/tier-data"
-import Link from "next/link"
+import Link from "@/components/document-link"
 import { brawlerPath } from "@/lib/brawler-paths"
 import { BrawlerDirectoryLink } from "@/components/brawler-directory-link"
 import { BrawlerPreviewLink } from "@/components/brawler-preview-link"
@@ -215,7 +218,8 @@ export default function TierListPage({ initialTierData, initialMatchups }: { ini
     void fetchPublicStats(characterDetailUrl(API_URL, name, selectedType, selectedRankTier, subType, selectedId)).catch(() => {})
   }
 
-  const updatedAt = tierData?.updated_at ? new Date(tierData.updated_at) : null
+  const updatedStamp = normalizeDate(tierData?.updated_at ?? null)
+  const updatedAt = updatedStamp ? new Date(updatedStamp) : null
   const updatedLabel = updatedAt && Number.isFinite(updatedAt.getTime())
     ? new Intl.DateTimeFormat("ja-JP", {
         timeZone: "Asia/Tokyo", year: "numeric", month: "2-digit", day: "2-digit",
@@ -232,8 +236,7 @@ export default function TierListPage({ initialTierData, initialMatchups }: { ini
           ブロスタ最強キャラ・ティア表
         </h1>
         <div className="flex flex-wrap gap-2">
-        <DocumentLink href="/modes" className="inline-flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-sm font-bold text-primary hover:bg-primary/10 transition-colors">モード別</DocumentLink>
-        <DocumentLink href="/maps" className="inline-flex items-center gap-2 rounded-lg border border-cyan-500/20 bg-cyan-500/5 px-3 py-2 text-sm font-bold text-cyan-400 hover:bg-cyan-500/10 transition-colors">マップ別</DocumentLink>
+        <RankingNav current="tier" />
         <BrawlerDirectoryLink className="inline-flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-sm font-bold text-primary hover:bg-primary/10 transition-colors">
           <Users aria-hidden="true" className="w-4 h-4" />キャラ一覧<ArrowRight aria-hidden="true" className="w-3.5 h-3.5" />
         </BrawlerDirectoryLink>

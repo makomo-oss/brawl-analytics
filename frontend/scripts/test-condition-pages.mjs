@@ -26,6 +26,7 @@ const bundle = await build({ entryPoints: ["edge/worker.ts"], bundle: true, form
   alias: Object.fromEntries(["link", "image", "navigation"].map(name => [`next/${name}`, fileURLToPath(new URL(`../edge/${name}.tsx`, import.meta.url))])), define: { "process.env.NODE_ENV": '"production"' } })
 const { default: worker } = await import(`data:text/javascript;base64,${Buffer.from(bundle.outputFiles[0].contents).toString("base64")}`)
 const original = { fetch: globalThis.fetch, caches: globalThis.caches, now: Date.now }
+let fetchCount = 0
 let now = 1_800_000_000_000, held = null, sufficient = true, offline = false
 Date.now = () => now
 const cache = new Map(), pending = []
@@ -37,14 +38,20 @@ const env = { NEXT_PUBLIC_API_URL: "https://test-statistics.example", ASSETS: { 
   catch { return new Response("<h1>404</h1>", { status: 404 }) }
 } } }
 globalThis.fetch = async input => {
+  fetchCount++
   if (held) await held
   if (offline) return new Response("offline", { status: 503 })
   const url = new URL(input), type = url.searchParams.get("type") || "global"
   if (url.pathname === "/meta/brawlers") return Response.json({ brawlers: snapshot.catalog })
-  if (url.pathname === "/meta/categories") return Response.json({ mode_to_maps: { brawlBall: ["Future Arena"] } })
+  if (url.pathname === "/meta/categories") {
+    const mode_to_maps = Object.fromEntries(index.modes.filter(row => row.ids[type]).map(row => [row.ids[type], []]))
+    for (const [id, modes] of Object.entries(snapshot.mapModes[type])) for (const mode of modes) if (mode_to_maps[mode]) mode_to_maps[mode].push(id)
+    ;(mode_to_maps.brawlBall ||= []).push("Future Arena")
+    return Response.json({ mode_to_maps })
+  }
   if (url.pathname === "/meta/tier-list") {
     const kind = url.searchParams.get("sub_type") === "mode" ? "modes" : "maps", id = url.searchParams.get("id")
-    const characters = id === "Future Arena" ? { amber: { ...snapshot.overview[type].characters.amber, sample_sufficient: sufficient } } : snapshot.contexts[type][kind][id]
+    const characters = id === "Future Arena" ? { amber: { ...snapshot.overview[type].characters.amber, sample_sufficient: sufficient } } : (snapshot.contexts[type][kind][id] || {})
     return Response.json({ tiers: { A: Object.keys(characters) }, characters, updated_at: "2026-10-05T12:00:00Z", metrics: { analyzed_matches: 1000 } })
   }
   return Response.json({ ...snapshot, details: { global: {}, gachi: {} }, contexts: { global: { modes: {}, maps: {} }, gachi: { modes: {}, maps: {} } } })
@@ -71,7 +78,28 @@ try {
   const sitemap = await (await request("/sitemap.xml")).text()
   for (const entry of entries) assert(sitemap.includes(entry.path), `Missing sitemap entry ${entry.path}`)
   await drain()
+  // Visit/refresh the hub until the complete bounded inventory is published.
+  for (let attempt = 0; attempt < 40; attempt++) {
+    const before = fetchCount
+    const html = await (await request("/maps")).text()
+    await drain()
+    assert(fetchCount - before <= 24, "Inventory refresh must stay bounded per visit")
+    if (html.includes('href="/maps/future-arena"')) break
+    now += 301_000; await drain()
+  }
+  assert.match(await (await request("/maps")).text(), /href="\/maps\/future-arena"/)
   sufficient = false
+  now += 301_000
+  for (let attempt = 0; attempt < 40; attempt++) {
+    await request("/maps"); await drain()
+    if (!(await (await request("/maps")).text()).includes('href="/maps/future-arena"')) break
+    now += 301_000
+  }
+  await request("/sitemap.xml"); await drain()
+  const currentSitemap = await (await request("/sitemap.xml")).text()
+  const currentMaps = await (await request("/maps")).text()
+  assert.doesNotMatch(currentSitemap, /<loc>[^<]*\/maps\/future-arena<\/loc>/)
+  assert.doesNotMatch(currentMaps, /href="\/maps\/future-arena"/)
   const future = await request("/maps/future-arena")
   assert.equal(future.status, 200)
   assert.match(await future.text(), /name="robots" content="noindex, follow"/)

@@ -14,6 +14,15 @@ async function writeData(page) {
 // Ship bounded per-character snapshots for an immediate first response while
 // the Worker refreshes live data. Newly discovered URLs still resolve via API.
 const snapshot = JSON.parse(await readFile(resolve(root, ".seo-data/brawler-pages.json"), "utf8"))
+const overviewDir = resolve(root, "out/__overview-snapshots")
+await mkdir(overviewDir, { recursive: true })
+for (const [kind, type] of [["home", "gachi"], ["tier", "global"]]) {
+  const rows = cohort => Object.fromEntries(Object.entries(snapshot.details[cohort]).map(([name, detail]) => [name, {
+    kamo: detail.kamo, tenteki: detail.tenteki, kamo_scope: detail.kamo_scope, tenteki_scope: detail.tenteki_scope,
+  }]))
+  const initialMatchups = { global: kind === "tier" ? rows("global") : {}, gachi: rows("gachi") }
+  await writeFile(resolve(overviewDir, `${kind}.json`), JSON.stringify({ kind, path: kind === "home" ? "/" : "/tier", tierData: snapshot.overview[type], initialMatchups }))
+}
 const snapshotDir = resolve(root, "out/__brawler-snapshots")
 await mkdir(snapshotDir, { recursive: true })
 const compact = name => ({ ...snapshot,
@@ -54,7 +63,7 @@ const common = {
   bundle: true, minify: true, format: "esm", platform: "browser", jsx: "automatic",
   tsconfig: resolve(root, "tsconfig.json"),
   alias: Object.fromEntries(["link", "image", "navigation"].map(name => [`next/${name}`, resolve(root, `edge/${name}.tsx`)])),
-  define: { "process.env.NODE_ENV": '"production"' },
+  define: { "process.env.NODE_ENV": '"production"', "process.env.NEXT_PUBLIC_API_URL": JSON.stringify(process.env.NEXT_PUBLIC_API_URL || "https://brawl-analytics-s000.onrender.com") },
 }
 const client = await build({ ...common, entryPoints: ["edge/client.tsx"], write: false })
 const output = client.outputFiles[0].contents
@@ -71,6 +80,22 @@ if (!links.includes('rel="stylesheet"') || !bodyClass) throw new Error("Could no
 const sources = await Promise.all(["edge/server.tsx", "edge/worker.ts", "edge/public-data.ts", "src/lib/llm-data.ts", "src/lib/site-schema.ts", "src/lib/brawler-page-data.ts", "src/lib/condition-pages.ts", "src/lib/seo.ts"].map(path => readFile(resolve(root, path), "utf8")))
 await mkdir(resolve(root, "edge"), { recursive: true })
 await writeFile(resolve(root, "edge/generated-shell.json"), JSON.stringify({ links, bodyClass, client: clientPath, version: hash(output.toString() + sources.join("") + links + bodyClass) }))
+// Pre-render the cold-start fallback using exactly the live renderer/payload.
+// Serving these bytes does not consume the edge CPU budget for a second SSR.
+const renderer = await build({ ...common, entryPoints: ["edge/server.tsx"], write: false })
+const { renderPage } = await import(`data:text/javascript;base64,${Buffer.from(renderer.outputFiles[0].contents).toString("base64")}`)
+async function writeDocument(page) {
+  const path = resolve(root, `out/__rendered-pages${page.path === "/" ? "/index" : page.path}.document`)
+  await mkdir(resolve(path, ".."), { recursive: true })
+  await writeFile(path, renderPage(page))
+}
+for (const page of directories) await writeDocument(page)
+for (const { slug } of brawlerEntries(snapshot)) await writeDocument({ kind: "detail", path: `/brawlers/${slug}`, data: brawlerPage(snapshot, slug) })
+for (const category of ["modes", "maps"]) for (const entry of conditionDirectory[category]) await writeDocument({ kind: "condition", path: entry.path, data: conditionPage(snapshot, entry, conditionDirectory) })
+for (const kind of ["home", "tier"]) await writeDocument(JSON.parse(await readFile(resolve(overviewDir, `${kind}.json`), "utf8")))
 await build({ ...common, entryPoints: ["edge/worker.ts"], outfile: "out/_worker.js" })
-await writeFile(resolve(root, "out/_routes.json"), JSON.stringify({ version: 1, include: ["/brawlers", "/brawlers/*", "/modes", "/modes/*", "/maps", "/maps/*", "/data/*", "/sitemap.xml"], exclude: [] }))
+await writeFile(resolve(root, "out/_routes.json"), JSON.stringify({ version: 1, include: ["/", "/tier", "/brawlers", "/brawlers/*", "/modes", "/modes/*", "/maps", "/maps/*", "/data/*", "/sitemap.xml"], exclude: [] }))
 console.log(`Live character pages built: ${clientPath}`)
+// Browser-oriented React UI dependencies may keep MessageChannels open in Node.
+// Every build/write above is awaited; this command has no remaining work.
+process.exit(0)

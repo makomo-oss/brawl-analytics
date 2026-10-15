@@ -2,7 +2,7 @@ import { brawlerEntries, brawlerPage, type BrawlerSnapshot, type CharacterStats 
 import { isTierListData } from "@/lib/tier-data"
 import { SITE_URL } from "@/lib/seo"
 import { renderPage, escapeHtml, runtimeVersion } from "./server"
-import { conditionPage, MODE_SLUGS, mapSlug, type ConditionEntry, type ConditionIndex } from "@/lib/condition-pages"
+import { conditionPage, conditionIndex, MODE_SLUGS, mapSlug, type ConditionEntry, type ConditionIndex } from "@/lib/condition-pages"
 import { translateMap, translateMode } from "@/lib/translations"
 import type { RuntimePage } from "./app"
 import { dataResponse } from "./public-data"
@@ -31,6 +31,7 @@ function validateSnapshot(value: unknown): asserts value is BrawlerSnapshot {
   if (!value || typeof value !== "object") throw new Error("Invalid statistics")
   const snapshot = value as BrawlerSnapshot
   if (!snapshot.overview || !isTierListData(snapshot.overview.global) || !isTierListData(snapshot.overview.gachi) ||
+      !Object.values(snapshot.overview).every(data => Object.values(data.characters).some(row => row.total_matches > 0)) ||
       !snapshot.details?.global || !snapshot.details.gachi || !snapshot.contexts?.global || !snapshot.contexts.gachi) throw new Error("Invalid statistics")
 }
 
@@ -63,14 +64,75 @@ async function inputs(env: Env, signal: AbortSignal) {
   return index
 }
 
-async function conditionManifest(env: Parameters<PagesFunction<Env>>[0]["env"], origin: string): Promise<ConditionIndex> {
+async function buildConditionManifest(env: Parameters<PagesFunction<Env>>[0]["env"], origin: string): Promise<ConditionIndex> {
   const value = await readJson(await env.ASSETS.fetch(new Request(`${origin}/__condition-snapshots/index.json`))) as ConditionIndex
   if (!Array.isArray(value.modes) || !Array.isArray(value.maps) || [...value.modes, ...value.maps].some(entry => !/^\/(?:modes|maps)\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(entry.path) || !entry.ids || !Array.isArray(entry.modeIds))) throw new Error("Invalid condition directory")
   return value
 }
 
+// Both hubs and the sitemap consume this one inventory. Only publish a complete
+// refresh; a failed scope request must not remove healthy URLs from the sitemap.
+async function conditionManifest(env: Parameters<PagesFunction<Env>>[0]["env"], origin: string, signal: AbortSignal): Promise<ConditionIndex> {
+  const cache = await caches.open("brawler-pages")
+  const key = new Request(`${origin}/__condition-index/${runtimeVersion}`)
+  const cached = await cache.match(key)
+  if (cached && Date.now() - Number(cached.headers.get("X-Brawler-Generated")) < FRESH_SECONDS * 1000) return await readJson(cached) as ConditionIndex
+  const snapshot = await inputs(env, signal)
+  const jobs: { type: "global" | "gachi"; kind: "modes" | "maps"; id: string }[] = []
+  for (const type of ["global", "gachi"] as const) {
+    const categories = await api(env, `/meta/categories?type=${type}`, signal) as { mode_to_maps: Record<string, string[]> }
+    if (!categories?.mode_to_maps || Object.values(categories.mode_to_maps).some(ids => !Array.isArray(ids) || ids.some(id => typeof id !== "string"))) throw new Error("Invalid condition inventory")
+    const mapModes: Record<string, string[]> = {}
+    const modes = Object.keys(categories.mode_to_maps).filter(id => MODE_SLUGS[id])
+    for (const mode of modes) for (const id of categories.mode_to_maps[mode]) (mapModes[id] ||= []).push(mode)
+    snapshot.mapModes ||= { global: {}, gachi: {} }
+    snapshot.mapModes[type] = mapModes
+    snapshot.contextUpdatedAt ||= { global: { modes: {}, maps: {} }, gachi: { modes: {}, maps: {} } }
+    for (const kind of ["modes", "maps"] as const) for (const id of kind === "modes" ? modes : Object.keys(mapModes)) jobs.push({ type, kind, id })
+  }
+  // A complete inventory can contain hundreds of scopes. Cache immutable chunks
+  // across visits instead of exceeding the per-invocation subrequest budget.
+  const signature = JSON.stringify([cached?.headers.get("X-Brawler-Generated") || "initial", snapshot.mapModes, Object.values(snapshot.overview).map(data => data.updated_at), jobs])
+  const generation = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(signature)))].map(byte => byte.toString(16).padStart(2, "0")).join("")
+  const chunkSize = 16
+  let fetchedChunk = false
+  for (let offset = 0; offset < jobs.length; offset += chunkSize) {
+    const chunkKey = new Request(`${origin}/__condition-index/${runtimeVersion}/${generation}/${offset}`)
+    const stored = await cache.match(chunkKey)
+    if (!stored && fetchedChunk) return cached ? await readJson(cached) as ConditionIndex : await buildConditionManifest(env, origin)
+    type Scope = typeof jobs[number] & { characters: Record<string, CharacterStats>; updatedAt: string | null }
+    let scopes: Scope[]
+    if (stored) scopes = await readJson(stored) as Scope[]
+    else {
+      const rows = jobs.slice(offset, offset + chunkSize)
+      scopes = []
+      const consume = async () => {
+        while (rows.length) {
+          const row = rows.shift()!
+          const data = await api(env, `/meta/tier-list?type=${row.type}&rank_tier=all&sub_type=${row.kind === "modes" ? "mode" : "map"}&id=${encodeURIComponent(row.id)}&include_details=false`, signal)
+          if (!isTierListData(data) || Object.values(data.characters).some(stats => !Number.isFinite(stats.total_matches) || stats.total_matches < 0 || typeof stats.sample_sufficient !== "boolean")) throw new Error("Invalid condition inventory statistics")
+          // Eligibility needs only one positive, preferably sufficient, real row.
+          const positive = Object.entries(data.characters).filter(([, stats]) => stats.total_matches > 0)
+          const selected = positive.find(([, stats]) => stats.sample_sufficient) || positive[0]
+          scopes.push({ ...row, characters: selected ? { [selected[0]]: selected[1] as CharacterStats } : {}, updatedAt: data.updated_at })
+        }
+      }
+      await Promise.all([consume(), consume()])
+      await cache.put(chunkKey, Response.json(scopes, { headers: { "Cache-Control": `public, max-age=${STALE_SECONDS}` } }))
+      fetchedChunk = true
+    }
+    for (const row of scopes) {
+      snapshot.contexts[row.type][row.kind][row.id] = row.characters
+      snapshot.contextUpdatedAt![row.type][row.kind][row.id] = row.updatedAt
+    }
+  }
+  const index = conditionIndex(snapshot)
+  await cache.put(key, Response.json(index, { headers: { "Cache-Control": `public, max-age=${STALE_SECONDS}`, "X-Brawler-Generated": String(Date.now()) } }))
+  return index
+}
+
 async function liveCondition(env: Parameters<PagesFunction<Env>>[0]["env"], origin: string, path: string, signal: AbortSignal): Promise<RuntimePage | null> {
-  const directory = await conditionManifest(env, origin)
+  const directory = await conditionManifest(env, origin, signal)
   const kind = path.startsWith("/modes") ? "modes" : "maps"
   if (path === `/${kind}`) return { kind: "conditions", path, category: kind, index: directory }
   let entry = directory[kind].find(row => row.path === path)
@@ -127,12 +189,13 @@ const worker = {
     const url = new URL(request.url)
     if (url.pathname.startsWith("/data/")) return dataResponse(request, source => worker.fetch(source, env, ctx))
     const isCondition = /^\/(?:modes|maps)(?:\/|$)/.test(url.pathname)
-    const isDynamic = isCondition || url.pathname === "/brawlers" || url.pathname.startsWith("/brawlers/") || url.pathname === "/sitemap.xml"
+    const isOverview = url.pathname === "/" || /^\/tier\/?$/.test(url.pathname)
+    const isDynamic = isOverview || isCondition || url.pathname === "/brawlers" || url.pathname.startsWith("/brawlers/") || url.pathname === "/sitemap.xml"
     if (!isDynamic) return env.ASSETS.fetch(request)
     if (!["GET", "HEAD"].includes(request.method)) return new Response("Method not allowed", { status: 405, headers: { Allow: "GET, HEAD" } })
-    const path = url.pathname.replace(/\/$/, "")
+    const path = url.pathname === "/" ? "/" : url.pathname.replace(/\/$/, "")
     if (path !== url.pathname) return Response.redirect(`${url.origin}${path}${url.search}`, 308)
-    if (!/^\/(?:brawlers|modes|maps)(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)?$/.test(path) && path !== "/sitemap.xml") return env.ASSETS.fetch(new Request(`${url.origin}/404.html`)).then(response => new Response(request.method === "HEAD" ? null : response.body, { status: 404, headers: response.headers }))
+    if (!/^\/(?:brawlers|modes|maps)(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)?$/.test(path) && path !== "/sitemap.xml" && !isOverview) return env.ASSETS.fetch(new Request(`${url.origin}/404.html`)).then(response => new Response(request.method === "HEAD" ? null : response.body, { status: 404, headers: response.headers }))
     const key = new Request(`${url.origin}/__brawler-cache/${runtimeVersion}${path}`)
     const cache = await caches.open("brawler-pages")
     let cached = await cache.match(key)
@@ -154,7 +217,8 @@ const worker = {
         body = renderPage(page)
       } else {
         const index = await inputs(env, signal)
-        if (path === "/sitemap.xml") body = xml(index, await conditionManifest(env, url.origin).catch(() => ({ modes: [], maps: [] })))
+        if (isOverview) body = renderPage({ kind: path === "/" ? "home" : "tier", path: path === "/" ? "/" : "/tier", tierData: index.overview[path === "/" ? "gachi" : "global"], initialMatchups: { global: {}, gachi: {} } })
+        else if (path === "/sitemap.xml") body = xml(index, await conditionManifest(env, url.origin, signal))
         else if (path === "/brawlers") body = renderPage({ kind: "directory", path, entries: brawlerEntries(index) })
         else {
           const entry = brawlerEntries(index).find(entry => path === `/brawlers/${entry.slug}`)
@@ -183,7 +247,16 @@ const worker = {
     // pages. It avoids blocking a first visit on a cold statistics backend.
     if (!cached) {
       try {
-        if (isCondition) {
+        // Ready-to-serve documents avoid parsing and rendering the same build
+        // snapshot on every cold edge location (including during API outages).
+        const document = path === "/sitemap.xml" ? null : await env.ASSETS.fetch(new Request(`${url.origin}/__rendered-pages${path === "/" ? "/index" : path}.document`))
+        if (document?.ok) {
+          cached = new Response(document.body, { headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": `public, max-age=${STALE_SECONDS}`, "X-Brawler-Generated": "0", "X-Brawler-Rendering": "snapshot" } })
+        } else if (isOverview) {
+          const page = await readJson(await env.ASSETS.fetch(new Request(`${url.origin}/__overview-snapshots/${path === "/" ? "home" : "tier"}.json`))) as import("./app").OverviewPage
+          if (page.path !== path || page.kind !== (path === "/" ? "home" : "tier") || !isTierListData(page.tierData) || !page.initialMatchups) throw new Error("Invalid overview snapshot")
+          cached = new Response(renderPage(page), { headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": `public, max-age=${STALE_SECONDS}`, "X-Brawler-Generated": "0", "X-Brawler-Rendering": "snapshot" } })
+        } else if (isCondition) {
           const page = await readJson(await env.ASSETS.fetch(new Request(`${url.origin}/__condition-snapshots${path}.json`))) as RuntimePage
           if (page.path !== path || !["condition", "conditions"].includes(page.kind)) throw new Error("Invalid condition snapshot")
           cached = new Response(renderPage(page), { headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": `public, max-age=${STALE_SECONDS}`, "X-Brawler-Generated": "0", "X-Brawler-Rendering": "snapshot" } })
@@ -192,7 +265,7 @@ const worker = {
           const snapshot = await readJson(await env.ASSETS.fetch(new Request(`${url.origin}/__brawler-snapshots/${assetName}.json`)))
           validateSnapshot(snapshot)
           const data = path.startsWith("/brawlers/") ? brawlerPage(snapshot, assetName) : null
-          const body = path === "/sitemap.xml" ? xml(snapshot, await conditionManifest(env, url.origin).catch(() => ({ modes: [], maps: [] }))) : path === "/brawlers" ? renderPage({ kind: "directory", path, entries: brawlerEntries(snapshot) }) : data ? renderPage({ kind: "detail", path, data }) : null
+          const body = path === "/sitemap.xml" ? xml(snapshot, await buildConditionManifest(env, url.origin)) : path === "/brawlers" ? renderPage({ kind: "directory", path, entries: brawlerEntries(snapshot) }) : data ? renderPage({ kind: "detail", path, data }) : null
           if (body) cached = new Response(body, { headers: {
             "Content-Type": path === "/sitemap.xml" ? "application/xml; charset=utf-8" : "text/html; charset=utf-8",
             "Cache-Control": `public, max-age=${STALE_SECONDS}`,

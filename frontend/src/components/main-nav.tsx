@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import Link from "next/link";
+import Link from "@/components/document-link";
 import { usePathname } from "next/navigation";
 import { Trophy, BarChart3, Cpu, Users } from "lucide-react";
 const headerLinkClass = "group/navigation-menu-trigger inline-flex h-9 w-max items-center justify-center rounded-lg px-2.5 py-1.5 text-sm font-medium transition-all outline-none hover:bg-muted focus:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50";
@@ -53,7 +53,7 @@ export function MainNav() {
               </li>
               <li className="relative">
                 <Link href="/player" className={headerLinkClass}>
-                  ダッシュボード
+                  戦績検索
                 </Link>
               </li>
               <li className="relative">
@@ -68,7 +68,7 @@ export function MainNav() {
               </li>
               <li className="relative">
                 <Link href="/companion" className={headerLinkClass}>
-                  ピック支援 (BAN/Pick)
+                  BAN・ピックツール
                 </Link>
               </li>
             </ul>
@@ -107,7 +107,7 @@ export function MainNav() {
             className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname.startsWith("/player") || pathname.startsWith("/dashboard") ? "text-primary" : "text-muted-foreground"}`}
           >
             <BarChart3 className="w-5 h-5" />
-            <span className="text-[10px] font-medium">ダッシュボード</span>
+            <span className="text-[10px] font-medium">戦績検索</span>
           </Link>
           <Link 
             href="/tier" 
@@ -121,7 +121,7 @@ export function MainNav() {
             className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname === "/companion" ? "text-primary" : "text-muted-foreground"}`}
           >
             <Cpu className="w-5 h-5" />
-            <span className="text-[10px] font-medium">ピック支援</span>
+            <span className="text-[9px] font-medium whitespace-nowrap">BAN・ピックツール</span>
           </Link>
         </div>
       </div>

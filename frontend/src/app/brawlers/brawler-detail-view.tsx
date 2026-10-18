@@ -72,7 +72,7 @@ function PairList({ rows, tone }: { rows: PairRow[]; tone: keyof typeof pairStyl
   </li>)}</ul>
 }
 
-function StatsPanel({ data, cohort }: { data: CohortData; cohort: Cohort }) {
+function StatsPanel({ data }: { data: CohortData }) {
   const stats = data.stats
   if (!stats) return <p className="text-muted-foreground py-8 text-center">この条件のデータはまだありません。</p>
   return <div className="space-y-6">
@@ -96,21 +96,19 @@ function StatsPanel({ data, cohort }: { data: CohortData; cohort: Cohort }) {
         <dd className="text-2xl sm:text-3xl font-black tabular-nums">{count(stats.total_matches)}</dd>
       </div>
     </dl>
-    <p className="text-xs text-muted-foreground">集計：直近{data.windowDays}日・記録されたプレイヤーごとの対戦件数。更新：{data.updatedLabel}（日本時間）</p>
-    <nav aria-label="キャラ分析の項目" className="flex flex-wrap gap-2 text-sm font-bold text-primary">{[["maps", "おすすめマップ"], ["matchups", "相性"], ["modes", "モード別の勝率"]].map(([id, label]) => <a key={id} href={`#${cohort}-${id}`} className="rounded-lg border border-primary/20 px-3 py-2 hover:bg-primary/10">{label}</a>)}</nav>
     {stats.confidence_interval && <p className="text-xs text-muted-foreground">勝率の95%信頼区間：{percent(stats.confidence_interval[0])}〜{percent(stats.confidence_interval[1])}</p>}
     <div className="grid lg:grid-cols-2 gap-6">
-      <section id={`${cohort}-modes`} className="scroll-mt-24 rounded-2xl border border-zinc-800/80 bg-zinc-900/40 backdrop-blur-md p-4 sm:p-6">
+      <section className="rounded-2xl border border-zinc-800/80 bg-zinc-900/40 backdrop-blur-md p-4 sm:p-6">
         <h2 className="font-bold text-lg text-zinc-100 flex items-center gap-2"><span className="rounded-lg bg-purple-500/10 p-2"><BarChart3 aria-hidden="true" className="w-5 h-5 text-purple-400" /></span>モード別の勝率</h2>
         <ConditionTable rows={data.modes} kind="モード" />
       </section>
-      <section id={`${cohort}-maps`} className="scroll-mt-24 rounded-2xl border border-zinc-800/80 bg-zinc-900/40 backdrop-blur-md p-4 sm:p-6">
+      <section className="rounded-2xl border border-zinc-800/80 bg-zinc-900/40 backdrop-blur-md p-4 sm:p-6">
         <h2 className="font-bold text-lg text-zinc-100 flex items-center gap-2"><span className="rounded-lg bg-cyan-500/10 p-2"><MapPin aria-hidden="true" className="w-5 h-5 text-cyan-400" /></span>おすすめマップ</h2>
         <p className="text-xs text-muted-foreground mt-2">十分なデータがあるマップを、勝率の信頼区間の下限順に表示。</p>
         <ConditionTable rows={data.maps} kind="マップ" />
       </section>
     </div>
-    <div id={`${cohort}-matchups`} className="scroll-mt-24 grid lg:grid-cols-3 gap-4">
+    <div className="grid lg:grid-cols-3 gap-4">
       <section className="rounded-xl border border-green-500/20 bg-green-500/5 p-4">
         <h2 className="font-extrabold text-sm text-green-400 flex items-center gap-2"><TrendingUp aria-hidden="true" className="w-5 h-5" />有利な敵キャラ</h2><PairList rows={data.favorable} tone="favorable" />
       </section>
@@ -122,7 +120,7 @@ function StatsPanel({ data, cohort }: { data: CohortData; cohort: Cohort }) {
       </section>
     </div>
     <p className="text-xs text-muted-foreground">相性：{data.matchupScope}の補正勝率。敵・味方にそのキャラがいる試合のチーム成績です。</p>
-
+    <p className="text-xs text-muted-foreground">集計：直近{data.windowDays}日・記録されたプレイヤーごとの対戦件数。更新：{data.updatedLabel}（日本時間）</p>
   </div>
 }
 
@@ -152,7 +150,7 @@ export default function BrawlerDetailView({ data }: { data: BrawlerPageData }) {
       </button>)}
     </div>
     {(["global", "gachi"] as const).map(type => <section key={type} role="tabpanel" id={`${type}-panel`} aria-labelledby={`${type}-tab`} hidden={selected !== type}>
-      <StatsPanel data={data.cohorts[type]} cohort={type} />
+      <StatsPanel data={data.cohorts[type]} />
     </section>)}
     <div className="grid sm:grid-cols-2 gap-3 text-sm font-bold">
       <Link href="/tier" className="group flex items-center gap-3 rounded-2xl bg-zinc-900/40 hover:bg-zinc-900/80 border border-zinc-800/80 hover:border-purple-500/40 p-4 transition-all duration-300"><span className="rounded-xl bg-purple-500/10 p-2.5"><Trophy aria-hidden="true" className="w-5 h-5 text-purple-400" /></span><span className="group-hover:text-purple-300 transition-colors">Tier表に戻る</span><ArrowLeft aria-hidden="true" className="w-4 h-4 text-muted-foreground ml-auto" /></Link>

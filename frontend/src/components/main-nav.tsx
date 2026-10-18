@@ -53,7 +53,7 @@ export function MainNav() {
               </li>
               <li className="relative">
                 <Link href="/player" className={headerLinkClass}>
-                  戦績検索
+                  ダッシュボード
                 </Link>
               </li>
               <li className="relative">
@@ -68,7 +68,7 @@ export function MainNav() {
               </li>
               <li className="relative">
                 <Link href="/companion" className={headerLinkClass}>
-                  BAN・ピックツール
+                  ピック支援 (BAN/Pick)
                 </Link>
               </li>
             </ul>
@@ -107,7 +107,7 @@ export function MainNav() {
             className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname.startsWith("/player") || pathname.startsWith("/dashboard") ? "text-primary" : "text-muted-foreground"}`}
           >
             <BarChart3 className="w-5 h-5" />
-            <span className="text-[10px] font-medium">戦績検索</span>
+            <span className="text-[10px] font-medium">ダッシュボード</span>
           </Link>
           <Link 
             href="/tier" 
@@ -121,7 +121,7 @@ export function MainNav() {
             className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${pathname === "/companion" ? "text-primary" : "text-muted-foreground"}`}
           >
             <Cpu className="w-5 h-5" />
-            <span className="text-[9px] font-medium whitespace-nowrap">BAN・ピックツール</span>
+            <span className="text-[10px] font-medium">ピック支援</span>
           </Link>
         </div>
       </div>

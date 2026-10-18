@@ -48,11 +48,13 @@ try {
     const html = await response.text()
     assert.match(html, new RegExp(`rel="canonical" href="https://brawl-lab.sozai-hub.com${path}"`))
     assert.doesNotMatch(html, /self\.__next_f|localhost:8000/)
-    for (const href of ["/modes", "/maps", "/brawlers"]) assert(html.includes(`href="${href}"`))
+    const links = path === "/tier" ? ["/modes", "/maps", "/brawlers"] : ["/tier", "/player", "/companion", "/brawlers"]
+    for (const href of links) assert(html.includes(`href="${href}"`))
     release(); held = null; await drain()
     const live = await (await request(path)).text()
     assert(live.includes(updatedAt))
-    assert(live.includes('dateTime="2026-10-16T00:00:00.000Z"'))
+    assert(live.includes('"dateModified":"2026-10-16T00:00:00.000Z"'))
+    if (path === "/tier") assert(live.includes('dateTime="2026-10-16T00:00:00.000Z"'))
     assert.equal((await request(path)).headers.get("X-Brawler-Rendering"), "live")
   }
   // The same Worker observes the new generation without a rebuild.

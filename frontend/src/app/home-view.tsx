@@ -16,10 +16,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { getBrawlerInfo, getRankImage } from "@/lib/brawlers";
 import { API_URL } from "@/lib/config";
 import { BurolaboIcon } from "@/components/brand-icon";
-import { normalizeDate } from "@/lib/condition-pages";
 import type { TierListData } from "@/lib/tier-data";
 import { brawlerPath } from "@/lib/brawler-paths";
-import { FeatureEntrances } from "@/components/feature-entrances";
+import { BrawlerDirectoryLink } from "@/components/brawler-directory-link";
 import { BrawlerPreviewLink } from "@/components/brawler-preview-link";
 
 import { characterDetailUrl, initialMatchup, type InitialMatchups } from "@/lib/matchup-preview";
@@ -36,7 +35,6 @@ export default function CockpitHomePage({ initialTierData, initialMatchups }: { 
   const [searchInput, setSearchInput] = useState("");
   const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
   const [tierData, setTierData] = useState<any>(initialTierData);
-  const updatedAt = normalizeDate(tierData?.updated_at ?? null);
   const [loadingTier, setLoadingTier] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
@@ -307,7 +305,6 @@ export default function CockpitHomePage({ initialTierData, initialMatchups }: { 
             </div>
             <Input
               type="text"
-              aria-label="プレイヤータグまたは名前"
               placeholder="プレイヤータグまたは名前"
               value={searchInput}
               onChange={(e) => {
@@ -469,8 +466,6 @@ export default function CockpitHomePage({ initialTierData, initialMatchups }: { 
         </SheetContent>
       </Sheet>
 
-      <FeatureEntrances />
-
       {/* ========================================================================= */}
       {/* ② 優先度: 今日の環境速報 (S+ / S Tier) */}
       {/* ========================================================================= */}
@@ -479,7 +474,7 @@ export default function CockpitHomePage({ initialTierData, initialMatchups }: { 
           <div className="flex items-center gap-2">
             <Flame className="w-5 h-5 text-rose-500" />
             <h2 className="text-lg font-bold text-zinc-100">
-              ガチバトル環境速報 (Tier S+ / S)
+              今日のガチバトル環境速報 (Tier S+ / S)
             </h2>
           </div>
           <Link
@@ -490,7 +485,6 @@ export default function CockpitHomePage({ initialTierData, initialMatchups }: { 
           </Link>
         </div>
 
-        {updatedAt && <p className="text-xs text-zinc-500">最終更新：<time dateTime={updatedAt}>{new Date(updatedAt).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })}（日本時間）</time></p>}
         {loadingTier ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
             {[...Array(6)].map((_, i) => (
@@ -550,6 +544,66 @@ export default function CockpitHomePage({ initialTierData, initialMatchups }: { 
             環境データを読み込み中...
           </div>
         )}
+      </section>
+
+      {/* ========================================================================= */}
+      {/* ③ 優先度: クイックアクセス (控えめな補助カード) */}
+      {/* ========================================================================= */}
+      <section className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <BrawlerDirectoryLink className="sm:col-span-2 group flex items-center gap-4 p-4 rounded-2xl bg-zinc-900/40 hover:bg-zinc-900/80 border border-zinc-800/80 hover:border-purple-500/40 transition-all duration-300">
+          <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 group-hover:scale-110 group-hover:bg-purple-500/20 transition-all shrink-0">
+            <Users aria-hidden="true" className="w-6 h-6" />
+          </div>
+          <h3 className="flex-1 font-bold text-sm text-zinc-100 group-hover:text-purple-300 transition-colors">キャラ一覧</h3>
+          <ArrowRight aria-hidden="true" className="w-4 h-4 text-zinc-500 group-hover:text-purple-400 group-hover:translate-x-1 transition-all shrink-0" />
+        </BrawlerDirectoryLink>
+        {/* BAN/Pick支援 */}
+        <Link
+          href="/companion"
+          className="group flex items-center gap-4 p-4 rounded-2xl bg-zinc-900/40 hover:bg-zinc-900/80 border border-zinc-800/80 hover:border-purple-500/40 transition-all duration-300"
+        >
+          <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 group-hover:scale-110 group-hover:bg-purple-500/20 transition-all shrink-0">
+            <Cpu className="w-6 h-6" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <h3 className="font-bold text-sm text-zinc-100 group-hover:text-purple-300 transition-colors">
+                ピック支援 (BAN/Pick)
+              </h3>
+              <Badge variant="outline" className="text-[10px] text-purple-400 border-purple-500/30">
+                4軸エンジン
+              </Badge>
+            </div>
+            <p className="text-xs text-zinc-400 truncate mt-0.5">
+              味方シナジー・敵カウンター・マップ適性からリアルタイム予測
+            </p>
+          </div>
+          <ArrowRight className="w-4 h-4 text-zinc-500 group-hover:text-purple-400 group-hover:translate-x-1 transition-all shrink-0" />
+        </Link>
+
+        {/* ダッシュボード (戦績分析) */}
+        <Link
+          href="/player"
+          className="group flex items-center gap-4 p-4 rounded-2xl bg-zinc-900/40 hover:bg-zinc-900/80 border border-zinc-800/80 hover:border-cyan-500/40 transition-all duration-300"
+        >
+          <div className="w-12 h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center text-cyan-400 group-hover:scale-110 group-hover:bg-cyan-500/20 transition-all shrink-0">
+            <BarChart3 className="w-6 h-6" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <h3 className="font-bold text-sm text-zinc-100 group-hover:text-cyan-300 transition-colors">
+                ダッシュボード (戦績分析)
+              </h3>
+              <Badge variant="outline" className="text-[10px] text-cyan-400 border-cyan-500/30">
+                詳細スタッツ
+              </Badge>
+            </div>
+            <p className="text-xs text-zinc-400 truncate mt-0.5">
+              メタギャップ診断・隠れ得意キャラ・クラブ詳細分析
+            </p>
+          </div>
+          <ArrowRight className="w-4 h-4 text-zinc-500 group-hover:text-cyan-400 group-hover:translate-x-1 transition-all shrink-0" />
+        </Link>
       </section>
 
       {/* ========================================================================= */}

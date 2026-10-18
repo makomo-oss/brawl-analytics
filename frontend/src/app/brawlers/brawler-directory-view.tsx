@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "@/components/document-link"
 import Image from "next/image"
-import { ArrowLeft, ArrowRight, Search, Users, X } from "lucide-react"
+import { ArrowLeft, Search, Users, X } from "lucide-react"
 import type { brawlerEntries, Cohort } from "@/lib/brawler-page-data"
 import { brawlerRarityLabel, directorySorts, filterAndSortBrawlers, type DirectorySort } from "@/lib/brawler-directory"
 
@@ -58,11 +58,11 @@ export default function BrawlerDirectoryView({ entries }: { entries: ReturnType<
       {visible.map(entry => {
         const style = rarityStyles[entry.rarity?.id ?? 0] || unknownRarityStyle
         const rarity = brawlerRarityLabel(entry)
-        return <Link key={entry.slug} prefetch={false} href={`/brawlers/${entry.slug}`} aria-label={`${entry.nameJa}の評価・相性・おすすめマップ`} title={rarity} className={`group relative overflow-hidden flex flex-col items-center gap-3 rounded-2xl border backdrop-blur-md p-3 sm:p-4 hover:-translate-y-1 hover:shadow-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white transition-all duration-300 ${style.card}`}>
+        return <Link key={entry.slug} prefetch={false} href={`/brawlers/${entry.slug}`} title={rarity} className={`group relative overflow-hidden flex flex-col items-center gap-3 rounded-2xl border backdrop-blur-md p-3 sm:p-4 hover:-translate-y-1 hover:shadow-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white transition-all duration-300 ${style.card}`}>
         <span aria-hidden="true" className={`absolute inset-x-3 top-0 h-0.5 rounded-b-full ${style.accent}`} />
         {entry.rarity?.id === 7 && <span aria-hidden="true" className="absolute right-2 top-2 h-1.5 w-1.5 rotate-45 bg-cyan-200 shadow-[0_0_8px_rgba(103,232,249,0.6)]" />}
         {entry.imageUrl && <Image src={entry.imageUrl} alt="" width={56} height={56} className="w-14 h-14 rounded-xl shadow-md transition-transform duration-300 group-hover:scale-105" />}
-        <span className="text-xs sm:text-sm font-bold text-zinc-200 group-hover:text-white text-center transition-colors">{entry.nameJa}</span><ArrowRight aria-hidden="true" className="w-3.5 h-3.5 text-muted-foreground" />
+        <span className="text-xs sm:text-sm font-bold text-zinc-200 group-hover:text-white text-center transition-colors">{entry.nameJa}</span>
         <span className="sr-only">レア度：{rarity}</span>
         {statistical && <span className="text-xs font-bold tabular-nums text-cyan-400 text-center">{(() => {
           const stats = entry.directoryStats[cohort]

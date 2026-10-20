@@ -15,7 +15,7 @@ export type RuntimePage = PublicPage | OverviewPage
 export function App({ page }: { page: RuntimePage }) {
   return <RuntimePathname.Provider value={page.path}>
     <MainNav />
-    <main className="container mx-auto px-3 py-4 sm:p-6 lg:p-8 max-w-7xl pb-24 lg:pb-8">
+    <main id="main-content" tabIndex={-1} className="container mx-auto px-3 py-4 sm:p-6 lg:p-8 max-w-7xl pb-24 lg:pb-8">
       {page.kind === "home" ? <HomeView initialTierData={page.tierData} initialMatchups={page.initialMatchups} /> : page.kind === "tier" ? <TierView initialTierData={page.tierData} initialMatchups={page.initialMatchups} /> : page.kind === "detail" ? <BrawlerDetailView data={page.data} /> : page.kind === "directory" ? <BrawlerDirectoryView entries={page.entries} /> : page.kind === "condition" ? <ConditionDetailView data={page.data} /> : page.kind === "conditions" ? <ConditionDirectoryView index={page.index} kind={page.category} /> : null}
     </main>
   </RuntimePathname.Provider>

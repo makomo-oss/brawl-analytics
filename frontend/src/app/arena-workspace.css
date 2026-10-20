@@ -56,10 +56,10 @@ main:not(:has(.arena-home)) h1>svg {color:#ffe16b;stroke-width:1.8}
 .arena-workspace :is(.text-red-500,.text-red-400) {color:#ff9c91}
 .arena-workspace .text-orange-500 {color:#ffc18f}
 
-/* The same crisp controls as the home search, with their original dimensions. */
-.arena-workspace :is([data-slot="input"],input[type="search"],select,[data-slot="select-trigger"]) {
+/* Shared controls keep the existing columns and allow each tool to size its fields. */
+.arena-workspace :where([data-slot="input"],input[type="search"],select,[data-slot="select-trigger"]) {
   background:#fffdf4;color:#27314b;border-color:#fff5d8;border-radius:7px;
-  box-shadow:0 2px 0 #060d201c;
+  box-shadow:0 2px 0 #060d201c;min-width:0;min-height:40px;
 }
 .arena-workspace :is([data-slot="input"],input[type="search"])::placeholder {color:#7a7e8b}
 .arena-workspace [data-slot="select-trigger"] :is(svg,[data-slot="select-value"]) {color:inherit}
@@ -93,9 +93,13 @@ main:not(:has(.arena-home)) h1>svg {color:#ffe16b;stroke-width:1.8}
   background:linear-gradient(135deg,#253361 0,#1a243d 55%);
 }
 .arena-draft-setup [data-slot="card-title"] {color:#ffe16b}
+.arena-draft-setup [data-slot="select-trigger"] {width:100%;min-height:44px}
+.arena-draft-setup [data-slot="tabs-list"] {min-height:44px}
+.arena-draft-setup [data-slot="button"] {min-height:44px}
 .arena-draft-board>div:first-child {background:#1a243d;border-color:#3b4865}
 .arena-dashboard>[data-slot="card"]:first-child {border-color:#596da1;box-shadow:4px 5px 0 #060d2044}
 .arena-dashboard>[data-slot="card"]:first-child [data-slot="card-title"] {color:#ffe16b}
+.arena-dashboard>[data-slot="card"]:first-child [data-slot="button"] {min-height:40px}
 
 /* Keep every Tier row, label width, portrait, grid breakpoint and control. */
 .arena-tier-row {--tier-color:#7c3aed;--tier-ink:#fff9ed}
@@ -145,4 +149,8 @@ body:has(.arena-workspace,.arena-home) [data-slot="select-item"][data-highlighte
 }
 @media(prefers-reduced-motion:reduce) {
   .arena-workspace,.arena-workspace * {animation:none!important;transition:none!important}
+}
+@media(max-width:700px) {
+  .arena-workspace :where([data-slot="input"],input[type="search"],select,[data-slot="select-trigger"]) {min-height:44px;font-size:16px}
+  .arena-dashboard>[data-slot="card"]:first-child [data-slot="button"] {min-height:44px}
 }

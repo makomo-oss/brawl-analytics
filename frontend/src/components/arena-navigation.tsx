@@ -31,6 +31,7 @@ function Destination({ item, pathname, mobile = false }: { item: typeof destinat
 
 export function ArenaNavigation({ pathname, visible }: { pathname: string; visible: boolean }) {
   return <>
+    <a href="#main-content" className="arena-skip-link">メインコンテンツへ</a>
     <header className="arena-site-header">
       <div className="arena-header-inner">
         <Link href="/" className="arena-brand" aria-label="ブロラボ ホーム">

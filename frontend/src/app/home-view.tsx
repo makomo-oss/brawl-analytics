@@ -320,7 +320,7 @@ export default function CockpitHomePage({ initialTierData, initialMatchups }: { 
 
           {/* エラーアラート */}
           {searchError && (
-            <div className="flex items-center gap-2 mt-2.5 px-4 py-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs text-left animate-in fade-in">
+            <div role="alert" className="arena-search-error flex items-center gap-2 mt-2.5 px-4 py-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs text-left animate-in fade-in">
               <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
               <span>{searchError}</span>
             </div>
@@ -328,7 +328,7 @@ export default function CockpitHomePage({ initialTierData, initialMatchups }: { 
 
           {/* サジェストドロップダウン */}
           {showSuggestions && suggestions.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-zinc-900/95 border border-zinc-700/80 rounded-xl shadow-2xl backdrop-blur-md overflow-hidden z-50 text-left">
+            <div className="arena-search-suggestions absolute top-full left-0 right-0 mt-2 bg-zinc-900/95 border border-zinc-700/80 rounded-xl shadow-2xl backdrop-blur-md overflow-hidden z-50 text-left">
               <div className="p-2 border-b border-zinc-800 text-[11px] font-medium text-zinc-400 flex items-center justify-between">
                 <span>検索候補（クリックで即時分析）</span>
                 <span className="text-[10px] text-zinc-500">{suggestions.length}件</span>
@@ -342,7 +342,7 @@ export default function CockpitHomePage({ initialTierData, initialMatchups }: { 
                       key={pTag}
                       type="button"
                       onClick={() => handleSearch(pTag, p.name)}
-                      className="w-full px-4 py-3 flex items-center justify-between hover:bg-zinc-800/70 transition-colors text-left group"
+                      className="arena-search-suggestion w-full px-4 py-3 flex items-center justify-between hover:bg-zinc-800/70 transition-colors text-left group"
                     >
                       <div className="flex items-center gap-2.5">
                         <Avatar className="w-9 h-9 border border-zinc-700 shrink-0">
@@ -384,7 +384,7 @@ export default function CockpitHomePage({ initialTierData, initialMatchups }: { 
                 key={item.tag}
                 type="button"
                 onClick={() => handleSearch(item.tag, item.name)}
-                className="inline-flex items-center gap-1 px-2.5 py-2 rounded-full bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 hover:text-white border border-zinc-700/50 transition-colors"
+                className="arena-history-chip inline-flex items-center gap-1 px-2.5 py-2 rounded-full bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 hover:text-white border border-zinc-700/50 transition-colors"
               >
                 <span className="font-medium">{item.name || item.tag}</span>
                 <span className="text-[10px] text-zinc-500 font-mono">{item.tag}</span>

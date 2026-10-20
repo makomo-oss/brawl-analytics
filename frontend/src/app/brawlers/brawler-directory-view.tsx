@@ -25,7 +25,7 @@ export default function BrawlerDirectoryView({ entries }: { entries: ReturnType<
   const [cohort, setCohort] = useState<Cohort>("global")
   const statistical = sort === "win_rate" || sort === "use_rate"
   const visible = filterAndSortBrawlers(entries, query, sort, cohort)
-  return <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+  return <div className="arena-workspace arena-directory max-w-7xl mx-auto space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
     <nav aria-label="パンくず" className="text-xs text-muted-foreground"><Link href="/" className="hover:text-primary">ホーム</Link><span aria-hidden="true"> / </span><span aria-current="page">キャラ一覧</span></nav>
     <h1 className="flex items-center gap-3 text-2xl sm:text-4xl font-extrabold tracking-tight"><Users aria-hidden="true" className="w-8 h-8 text-cyan-400" /><span className="bg-gradient-to-r from-primary via-purple-400 to-cyan-400 bg-clip-text text-transparent">キャラ一覧</span></h1>
     <section aria-label="キャラを探す" className="space-y-3 rounded-2xl border border-zinc-800/80 bg-zinc-900/40 backdrop-blur-md p-4 sm:p-5">
@@ -58,7 +58,7 @@ export default function BrawlerDirectoryView({ entries }: { entries: ReturnType<
       {visible.map(entry => {
         const style = rarityStyles[entry.rarity?.id ?? 0] || unknownRarityStyle
         const rarity = brawlerRarityLabel(entry)
-        return <Link key={entry.slug} prefetch={false} href={`/brawlers/${entry.slug}`} title={rarity} className={`group relative overflow-hidden flex flex-col items-center gap-3 rounded-2xl border backdrop-blur-md p-3 sm:p-4 hover:-translate-y-1 hover:shadow-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white transition-all duration-300 ${style.card}`}>
+        return <Link key={entry.slug} prefetch={false} href={`/brawlers/${entry.slug}`} title={rarity} className={`arena-directory-card group relative overflow-hidden flex flex-col items-center gap-3 rounded-2xl border backdrop-blur-md p-3 sm:p-4 hover:-translate-y-1 hover:shadow-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white transition-all duration-300 ${style.card}`}>
         <span aria-hidden="true" className={`absolute inset-x-3 top-0 h-0.5 rounded-b-full ${style.accent}`} />
         {entry.rarity?.id === 7 && <span aria-hidden="true" className="absolute right-2 top-2 h-1.5 w-1.5 rotate-45 bg-cyan-200 shadow-[0_0_8px_rgba(103,232,249,0.6)]" />}
         {entry.imageUrl && <Image src={entry.imageUrl} alt="" width={56} height={56} className="w-14 h-14 rounded-xl shadow-md transition-transform duration-300 group-hover:scale-105" />}

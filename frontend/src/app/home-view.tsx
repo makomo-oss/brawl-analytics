@@ -15,7 +15,7 @@ import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { getBrawlerInfo, getRankImage } from "@/lib/brawlers";
 import { API_URL } from "@/lib/config";
-import { BurolaboIcon } from "@/components/brand-icon";
+import { ArenaHeroStage, ArenaToolCards } from "@/components/arena-home-panels";
 import type { TierListData } from "@/lib/tier-data";
 import { brawlerPath } from "@/lib/brawler-paths";
 import { BrawlerDirectoryLink } from "@/components/brawler-directory-link";
@@ -275,48 +275,44 @@ export default function CockpitHomePage({ initialTierData, initialMatchups }: { 
   }
 
   return (
-    <div className="flex flex-col gap-10 max-w-5xl mx-auto pb-12">
+    <div className="arena-home">
 
       {/* ========================================================================= */}
       {/* ① 最優先: プレイヤー検索 (ファーストビューの主役) */}
       {/* ========================================================================= */}
-      <section className="flex flex-col items-center text-center pt-4 md:pt-8">
-        <div className="flex items-center justify-center gap-2.5 mb-3">
-          <BurolaboIcon size={36} className="shadow-lg" />
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">
-            ブロラボ - ブロスタ攻略・分析ツール
-          </h1>
-        </div>
-        <p className="text-xs sm:text-sm text-zinc-400 max-w-md mb-6">
-          プレイヤー戦績検索・環境Tier表・BAN/Pick支援を無料で。ガチバトルの勝率を上げよう。
-        </p>
+      <section className="arena-home-hero">
+        <div className="arena-hero-copy">
+        <p className="arena-home-kicker"><span aria-hidden="true">✦</span> ブロラボ / ブロスタ攻略・分析ツール</p>
+        <h1 className="arena-home-title">勝ち筋、<br /><span>見つけた。</span></h1>
+        <p className="arena-home-description">ひらめきに、データをプラス。<br />プレイヤー戦績検索・環境Tier表・BAN/Pick支援を無料で。</p>
 
         {/* 検索入力ボックス (大きく押しやすい主役UI) */}
-        <div ref={searchContainerRef} className="relative w-full max-w-xl">
+        <div ref={searchContainerRef} className="arena-search-region">
           <form
             onSubmit={(e) => {
               e.preventDefault();
               handleSearch();
             }}
-            className="relative flex items-center shadow-2xl rounded-2xl p-1 bg-gradient-to-r from-purple-500/30 via-cyan-500/30 to-purple-500/30 border border-white/15 backdrop-blur-xl transition-all duration-300 focus-within:border-primary/80 focus-within:shadow-[0_0_30px_rgba(168,85,247,0.35)]"
+            className="arena-search-form"
           >
-            <div className="flex items-center pl-3.5 pointer-events-none text-zinc-400">
+            <div className="arena-search-icon" aria-hidden="true">
               {isSearching ? <Loader2 className="w-5 h-5 animate-spin text-primary" /> : <Search className="w-5 h-5" />}
             </div>
             <Input
               type="text"
               placeholder="プレイヤータグまたは名前"
+              aria-label="プレイヤータグまたは名前"
               value={searchInput}
               onChange={(e) => {
                 setSearchInput(e.target.value);
                 setSearchError(null);
               }}
-              className="flex-1 bg-transparent border-0 text-white placeholder:text-zinc-500 focus-visible:ring-0 focus-visible:ring-offset-0 text-sm sm:text-base px-3 py-3 h-12"
+              className="arena-search-input"
             />
             <Button
               type="submit"
               disabled={isSearching}
-              className="h-10 px-3 sm:px-5 rounded-xl font-bold text-sm bg-primary text-primary-foreground hover:bg-primary/90 transition-all active:scale-95 shadow-md shrink-0"
+              className="arena-search-button"
             >
               {isSearching ? "検索中..." : "分析する"}
             </Button>
@@ -379,7 +375,7 @@ export default function CockpitHomePage({ initialTierData, initialMatchups }: { 
 
         {/* 最近検索した履歴チップ */}
         {recentSearches.length > 0 && (
-          <div className="flex items-center gap-1.5 mt-3 flex-wrap justify-center text-xs text-zinc-400">
+          <div className="arena-recent-searches">
             <span className="flex items-center gap-1 text-zinc-500 font-medium">
               <Clock className="w-3.5 h-3.5" /> 履歴:
             </span>
@@ -396,7 +392,11 @@ export default function CockpitHomePage({ initialTierData, initialMatchups }: { 
             ))}
           </div>
         )}
+        </div>
+        <ArenaHeroStage />
       </section>
+
+      <ArenaToolCards />
 
       {/* ========================================================================= */}
       {/* プレイヤー名検索 複数候補選択モーダル (Sheet/Modal) */}
@@ -469,11 +469,11 @@ export default function CockpitHomePage({ initialTierData, initialMatchups }: { 
       {/* ========================================================================= */}
       {/* ② 優先度: 今日の環境速報 (S+ / S Tier) */}
       {/* ========================================================================= */}
-      <section className="flex flex-col gap-4">
+      <section className="arena-home-meta" aria-labelledby="arena-meta-title">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Flame className="w-5 h-5 text-rose-500" />
-            <h2 className="text-lg font-bold text-zinc-100">
+            <h2 id="arena-meta-title" className="arena-section-title">
               今日のガチバトル環境速報 (Tier S+ / S)
             </h2>
           </div>
@@ -486,13 +486,13 @@ export default function CockpitHomePage({ initialTierData, initialMatchups }: { 
         </div>
 
         {loadingTier ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+          <div className="arena-meta-grid">
             {[...Array(6)].map((_, i) => (
               <div key={i} className="h-28 rounded-2xl bg-zinc-900/60 border border-zinc-800 animate-pulse" />
             ))}
           </div>
         ) : topMetaChars.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+          <div className="arena-meta-grid">
             {topMetaChars.slice(0, 12).map((char) => {
               const info = getBrawlerInfo(char.id);
               const isSp = char.tier === "S+";
@@ -502,21 +502,16 @@ export default function CockpitHomePage({ initialTierData, initialMatchups }: { 
                   href={tierData?.characters?.[char.id]?.total_matches > 0 ? brawlerPath(char.id) : undefined}
                   onPreview={() => { void handleCharClick(char.id, char.tier) }}
                   onIntent={() => { if (!initialMatchup(initialMatchups, char.id, "gachi")) void fetchPublicStats(characterDetailUrl(API_URL, char.id)).catch(() => {}); }}
-                  className={`group relative flex flex-col items-center p-3 rounded-2xl border backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl text-left ${
-                    isSp
-                      ? "bg-purple-950/20 border-purple-500/40 hover:border-purple-400 hover:shadow-purple-500/20"
-                      : "bg-pink-950/20 border-pink-500/40 hover:border-pink-400 hover:shadow-pink-500/20"
-                  }`}
+                  className={`arena-meta-card${isSp ? " is-top-tier" : ""}`}
                 >
-                  <div className="absolute top-2 left-2 z-10">
-                    <Badge className={`text-[10px] font-black px-1.5 py-0.5 border-0 ${
-                      isSp ? "bg-purple-600 text-white" : "bg-pink-600 text-white"
-                    }`}>
+                  <div className="arena-meta-card-label">
+                    <span>THE META LINEUP</span>
+                    <Badge className="arena-meta-tier">
                       {char.tier}
                     </Badge>
                   </div>
 
-                  <div className="relative w-14 h-14 my-1 rounded-xl overflow-hidden shadow-md group-hover:scale-105 transition-transform">
+                  <div className="arena-meta-portrait">
                     <img loading="lazy" decoding="async"
                       src={info.imageUrl}
                       alt={info.nameJa}
@@ -527,11 +522,11 @@ export default function CockpitHomePage({ initialTierData, initialMatchups }: { 
                     />
                   </div>
 
-                  <div className="w-full text-center">
-                    <div className="text-xs font-bold text-zinc-200 truncate group-hover:text-white">
+                  <div className="arena-meta-copy">
+                    <div className="arena-meta-name">
                       {info.nameJa}
                     </div>
-                    <div className="text-[11px] font-semibold text-emerald-400 mt-0.5">
+                    <div className="arena-meta-win">
                       勝率 {char.win_rate}%
                     </div>
                   </div>
@@ -549,66 +544,18 @@ export default function CockpitHomePage({ initialTierData, initialMatchups }: { 
       {/* ========================================================================= */}
       {/* ③ 優先度: クイックアクセス (控えめな補助カード) */}
       {/* ========================================================================= */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <BrawlerDirectoryLink className="sm:col-span-2 group flex items-center gap-4 p-4 rounded-2xl bg-zinc-900/40 hover:bg-zinc-900/80 border border-zinc-800/80 hover:border-purple-500/40 transition-all duration-300">
-          <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 group-hover:scale-110 group-hover:bg-purple-500/20 transition-all shrink-0">
-            <Users aria-hidden="true" className="w-6 h-6" />
-          </div>
-          <h3 className="flex-1 font-bold text-sm text-zinc-100 group-hover:text-purple-300 transition-colors">キャラ一覧</h3>
-          <ArrowRight aria-hidden="true" className="w-4 h-4 text-zinc-500 group-hover:text-purple-400 group-hover:translate-x-1 transition-all shrink-0" />
-        </BrawlerDirectoryLink>
-        {/* BAN/Pick支援 */}
-        <Link
-          href="/companion"
-          className="group flex items-center gap-4 p-4 rounded-2xl bg-zinc-900/40 hover:bg-zinc-900/80 border border-zinc-800/80 hover:border-purple-500/40 transition-all duration-300"
-        >
-          <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 group-hover:scale-110 group-hover:bg-purple-500/20 transition-all shrink-0">
-            <Cpu className="w-6 h-6" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <h3 className="font-bold text-sm text-zinc-100 group-hover:text-purple-300 transition-colors">
-                ピック支援 (BAN/Pick)
-              </h3>
-              <Badge variant="outline" className="text-[10px] text-purple-400 border-purple-500/30">
-                4軸エンジン
-              </Badge>
-            </div>
-            <p className="text-xs text-zinc-400 truncate mt-0.5">
-              味方シナジー・敵カウンター・マップ適性からリアルタイム予測
-            </p>
-          </div>
-          <ArrowRight className="w-4 h-4 text-zinc-500 group-hover:text-purple-400 group-hover:translate-x-1 transition-all shrink-0" />
-        </Link>
-
-        {/* ダッシュボード (戦績分析) */}
-        <Link
-          href="/player"
-          className="group flex items-center gap-4 p-4 rounded-2xl bg-zinc-900/40 hover:bg-zinc-900/80 border border-zinc-800/80 hover:border-cyan-500/40 transition-all duration-300"
-        >
-          <div className="w-12 h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center text-cyan-400 group-hover:scale-110 group-hover:bg-cyan-500/20 transition-all shrink-0">
-            <BarChart3 className="w-6 h-6" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <h3 className="font-bold text-sm text-zinc-100 group-hover:text-cyan-300 transition-colors">
-                ダッシュボード (戦績分析)
-              </h3>
-              <Badge variant="outline" className="text-[10px] text-cyan-400 border-cyan-500/30">
-                詳細スタッツ
-              </Badge>
-            </div>
-            <p className="text-xs text-zinc-400 truncate mt-0.5">
-              メタギャップ診断・隠れ得意キャラ・クラブ詳細分析
-            </p>
-          </div>
-          <ArrowRight className="w-4 h-4 text-zinc-500 group-hover:text-cyan-400 group-hover:translate-x-1 transition-all shrink-0" />
-        </Link>
+      <section className="arena-directory-callout" aria-labelledby="arena-directory-title">
+        <span className="arena-directory-icon"><Users aria-hidden="true" /></span>
+        <div>
+          <p className="arena-section-eyebrow">FIND YOUR NEXT MAIN</p>
+          <h2 id="arena-directory-title">次の相棒を、見つけよう。</h2>
+          <p>キャラごとの勝率や対面相性をチェック。気になるキャラから、分析を深めよう。</p>
+        </div>
+        <BrawlerDirectoryLink className="arena-directory-action">キャラ一覧を見る<ArrowRight aria-hidden="true" /></BrawlerDirectoryLink>
       </section>
+      <footer className="arena-home-footer"><span>ブロラボ <small>BRAWL LAB</small></span><p>非公式ファンツール · PLAY SMART. HAVE FUN.</p></footer>
 
-      {/* ========================================================================= */}
-      {/* キャラクター対面詳細モーダル (Sheet) */}
-      {/* ========================================================================= */}
+      {/* 既存のキャラクター対面詳細・データ取得を維持 */}
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent side="right" className="w-full sm:max-w-md p-0 flex flex-col bg-zinc-950 border-zinc-800">
           {selectedChar && (

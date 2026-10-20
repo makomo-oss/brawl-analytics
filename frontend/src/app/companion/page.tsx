@@ -553,7 +553,7 @@ export default function DraftCompanionPage() {
 
   if (phase === "setup") {
     return (
-      <div className="max-w-3xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="arena-workspace arena-draft arena-draft-setup max-w-3xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="text-center space-y-4">
           <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
             ブロスタ ガチバトルのピック支援
@@ -648,7 +648,7 @@ export default function DraftCompanionPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 animate-in fade-in duration-300">
+    <div className="arena-workspace arena-draft arena-draft-board max-w-7xl mx-auto space-y-6 animate-in fade-in duration-300">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-secondary/30 p-4 rounded-xl border border-primary/10">
         <div>

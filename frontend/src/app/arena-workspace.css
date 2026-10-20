@@ -1,0 +1,148 @@
+/* STARR ARENA shared surfaces. These rules change presentation only: the
+   existing grids, spacing, component order, and responsive layout stay intact. */
+html.dark {
+  --background:#10182c;
+  --foreground:#f8f6ec;
+  --card:#1a243d;
+  --card-foreground:#f8f6ec;
+  --popover:#202c47;
+  --popover-foreground:#f8f6ec;
+  --primary:#ffe16b;
+  --primary-foreground:#1c2640;
+  --secondary:#293652;
+  --secondary-foreground:#e5eafa;
+  --muted:#202c47;
+  --muted-foreground:#aab9d2;
+  --accent:#334464;
+  --accent-foreground:#fff0ad;
+  --border:#3b4865;
+  --input:#4c5c7c;
+  --ring:#ffe16b;
+  --destructive:#ff998a;
+  --sidebar:#1a243d;
+  --sidebar-foreground:#f8f6ec;
+  --sidebar-primary:#ffe16b;
+  --sidebar-primary-foreground:#1c2640;
+  --sidebar-accent:#293652;
+  --sidebar-accent-foreground:#f8f6ec;
+  --sidebar-border:#3b4865;
+  --sidebar-ring:#ffe16b;
+}
+
+main:not(:has(.arena-home)) h1 {
+  color:#f8f6ec;background-image:none;-webkit-text-fill-color:currentColor;
+  font-weight:850;letter-spacing:-.035em;text-wrap:balance;
+}
+main:not(:has(.arena-home)) h1 .bg-clip-text {
+  color:#f8f6ec;background-image:none;-webkit-text-fill-color:currentColor;
+}
+main:not(:has(.arena-home)) h1>svg {color:#ffe16b;stroke-width:1.8}
+.arena-workspace {color:#f8f6ec}
+.arena-workspace [data-slot="card"] {
+  background-color:#1a243d;border-color:#3b4865;
+  border-radius:13px;box-shadow:0 4px 14px #060c211c;--tw-ring-color:transparent;
+}
+.arena-workspace [data-slot="card-title"] {font-weight:750;letter-spacing:-.02em}
+.arena-workspace [data-slot="card-description"] {color:#aab9d2}
+.arena-workspace :is([class~="bg-zinc-900/40"],[class~="bg-zinc-900/60"],[class~="bg-zinc-950/70"]) {
+  background-color:#1a243d;border-color:#3b4865;
+}
+.arena-workspace :is([class~="border-zinc-800/80"],[class~="border-zinc-800"]) {border-color:#3b4865}
+.arena-workspace :is(.text-zinc-100,.text-zinc-200) {color:#f8f6ec}
+.arena-workspace :is(.text-zinc-300,.text-zinc-400) {color:#aab9d2}
+.arena-workspace :is(.text-purple-400,.text-purple-300) {color:#b6c3ff}
+.arena-workspace :is(.text-cyan-400,.text-blue-500) {color:#9bc6f5}
+.arena-workspace :is(.text-green-500,.text-green-400) {color:#bfdfa0}
+.arena-workspace :is(.text-red-500,.text-red-400) {color:#ff9c91}
+.arena-workspace .text-orange-500 {color:#ffc18f}
+
+/* The same crisp controls as the home search, with their original dimensions. */
+.arena-workspace :is([data-slot="input"],input[type="search"],select,[data-slot="select-trigger"]) {
+  background:#fffdf4;color:#27314b;border-color:#fff5d8;border-radius:7px;
+  box-shadow:0 2px 0 #060d201c;
+}
+.arena-workspace :is([data-slot="input"],input[type="search"])::placeholder {color:#7a7e8b}
+.arena-workspace [data-slot="select-trigger"] :is(svg,[data-slot="select-value"]) {color:inherit}
+.arena-workspace select option {color:#27314b;background:#fffdf4}
+.arena-workspace :is([data-slot="input"],input[type="search"],select,[data-slot="select-trigger"]):focus-visible {
+  outline:3px solid #ffe16b;outline-offset:3px;border-color:#fff5d8;
+}
+.arena-directory [aria-label="キャラを探す"] :is(.text-purple-400,button) {color:#62708c}
+.arena-workspace [data-slot="button"] {border-radius:7px;font-weight:700;box-shadow:none}
+.arena-workspace [data-slot="button"][class~="bg-primary"] {
+  background:#ffe16b;color:#1c2640;border-color:#ffe16b;
+}
+.arena-workspace [data-slot="tabs-list"],
+.arena-workspace [role="tablist"]:not([data-slot]) {
+  background:#182239;border:1px solid #3b4865;border-radius:10px;box-shadow:none;
+}
+.arena-workspace [role="tab"] {color:#aab9d2;font-weight:650;box-shadow:none}
+.arena-workspace [role="tab"][aria-selected="true"] {
+  background:#ffe16b;color:#1c2640;border-color:transparent;box-shadow:0 2px 5px #060c211c;
+}
+/* Team color remains meaningful, including Base UI's aria-selected state. */
+.arena-draft [role="tab"][aria-selected="true"][class*="bg-blue-600"] {
+  background:#9dbdff!important;color:#17213d!important;border-color:#b8ceff;
+}
+.arena-draft [role="tab"][aria-selected="true"][class*="bg-red-600"] {
+  background:#ff9c91!important;color:#3d202d!important;border-color:#ffc2b6;
+}
+.arena-draft-setup>div:first-child p {line-height:1.9}
+.arena-draft-setup>[data-slot="card"] {
+  border-color:#596da1;box-shadow:5px 6px 0 #060d2044;
+  background:linear-gradient(135deg,#253361 0,#1a243d 55%);
+}
+.arena-draft-setup [data-slot="card-title"] {color:#ffe16b}
+.arena-draft-board>div:first-child {background:#1a243d;border-color:#3b4865}
+.arena-dashboard>[data-slot="card"]:first-child {border-color:#596da1;box-shadow:4px 5px 0 #060d2044}
+.arena-dashboard>[data-slot="card"]:first-child [data-slot="card-title"] {color:#ffe16b}
+
+/* Keep every Tier row, label width, portrait, grid breakpoint and control. */
+.arena-tier-row {--tier-color:#7c3aed;--tier-ink:#fff9ed}
+.arena-tier-row[data-arena-tier="S"] {--tier-color:#d51d4c}
+.arena-tier-row[data-arena-tier="A+"] {--tier-color:#c74712}
+.arena-tier-row[data-arena-tier="A"] {--tier-color:#efb321;--tier-ink:#17213b}
+.arena-tier-row[data-arena-tier="B"] {--tier-color:#8fc93a;--tier-ink:#17213b}
+.arena-tier-row[data-arena-tier="C"] {--tier-color:#2563eb}
+.arena-tier-row[data-arena-tier="D"] {--tier-color:#52627a}
+.arena-tier-row[data-arena-tier="N/A"] {--tier-color:#3b4960}
+.arena-tier-row[data-slot="card"] {background:#1a243d;border-color:#3b4865;box-shadow:none}
+.arena-tier-label {background:var(--tier-color);color:var(--tier-ink);box-shadow:none}
+.arena-tier-label h2 {text-shadow:none}
+.arena-tier-label>span {background:#0a102829;color:inherit;border:1px solid #0a10281a}
+.arena-tier-brawler {background:#172239;color:#f8f6ec;border-color:#445675;box-shadow:0 2px 0 #060d2026}
+.arena-tier-brawler>div {border-color:#596a87;background:#253652}
+.arena-tier-brawler>span {font-weight:700}
+
+/* Rarity remains visible in each existing colored edge; cards echo the home. */
+.arena-directory-card {
+  background:#1a243d;border-color:#3b4865;color:#f8f6ec;
+  border-radius:11px;box-shadow:2px 3px 0 #060d2026;
+}
+.arena-directory-card>span:first-child {height:3px}
+.arena-directory-card img {border:2px solid #596a87;box-shadow:0 2px 0 #060d2026}
+.arena-directory .arena-directory-card>span:not(.sr-only) {color:#f8f6ec}
+.arena-directory .arena-directory-card>span.text-cyan-400 {color:#bfdfa0}
+.arena-directory .arena-directory-card .text-muted-foreground {color:#aab9d2}
+.arena-detail section[class*="bg-zinc-900"] {background:#1a243d;border-color:#3b4865}
+
+/* Portals live outside the page root and must share its surfaces and focus. */
+body:has(.arena-workspace,.arena-home) :is([data-slot="sheet-content"],[data-slot="dialog-content"]) {
+  background:#1a243d;border-color:#3b4865;color:#f8f6ec;
+}
+body:has(.arena-workspace,.arena-home) [data-slot="select-content"] {
+  background:#202c47;border:1px solid #536584;color:#f8f6ec;border-radius:9px;
+  box-shadow:0 12px 30px #060d2055;
+}
+body:has(.arena-workspace,.arena-home) [data-slot="select-item"][data-highlighted] {
+  background:#334464;color:#fff0ad;
+}
+@media(hover:hover) {
+  .arena-workspace [data-slot="button"][class~="bg-primary"]:not(:disabled):hover {background:#ffe88e}
+  .arena-workspace [role="tab"]:not([aria-selected="true"]):hover {background:#293652;color:#f8f6ec}
+  .arena-tier-brawler:hover {background:#243451;border-color:#ffe16b;box-shadow:0 3px 0 #060d2033}
+  .arena-directory-card:hover {background:#243451;border-color:#ffe16b;box-shadow:0 8px 20px #060d2033}
+}
+@media(prefers-reduced-motion:reduce) {
+  .arena-workspace,.arena-workspace * {animation:none!important;transition:none!important}
+}

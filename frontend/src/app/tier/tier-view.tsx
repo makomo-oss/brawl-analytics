@@ -227,7 +227,7 @@ export default function TierListPage({ initialTierData, initialMatchups }: { ini
     : null
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-7xl mx-auto">
+    <div className="arena-workspace arena-tier space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-7xl mx-auto">
       <div className="flex flex-col gap-2">
         <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent flex items-center gap-3">
@@ -363,10 +363,10 @@ export default function TierListPage({ initialTierData, initialMatchups }: { ini
                   if (chars.length === 0) return null;
 
                   return (
-                  <Card key={tierKey} className={`overflow-hidden backdrop-blur-sm shadow-lg border ${config.bg} transition-all hover:shadow-xl`}>
+                  <Card key={tierKey} data-arena-tier={tierKey} className={`arena-tier-row overflow-hidden backdrop-blur-sm shadow-lg border ${config.bg} transition-all hover:shadow-xl`}>
                     <div className="flex flex-col md:flex-row">
                       {/* Tier Label Column */}
-                      <div className={`md:w-32 flex flex-col items-center justify-center p-4 bg-gradient-to-br ${config.color} text-white shadow-inner`}>
+                      <div className={`arena-tier-label md:w-32 flex flex-col items-center justify-center p-4 bg-gradient-to-br ${config.color} text-white shadow-inner`}>
                         <h2 className="text-5xl font-black drop-shadow-md">{tierKey}</h2>
                         <span className="text-xs font-bold mt-2 bg-black/20 px-2 py-1 rounded-full text-center">{config.label}</span>
                       </div>
@@ -381,7 +381,7 @@ export default function TierListPage({ initialTierData, initialMatchups }: { ini
                               key={charId}
                               onPreview={() => { void fetchCharacterDetail(charId) }}
                               onIntent={() => prefetchCharacterDetail(charId)}
-                              className="group relative flex flex-col items-center justify-center p-1.5 sm:p-2 rounded-xl bg-background/60 hover:bg-background/90 border border-primary/10 hover:border-primary/50 transition-all hover:-translate-y-1 cursor-pointer shadow-sm"
+                              className="arena-tier-brawler group relative flex flex-col items-center justify-center p-1.5 sm:p-2 rounded-xl bg-background/60 hover:bg-background/90 border border-primary/10 hover:border-primary/50 transition-all hover:-translate-y-1 cursor-pointer shadow-sm"
                             >
                               <div className="w-11 h-11 sm:w-14 sm:h-14 shrink-0 border-2 border-black/20 dark:border-white/10 group-hover:border-primary transition-colors shadow-sm rounded-md bg-primary/10 relative overflow-hidden flex items-center justify-center">
                                 {/* eslint-disable-next-line @next/next/no-img-element */}

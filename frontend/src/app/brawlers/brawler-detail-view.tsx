@@ -126,7 +126,7 @@ function StatsPanel({ data }: { data: CohortData }) {
 
 export default function BrawlerDetailView({ data }: { data: BrawlerPageData }) {
   const [selected, setSelected] = useState<Cohort>("global")
-  return <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+  return <div className="arena-workspace arena-detail max-w-7xl mx-auto space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
     <nav aria-label="パンくず" className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
       <Link href="/" className="hover:text-primary">ホーム</Link><span aria-hidden="true">/</span>
       <Link href="/brawlers" className="hover:text-primary">キャラ一覧</Link><span aria-hidden="true">/</span><span aria-current="page">{data.nameJa}</span>

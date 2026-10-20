@@ -425,7 +425,7 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
 
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="arena-workspace arena-dashboard space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <Card className="relative z-50 bg-card border-primary/20 shadow-sm overflow-visible">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">

@@ -1,6 +1,7 @@
 import type { AnchorHTMLAttributes } from "react"
 
-// Live Pages routes return a complete document rather than Next's RSC payload.
+// Real anchors work before hydration and in new tabs. The shared Pages router
+// enhances supported clicks without requesting Next's RSC payload.
 export default function DocumentLink({ prefetch, ...props }: AnchorHTMLAttributes<HTMLAnchorElement> & { prefetch?: boolean }) {
   void prefetch
   return <a {...props} />

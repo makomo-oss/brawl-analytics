@@ -29,14 +29,14 @@ html.dark {
   --sidebar-ring:#ffe16b;
 }
 
-main:not(:has(.arena-home)) h1 {
+:is(main:not(:has(.arena-route-frame, .arena-home)), .arena-route-frame:not(:has(.arena-home))) h1 {
   color:#f8f6ec;background-image:none;-webkit-text-fill-color:currentColor;
   font-weight:850;letter-spacing:-.035em;text-wrap:balance;
 }
-main:not(:has(.arena-home)) h1 .bg-clip-text {
+:is(main:not(:has(.arena-route-frame, .arena-home)), .arena-route-frame:not(:has(.arena-home))) h1 .bg-clip-text {
   color:#f8f6ec;background-image:none;-webkit-text-fill-color:currentColor;
 }
-main:not(:has(.arena-home)) h1>svg {color:#ffe16b;stroke-width:1.8}
+:is(main:not(:has(.arena-route-frame, .arena-home)), .arena-route-frame:not(:has(.arena-home))) h1>svg {color:#ffe16b;stroke-width:1.8}
 .arena-workspace {color:#f8f6ec}
 .arena-workspace [data-slot="card"] {
   background-color:#1a243d;border-color:#3b4865;

@@ -32,8 +32,23 @@
   from { translate: -110% 0; }
   to { translate: 110% 0; }
 }
+@keyframes arena-route-arrive {
+  from { opacity: .72; translate: 0 5px; }
+  to { opacity: 1; translate: 0 0; }
+}
+@keyframes arena-route-loading {
+  from { scale: .12 1; }
+  to { scale: .84 1; }
+}
+.arena-route-progress {position:fixed;inset:78px 0 auto;z-index:60;height:2px;background:#ffe16b;transform-origin:left;scale:.6 1;pointer-events:none}
+.arena-route-error {margin-bottom:20px;padding:16px;border:1px solid #ff998a;border-radius:10px;background:#202c47;color:#f8f6ec}
+.arena-route-error p {margin-bottom:12px}
+.arena-route-error :is(button,a) {display:inline-flex;align-items:center;min-height:44px;margin-right:16px;color:#ffe16b;text-decoration:underline;text-underline-offset:4px;cursor:pointer}
+@media(max-width:1023px) {.arena-route-progress {top:62px}}
 
 @media (prefers-reduced-motion: no-preference) {
+  .arena-route-frame[data-current="true"] {animation:arena-route-arrive 200ms var(--arena-ease-out)}
+  .arena-route-progress {animation:arena-route-loading 1200ms var(--arena-ease-out) 120ms infinite alternate backwards}
   /* A brief sequence introduces the page, then every decorative element rests. */
   .arena-home-kicker, .arena-home-title, .arena-home-description, .arena-search-region {
     animation: arena-enter 420ms var(--arena-ease-out) var(--arena-enter-delay, 0ms) backwards;
@@ -55,7 +70,7 @@
   .arena-workspace { animation: none; }
   .arena-workspace > h1, .arena-workspace > header,
   .arena-tier > div:first-child, .arena-draft-setup > div:first-child,
-  main:has(.arena-dashboard) > header {
+  main:has(.arena-dashboard) > header, .arena-route-frame:has(.arena-dashboard) > header {
     animation: arena-enter 320ms var(--arena-ease-out) backwards;
   }
   .arena-draft-setup > [data-slot="card"],

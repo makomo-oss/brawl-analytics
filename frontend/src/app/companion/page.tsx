@@ -70,7 +70,13 @@ export default function DraftCompanionPage() {
   const [detailsError, setDetailsError] = useState("")
   const draftRequestRef = useRef(0)
 
-  useEffect(() => () => { ++draftRequestRef.current }, [])
+  useEffect(() => {
+    // Activity pauses effects while another tab is visible. Resume a pending
+    // details request, or release a setup request cancelled while hidden.
+    if (phase === "setup") setLoading(false)
+    else if (!detailsReady) void retryDraftDetails()
+    return () => { ++draftRequestRef.current }
+  }, [])
 
   // 初期ロード：カテゴリの取得
   useEffect(() => {
@@ -79,8 +85,8 @@ export default function DraftCompanionPage() {
         const data = await fetchPublicStats(`${API_URL}/meta/categories?type=gachi`)
         if (data) {
           setCategories(data)
-          if (data.modes?.length > 0) setSelectedMode(data.modes[0])
-          if (data.maps?.length > 0) setSelectedMap(data.maps[0])
+          if (data.modes?.length > 0) setSelectedMode(current => current || data.modes[0])
+          if (data.maps?.length > 0) setSelectedMap(current => current || data.maps[0])
         }
       } catch (err) {
         setError(err instanceof TypeError ? "通信に失敗しました。時間をおいて再読み込みしてください。" : err instanceof Error ? err.message : "データを取得できませんでした")

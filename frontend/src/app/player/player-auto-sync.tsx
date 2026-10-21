@@ -75,7 +75,7 @@ export default function PlayerAutoSync({ playerTag, onCollected }: { playerTag: 
         body: JSON.stringify({ enabled: !state.enabled }),
       })
       if (!response.ok) {
-        const result = await response.json().catch(() => ({}))
+        const result = await response.json().catch(() => ({})) as { detail?: unknown }
         throw new Error(typeof result.detail === "string" ? result.detail : "自動同期の設定を保存できませんでした。")
       }
       const result: SyncState = await response.json()

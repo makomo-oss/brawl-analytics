@@ -11,12 +11,13 @@ const safeJson = (value: unknown) => JSON.stringify(value).replace(/</g, "\\u003
 
 export function renderPage(page: RuntimePage) {
   const overview = page.kind === "home" || page.kind === "tier"
+  const general = overview || page.kind === "player" || page.kind === "companion"
   const isDetail = page.kind === "detail"
   const name = isDetail ? page.data.nameJa : ""
-  const copy = page.kind === "home" || page.kind === "tier" ? searchCopy[page.kind] : isDetail ? brawlerSearchCopy(name) : page.kind === "condition" ? conditionCopy(page.data.entry) : page.kind === "conditions" ? { title: `ブロスタ ${page.category === "modes" ? "モード" : "マップ"}別最強キャラランキング`, description: `${page.category === "modes" ? "モード" : "マップ"}別のキャラ勝率・使用率ランキング。` } : searchCopy.brawlers
+  const copy = page.kind === "home" || page.kind === "tier" || page.kind === "player" || page.kind === "companion" ? searchCopy[page.kind] : isDetail ? brawlerSearchCopy(name) : page.kind === "condition" ? conditionCopy(page.data.entry) : page.kind === "conditions" ? { title: `ブロスタ ${page.category === "modes" ? "モード" : "マップ"}別最強キャラランキング`, description: `${page.category === "modes" ? "モード" : "マップ"}別のキャラ勝率・使用率ランキング。` } : searchCopy.brawlers
   const title = `${copy.title} | ブロラボ`
   const description = copy.description
-  const index = overview || indexablePage(page as import("@/lib/llm-data").PublicPage)
+  const index = general || indexablePage(page as import("@/lib/llm-data").PublicPage)
   const url = `${SITE_URL}${page.path}`
   const breadcrumb = { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [
     { "@type": "ListItem", position: 1, name: "ホーム", item: SITE_URL },
@@ -24,8 +25,8 @@ export function renderPage(page: RuntimePage) {
     ...(isDetail ? [{ "@type": "ListItem", position: 3, name, item: url }] : []),
   ] }
   const schema = page.kind === "condition" ? conditionSchema(page.data) : page.kind === "conditions" ? collectionSchema(page.path, copy.title, conditionBreadcrumbs(undefined, page.category), page.index[page.category].map(row => ({ name: row.label, path: row.path }))) : page.kind === "directory" ? collectionSchema(page.path, copy.title, [{ name: "ホーム", path: "/" }, { name: "キャラ一覧", path: "/brawlers" }], page.entries.map(row => ({ name: row.nameJa, path: `/brawlers/${row.slug}` }))) : breadcrumb
-  const structured = page.kind === "home" || page.kind === "tier" ? { "@context": "https://schema.org", "@graph": [...siteNodes(), { "@type": "WebPage", "@id": url, url, name: copy.title, inLanguage: "ja", isPartOf: reference(SITE_ID), dateModified: normalizeDate(page.tierData.updated_at) || undefined }] } : pageSchema(page as import("@/lib/llm-data").PublicPage, schema, true)
-  const dataLinks = overview ? "" : `<link rel="alternate" type="application/json" href="${SITE_URL}${dataPath(page.path)}"><link rel="describedby" type="application/json" href="${SITE_URL}/data/index.json"><link rel="describedby" type="application/ld+json" href="${SITE_URL}/data/catalog.jsonld">`
+  const structured = general ? { "@context": "https://schema.org", "@graph": [...siteNodes(), { "@type": "WebPage", "@id": url, url, name: copy.title, inLanguage: "ja", isPartOf: reference(SITE_ID), dateModified: (page.kind === "home" || page.kind === "tier") ? normalizeDate(page.tierData.updated_at) || undefined : undefined }] } : pageSchema(page as import("@/lib/llm-data").PublicPage, schema, true)
+  const dataLinks = general ? "" : `<link rel="alternate" type="application/json" href="${SITE_URL}${dataPath(page.path)}"><link rel="describedby" type="application/json" href="${SITE_URL}/data/index.json"><link rel="describedby" type="application/ld+json" href="${SITE_URL}/data/catalog.jsonld">`
   return `<!DOCTYPE html><html lang="ja" class="dark"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">${shell.links}<title>${escapeHtml(title)}</title><meta name="description" content="${escapeHtml(description)}"><link rel="canonical" href="${escapeHtml(url)}">${dataLinks}<meta name="robots" content="${index ? "index" : "noindex"}, follow"><meta property="og:type" content="website"><meta property="og:locale" content="ja_JP"><meta property="og:site_name" content="ブロラボ"><meta property="og:title" content="${escapeHtml(title)}"><meta property="og:description" content="${escapeHtml(description)}"><meta property="og:url" content="${escapeHtml(url)}"><meta property="og:image" content="${SITE_URL}/icon-512.png"><meta name="twitter:card" content="summary"><meta name="twitter:title" content="${escapeHtml(title)}"><meta name="twitter:description" content="${escapeHtml(description)}"><meta name="twitter:image" content="${SITE_URL}/icon-512.png"><script type="application/ld+json">${safeJson(structured)}</script></head><body class="${shell.bodyClass}"><div id="brawler-runtime">${renderToString(<App page={page} />)}</div><script id="brawler-page-data" type="application/json">${safeJson(page)}</script><script type="module" src="${shell.client}"></script></body></html>`
 }
 

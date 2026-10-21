@@ -116,6 +116,7 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
   const params = useParams()
   const router = useRouter()
   const routeTag = defaultTag || (params?.tag ? decodeURIComponent(String(params.tag)) : "")
+  const appliedRouteTag = useRef<string | undefined>(undefined)
 
   const [searchMode, setSearchMode] = useState<"player" | "club">("player")
   const [playerTag, setPlayerTag] = useState(routeTag ? (routeTag.startsWith("#") ? routeTag : `#${routeTag}`) : "")
@@ -261,6 +262,10 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
   
   // URL パラメータ(defaultTag)でタグが渡された場合、初回自動同期を実行
   useEffect(() => {
+    // Returning to a preserved tab must not restart the URL-triggered sync or
+    // clear an in-progress club view. A changed query still loads its player.
+    if (appliedRouteTag.current === defaultTag) return
+    appliedRouteTag.current = defaultTag
     if (defaultTag) {
       const formattedTag = defaultTag.startsWith("#") ? defaultTag : `#${defaultTag}`
       setPlayerTag(formattedTag)
@@ -337,7 +342,7 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
         }
         return
       }
-      const result = await res.json()
+      const result = await res.json() as DashboardData & { error?: string }
       if (result.error) {
         setErrorMsg(result.error)
         return
@@ -346,7 +351,9 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
       setData(result)
       setAnalysisRevision(value => value + 1)
       // URL を現在のタグで更新
-      window.history.replaceState(null, '', `/player?tag=${encodeURIComponent(cacheKey)}`)
+      if (window.location.pathname === "/player") {
+        window.history.replaceState(window.history.state, '', `/player?tag=${encodeURIComponent(cacheKey)}`)
+      }
     } catch (error) {
       console.error("Fetch error", error)
       setErrorMsg("ネットワークエラーが発生しました。")

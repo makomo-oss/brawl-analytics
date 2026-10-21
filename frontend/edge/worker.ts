@@ -190,11 +190,19 @@ const worker = {
     if (url.pathname.startsWith("/data/")) return dataResponse(request, source => worker.fetch(source, env, ctx))
     const isCondition = /^\/(?:modes|maps)(?:\/|$)/.test(url.pathname)
     const isOverview = url.pathname === "/" || /^\/tier\/?$/.test(url.pathname)
-    const isDynamic = isOverview || isCondition || url.pathname === "/brawlers" || url.pathname.startsWith("/brawlers/") || url.pathname === "/sitemap.xml"
+    const isTool = /^\/(player|companion)\/?$/.test(url.pathname)
+    const isDynamic = isTool || isOverview || isCondition || url.pathname === "/brawlers" || url.pathname.startsWith("/brawlers/") || url.pathname === "/sitemap.xml"
     if (!isDynamic) return env.ASSETS.fetch(request)
     if (!["GET", "HEAD"].includes(request.method)) return new Response("Method not allowed", { status: 405, headers: { Allow: "GET, HEAD" } })
     const path = url.pathname === "/" ? "/" : url.pathname.replace(/\/$/, "")
     if (path !== url.pathname) return Response.redirect(`${url.origin}${path}${url.search}`, 308)
+    if (isTool) {
+      // Tool documents contain no player data or query values. Reuse the same
+      // shell as public pages so every entry URL can navigate without reloads.
+      const document = await env.ASSETS.fetch(new Request(`${url.origin}/__rendered-pages${path}.document`))
+      const body = document.ok ? document.body : renderPage(path === "/player" ? { kind: "player", path } : { kind: "companion", path: "/companion" })
+      return new Response(request.method === "HEAD" ? null : body, { headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "public, max-age=0, must-revalidate" } })
+    }
     if (!/^\/(?:brawlers|modes|maps)(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)?$/.test(path) && path !== "/sitemap.xml" && !isOverview) return env.ASSETS.fetch(new Request(`${url.origin}/404.html`)).then(response => new Response(request.method === "HEAD" ? null : response.body, { status: 404, headers: response.headers }))
     const key = new Request(`${url.origin}/__brawler-cache/${runtimeVersion}${path}`)
     const cache = await caches.open("brawler-pages")
@@ -217,7 +225,7 @@ const worker = {
         body = renderPage(page)
       } else {
         const index = await inputs(env, signal)
-        if (isOverview) body = renderPage({ kind: path === "/" ? "home" : "tier", path: path === "/" ? "/" : "/tier", tierData: index.overview[path === "/" ? "gachi" : "global"], initialMatchups: { global: {}, gachi: {} } })
+        if (isOverview) body = renderPage({ ...(path === "/" ? { kind: "home", path: "/" } as const : { kind: "tier", path: "/tier" } as const), tierData: index.overview[path === "/" ? "gachi" : "global"], initialMatchups: { global: {}, gachi: {} } })
         else if (path === "/sitemap.xml") body = xml(index, await conditionManifest(env, url.origin, signal))
         else if (path === "/brawlers") body = renderPage({ kind: "directory", path, entries: brawlerEntries(index) })
         else {

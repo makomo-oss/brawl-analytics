@@ -16,7 +16,8 @@
     "test:player-brawler-sort": "node scripts/test-player-brawler-sort.mjs",
     "test:brawler-preview-link": "node scripts/test-brawler-preview-link.mjs",
     "lint": "eslint",
-    "test:live-overview": "node scripts/test-live-overview.mjs"
+    "test:live-overview": "node scripts/test-live-overview.mjs",
+    "test:runtime-navigation": "node scripts/test-runtime-navigation.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",

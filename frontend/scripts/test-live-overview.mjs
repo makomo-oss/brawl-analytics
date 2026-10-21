@@ -39,6 +39,20 @@ const ctx = { waitUntil: promise => pending.push(promise) }
 const request = (path, method = "GET") => worker.fetch(new Request(`https://example.com${path}`, { method }), env, ctx)
 const drain = async () => { await Promise.all(pending.splice(0)) }
 try {
+  for (const path of ["/player", "/companion"]) {
+    held = new Promise(() => {})
+    const response = await Promise.race([request(`${path}?tag=TEST-QUERY`), new Promise((_, reject) => setTimeout(() => reject(new Error("Tool HTML waited for API")), 1000))])
+    assert.equal(response.status, 200)
+    const html = await response.text()
+    assert.match(html, /id="brawler-runtime"/)
+    assert.doesNotMatch(html, /self\.__next_f|TEST-QUERY/)
+    assert(html.includes(`"kind":"${path.slice(1)}"`))
+    assert(html.includes(`rel="canonical" href="https://brawl-lab.sozai-hub.com${path}"`))
+    assert.equal(await (await request(path, "HEAD")).text(), "")
+    assert.equal((await request(`${path}/`)).status, 308)
+    assert.equal((await request(path, "POST")).status, 405)
+    held = null
+  }
   for (const path of ["/", "/tier"]) {
     let release
     held = new Promise(resolve => { release = resolve })

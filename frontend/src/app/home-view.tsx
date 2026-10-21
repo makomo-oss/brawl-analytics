@@ -556,7 +556,7 @@ export default function CockpitHomePage({ initialTierData, initialMatchups }: { 
       <footer className="arena-home-footer"><span>ブロラボ <small>BRAWL LAB</small></span><p>非公式ファンツール · PLAY SMART. HAVE FUN.</p></footer>
 
       {/* 既存のキャラクター対面詳細・データ取得を維持 */}
-      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+      {selectedChar && <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent side="right" className="w-full sm:max-w-md p-0 flex flex-col bg-zinc-950 border-zinc-800">
           {selectedChar && (
             <>
@@ -577,7 +577,13 @@ export default function CockpitHomePage({ initialTierData, initialMatchups }: { 
                   <SheetDescription className="text-xs text-zinc-400">
                     環境スコア: {selectedChar.score} / {selectedChar.total_matches?.toLocaleString()}試合
                   </SheetDescription>
-                  {tierData?.characters?.[selectedChar.id]?.total_matches > 0 && <a href={brawlerPath(selectedChar.id)} className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                  {tierData?.characters?.[selectedChar.id]?.total_matches > 0 && <a href={brawlerPath(selectedChar.id)} className="inline-flex items-center gap-1 text-xs text-primary hover:underline" onClick={event => {
+                    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+                    // Activity retains this page. Unmount the portal before its effects stop.
+                    ++detailRequestRef.current;
+                    setSheetOpen(false);
+                    setSelectedChar(null);
+                  }}>
                     詳細ページを見る<ArrowRight className="w-3 h-3" />
                   </a>}
                 </div>
@@ -683,7 +689,7 @@ export default function CockpitHomePage({ initialTierData, initialMatchups }: { 
             </>
           )}
         </SheetContent>
-      </Sheet>
+      </Sheet>}
     </div>
   );
 }

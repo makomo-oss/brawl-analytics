@@ -410,7 +410,7 @@ export default function TierListPage({ initialTierData, initialMatchups }: { ini
       <Link href="/brawlers" className="inline-block text-sm font-medium text-primary hover:underline">キャラ詳細一覧を見る</Link>
 
       {/* キャラクター詳細モーダル (Sheet) */}
-      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+      {selectedChar && <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent className="w-full sm:max-w-md overflow-y-auto bg-card/95 backdrop-blur-xl border-l-primary/20">
           {selectedChar && (
             <div className="space-y-6 pb-8">
@@ -434,7 +434,13 @@ export default function TierListPage({ initialTierData, initialMatchups }: { ini
                       </Badge>
                       <span className="text-xs font-mono text-muted-foreground">スコア: {selectedChar.score} / {selectedChar.total_matches}試合</span>
                     </SheetDescription>
-                    {selectedChar.total_matches > 0 && <a href={brawlerPath(selectedChar.character_id)} className="inline-block mt-2 text-xs text-primary hover:underline">詳細ページを見る</a>}
+                    {selectedChar.total_matches > 0 && <a href={brawlerPath(selectedChar.character_id)} className="inline-block mt-2 text-xs text-primary hover:underline" onClick={event => {
+                      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+                      // Activity retains this page. Unmount the portal before its effects stop.
+                      ++detailRequestRef.current
+                      setSheetOpen(false)
+                      setSelectedChar(null)
+                    }}>詳細ページを見る</a>}
                   </div>
                 </div>
               </SheetHeader>
@@ -547,7 +553,7 @@ export default function TierListPage({ initialTierData, initialMatchups }: { ini
             </div>
           )}
         </SheetContent>
-      </Sheet>
+      </Sheet>}
     </div>
   )
 }

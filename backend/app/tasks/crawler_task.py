@@ -14,8 +14,16 @@ logger = logging.getLogger(__name__)
 ANCHOR_LIMIT = 10
 ELITE_REFRESH_LIMIT = 50
 DISCOVERED_LIMIT = 100
-PLAYER_WRITE_BATCH = 50
-MATCH_WRITE_BATCH = 500
+PLAYER_WRITE_BATCH = 10
+MATCH_WRITE_BATCH = 100
+
+
+async def upsert_batches(db, table: str, records: list[dict], batch_size: int):
+    """Bound write payloads and avoid decoding copies of profiles we already hold."""
+    for offset in range(0, len(records), batch_size):
+        batch = records[offset:offset + batch_size]
+        await asyncio.to_thread(
+            lambda: db.table(table).upsert(batch, returning="minimal").execute())
 
 def select_anchor_tags(db) -> set[str]:
     """Seed Ranked discovery from recently verified Elite+ profiles."""
@@ -203,6 +211,9 @@ async def run_crawler_task(report_stage: Callable[[str], None] | None = None, ag
             encountered_in_battles.update(e_players)
         if p_data and int(p_data["unlocked_characters"].get("ranked_rank") or 0) >= 13:
             ranked_encounters.update(r_players)
+    # Encounter sets are only needed for seed discovery; release each result
+    # container before collecting the next phase and serializing write payloads.
+    del results
             
     # フェーズ2: クラブから新メンバーを抽出 & クラブ情報を保存 (芋づる式クローリング制限：最大10クラブ)
     new_player_tags = set()
@@ -262,6 +273,7 @@ async def run_crawler_task(report_stage: Callable[[str], None] | None = None, ag
                 upsert_players.append(p_data)
             if m_data:
                 upsert_matches.extend(m_data)
+        del new_results
 
     # Different discovery paths can return the same player's log. Postgres rejects
     # duplicate match_id values inside one ON CONFLICT upsert with SQLSTATE 21000.
@@ -278,9 +290,7 @@ async def run_crawler_task(report_stage: Callable[[str], None] | None = None, ag
     if upsert_players:
         try:
             logger.info(f"Bulk upserting {len(upsert_players)} players...")
-            for offset in range(0, len(upsert_players), PLAYER_WRITE_BATCH):
-                batch = upsert_players[offset:offset + PLAYER_WRITE_BATCH]
-                await asyncio.to_thread(lambda: db.table("players").upsert(batch).execute())
+            await upsert_batches(db, "players", upsert_players, PLAYER_WRITE_BATCH)
         except Exception as e:
             logger.error(f"Failed to upsert players: {e}")
             raise
@@ -288,7 +298,7 @@ async def run_crawler_task(report_stage: Callable[[str], None] | None = None, ag
     if upsert_clubs:
         try:
             logger.info(f"Bulk upserting {len(upsert_clubs)} clubs...")
-            await asyncio.to_thread(lambda: db.table("clubs").upsert(upsert_clubs).execute())
+            await upsert_batches(db, "clubs", upsert_clubs, PLAYER_WRITE_BATCH)
         except Exception as e:
             logger.error(f"Failed to upsert clubs: {e}")
             
@@ -296,9 +306,7 @@ async def run_crawler_task(report_stage: Callable[[str], None] | None = None, ag
         try:
             report("saving_matches")
             logger.info(f"Bulk upserting {len(upsert_matches)} matches...")
-            for offset in range(0, len(upsert_matches), MATCH_WRITE_BATCH):
-                batch = upsert_matches[offset:offset + MATCH_WRITE_BATCH]
-                await asyncio.to_thread(lambda: db.table("match_raw_history").upsert(batch).execute())
+            await upsert_batches(db, "match_raw_history", upsert_matches, MATCH_WRITE_BATCH)
         except Exception:
             logger.exception("Failed to persist matches; aggregation cancelled")
             raise

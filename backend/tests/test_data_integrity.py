@@ -212,6 +212,33 @@ def test_failed_crawl_does_not_delete_or_write_data(monkeypatch):
     db.table.return_value.delete.assert_not_called()
 
 
+@pytest.mark.parametrize("table,batch_size", [("players", 10), ("match_raw_history", 100)])
+def test_crawler_writes_bounded_batches_without_returning_records(table, batch_size):
+    from unittest.mock import Mock
+    from app.tasks.crawler_task import upsert_batches
+
+    db = Mock()
+    records = [{"id": i} for i in range(batch_size * 2 + 1)]
+    asyncio.run(upsert_batches(db, table, records, batch_size))
+
+    writes = db.table.return_value.upsert.call_args_list
+    assert [len(write.args[0]) for write in writes] == [batch_size, batch_size, 1]
+    assert [record for write in writes for record in write.args[0]] == records
+    assert all(write.kwargs == {"returning": "minimal"} for write in writes)
+    assert all(call.args == (table,) for call in db.table.call_args_list)
+
+
+def test_crawler_stops_after_a_failed_write_batch():
+    from unittest.mock import Mock
+    from app.tasks.crawler_task import upsert_batches
+
+    db = Mock()
+    db.table.return_value.upsert.return_value.execute.side_effect = RuntimeError("write failed")
+    with pytest.raises(RuntimeError, match="write failed"):
+        asyncio.run(upsert_batches(db, "players", [{"id": i} for i in range(11)], 10))
+    assert db.table.return_value.upsert.call_count == 1
+
+
 def test_cleanup_deletes_only_expired_battles_and_checks_remaining(monkeypatch):
     from unittest.mock import Mock
     from app.tasks import cleanup_task

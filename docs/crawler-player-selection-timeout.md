@@ -75,3 +75,23 @@ backoff. Only the interrupted batch is repeated; stable primary keys make
 the upsert safe even if the original request committed before the read
 failed. Validation/SQL errors still fail immediately, and an exhausted
 transport retry is propagated to the workflow.
+
+## Successful production verification
+
+Commit `24907b4` became live as `dep-dbce0a8n74is73885be0` at 15:56:36 UTC.
+The crawler-related regression tests passed (10 tests, including retry
+recovery and exhaustion).
+
+[Workflow attempt 4](https://github.com/makomo-oss/brawl-analytics/actions/runs/39595845413/attempts/4)
+completed successfully at 16:05:30 UTC, taking 8m26s:
+
+- 156 profiles fetched, including 142 Elite+ profiles, and 10 clubs fetched.
+- 3,671 battle observations saved; the raw table count increased by 3,605
+  during the crawl, to 214,857 (concurrent auto-sync can contribute to that delta).
+- 211,686 observations inside the analysis window aggregated successfully.
+- The live Tier cache refresh completed successfully.
+
+Render reported no server failures during this retry. Memory samples at
+30-second resolution peaked at approximately 186 MiB during the observed
+crawl/save interval, below the 512 MiB limit. These samples are not a
+continuous measurement of the process's instantaneous peak.

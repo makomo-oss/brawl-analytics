@@ -239,6 +239,37 @@ def test_crawler_stops_after_a_failed_write_batch():
     assert db.table.return_value.upsert.call_count == 1
 
 
+def test_crawler_retries_only_the_interrupted_write_batch(monkeypatch):
+    from unittest.mock import Mock
+    from app.tasks import crawler_task
+
+    db = Mock()
+    records = [{"match_id": str(i)} for i in range(5)]
+    db.table.return_value.upsert.return_value.execute.side_effect = [
+        None, httpx.ReadError("Resource temporarily unavailable"), None, None,
+    ]
+    monkeypatch.setattr(crawler_task.asyncio, "sleep", AsyncMock())
+    asyncio.run(crawler_task.upsert_batches(db, "match_raw_history", records, 2))
+    writes = db.table.return_value.upsert.call_args_list
+    assert [write.args[0] for write in writes] == [
+        records[:2], records[2:4], records[2:4], records[4:],
+    ]
+    crawler_task.asyncio.sleep.assert_awaited_once_with(0.5)
+
+
+def test_crawler_raises_when_write_transport_retries_are_exhausted(monkeypatch):
+    from unittest.mock import Mock
+    from app.tasks import crawler_task
+
+    db = Mock()
+    db.table.return_value.upsert.return_value.execute.side_effect = httpx.ReadError("offline")
+    monkeypatch.setattr(crawler_task.asyncio, "sleep", AsyncMock())
+    with pytest.raises(httpx.ReadError, match="offline"):
+        asyncio.run(crawler_task.upsert_batches(db, "players", [{"player_tag": "ABC"}], 10))
+    assert db.table.return_value.upsert.call_count == 3
+    assert [call.args[0] for call in crawler_task.asyncio.sleep.await_args_list] == [0.5, 1.0]
+
+
 def test_cleanup_deletes_only_expired_battles_and_checks_remaining(monkeypatch):
     from unittest.mock import Mock
     from app.tasks import cleanup_task

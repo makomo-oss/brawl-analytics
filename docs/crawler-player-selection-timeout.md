@@ -61,3 +61,17 @@ write cases. One existing test,
 it expects an observation with an unknown brawler to be saved while the
 current parser deliberately skips it. Running that test with the unchanged
 `HEAD` crawler reproduced the same failure.
+
+## Write transport failure during production verification
+
+Commit `d5c5551` was deployed as `dep-dbcdtf0n74is7387oa90` and became live
+at 15:49:30 UTC. Automatic deployment did not start after the push, so a
+manual deployment was used after confirming no deployment was queued.
+
+Attempt 3 reached `saving_matches` without a server restart, then stopped
+on `httpx.ReadError: [Errno 11] Resource temporarily unavailable`. Bulk
+writes now retry transport errors up to three attempts with 0.5s and 1s
+backoff. Only the interrupted batch is repeated; stable primary keys make
+the upsert safe even if the original request committed before the read
+failed. Validation/SQL errors still fail immediately, and an exhausted
+transport retry is propagated to the workflow.

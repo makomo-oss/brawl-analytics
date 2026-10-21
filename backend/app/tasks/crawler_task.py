@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import random
+import httpx
 from collections import Counter
 from datetime import datetime, timedelta, timezone
 from typing import Callable
@@ -16,14 +17,26 @@ ELITE_REFRESH_LIMIT = 50
 DISCOVERED_LIMIT = 100
 PLAYER_WRITE_BATCH = 10
 MATCH_WRITE_BATCH = 100
+WRITE_ATTEMPTS = 3
 
 
 async def upsert_batches(db, table: str, records: list[dict], batch_size: int):
     """Bound write payloads and avoid decoding copies of profiles we already hold."""
     for offset in range(0, len(records), batch_size):
         batch = records[offset:offset + batch_size]
-        await asyncio.to_thread(
-            lambda: db.table(table).upsert(batch, returning="minimal").execute())
+        # A transport failure can happen after the database committed the write.
+        # Replaying this same upsert is safe because record primary keys are stable.
+        for attempt in range(WRITE_ATTEMPTS):
+            try:
+                await asyncio.to_thread(
+                    lambda: db.table(table).upsert(batch, returning="minimal").execute())
+                break
+            except httpx.TransportError:
+                if attempt == WRITE_ATTEMPTS - 1:
+                    raise
+                logger.warning("Retrying %s write batch after a transport failure (%s/%s)",
+                               table, attempt + 1, WRITE_ATTEMPTS)
+                await asyncio.sleep(0.5 * 2 ** attempt)
 
 def select_anchor_tags(db) -> set[str]:
     """Seed Ranked discovery from recently verified Elite+ profiles."""

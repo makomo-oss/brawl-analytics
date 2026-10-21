@@ -3,6 +3,7 @@
 @import "shadcn/tailwind.css";
 @import "./arena.css";
 @import "./arena-workspace.css";
+@import "./arena-motion.css";
 
 @custom-variant dark (&:is(.dark *));
 

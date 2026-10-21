@@ -1,0 +1,181 @@
+/* One motion language for the existing UI. Content never depends on JS or an
+   observer becoming ready. Individual translate/scale preserve card rotations. */
+:root {
+  --arena-ease-out: cubic-bezier(.22, 1, .36, 1);
+  --arena-ease-control: cubic-bezier(.2, 0, 0, 1);
+  --arena-motion-fast: 140ms;
+  --arena-motion-medium: 220ms;
+}
+
+@keyframes arena-enter {
+  from { opacity: 0; translate: 0 10px; }
+  to { opacity: 1; translate: 0 0; }
+}
+@keyframes arena-deal {
+  from { opacity: 0; translate: var(--arena-deal-x, 0) 16px; scale: .96; }
+  to { opacity: 1; translate: 0 0; scale: 1; }
+}
+@keyframes arena-accent {
+  from { opacity: 0; scale: .82; }
+  70% { opacity: 1; scale: 1.035; }
+  to { opacity: 1; scale: 1; }
+}
+@keyframes arena-selection {
+  from { opacity: .75; scale: .985; }
+  to { opacity: 1; scale: 1; }
+}
+@keyframes arena-panel {
+  from { opacity: .65; }
+  to { opacity: 1; }
+}
+@keyframes arena-sheen {
+  from { translate: -110% 0; }
+  to { translate: 110% 0; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* A brief sequence introduces the page, then every decorative element rests. */
+  .arena-home-kicker, .arena-home-title, .arena-home-description, .arena-search-region {
+    animation: arena-enter 420ms var(--arena-ease-out) var(--arena-enter-delay, 0ms) backwards;
+  }
+  .arena-home-title { --arena-enter-delay: 40ms; }
+  .arena-home-description { --arena-enter-delay: 80ms; }
+  .arena-search-region { --arena-enter-delay: 120ms; }
+  .arena-home-stage { animation: arena-enter 480ms var(--arena-ease-out) 60ms backwards; }
+  .arena-fighter { animation: arena-deal 520ms var(--arena-ease-out) 130ms backwards; }
+  .arena-fighter-amber { --arena-deal-x: -18px; }
+  .arena-fighter-spike { --arena-deal-x: 18px; animation-delay: 200ms; }
+  .arena-stage-versus { animation: arena-accent 360ms var(--arena-ease-out) 240ms backwards; }
+  .arena-stage-sticker { animation: arena-enter 300ms var(--arena-ease-out) 280ms backwards; }
+  .arena-tool-card { animation: arena-enter 420ms var(--arena-ease-out) var(--arena-stagger, 80ms) backwards; }
+  .arena-tool-card:nth-child(2) { --arena-stagger: 125ms; }
+  .arena-tool-card:nth-child(3) { --arena-stagger: 170ms; }
+
+  /* Replace the older whole-page slide with a quiet heading and panel entrance. */
+  .arena-workspace { animation: none; }
+  .arena-workspace > h1, .arena-workspace > header,
+  .arena-tier > div:first-child, .arena-draft-setup > div:first-child,
+  main:has(.arena-dashboard) > header {
+    animation: arena-enter 320ms var(--arena-ease-out) backwards;
+  }
+  .arena-draft-setup > [data-slot="card"],
+  .arena-dashboard > [data-slot="card"]:first-child,
+  .arena-draft-board > div:first-child,
+  .arena-directory > section[aria-label="キャラを探す"] {
+    animation: arena-enter 360ms var(--arena-ease-out) 55ms backwards;
+  }
+  .arena-tier-row {
+    animation: arena-enter 360ms var(--arena-ease-out) var(--arena-stagger, 40ms) backwards;
+  }
+  .arena-tier-row:nth-child(2) { --arena-stagger: 75ms; }
+  .arena-tier-row:nth-child(3) { --arena-stagger: 110ms; }
+  .arena-tier-row:nth-child(n+4) { --arena-stagger: 130ms; }
+  /* Limit the entrance to two desktop rows, rather than animating the full catalog. */
+  .arena-directory-card:nth-child(-n+14) {
+    animation: arena-enter 300ms var(--arena-ease-out) var(--arena-stagger, 40ms) backwards;
+  }
+  .arena-directory-card:nth-child(7n+2) { --arena-stagger: 70ms; }
+  .arena-directory-card:nth-child(7n+3) { --arena-stagger: 100ms; }
+  .arena-directory-card:nth-child(7n+4) { --arena-stagger: 130ms; }
+  .arena-directory-card:nth-child(7n+5) { --arena-stagger: 160ms; }
+  .arena-directory-card:nth-child(7n+6) { --arena-stagger: 190ms; }
+  .arena-directory-card:nth-child(7n+7) { --arena-stagger: 220ms; }
+
+  .arena-search-suggestions, .arena-search-error {
+    animation: arena-enter 180ms var(--arena-ease-out) backwards;
+  }
+  .arena-workspace [role="tabpanel"]:not([hidden]) {
+    animation: arena-panel 180ms var(--arena-ease-control);
+  }
+  .arena-workspace [role="tab"][aria-selected="true"] {
+    animation: arena-selection 180ms var(--arena-ease-out);
+  }
+
+  /* Small, immediate feedback. No animated dimensions, layout, or input delays. */
+  .arena-tool-card, .arena-meta-card, .arena-directory-card, .arena-tier-brawler,
+  .arena-stage-action, .arena-directory-action, .arena-search-button, .arena-history-chip,
+  .arena-workspace [data-slot="button"], .arena-workspace [data-slot="select-trigger"] {
+    transition: transform var(--arena-motion-medium) var(--arena-ease-out),
+      translate var(--arena-motion-fast) var(--arena-ease-out),
+      scale var(--arena-motion-fast) var(--arena-ease-out),
+      background-color var(--arena-motion-medium) var(--arena-ease-control),
+      border-color var(--arena-motion-medium) var(--arena-ease-control),
+      box-shadow var(--arena-motion-medium) var(--arena-ease-control);
+  }
+  .arena-tab-link, .arena-bottom-link, .arena-mobile-dashboard,
+  .arena-workspace [role="tab"], .arena-search-suggestion {
+    transition: background-color 180ms var(--arena-ease-control),
+      color 180ms var(--arena-ease-control), border-color 180ms var(--arena-ease-control);
+  }
+  .arena-tab-link > svg, .arena-stage-action > svg, .arena-directory-action > svg {
+    transition: translate 180ms var(--arena-ease-out);
+  }
+  .arena-fighter { transition: transform 380ms var(--arena-ease-out); }
+  .arena-search-form { transition: box-shadow 220ms var(--arena-ease-control); }
+  .arena-bottom-nav { transition: transform 260ms var(--arena-ease-out); }
+  :is(.arena-stage-action, .arena-directory-action, .arena-search-button,
+      .arena-tool-card, .arena-meta-card, .arena-directory-card, .arena-tier-brawler):active,
+  .arena-workspace [data-slot="button"]:not(:disabled):not([aria-disabled="true"]):active {
+    scale: .985;
+  }
+
+  /* Base UI owns mounting, closing and focus. Use its transition attributes so
+     dismissal still waits for the animation, including keyboard dismissal. */
+  body:has(.arena-home, .arena-workspace) [data-slot="select-content"] {
+    animation: none;
+    opacity: 1;
+    transform: scale(1);
+    transform-origin: var(--transform-origin);
+    transition: opacity 140ms var(--arena-ease-control), transform 180ms var(--arena-ease-out);
+  }
+  body:has(.arena-home, .arena-workspace) [data-slot="select-content"]:is([data-starting-style], [data-ending-style]) {
+    opacity: 0;
+    transform: scale(.98);
+  }
+  body:has(.arena-home, .arena-workspace) [data-slot="sheet-overlay"] {
+    transition: opacity 220ms var(--arena-ease-control);
+  }
+  body:has(.arena-home, .arena-workspace) [data-slot="sheet-content"] {
+    opacity: 1;
+    translate: 0 0;
+    transition: translate 300ms var(--arena-ease-out), opacity 180ms var(--arena-ease-control);
+  }
+  body:has(.arena-home, .arena-workspace) [data-slot="sheet-content"][data-side="right"]:is([data-starting-style], [data-ending-style]) { translate: 28px 0; opacity: 0; }
+  body:has(.arena-home, .arena-workspace) [data-slot="sheet-content"][data-side="left"]:is([data-starting-style], [data-ending-style]) { translate: -28px 0; opacity: 0; }
+  body:has(.arena-home, .arena-workspace) [data-slot="sheet-content"][data-side="bottom"]:is([data-starting-style], [data-ending-style]) { translate: 0 24px; opacity: 0; }
+  body:has(.arena-home, .arena-workspace) [data-slot="sheet-content"][data-side="top"]:is([data-starting-style], [data-ending-style]) { translate: 0 -24px; opacity: 0; }
+  body:has(.arena-home, .arena-workspace) [data-slot="sheet-content"][data-ending-style] { transition-duration: 180ms; }
+
+  /* Sheen exists only on genuine, empty loading placeholders. */
+  :is(.arena-home, .arena-workspace) div.animate-pulse:empty {
+    position: relative; overflow: hidden; animation: none;
+  }
+  :is(.arena-home, .arena-workspace) div.animate-pulse:empty::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(90deg, transparent, #b5c7ed12, transparent);
+    animation: arena-sheen 1600ms linear infinite;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) and (hover: hover) and (pointer: fine) {
+  .arena-home-stage:hover .arena-fighter-amber { transform: rotate(-12deg) translateY(-4px); }
+  .arena-home-stage:hover .arena-fighter-spike { transform: rotate(13deg) translateY(-4px); }
+  .arena-tab-link:hover > svg { translate: 0 -1px; }
+  .arena-stage-action:hover > svg, .arena-directory-action:hover > svg { translate: 3px 0; }
+  .arena-search-button:not(:disabled):hover,
+  .arena-workspace [data-slot="button"][class~="bg-primary"]:not(:disabled):hover { translate: 0 -1px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arena-site-header *, .arena-bottom-nav, .arena-bottom-nav *,
+  .arena-home, .arena-home *, .arena-home *::after,
+  .arena-workspace, .arena-workspace *, .arena-workspace *::after,
+  body:has(.arena-home, .arena-workspace) :is([data-slot="sheet-content"], [data-slot="sheet-overlay"], [data-slot="select-content"]) {
+    animation: none !important; transition: none !important; scroll-behavior: auto !important;
+  }
+  .arena-tool-card:hover, .arena-meta-card:hover,
+  .arena-directory-card:hover, .arena-tier-brawler:hover,
+  .arena-meta-card:hover .arena-meta-portrait,
+  .arena-tool-card:hover .arena-tool-action svg { transform: none; }
+  .arena-tool-card:hover .arena-tool-icon { transform: rotate(-6deg); }
+}

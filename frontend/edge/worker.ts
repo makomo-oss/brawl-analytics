@@ -4,7 +4,7 @@ import { SITE_URL } from "@/lib/seo"
 import { renderPage, escapeHtml, runtimeVersion } from "./server"
 import { conditionPage, conditionIndex, MODE_SLUGS, mapSlug, type ConditionEntry, type ConditionIndex } from "@/lib/condition-pages"
 import { translateMap, translateMode } from "@/lib/translations"
-import type { RuntimePage } from "./app"
+import type { OverviewPage, RuntimePage } from "./app"
 import { dataResponse } from "./public-data"
 
 const FRESH_SECONDS = 300
@@ -62,6 +62,14 @@ async function inputs(env: Env, signal: AbortSignal) {
   if (!Array.isArray(rows) || rows.some(row => !row || typeof row.name !== "string" || typeof row.nameJa !== "string" || typeof row.imageUrl !== "string")) throw new Error("Invalid character catalog")
   index.catalog = rows
   return index
+}
+
+async function overviewPreviews(env: Parameters<PagesFunction<Env>>[0]["env"], origin: string, kind: "home" | "tier"): Promise<OverviewPage["initialMatchups"]> {
+  try {
+    const page = await readJson(await env.ASSETS.fetch(new Request(`${origin}/__overview-snapshots/${kind}.json`))) as OverviewPage
+    if (page.kind === kind && page.initialMatchups?.global && page.initialMatchups.gachi) return page.initialMatchups
+  } catch { /* A missing snapshot must not prevent live Tier updates. */ }
+  return { global: {}, gachi: {} }
 }
 
 async function buildConditionManifest(env: Parameters<PagesFunction<Env>>[0]["env"], origin: string): Promise<ConditionIndex> {
@@ -225,7 +233,13 @@ const worker = {
         body = renderPage(page)
       } else {
         const index = await inputs(env, signal)
-        if (isOverview) body = renderPage({ ...(path === "/" ? { kind: "home", path: "/" } as const : { kind: "tier", path: "/tier" } as const), tierData: index.overview[path === "/" ? "gachi" : "global"], initialMatchups: { global: {}, gachi: {} } })
+        if (isOverview) {
+          // The live index deliberately omits pair statistics. Preserve the
+          // build's compact TOP5 so a refreshed document can still open panels
+          // immediately; each panel revalidates its own live/filtered data.
+          const initialMatchups = await overviewPreviews(env, url.origin, path === "/" ? "home" : "tier")
+          body = renderPage({ ...(path === "/" ? { kind: "home", path: "/" } as const : { kind: "tier", path: "/tier" } as const), tierData: index.overview[path === "/" ? "gachi" : "global"], initialMatchups })
+        }
         else if (path === "/sitemap.xml") body = xml(index, await conditionManifest(env, url.origin, signal))
         else if (path === "/brawlers") body = renderPage({ kind: "directory", path, entries: brawlerEntries(index) })
         else {

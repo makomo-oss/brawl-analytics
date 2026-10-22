@@ -310,9 +310,8 @@ def _display_matchups(pairs):
 def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, rank_tier: str = "all", include_details: bool = False, mode: str = None, detail_character: str = None, include_matchup_fallback: bool = True):
     db = get_db()
     
-    # マッチ数のカウント（キャッシュから高速取得）
-    total_analyzed = _get_cached_total_analyzed(db)
-        
+    # Counts below come from the selected aggregate rows. A raw-history exact
+    # count is unused here and delays every cold Tier/detail request.
     # macro_map_statsからデータをインメモリキャッシュから超高速取得
     data = _get_cached_macro_data(db)
         
@@ -323,7 +322,7 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
             "tiers": {"S+": [], "S": [], "A+": [], "A": [], "B": [], "C": [], "D": []},
             "type": type,
             "rank_tier": rank_tier,
-            "metrics": {"analyzed_matches": total_analyzed},
+            "metrics": {"analyzed_matches": 0},
             "characters": {}
         }
         

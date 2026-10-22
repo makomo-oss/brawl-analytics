@@ -38,6 +38,7 @@ const env = { NEXT_PUBLIC_API_URL: "https://test-statistics.example", ASSETS: { 
 const ctx = { waitUntil: promise => pending.push(promise) }
 const request = (path, method = "GET") => worker.fetch(new Request(`https://example.com${path}`, { method }), env, ctx)
 const drain = async () => { await Promise.all(pending.splice(0)) }
+const pageData = html => JSON.parse(html.match(/<script id="brawler-page-data" type="application\/json">(.*?)<\/script>/s)[1])
 try {
   for (const path of ["/player", "/companion"]) {
     held = new Promise(() => {})
@@ -60,12 +61,17 @@ try {
     assert.equal(response.status, 200)
     assert.equal(response.headers.get("X-Brawler-Rendering"), "snapshot")
     const html = await response.text()
+    const previews = pageData(html).initialMatchups
+    assert(Object.keys(previews.gachi).length > 0, "cold panels must have initial matchup data")
+    if (path === "/tier") assert(Object.keys(previews.global).length > 0)
     assert.match(html, new RegExp(`rel="canonical" href="https://brawl-lab.sozai-hub.com${path}"`))
     assert.doesNotMatch(html, /self\.__next_f|localhost:8000/)
     const links = path === "/tier" ? ["/modes", "/maps", "/brawlers"] : ["/tier", "/player", "/companion", "/brawlers"]
     for (const href of links) assert(html.includes(`href="${href}"`))
     release(); held = null; await drain()
     const live = await (await request(path)).text()
+    assert.deepEqual(pageData(live).initialMatchups, previews, "live refresh must preserve instant panel previews when the API index omits details")
+    assert.equal(pageData(live).tierData.metrics.analyzed_matches, 987654, "previews must not replace fresh Tier statistics")
     assert(live.includes(updatedAt))
     assert(live.includes('"dateModified":"2026-10-16T00:00:00.000Z"'))
     if (path === "/tier") assert(live.includes('dateTime="2026-10-16T00:00:00.000Z"'))
@@ -76,6 +82,7 @@ try {
   await request("/"); await request("/tier"); await drain()
   assert((await (await request("/tier")).text()).includes(updatedAt))
   const healthy = await (await request("/tier")).text()
+  assert(Object.keys(pageData(healthy).initialMatchups.global).length > 0, "previews must survive subsequent generations")
   for (const failure of ["empty", "offline"]) {
     now += 301_000; empty = failure === "empty"; offline = failure === "offline"
     await request("/tier"); await drain()
@@ -86,8 +93,13 @@ try {
   assert.equal((await request("/tier/" )).status, 308)
   assert.equal((await request("/", "POST")).status, 405)
   assets = false; storage.clear()
+  empty = offline = false
+  const withoutSnapshot = await request("/tier")
+  assert.equal(withoutSnapshot.status, 200, "missing previews must not break live Tier data")
+  assert.deepEqual(pageData(await withoutSnapshot.text()).initialMatchups, { global: {}, gachi: {} })
+  storage.clear(); offline = true
   assert.equal((await request("/tier")).status, 503)
-  console.log("PASS: home/Tier cold HTML, no-rebuild refresh, outage and empty-data retention, canonical, links, HEAD/308/405/503")
+  console.log("PASS: home/Tier cold HTML and instant previews survive live refresh, missing-preview fallback, no-rebuild refresh, outage and empty-data retention, canonical, links, HEAD/308/405/503")
 } finally {
   held = null; await drain()
   globalThis.fetch = original.fetch; globalThis.caches = original.caches; Date.now = original.now

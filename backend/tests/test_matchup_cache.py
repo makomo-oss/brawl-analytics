@@ -139,3 +139,18 @@ def test_public_detail_response_allows_browser_cache(monkeypatch):
     assert detail["character_id"] == "amber"
     parameters = app.openapi()["paths"]["/meta/characters/{character_id}"]["get"]["parameters"]
     assert "response" not in {parameter["name"] for parameter in parameters}
+
+
+@pytest.mark.parametrize("rows", [[], [dict(character_id="amber", match_type="gachi",
+    map_id="map", mode="brawlBall", total_matches=50, total_wins=30)]])
+def test_tier_and_detail_do_not_wait_for_unused_raw_history_count(monkeypatch, rows):
+    monkeypatch.setattr(meta, "get_db", lambda: None)
+    monkeypatch.setattr(meta, "_get_cached_macro_data", lambda db: rows)
+    monkeypatch.setattr(meta, "_contextual_pairs", lambda *args: {})
+    def unused_count(db):
+        pytest.fail("Tier/detail requests must not scan raw history for an unused count")
+    monkeypatch.setattr(meta, "_get_cached_total_analyzed", unused_count)
+    tier = meta.get_tier_list(type="gachi")
+    assert tier["metrics"]["analyzed_matches"] == (50 if rows else 0)
+    detail = meta.get_character_detail("amber", type="gachi")
+    assert detail["total_matches"] == (50 if rows else 0)

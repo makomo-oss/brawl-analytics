@@ -118,31 +118,29 @@ html.dark {
 .arena-tier-brawler>div {border-color:#596a87;background:#253652}
 .arena-tier-brawler>span {font-weight:700}
 
-/* Named rarity badges communicate more than a thin color-only edge. */
+/* Rarity colors cover each card; a quiet caption supplies the exact name. */
 .arena-directory-card {
-  --rarity-ink:#c4cede;--rarity-background:#27344c;--rarity-border:#53637d;
-  background:#1a243d;border-color:#3b4865;color:#f8f6ec;
-  border-radius:11px;box-shadow:2px 3px 0 #060d2026;
+  --rarity-ink:#c4cede;--rarity-card:linear-gradient(150deg,#35445d,#202c42);--rarity-border:#657590;
+  background:var(--rarity-card);border-color:var(--rarity-border);color:#f8f6ec;
+  border-radius:11px;box-shadow:inset 0 1px 0 #ffffff0d,2px 3px 0 #060d2026;
 }
-.arena-directory-card[data-rarity="1"] {--rarity-ink:#b3e0ff;--rarity-background:#1c344d;--rarity-border:#4c779b}
-.arena-directory-card[data-rarity="2"] {--rarity-ink:#a4efb5;--rarity-background:#1c3833;--rarity-border:#438464}
-.arena-directory-card[data-rarity="3"] {--rarity-ink:#afd0ff;--rarity-background:#22375c;--rarity-border:#527fb7}
-.arena-directory-card[data-rarity="4"] {--rarity-ink:#dfc3ff;--rarity-background:#35284f;--rarity-border:#8d63b8}
-.arena-directory-card[data-rarity="5"] {--rarity-ink:#ffbed1;--rarity-background:#47283c;--rarity-border:#b16080}
-.arena-directory-card[data-rarity="6"] {--rarity-ink:#ffe582;--rarity-background:#3c3424;--rarity-border:#9c8541}
-.arena-directory-card[data-rarity="7"] {--rarity-ink:#f4deff;--rarity-background:linear-gradient(115deg,#263854,#452c57);--rarity-border:#b18ad2}
-.arena-directory-card img {border:2px solid #596a87;box-shadow:0 2px 0 #060d2026}
-.arena-directory .arena-directory-card>span:not(.sr-only, .arena-rarity-badge) {color:#f8f6ec}
-.arena-rarity-badge {
-  display:flex;align-items:center;justify-content:center;width:calc(100% + 12px);
-  min-height:40px;margin-inline:-6px;padding:4px 3px;border:1px solid var(--rarity-border);
-  border-radius:7px;background:var(--rarity-background);color:var(--rarity-ink);
-  font-size:11px;line-height:1.3;font-weight:750;text-align:center;
+.arena-directory-card[data-rarity="1"] {--rarity-ink:#c1e4ff;--rarity-card:linear-gradient(150deg,#335477,#203249);--rarity-border:#648bb1}
+.arena-directory-card[data-rarity="2"] {--rarity-ink:#b5efcd;--rarity-card:linear-gradient(150deg,#195c40,#173b30);--rarity-border:#45996b}
+.arena-directory-card[data-rarity="3"] {--rarity-ink:#c5dcff;--rarity-card:linear-gradient(150deg,#214e9b,#1b3158);--rarity-border:#538be0}
+.arena-directory-card[data-rarity="4"] {--rarity-ink:#e7d2ff;--rarity-card:linear-gradient(150deg,#61318d,#34234f);--rarity-border:#9e6bcd}
+.arena-directory-card[data-rarity="5"] {--rarity-ink:#ffd3de;--rarity-card:linear-gradient(150deg,#8b324f,#462538);--rarity-border:#d26684}
+.arena-directory-card[data-rarity="6"] {--rarity-ink:#ffe9ab;--rarity-card:linear-gradient(150deg,#765419,#3d3020);--rarity-border:#bd9743}
+.arena-directory-card[data-rarity="7"] {--rarity-ink:#f4deff;--rarity-card:linear-gradient(135deg,#2b4977,#65375f 58%,#644a2d);--rarity-border:#bd8bcb}
+.arena-directory-card img {border:2px solid var(--rarity-border);background:#10182c66;box-shadow:0 2px 0 #060d2044}
+.arena-directory .arena-directory-card>span:not(.sr-only, .arena-rarity-label) {color:#f8f6ec}
+.arena-rarity-label {
+  display:block;width:calc(100% + 12px);margin-inline:-6px;margin-top:-6px;
+  color:var(--rarity-ink);font-size:10px;line-height:1.35;font-weight:600;text-align:center;
   word-break:keep-all;overflow-wrap:anywhere;
 }
-@media(max-width:359px) {.arena-rarity-badge {font-size:10px}}
-.arena-directory .arena-directory-card>span.text-cyan-400 {color:#bfdfa0}
-.arena-directory .arena-directory-card .text-muted-foreground {color:#aab9d2}
+@media(min-width:1024px) {.arena-rarity-label {font-size:11px}}
+.arena-directory .arena-directory-card>span.text-cyan-400 {color:#d9f1c2}
+.arena-directory .arena-directory-card .text-muted-foreground {color:#d2dce9}
 .arena-detail section[class*="bg-zinc-900"] {background:#1a243d;border-color:#3b4865}
 
 /* Portals live outside the page root and must share its surfaces and focus. */
@@ -160,7 +158,7 @@ body:has(.arena-workspace,.arena-home) [data-slot="select-item"][data-highlighte
   .arena-workspace [data-slot="button"][class~="bg-primary"]:not(:disabled):hover {background:#ffe88e}
   .arena-workspace [role="tab"]:not([aria-selected="true"]):hover {background:#293652;color:#f8f6ec}
   .arena-tier-brawler:hover {background:#243451;border-color:#ffe16b;box-shadow:0 3px 0 #060d2033}
-  .arena-directory-card:hover {background:#243451;border-color:#ffe16b;box-shadow:0 8px 20px #060d2033}
+  .arena-directory-card:hover {border-color:var(--rarity-ink);box-shadow:inset 0 1px 0 #ffffff14,0 8px 20px #060d2044}
 }
 @media(prefers-reduced-motion:reduce) {
   .arena-workspace,.arena-workspace * {animation:none!important;transition:none!important}

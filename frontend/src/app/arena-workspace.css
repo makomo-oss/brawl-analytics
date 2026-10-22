@@ -118,7 +118,7 @@ html.dark {
 .arena-tier-brawler>div {border-color:#596a87;background:#253652}
 .arena-tier-brawler>span {font-weight:700}
 
-/* Rarity colors cover each card; a quiet caption supplies the exact name. */
+/* Rarity colors cover each card; link descriptions retain the exact name. */
 .arena-directory-card {
   --rarity-ink:#c4cede;--rarity-card:linear-gradient(150deg,#35445d,#202c42);--rarity-border:#657590;
   background:var(--rarity-card);border-color:var(--rarity-border);color:#f8f6ec;
@@ -132,13 +132,7 @@ html.dark {
 .arena-directory-card[data-rarity="6"] {--rarity-ink:#ffe9ab;--rarity-card:linear-gradient(150deg,#765419,#3d3020);--rarity-border:#bd9743}
 .arena-directory-card[data-rarity="7"] {--rarity-ink:#f4deff;--rarity-card:linear-gradient(135deg,#2b4977,#65375f 58%,#644a2d);--rarity-border:#bd8bcb}
 .arena-directory-card img {border:2px solid var(--rarity-border);background:#10182c66;box-shadow:0 2px 0 #060d2044}
-.arena-directory .arena-directory-card>span:not(.sr-only, .arena-rarity-label) {color:#f8f6ec}
-.arena-rarity-label {
-  display:block;width:calc(100% + 12px);margin-inline:-6px;margin-top:-6px;
-  color:var(--rarity-ink);font-size:10px;line-height:1.35;font-weight:600;text-align:center;
-  word-break:keep-all;overflow-wrap:anywhere;
-}
-@media(min-width:1024px) {.arena-rarity-label {font-size:11px}}
+.arena-directory .arena-directory-card>span:not(.sr-only) {color:#f8f6ec}
 .arena-directory .arena-directory-card>span.text-cyan-400 {color:#d9f1c2}
 .arena-directory .arena-directory-card .text-muted-foreground {color:#d2dce9}
 .arena-detail section[class*="bg-zinc-900"] {background:#1a243d;border-color:#3b4865}

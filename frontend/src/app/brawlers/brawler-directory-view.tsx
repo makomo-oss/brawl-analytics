@@ -49,7 +49,7 @@ export default function BrawlerDirectoryView({ entries }: { entries: ReturnType<
         return <Link key={entry.slug} prefetch={false} href={`/brawlers/${entry.slug}`} title={rarity} data-rarity={entry.rarity?.id ?? "unknown"} className="arena-directory-card group relative overflow-hidden flex flex-col items-center gap-3 rounded-2xl border backdrop-blur-md p-3 sm:p-4 hover:-translate-y-1 hover:shadow-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white transition-all duration-300">
         {entry.imageUrl && <Image src={entry.imageUrl} alt="" width={56} height={56} className="w-14 h-14 rounded-xl shadow-md transition-transform duration-300 group-hover:scale-105" />}
         <span className="text-xs sm:text-sm font-bold text-zinc-200 group-hover:text-white text-center transition-colors">{entry.nameJa}</span>
-        <span className="arena-rarity-label"><span className="sr-only">レア度：</span>{entry.rarity?.id === 7 ? <>ウルトラ<wbr />レジェンドレア</> : rarity}</span>
+        <span className="sr-only">レア度：{rarity}</span>
         {statistical && <span className="text-xs font-bold tabular-nums text-cyan-400 text-center">{(() => {
           const stats = entry.directoryStats[cohort]
           if (!stats) return "データなし"

@@ -6,7 +6,7 @@ import { createHash } from "node:crypto"
 const root = process.cwd()
 // Next's export can retain directories that this script generated previously.
 // Remove only our generated assets so retired/low-sample URLs cannot reuse them.
-for (const name of ["__overview-snapshots", "__brawler-snapshots", "__condition-snapshots", "__rendered-pages", "data"]) {
+for (const name of ["__companion-snapshots", "__overview-snapshots", "__brawler-snapshots", "__condition-snapshots", "__rendered-pages", "data"]) {
   const target = resolve(root, "out", name)
   if (!target.startsWith(resolve(root, "out") + (process.platform === "win32" ? "\\" : "/"))) throw new Error("Invalid generated asset directory")
   await rm(target, { recursive: true, force: true })
@@ -21,6 +21,11 @@ async function writeData(page) {
 // Ship bounded per-character snapshots for an immediate first response while
 // the Worker refreshes live data. Newly discovered URLs still resolve via API.
 const snapshot = JSON.parse(await readFile(resolve(root, ".seo-data/brawler-pages.json"), "utf8"))
+const draftModule = await build({ entryPoints: ["src/lib/draft-categories.ts"], bundle: true, format: "esm", platform: "node", write: false })
+const { draftCategoriesFromSnapshot } = await import(`data:text/javascript;base64,${Buffer.from(draftModule.outputFiles[0].contents).toString("base64")}`)
+const companion = { kind: "companion", path: "/companion", categories: draftCategoriesFromSnapshot(snapshot) }
+await mkdir(resolve(root, "out/__companion-snapshots"), { recursive: true })
+await writeFile(resolve(root, "out/__companion-snapshots/index.json"), JSON.stringify(companion))
 const overviewDir = resolve(root, "out/__overview-snapshots")
 await mkdir(overviewDir, { recursive: true })
 for (const [kind, type] of [["home", "gachi"], ["tier", "global"]]) {
@@ -100,7 +105,8 @@ for (const page of directories) await writeDocument(page)
 for (const { slug } of brawlerEntries(snapshot)) await writeDocument({ kind: "detail", path: `/brawlers/${slug}`, data: brawlerPage(snapshot, slug) })
 for (const category of ["modes", "maps"]) for (const entry of conditionDirectory[category]) await writeDocument({ kind: "condition", path: entry.path, data: conditionPage(snapshot, entry, conditionDirectory) })
 for (const kind of ["home", "tier"]) await writeDocument(JSON.parse(await readFile(resolve(overviewDir, `${kind}.json`), "utf8")))
-for (const kind of ["player", "companion"]) await writeDocument({ kind, path: `/${kind}` })
+await writeDocument({ kind: "player", path: "/player" })
+await writeDocument(companion)
 await build({ ...common, entryPoints: ["edge/worker.ts"], outfile: "out/_worker.js" })
 await writeFile(resolve(root, "out/_routes.json"), JSON.stringify({ version: 1, include: ["/", "/tier", "/player", "/player/", "/companion", "/companion/", "/brawlers", "/brawlers/*", "/modes", "/modes/*", "/maps", "/maps/*", "/data/*", "/sitemap.xml"], exclude: [] }))
 console.log(`Live character pages built: ${clientPath}`)

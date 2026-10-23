@@ -10,11 +10,12 @@ import TierView from "@/app/tier/tier-view"
 import type { TierListData } from "@/lib/tier-data"
 import type { InitialMatchups } from "@/lib/matchup-preview"
 import PlayerView from "@/app/player/player-view"
-import DraftCompanionPage from "@/app/companion/page"
+import DraftCompanionPage from "@/app/companion/companion-view"
+import type { DraftCategories } from "@/lib/draft-categories"
 import { createRouteLoader, isRuntimePath } from "./route-loader"
 
 export type OverviewPage = ({ kind: "home"; path: "/" } | { kind: "tier"; path: "/tier" }) & { tierData: TierListData; initialMatchups: InitialMatchups }
-export type ToolPage = { kind: "player"; path: "/player" } | { kind: "companion"; path: "/companion" }
+export type ToolPage = { kind: "player"; path: "/player" } | { kind: "companion"; path: "/companion"; categories: DraftCategories }
 export type RuntimePage = PublicPage | OverviewPage | ToolPage
 
 function PageView({ page, href }: { page: RuntimePage; href: string }) {
@@ -22,7 +23,7 @@ function PageView({ page, href }: { page: RuntimePage; href: string }) {
     <header className="mb-8 space-y-2"><h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">ブロスタ戦績検索・勝率確認</h1></header>
     <PlayerView defaultTag={new URL(href, "https://brawl-lab.sozai-hub.com").searchParams.get("tag") || ""} />
   </>
-  if (page.kind === "companion") return <DraftCompanionPage />
+  if (page.kind === "companion") return <DraftCompanionPage initialCategories={page.categories} />
   return page.kind === "home" ? <HomeView initialTierData={page.tierData} initialMatchups={page.initialMatchups} /> : page.kind === "tier" ? <TierView initialTierData={page.tierData} initialMatchups={page.initialMatchups} /> : page.kind === "detail" ? <BrawlerDetailView data={page.data} /> : page.kind === "directory" ? <BrawlerDirectoryView entries={page.entries} /> : page.kind === "condition" ? <ConditionDetailView data={page.data} /> : <ConditionDirectoryView index={page.index} kind={page.category} />
 }
 

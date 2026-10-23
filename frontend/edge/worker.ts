@@ -6,6 +6,7 @@ import { conditionPage, conditionIndex, MODE_SLUGS, mapSlug, type ConditionEntry
 import { translateMap, translateMode } from "@/lib/translations"
 import type { OverviewPage, RuntimePage } from "./app"
 import { dataResponse } from "./public-data"
+import { isDraftCategories } from "@/lib/draft-categories"
 
 const FRESH_SECONDS = 300
 const STALE_SECONDS = 86400
@@ -140,9 +141,14 @@ async function conditionManifest(env: Parameters<PagesFunction<Env>>[0]["env"], 
 }
 
 async function liveCondition(env: Parameters<PagesFunction<Env>>[0]["env"], origin: string, path: string, signal: AbortSignal): Promise<RuntimePage | null> {
-  const directory = await conditionManifest(env, origin, signal)
   const kind = path.startsWith("/modes") ? "modes" : "maps"
-  if (path === `/${kind}`) return { kind: "conditions", path, category: kind, index: directory }
+  if (path === `/${kind}`) return { kind: "conditions", path, category: kind, index: await conditionManifest(env, origin, signal) }
+  // Details need their own scopes, not a refresh of hundreds of unrelated
+  // scopes. Hubs/sitemap advance the shared inventory; reuse its last complete
+  // generation (or the build) even when the inventory APIs are unavailable.
+  const cache = await caches.open("brawler-pages")
+  const stored = await cache.match(new Request(`${origin}/__condition-index/${runtimeVersion}`))
+  const directory = stored ? await readJson(stored) as ConditionIndex : await buildConditionManifest(env, origin)
   let entry = directory[kind].find(row => row.path === path)
   if (!entry && kind === "modes") {
     const id = Object.keys(MODE_SLUGS).find(id => path === `/modes/${MODE_SLUGS[id]}`)
@@ -198,8 +204,9 @@ const worker = {
     if (url.pathname.startsWith("/data/")) return dataResponse(request, source => worker.fetch(source, env, ctx))
     const isCondition = /^\/(?:modes|maps)(?:\/|$)/.test(url.pathname)
     const isOverview = url.pathname === "/" || /^\/tier\/?$/.test(url.pathname)
-    const isTool = /^\/(player|companion)\/?$/.test(url.pathname)
-    const isDynamic = isTool || isOverview || isCondition || url.pathname === "/brawlers" || url.pathname.startsWith("/brawlers/") || url.pathname === "/sitemap.xml"
+    const isTool = /^\/player\/?$/.test(url.pathname)
+    const isCompanion = /^\/companion\/?$/.test(url.pathname)
+    const isDynamic = isTool || isCompanion || isOverview || isCondition || url.pathname === "/brawlers" || url.pathname.startsWith("/brawlers/") || url.pathname === "/sitemap.xml"
     if (!isDynamic) return env.ASSETS.fetch(request)
     if (!["GET", "HEAD"].includes(request.method)) return new Response("Method not allowed", { status: 405, headers: { Allow: "GET, HEAD" } })
     const path = url.pathname === "/" ? "/" : url.pathname.replace(/\/$/, "")
@@ -208,10 +215,10 @@ const worker = {
       // Tool documents contain no player data or query values. Reuse the same
       // shell as public pages so every entry URL can navigate without reloads.
       const document = await env.ASSETS.fetch(new Request(`${url.origin}/__rendered-pages${path}.document`))
-      const body = document.ok ? document.body : renderPage(path === "/player" ? { kind: "player", path } : { kind: "companion", path: "/companion" })
+      const body = document.ok ? document.body : renderPage({ kind: "player", path: "/player" })
       return new Response(request.method === "HEAD" ? null : body, { headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "public, max-age=0, must-revalidate" } })
     }
-    if (!/^\/(?:brawlers|modes|maps)(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)?$/.test(path) && path !== "/sitemap.xml" && !isOverview) return env.ASSETS.fetch(new Request(`${url.origin}/404.html`)).then(response => new Response(request.method === "HEAD" ? null : response.body, { status: 404, headers: response.headers }))
+    if (!/^\/(?:brawlers|modes|maps)(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)?$/.test(path) && path !== "/sitemap.xml" && !isOverview && !isCompanion) return env.ASSETS.fetch(new Request(`${url.origin}/404.html`)).then(response => new Response(request.method === "HEAD" ? null : response.body, { status: 404, headers: response.headers }))
     const key = new Request(`${url.origin}/__brawler-cache/${runtimeVersion}${path}`)
     const cache = await caches.open("brawler-pages")
     let cached = await cache.match(key)
@@ -224,7 +231,11 @@ const worker = {
     if (cached && fresh) return serve(cached)
     const regenerate = async (signal: AbortSignal) => {
       let body: string
-      if (isCondition) {
+      if (isCompanion) {
+        const categories = await api(env, "/meta/categories?type=gachi", signal)
+        if (!isDraftCategories(categories)) throw new Error("Invalid draft categories")
+        body = renderPage({ kind: "companion", path: "/companion", categories })
+      } else if (isCondition) {
         const page = await liveCondition(env, url.origin, path, signal)
         if (!page) {
           const missing = await env.ASSETS.fetch(new Request(`${url.origin}/404.html`))
@@ -281,6 +292,10 @@ const worker = {
         const document = path === "/sitemap.xml" ? null : await env.ASSETS.fetch(new Request(`${url.origin}/__rendered-pages${path === "/" ? "/index" : path}.document`))
         if (document?.ok) {
           cached = new Response(document.body, { headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": `public, max-age=${STALE_SECONDS}`, "X-Brawler-Generated": "0", "X-Brawler-Rendering": "snapshot" } })
+        } else if (isCompanion) {
+          const page = await readJson(await env.ASSETS.fetch(new Request(`${url.origin}/__companion-snapshots/index.json`))) as RuntimePage
+          if (page.kind !== "companion" || page.path !== path || !isDraftCategories(page.categories)) throw new Error("Invalid draft snapshot")
+          cached = new Response(renderPage(page), { headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": `public, max-age=${STALE_SECONDS}`, "X-Brawler-Generated": "0", "X-Brawler-Rendering": "snapshot" } })
         } else if (isOverview) {
           const page = await readJson(await env.ASSETS.fetch(new Request(`${url.origin}/__overview-snapshots/${path === "/" ? "home" : "tier"}.json`))) as import("./app").OverviewPage
           if (page.path !== path || page.kind !== (path === "/" ? "home" : "tier") || !isTierListData(page.tierData) || !page.initialMatchups) throw new Error("Invalid overview snapshot")

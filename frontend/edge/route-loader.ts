@@ -1,5 +1,6 @@
 import type { RuntimePage } from "./app"
 import { isTierListData } from "@/lib/tier-data"
+import { isDraftCategories } from "@/lib/draft-categories"
 
 export function isRuntimePath(path: string) {
   return path === "/" || /^\/(?:player|companion|tier)$/.test(path) || /^\/(?:brawlers|modes|maps)(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)?$/.test(path)
@@ -10,7 +11,7 @@ export function isRuntimePage(value: unknown, path: string): value is RuntimePag
   const page = value as RuntimePage
   switch (page.kind) {
     case "player": return path === "/player"
-    case "companion": return path === "/companion"
+    case "companion": return path === "/companion" && isDraftCategories(page.categories)
     case "home": case "tier": return path === (page.kind === "home" ? "/" : "/tier") && isTierListData(page.tierData) && !!page.initialMatchups
     case "directory": return path === "/brawlers" && Array.isArray(page.entries)
     case "detail": return path.startsWith("/brawlers/") && !!page.data?.cohorts?.global && !!page.data.cohorts.gachi

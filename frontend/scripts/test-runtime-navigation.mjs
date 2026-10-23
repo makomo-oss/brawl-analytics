@@ -10,6 +10,9 @@ assert(!isRuntimePage({ kind: "player", path: "/tier" }, "/tier"))
 assert(!isRuntimePage({ kind: "tier", path: "/tier", tierData: {} }, "/tier"))
 assert(!isRuntimePage({ kind: "unknown", path: "/tier" }, "/tier"))
 const fixture = JSON.parse(await readFile(".seo-data/brawler-pages.json", "utf8"))
+const categories = JSON.parse(await readFile("out/__companion-snapshots/index.json", "utf8")).categories
+assert(!isRuntimePage({ kind: "companion", path: "/companion" }, "/companion"), "Reject empty tool documents")
+assert(isRuntimePage({ kind: "companion", path: "/companion", categories }, "/companion"))
 assert(isRuntimePage({ kind: "tier", path: "/tier", tierData: fixture.overview.global, initialMatchups: {} }, "/tier"))
 
 const html = page => `<!DOCTYPE html><script id="brawler-page-data" type="application/json">${JSON.stringify(page)}</script>`
@@ -19,7 +22,7 @@ const loader = createRouteLoader(async path => {
   calls++
   await gate
   if (fail) return new Response("offline", { status: 503 })
-  return new Response(html({ kind: path === "/player" ? "player" : "companion", path }), { headers: { "Content-Type": "text/html; charset=utf-8" } })
+  return new Response(html({ kind: path === "/player" ? "player" : "companion", path, ...(path === "/companion" ? { categories } : {}) }), { headers: { "Content-Type": "text/html; charset=utf-8" } })
 })
 await assert.rejects(loader.load("https://other.example/player"))
 assert.equal(calls, 0, "Only supported local paths may be fetched")

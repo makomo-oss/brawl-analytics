@@ -28,6 +28,8 @@ const { default: worker } = await import(`data:text/javascript;base64,${Buffer.f
 const original = { fetch: globalThis.fetch, caches: globalThis.caches, now: Date.now }
 let fetchCount = 0
 let now = 1_800_000_000_000, held = null, sufficient = true, offline = false
+let inventoryOffline = false
+const requestedPaths = []
 Date.now = () => now
 const cache = new Map(), pending = []
 globalThis.caches = { open: async () => ({ match: async request => cache.get(request.url)?.clone(), put: async (request, response) => cache.set(request.url, response.clone()) }) }
@@ -45,8 +47,10 @@ globalThis.fetch = async input => {
   if (held) await held
   if (offline) return new Response("offline", { status: 503 })
   const url = new URL(input), type = url.searchParams.get("type") || "global"
+  requestedPaths.push(url.pathname)
   if (url.pathname === "/meta/brawlers") return Response.json({ brawlers: snapshot.catalog })
   if (url.pathname === "/meta/categories") {
+    if (inventoryOffline) return new Response("inventory unavailable", { status: 503 })
     const mode_to_maps = Object.fromEntries(index.modes.filter(row => row.ids[type]).map(row => [row.ids[type], []]))
     for (const [id, modes] of Object.entries(snapshot.mapModes[type])) for (const mode of modes) if (mode_to_maps[mode]) mode_to_maps[mode].push(id)
     ;(mode_to_maps.brawlBall ||= []).push("Future Arena")
@@ -76,6 +80,15 @@ try {
   release(); held = null; await drain()
   assert.equal((await request("/modes/brawl-ball")).headers.get("X-Brawler-Rendering"), "live")
   assert.match(await (await request("/modes/brawl-ball")).text(), /2026-10-05T12:00:00.000Z/)
+  // Scope pages must keep refreshing even when an unrelated inventory scan is
+  // unavailable; they need only index/catalog and their two selected scopes.
+  inventoryOffline = true; now += 301_000
+  const beforeRequests = requestedPaths.length
+  await request("/modes/brawl-ball"); await drain()
+  assert.equal((await request("/modes/brawl-ball")).headers.get("X-Brawler-Rendering"), "live")
+  assert(!requestedPaths.slice(beforeRequests).includes("/meta/categories"))
+  assert(requestedPaths.length - beforeRequests <= 4, "A detail refresh must not scan unrelated scopes")
+  inventoryOffline = false
   for (const path of ["/modes", "/maps", index.maps[0].path]) assert.equal((await request(path)).status, 200)
   await drain()
   const sitemap = await (await request("/sitemap.xml")).text()

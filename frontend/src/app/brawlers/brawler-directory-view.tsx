@@ -59,6 +59,10 @@ export default function BrawlerDirectoryView({ entries }: { entries: ReturnType<
       </Link>})}
     </div>
     {!visible.length && <div className="py-8 text-center space-y-3"><p className="text-sm text-muted-foreground">一致するキャラが見つかりません</p><button type="button" onClick={() => setQuery("")} className="text-sm font-bold text-primary hover:text-purple-300">検索をクリア</button></div>}
-    <Link href="/tier" className="inline-flex items-center gap-2 text-sm font-bold text-primary hover:text-purple-300 transition-colors"><ArrowLeft aria-hidden="true" className="w-4 h-4" />Tier表に戻る</Link>
+    <nav aria-label="関連ランキング" className="flex flex-wrap items-center gap-5 text-sm text-primary">
+      <Link href="/modes" className="hover:underline">モード別ランキング</Link>
+      <Link href="/maps" className="hover:underline">マップ別ランキング</Link>
+      <Link href="/tier" className="inline-flex items-center gap-2 text-sm font-bold text-primary hover:text-purple-300 transition-colors"><ArrowLeft aria-hidden="true" className="w-4 h-4" />Tier表に戻る</Link>
+    </nav>
   </div>
 }

@@ -397,6 +397,10 @@ export default function CockpitHomePage({ initialTierData, initialMatchups }: { 
       </section>
 
       <ArenaToolCards />
+      <nav aria-label="モード・マップのランキング" className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
+        <Link href="/modes" className="hover:text-primary">モード別ランキング</Link>
+        <Link href="/maps" className="hover:text-primary">マップ別ランキング</Link>
+      </nav>
 
       {/* ========================================================================= */}
       {/* プレイヤー名検索 複数候補選択モーダル (Sheet/Modal) */}

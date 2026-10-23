@@ -40,7 +40,7 @@ const request = (path, method = "GET") => worker.fetch(new Request(`https://exam
 const drain = async () => { await Promise.all(pending.splice(0)) }
 const pageData = html => JSON.parse(html.match(/<script id="brawler-page-data" type="application\/json">(.*?)<\/script>/s)[1])
 try {
-  for (const path of ["/player", "/companion"]) {
+  for (const path of ["/player"]) {
     held = new Promise(() => {})
     const response = await Promise.race([request(`${path}?tag=TEST-QUERY`), new Promise((_, reject) => setTimeout(() => reject(new Error("Tool HTML waited for API")), 1000))])
     assert.equal(response.status, 200)

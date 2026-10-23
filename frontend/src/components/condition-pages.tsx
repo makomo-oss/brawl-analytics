@@ -56,6 +56,9 @@ export function ConditionDetailView({ data }: { data: ConditionPageData }) {
       </tr>)}</tbody></table></div> : <p className="py-6 text-sm text-muted-foreground">データ不足</p>}
     </section>)}
     {data.related.length > 0 && <section className="space-y-3"><h2 className="font-bold text-lg flex items-center gap-2"><MapPin aria-hidden="true" className="w-5 h-5 text-cyan-400" />{data.entry.kind === "modes" ? "マップ別ランキング" : "モード別ランキング"}</h2><EntryLinks entries={data.related} /></section>}
-    <Link href="/tier" className="inline-block text-sm font-bold text-primary hover:underline">Tier表</Link>
+    <nav aria-label="関連ツール" className="flex flex-wrap gap-5 text-sm font-bold text-primary">
+      <Link href="/tier" className="hover:underline">Tier表</Link>
+      <Link href="/companion" className="hover:underline">BAN・ピックツール</Link>
+    </nav>
   </div>
 }

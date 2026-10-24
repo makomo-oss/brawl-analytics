@@ -10,10 +10,15 @@
 .arena-header-inner {max-width:1280px;min-height:80px;margin:0 auto;padding:0 32px;display:flex;align-items:center;gap:32px;justify-content:space-between}
 .arena-brand {display:flex;gap:9px;align-items:center;flex-shrink:0;text-decoration:none;color:#f8f6ec;font-size:21px;font-weight:850;letter-spacing:-.7px;line-height:1.3}
 .arena-brand small {display:block;font-size:8px;letter-spacing:2.1px;color:#9caccc;margin-top:3px;font-weight:550}
-.arena-site-tabbar {display:flex;align-items:center;gap:4px;padding:5px;border:1px solid #35415c;border-radius:12px;background:#182239}
-.arena-tab-link {display:flex;align-items:center;justify-content:center;gap:8px;min-height:42px;padding:10px 15px;border-radius:7px;font-size:12px;font-weight:650;white-space:nowrap;color:#b8c5df;transition:background .16s,color .16s}
+.arena-site-tabbar {position:relative;isolation:isolate;display:flex;align-items:center;gap:4px;padding:5px;border:1px solid #35415c;border-radius:12px;background:#182239}
+.arena-tab-link {position:relative;z-index:1;display:flex;align-items:center;justify-content:center;gap:8px;min-height:42px;padding:10px 15px;border-radius:7px;font-size:12px;font-weight:650;white-space:nowrap;color:#b8c5df;transition:background .16s,color .16s}
 .arena-tab-link svg {width:16px;height:16px;flex-shrink:0;stroke-width:1.8}
 .arena-tab-link.is-active {background:#ffe16b;color:#1c2640;box-shadow:0 2px 5px #060c211c}
+.arena-nav-indicator {position:absolute;z-index:0;pointer-events:none;opacity:0;transform-origin:0 0}
+.arena-desktop-indicator {border-radius:7px;background:#ffe16b;box-shadow:inset 0 1px 0 #fff6,0 3px 10px #060c2126}
+.arena-mobile-indicator {border:1px solid #ffe16b38;border-radius:10px;background:#ffe16b14}
+[data-indicator-ready]>.arena-nav-indicator {opacity:1}
+.arena-site-tabbar[data-indicator-ready] .arena-tab-link.is-active {background:transparent;box-shadow:none}
 .arena-mobile-dashboard,.arena-bottom-nav {display:none}
 .arena-tab-link:focus-visible,.arena-brand:focus-visible,.arena-mobile-dashboard:focus-visible,.arena-bottom-link:focus-visible {outline:3px solid #ffe16b;outline-offset:4px}
 body:has(.arena-home) {background:#10182c}
@@ -147,9 +152,9 @@ body:has(.arena-home) {background:#10182c}
   .arena-mobile-dashboard>svg {width:15px;height:15px;flex-shrink:0}
   .arena-mobile-dashboard>svg:last-child {height:13px;width:13px;color:#9aafd0}
   .arena-mobile-dashboard[aria-current=page] {color:#ffe16b;border-color:#b6a04e}
-  .arena-bottom-nav {display:flex;justify-content:space-around;align-items:center;position:fixed;bottom:0;left:0;right:0;z-index:50;background:#111b30f5;border-top:1px solid #3a4966;color:#a7b8d6;backdrop-filter:blur(16px);transition:transform .22s}
+  .arena-bottom-nav {isolation:isolate;display:flex;justify-content:space-around;align-items:center;position:fixed;bottom:0;left:0;right:0;z-index:50;background:#111b30f5;border-top:1px solid #3a4966;color:#a7b8d6;backdrop-filter:blur(16px);transition:transform .22s}
   .arena-bottom-nav.is-hidden {transform:translateY(150%)}
-  .arena-bottom-link {display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;font-size:10px;min-height:61px;flex:1;padding:8px 3px;line-height:1.5}
+  .arena-bottom-link {position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;font-size:10px;min-height:61px;flex:1;padding:8px 3px;line-height:1.5}
   .arena-bottom-link>svg {width:20px;height:20px;stroke-width:1.8}
   .arena-bottom-link.is-active {color:#ffe16b}
   .arena-home-hero {grid-template-columns:1fr 1fr;gap:28px}

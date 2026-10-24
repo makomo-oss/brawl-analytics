@@ -1,7 +1,10 @@
+"use client";
+
 import { ArrowUpRight, BarChart3, Home, Swords, Trophy, Users } from "lucide-react";
 import Link from "@/components/document-link";
 import { BrawlerDirectoryLink } from "@/components/brawler-directory-link";
 import { BurolaboIcon } from "@/components/brand-icon";
+import { useArenaTabIndicator } from "@/components/use-arena-tab-indicator";
 
 const destinations = [
   { href: "/", label: "ホーム", icon: Home },
@@ -30,6 +33,8 @@ function Destination({ item, pathname, mobile = false }: { item: typeof destinat
 }
 
 export function ArenaNavigation({ pathname, visible }: { pathname: string; visible: boolean }) {
+  const desktop = useArenaTabIndicator(pathname);
+  const mobile = useArenaTabIndicator(pathname);
   return <>
     <a href="#main-content" className="arena-skip-link">メインコンテンツへ</a>
     <header className="arena-site-header">
@@ -38,7 +43,8 @@ export function ArenaNavigation({ pathname, visible }: { pathname: string; visib
           <BurolaboIcon size={32} glow={false} />
           <span>ブロラボ<small>BRAWL LAB</small></span>
         </Link>
-        <nav className="arena-site-tabbar" aria-label="メインナビゲーション">
+        <nav ref={desktop.navigation} className="arena-site-tabbar" aria-label="メインナビゲーション">
+          <span ref={desktop.indicator} className="arena-nav-indicator arena-desktop-indicator" aria-hidden="true" />
           {destinations.map(item => <Destination key={item.href} item={item} pathname={pathname} />)}
         </nav>
         <Link href="/player" className="arena-mobile-dashboard" aria-current={isCurrent("/player", pathname) ? "page" : undefined}>
@@ -46,7 +52,8 @@ export function ArenaNavigation({ pathname, visible }: { pathname: string; visib
         </Link>
       </div>
     </header>
-    <nav className={`arena-bottom-nav pb-safe${visible ? "" : " is-hidden"}`} aria-label="モバイルナビゲーション">
+    <nav ref={mobile.navigation} className={`arena-bottom-nav pb-safe${visible ? "" : " is-hidden"}`} aria-label="モバイルナビゲーション">
+      <span ref={mobile.indicator} className="arena-nav-indicator arena-mobile-indicator" aria-hidden="true" />
       {[destinations[3], destinations[1], destinations[2], destinations[4]].map(item =>
         <Destination key={item.href} item={item} pathname={pathname} mobile />)}
     </nav>

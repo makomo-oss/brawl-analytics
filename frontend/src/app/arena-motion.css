@@ -25,15 +25,15 @@
   to { opacity: 1; scale: 1; }
 }
 @keyframes arena-panel {
-  from { opacity: .65; }
-  to { opacity: 1; }
+  from { opacity: .4; translate: 0 5px; }
+  to { opacity: 1; translate: 0 0; }
 }
 @keyframes arena-sheen {
   from { translate: -110% 0; }
   to { translate: 110% 0; }
 }
 @keyframes arena-route-arrive {
-  from { opacity: .72; translate: 0 5px; }
+  from { opacity: .25; translate: var(--arena-route-offset, 0px) 5px; }
   to { opacity: 1; translate: 0 0; }
 }
 @keyframes arena-route-loading {
@@ -44,10 +44,16 @@
 .arena-route-error {margin-bottom:20px;padding:16px;border:1px solid #ff998a;border-radius:10px;background:#202c47;color:#f8f6ec}
 .arena-route-error p {margin-bottom:12px}
 .arena-route-error :is(button,a) {display:inline-flex;align-items:center;min-height:44px;margin-right:16px;color:#ffe16b;text-decoration:underline;text-underline-offset:4px;cursor:pointer}
+#main-content {--arena-route-distance:24px}
+#main-content[data-route-direction="forward"] {--arena-route-offset:var(--arena-route-distance)}
+#main-content[data-route-direction="backward"] {--arena-route-offset:calc(-1 * var(--arena-route-distance))}
 @media(max-width:1023px) {.arena-route-progress {top:62px}}
+@media(max-width:1023px) {#main-content {--arena-route-distance:16px}}
+@media(max-width:639px) {#main-content {--arena-route-distance:10px}}
 
 @media (prefers-reduced-motion: no-preference) {
-  .arena-route-frame[data-current="true"] {animation:arena-route-arrive 200ms var(--arena-ease-out)}
+  #main-content:not([data-route-direction="none"]) .arena-route-frame[data-current="true"] {animation:arena-route-arrive 320ms var(--arena-ease-out)}
+  .arena-nav-indicator {transition:opacity 140ms var(--arena-ease-control)}
   .arena-route-progress {animation:arena-route-loading 1200ms var(--arena-ease-out) 120ms infinite alternate backwards}
   /* A brief sequence introduces the page, then every decorative element rests. */
   .arena-home-kicker, .arena-home-title, .arena-home-description, .arena-search-region {

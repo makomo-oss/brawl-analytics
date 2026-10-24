@@ -13,6 +13,7 @@ import PlayerView from "@/app/player/player-view"
 import DraftCompanionPage from "@/app/companion/companion-view"
 import type { DraftCategories } from "@/lib/draft-categories"
 import { createRouteLoader, isRuntimePath } from "./route-loader"
+import { navigationDirection } from "@/lib/arena-navigation-motion"
 
 export type OverviewPage = ({ kind: "home"; path: "/" } | { kind: "tier"; path: "/tier" }) & { tierData: TierListData; initialMatchups: InitialMatchups }
 export type ToolPage = { kind: "player"; path: "/player" } | { kind: "companion"; path: "/companion"; categories: DraftCategories }
@@ -44,6 +45,8 @@ export function App({ page }: { page: RuntimePage }) {
   const [pending, setPending] = useState<string | null>(null)
   const [failure, setFailure] = useState<{ href: string; mode: "push" | "replace" | "pop" } | null>(null)
   const [revision, setRevision] = useState(0)
+  const [direction, setDirection] = useState<ReturnType<typeof navigationDirection>>("none")
+  const displayedPath = useRef(page.path)
   const sequence = useRef(0)
   const restore = useRef<{ scroll: number; hash: string } | null>(null)
   const navigate = useRef<Navigate>((href, mode) => mode === "replace" ? window.location.replace(href) : window.location.assign(href))
@@ -51,6 +54,7 @@ export function App({ page }: { page: RuntimePage }) {
   const router = useMemo(() => ({ push: (href: string) => navigate.current(href, "push"), replace: (href: string) => navigate.current(href, "replace") }), [])
 
   useLayoutEffect(() => {
+    displayedPath.current = current.page.path
     const target = restore.current
     if (!target) return
     restore.current = null
@@ -59,7 +63,7 @@ export function App({ page }: { page: RuntimePage }) {
     try { if (target.hash) anchor = document.getElementById(decodeURIComponent(target.hash.slice(1))) } catch { /* A malformed fragment still navigates to the page. */ }
     if (anchor) anchor.scrollIntoView({ behavior: "instant" })
     else window.scrollTo({ top: target.scroll, left: 0, behavior: "instant" })
-  }, [revision])
+  }, [revision, current.page.path])
 
   useEffect(() => {
     const originalRestoration = history.scrollRestoration
@@ -94,6 +98,7 @@ export function App({ page }: { page: RuntimePage }) {
         }
         updateDocumentHead(document.html)
         const visit = { page: document.page, href: nextHref }
+        const nextDirection = navigationDirection(displayedPath.current, url.pathname, mode, window.matchMedia("(max-width: 1023px)").matches)
         restore.current = { scroll, hash: url.hash }
         startTransition(() => {
           setVisits(previous => {
@@ -103,6 +108,7 @@ export function App({ page }: { page: RuntimePage }) {
             return [...retained.filter(row => primaryPaths.has(row.page.path)), visit]
           })
           setCurrent(visit)
+          setDirection(nextDirection)
           setRevision(value => value + 1)
           setPending(null)
         })
@@ -149,7 +155,7 @@ export function App({ page }: { page: RuntimePage }) {
     <MainNav />
     {pending && <div className="arena-route-progress" aria-hidden="true" />}
     <div role="status" aria-live="polite" className="sr-only">{pending ? "画面を切り替えています" : revision ? "画面を切り替えました" : ""}</div>
-    <main id="main-content" tabIndex={-1} aria-busy={!!pending} data-arena-route={current.page.path} className="container mx-auto px-3 py-4 sm:p-6 lg:p-8 max-w-7xl pb-24 lg:pb-8">
+    <main id="main-content" tabIndex={-1} aria-busy={!!pending} data-arena-route={current.page.path} data-route-direction={direction} className="container mx-auto px-3 py-4 sm:p-6 lg:p-8 max-w-7xl pb-24 lg:pb-8">
       {failure && <div role="alert" className="arena-route-error">
         <p>画面を読み込めませんでした。接続を確認して、もう一度お試しください。</p>
         <button type="button" onClick={() => navigate.current(failure.href, failure.mode)}>もう一度試す</button>

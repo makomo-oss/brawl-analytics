@@ -18,7 +18,8 @@
     "lint": "eslint",
     "test:live-overview": "node scripts/test-live-overview.mjs",
     "test:live-companion": "node scripts/test-live-companion.mjs",
-    "test:runtime-navigation": "node scripts/test-runtime-navigation.mjs"
+    "test:runtime-navigation": "node scripts/test-runtime-navigation.mjs",
+    "test:arena-navigation-motion": "node scripts/test-arena-navigation-motion.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",

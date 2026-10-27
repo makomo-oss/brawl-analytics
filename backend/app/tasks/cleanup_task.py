@@ -26,7 +26,7 @@ def _delete_expired_battles(db, threshold: str) -> dict:
         if remaining == 0:
             logger.info("%s-day cleanup completed: deleted %s observations.", ANALYSIS_WINDOW_DAYS, deleted)
             return {"deleted_count": deleted, "remaining_expired": 0}
-        db.table("match_raw_history").delete().lt("match_at", threshold).execute()
+        db.table("match_raw_history").delete(returning="minimal").lt("match_at", threshold).execute()
         after = expired_count()
         if after >= remaining:
             raise RuntimeError(f"{ANALYSIS_WINDOW_DAYS}-day cleanup made no progress")

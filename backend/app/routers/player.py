@@ -58,9 +58,9 @@ _ENRICH_CACHE_TTL = 86400.0  # 24 hours
 def _save_synced_player(db, tag: str, player_info: dict, battlelog: dict) -> int:
     """Persist profile before its battle observations; fail the sync on write errors."""
     records, _ = parse_battlelog(tag, (battlelog or {}).get("items") or [])
-    db.table("players").upsert(profile_record(tag, player_info)).execute()
+    db.table("players").upsert(profile_record(tag, player_info), returning="minimal").execute()
     if records:
-        db.table("match_raw_history").upsert(records).execute()
+        db.table("match_raw_history").upsert(records, returning="minimal").execute()
     invalidate_player_analysis(tag)
     return len(records)
 

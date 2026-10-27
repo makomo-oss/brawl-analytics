@@ -87,6 +87,8 @@ def test_player_sync_persists_crawler_compatible_battles(monkeypatch, route):
     result = asyncio.run(route("ABC"))
     assert db.table.call_args_list[:2] == [call("players"), call("match_raw_history")]
     records = db.table.return_value.upsert.call_args_list[-1].args[0]
+    assert all(write.kwargs == {"returning": "minimal"}
+               for write in db.table.return_value.upsert.call_args_list)
     assert records[0]["match_id"] == "ABC_20260918T120000.000Z"
     assert records[0]["match_type"] == "soloRanked"
     assert records[0]["hero_used"] == "COLT"
@@ -280,7 +282,7 @@ def test_cleanup_deletes_only_expired_battles_and_checks_remaining(monkeypatch):
     ]
     monkeypatch.setattr(cleanup_task, "get_db", lambda: db)
     assert asyncio.run(cleanup_task.run_cleanup_task()) == {"deleted_count": 2, "remaining_expired": 0}
-    db.table.return_value.delete.assert_called_once_with()
+    db.table.return_value.delete.assert_called_once_with(returning="minimal")
     cutoff = db.table.return_value.delete.return_value.lt.call_args.args
     assert cutoff[0] == "match_at"
     assert (pd.Timestamp.now(tz="UTC") - pd.Timestamp(cutoff[1])).days == 60

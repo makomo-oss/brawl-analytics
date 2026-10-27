@@ -23,6 +23,14 @@ from app.algorithm.statistics import (ANALYSIS_WINDOW_DAYS, RECENT_WINDOW_DAYS,
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
+# Keep identifiers and pair data used by all three calculations, but omit
+# ingestion metadata (collected_at) that never participates in the statistics.
+MATCH_ANALYSIS_COLUMNS = (
+    "match_id,player_tag,match_at,mode,map_id,result,hero_used,"
+    "allies,opponents,match_type,battle_uid"
+)
+PLAYER_RANK_COLUMNS = "player_tag,ranked_rank:unlocked_characters->ranked_rank"
+
 def get_supabase_client() -> Client:
     """Supabaseクライアントを取得する"""
     url = os.getenv("SUPABASE_URL")
@@ -60,7 +68,7 @@ async def auto_sync_missing_player_ranks(missing_tags: list[str], supabase: Clie
     valid_updates = [r for r in results if r is not None]
     if valid_updates:
         for i in range(0, len(valid_updates), 100):
-            supabase.table("players").upsert(valid_updates[i:i+100]).execute()
+            supabase.table("players").upsert(valid_updates[i:i+100], returning="minimal").execute()
         logger.info(f"Successfully auto-healed {len(valid_updates)} player profiles!")
 
 def fetch_recent_matches(client: Client = None) -> pd.DataFrame:
@@ -72,7 +80,7 @@ def fetch_recent_matches(client: Client = None) -> pd.DataFrame:
     offset = 0
     threshold = (datetime.now(timezone.utc) - timedelta(days=ANALYSIS_WINDOW_DAYS)).isoformat()
     while True:
-        response = supabase.table("match_raw_history").select("*").gte("match_at", threshold).order("match_id").range(offset, offset + limit - 1).execute()
+        response = supabase.table("match_raw_history").select(MATCH_ANALYSIS_COLUMNS).gte("match_at", threshold).order("match_id").range(offset, offset + limit - 1).execute()
         data = response.data
         if not data:
             break
@@ -94,11 +102,16 @@ def fetch_player_rank_segments(client: Client = None, match_df: pd.DataFrame = N
     """
     supabase = client or get_supabase_client()
     logger.info("Fetching pure ranked ranks (Rank 1-19+) from Supabase...")
+    # The scheduled calculation only needs ranks. Preserve full metadata for
+    # callers explicitly requesting the existing profile auto-refresh behavior.
+    refresh_profiles = match_df is not None and "player_tag" in match_df.columns
+    columns = ("player_tag, updated_at, unlocked_characters" if refresh_profiles
+               else PLAYER_RANK_COLUMNS)
     all_players = []
     offset = 0
     limit = 1000
     while True:
-        res = supabase.table("players").select("player_tag, updated_at, unlocked_characters").not_.like("name", "Mock (Error:%").order("player_tag").range(offset, offset + limit - 1).execute()
+        res = supabase.table("players").select(columns).not_.like("name", "Mock (Error:%").order("player_tag").range(offset, offset + limit - 1).execute()
         if not res.data:
             break
         all_players.extend(res.data)
@@ -123,7 +136,8 @@ def fetch_player_rank_segments(client: Client = None, match_df: pd.DataFrame = N
             try: chars_json = json.loads(chars_json)
             except: chars_json = {}
             
-        ranked_rank = int(chars_json.get("ranked_rank") or 0)
+        ranked_rank = int((chars_json.get("ranked_rank") if refresh_profiles
+                           else p.get("ranked_rank")) or 0)
         has_rank_info = (ranked_rank > 0) or ("highest_ranked_name" in chars_json)
         
         # 鮮度チェック: 3日 (259,200秒) 以内に更新されているか

@@ -21,7 +21,10 @@ def calculate_score(char_id: str, f_own: float, s_map: float, s_counter: float, 
 
 def recommend_picks(map_id: str, mode: str, allies: list[str], opponents: list[str], pick_turn: int, is_proxy_pick: bool, bans: list[str] | None = None):
     from app.routers.meta import get_tier_list, _normalize_id
-    map_data = get_tier_list(type="gachi", sub_type="map", id=map_id, include_details=True, mode=mode)
+    # Recommendation uses the selected map's matchups/synergies, never the
+    # display-only broad kamo/tenteki fallback. Avoid its full-history RPC.
+    map_data = get_tier_list(type="gachi", sub_type="map", id=map_id, include_details=True,
+                             mode=mode, include_matchup_fallback=False)
     mode_data = get_tier_list(type="gachi", sub_type="mode", id=mode)
     excluded = {_normalize_id(c) for c in allies + opponents + (bans or [])}
     weights = get_weights(len(opponents), is_proxy_pick)

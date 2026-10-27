@@ -4,6 +4,9 @@ from fastapi.testclient import TestClient
 from postgrest.exceptions import APIError
 
 from app.routers import meta
+from app.routers import match
+from app.algorithm.recommender import get_weights, calculate_score
+from app.algorithm.statistics import posterior_rate
 
 
 def setup_map(monkeypatch, db=None):
@@ -61,3 +64,44 @@ def test_pair_timeout_returns_readable_cors_response_and_is_not_cached(monkeypat
         assert response.json()["detail"].startswith("相性データを取得できませんでした")
         assert "statement timeout" not in response.text
     assert calls == ["contextual_pair_stats", "contextual_pair_stats"]
+
+
+def test_recommendation_uses_map_pairs_even_when_broad_fallback_times_out(monkeypatch):
+    """The unrelated display fallback must not fail a valid recommendation."""
+    from types import SimpleNamespace
+    from collections import OrderedDict
+
+    calls = []
+
+    class Database:
+        def rpc(self, name, params):
+            calls.append((name, params))
+            if params["p_map"] is None:
+                raise APIError({"message": "statement timeout", "code": "57014",
+                                "details": None, "hint": None})
+            return SimpleNamespace(execute=lambda: SimpleNamespace(data=[
+                dict(kind="counter", char_a="colt", char_b="bull", match_count=20,
+                     weighted_matches=15, weighted_wins=12),
+                dict(kind="synergy", char_a="colt", char_b="rico", match_count=20,
+                     weighted_matches=15, weighted_wins=12),
+            ]))
+
+    setup_map(monkeypatch, Database())
+    monkeypatch.setattr(meta, "_PAIR_CONTEXT_CACHE", OrderedDict())
+    app = FastAPI()
+    app.include_router(match.router)
+    response = TestClient(app).post("/match/recommend", json={
+        "map_id": "Dry Season", "mode": "bounty", "allies": ["rico"],
+        "opponents": ["bull"], "bans": [], "pick_turn": 3, "is_proxy_pick": False,
+    })
+    assert response.status_code == 200
+    recommendation = response.json()["recommendations"][0]
+    # Preserve actual selected-map counter/synergy signals, not neutral defaults.
+    counter = round(posterior_rate(12, 15) * 100, 1)
+    lift = round((posterior_rate(12, 15, .5) - .5) * 100, 1)
+    expected = calculate_score("colt", 1, 50, counter, 50 + lift, 50, get_weights(1, False))
+    assert recommendation["character_id"] == "colt"
+    assert recommendation["score"] == round(expected, 2)
+    assert recommendation["reason"].endswith(f"Matchup:{counter:.1f}")
+    assert calls == [("contextual_pair_stats", {"p_type": "gachi", "p_mode": "bounty",
+                                              "p_map": "Dry Season", "p_rank": "all"})]

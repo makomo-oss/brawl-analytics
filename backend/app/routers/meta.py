@@ -29,6 +29,9 @@ MIN_DISPLAY_MATCHUP_WEIGHT = 3.0
 # --- In-Memory Cache Layers (TTL = 3600 seconds / 1 hour) ---
 # 日次バッチ実行時 (clear_meta_cache) または 1 時間経過で最新化
 _MACRO_CACHE = {"data": None, "timestamp": 0, "ttl": 3600}
+_MACRO_CACHE_LOCK = Lock()
+_MACRO_CACHE_GENERATION = 0
+_MACRO_PENDING = None
 _TOTAL_MATCHES_CACHE = {"count": 0, "timestamp": 0, "ttl": 3600}
 _CATEGORIES_CACHE = {"data": {}, "timestamp": 0, "ttl": 3600}
 _COUNTERS_CACHE = {"data": None, "by_char": {}, "timestamp": 0, "ttl": 3600}
@@ -43,7 +46,11 @@ _MODE_MAPS_CACHE = {} # mode -> (set of map_ids, timestamp)
 
 def clear_meta_cache():
     """日次バッチ完了時やデータ更新時にキャッシュを即座に破棄・最新化する"""
-    _MACRO_CACHE["data"] = None
+    global _MACRO_CACHE_GENERATION, _MACRO_PENDING
+    with _MACRO_CACHE_LOCK:
+        _MACRO_CACHE["data"] = None
+        _MACRO_CACHE_GENERATION += 1
+        _MACRO_PENDING = None
     _TOTAL_MATCHES_CACHE["count"] = 0
     _CATEGORIES_CACHE["data"] = {}
     _COUNTERS_CACHE["data"] = None
@@ -165,9 +172,18 @@ def _get_cached_counters_for_char(db, char_a: str) -> list[dict]:
 
 def _get_cached_macro_data(db) -> list[dict]:
     """macro_map_stats をインメモリキャッシュから超高速に取得 (DB通信を99%削減)"""
-    now = time.time()
-    if _MACRO_CACHE["data"] is not None and (now - _MACRO_CACHE["timestamp"]) < _MACRO_CACHE["ttl"]:
-        return _MACRO_CACHE["data"]
+    global _MACRO_PENDING
+    with _MACRO_CACHE_LOCK:
+        now = time.time()
+        if _MACRO_CACHE["data"] is not None and now - _MACRO_CACHE["timestamp"] < _MACRO_CACHE["ttl"]:
+            return _MACRO_CACHE["data"]
+        owner = _MACRO_PENDING is None
+        if owner:
+            _MACRO_PENDING = Future()
+        pending = _MACRO_PENDING
+        generation = _MACRO_CACHE_GENERATION
+    if not owner:
+        return pending.result()
         
     data = []
     try:
@@ -175,22 +191,34 @@ def _get_cached_macro_data(db) -> list[dict]:
         PAGE_SIZE = 1000
         while True:
             # The composite key gives every page a stable, unique order.
-            res = (db.table("macro_map_stats").select("*")
+            res = execute_read(db.table("macro_map_stats").select("*")
                    .order("map_id").order("character_id").order("match_type").order("mode")
-                   .range(offset, offset + PAGE_SIZE - 1).execute())
+                   .range(offset, offset + PAGE_SIZE - 1))
             if not res.data:
                 break
             data.extend(res.data)
             if len(res.data) < PAGE_SIZE:
                 break
             offset += PAGE_SIZE
-        _MACRO_CACHE["data"] = data
-        _MACRO_CACHE["timestamp"] = now
+        with _MACRO_CACHE_LOCK:
+            if generation == _MACRO_CACHE_GENERATION:
+                _MACRO_CACHE["data"] = data
+                _MACRO_CACHE["timestamp"] = now
+        pending.set_result(data)
         return data
     except Exception as e:
-        if _MACRO_CACHE["data"] is not None:
-            return _MACRO_CACHE["data"] # フォールバック
-        raise HTTPException(status_code=500, detail=f"Database error: {e}")
+        with _MACRO_CACHE_LOCK:
+            fallback = _MACRO_CACHE["data"]
+        if fallback is not None:
+            pending.set_result(fallback)
+            return fallback
+        error = HTTPException(status_code=500, detail=f"Database error: {e}")
+        pending.set_exception(error)
+        raise error from e
+    finally:
+        with _MACRO_CACHE_LOCK:
+            if _MACRO_PENDING is pending:
+                _MACRO_PENDING = None
 
 def _get_cached_total_analyzed(db) -> int:
     """総試合数をインメモリキャッシュから取得"""

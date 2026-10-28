@@ -33,6 +33,62 @@ def test_repeated_transport_failure_is_bounded():
     assert len(attempts) == 2
 
 
+class MacroDatabase:
+    def __init__(self, execute):
+        self.execute = execute
+
+    def table(self, *args): return self
+    def select(self, *args): return self
+    def order(self, *args): return self
+    def range(self, *args): return self
+
+
+def test_cold_shared_statistics_are_read_once_for_eight_requests():
+    started, release = Event(), Event()
+    calls = []
+    def execute():
+        calls.append(1)
+        started.set()
+        assert release.wait(timeout=5)
+        return SimpleNamespace(data=[{'character_id': 'amber', 'total_matches': 100}])
+    db = MacroDatabase(execute)
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        futures = [pool.submit(meta._get_cached_macro_data, db) for _ in range(8)]
+        try:
+            assert started.wait(timeout=2)
+        finally:
+            release.set()
+        data = [f.result(timeout=2) for f in futures]
+    assert len(calls) == 1
+    assert all(rows == data[0] for rows in data)
+
+
+def test_old_shared_statistics_cannot_replace_cleared_cache():
+    started, release = Event(), Event()
+    def old():
+        started.set()
+        assert release.wait(timeout=5)
+        return SimpleNamespace(data=[{'version': 'old'}])
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        future = pool.submit(meta._get_cached_macro_data, MacroDatabase(old))
+        try:
+            assert started.wait(timeout=2)
+            meta.clear_meta_cache()
+            fresh = meta._get_cached_macro_data(MacroDatabase(lambda: SimpleNamespace(data=[{'version': 'new'}])))
+        finally:
+            release.set()
+        assert future.result(timeout=2) == [{'version': 'old'}]
+    assert fresh == meta._MACRO_CACHE['data'] == [{'version': 'new'}]
+
+
+def test_failed_shared_statistics_can_retry():
+    def fail(): raise RuntimeError('database unavailable')
+    with pytest.raises(HTTPException):
+        meta._get_cached_macro_data(MacroDatabase(fail))
+    assert meta._MACRO_PENDING is None
+    assert meta._get_cached_macro_data(MacroDatabase(lambda: SimpleNamespace(data=[]))) == []
+
+
 @pytest.fixture(autouse=True)
 def empty_cache():
     meta.clear_meta_cache()

@@ -11,6 +11,7 @@ from cryptography.exceptions import InvalidTag
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
+from app.services.db_reads import execute_read
 
 logger = logging.getLogger(__name__)
 FORMAT = b'brawl-history-v1\0'
@@ -78,9 +79,9 @@ class HistoryCache:
 
     @staticmethod
     def _manifest(client, first_day):
-        result = client.rpc('analytics_history_manifest', {
+        result = execute_read(client.rpc('analytics_history_manifest', {
             'p_first_day': first_day.isoformat(),
-        }).execute().data
+        })).data
         if not isinstance(result, dict) or result.get('version') != 1:
             raise ValueError('History manifest is unavailable')
         days = result['days']
@@ -102,7 +103,7 @@ class HistoryCache:
                      .order('match_id').limit(self.page_size))
             if last_id is not None:
                 query = query.gt('match_id', last_id)
-            page = query.execute().data
+            page = execute_read(query).data
             rows.extend(page)
             if len(page) < self.page_size:
                 return rows

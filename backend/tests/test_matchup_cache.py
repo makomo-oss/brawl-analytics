@@ -3,8 +3,34 @@ from threading import Event
 from types import SimpleNamespace
 
 import pytest
+import httpx
 from fastapi import HTTPException
 from app.routers import meta
+
+
+@pytest.mark.parametrize('error', [httpx.RemoteProtocolError, httpx.ReadError])
+def test_interrupted_read_retries_once_before_caching(error):
+    attempts = []
+    def execute():
+        attempts.append(1)
+        if len(attempts) == 1:
+            raise error('connection terminated')
+        return SimpleNamespace(data=[])
+    db = SimpleNamespace(rpc=lambda *args: SimpleNamespace(execute=execute))
+    assert pairs(db) == {}
+    assert pairs(db) == {}
+    assert len(attempts) == 2
+
+
+def test_repeated_transport_failure_is_bounded():
+    attempts = []
+    def execute():
+        attempts.append(1)
+        raise httpx.RemoteProtocolError('connection terminated')
+    db = SimpleNamespace(rpc=lambda *args: SimpleNamespace(execute=execute))
+    with pytest.raises(HTTPException):
+        pairs(db)
+    assert len(attempts) == 2
 
 
 @pytest.fixture(autouse=True)

@@ -244,3 +244,22 @@ def test_each_daily_run_refreshes_ranks_even_when_history_is_reused(tmp_path, mo
         assert 'gachi_masters' in second and 'gachi_mythic' not in second
         assert any(r.url.path.endswith('/players') for r in source.requests)
         assert not any(r.url.path.endswith('/match_raw_history') for r in source.requests)
+
+
+def test_interrupted_manifest_does_not_force_full_history_download(tmp_path):
+    source = Source([observation(1)])
+    cutoff = NOW - timedelta(days=60)
+    with source.client() as db:
+        cache(tmp_path).fetch(db, cutoff)
+    source.requests.clear()
+    attempts = []
+    def handler(request):
+        attempts.append(1)
+        if len(attempts) == 1:
+            raise httpx.RemoteProtocolError('connection terminated')
+        return source.handler(request)
+    with SyncPostgrestClient('https://example.test/rest/v1',
+                            http_client=httpx.Client(transport=httpx.MockTransport(handler))) as db:
+        assert cache(tmp_path).fetch(db, cutoff) == source.rows
+    assert len(attempts) == 3  # One failed manifest and the two successful checks.
+    assert all('/rpc/' in r.url.path for r in source.requests)

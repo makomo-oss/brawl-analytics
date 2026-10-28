@@ -110,12 +110,27 @@ jobs:
       - name: Install dependencies
         run: pip install -r backend/requirements.txt
 
+      - name: Restore encrypted history input
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: .analytics-cache/history.bin
+          key: analytics-history-v1-${{ runner.os }}-${{ github.ref_name }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: analytics-history-v1-${{ runner.os }}-${{ github.ref_name }}-
+
       - name: Aggregate the saved battles
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          ANALYTICS_HISTORY_CACHE: ${{ github.workspace }}/.analytics-cache/history.bin
         working-directory: backend
         run: python app/scripts/daily_calc.py
+
+      - name: Save encrypted history input
+        if: success() && hashFiles('.analytics-cache/history.bin') != ''
+        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: .analytics-cache/history.bin
+          key: analytics-history-v1-${{ runner.os }}-${{ github.ref_name }}-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Refresh the live Tier cache
         env:

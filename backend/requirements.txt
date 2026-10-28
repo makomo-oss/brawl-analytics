@@ -4,3 +4,4 @@ pandas
 supabase
 pydantic
 python-dotenv
+cryptography==50.0.2

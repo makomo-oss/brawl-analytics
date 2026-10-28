@@ -75,6 +75,19 @@ def fetch_recent_matches(client: Client = None) -> pd.DataFrame:
     """過去のマッチ履歴を全件取得（ページネーション使用）"""
     supabase = client or get_supabase_client()
     logger.info("Fetching recent matches from Supabase...")
+    cache_path = os.getenv("ANALYTICS_HISTORY_CACHE")
+    cache_secret = os.getenv("SUPABASE_KEY")
+    if cache_path and cache_secret:
+        from app.services.history_cache import HistoryCache, HistoryChanged
+        threshold = datetime.now(timezone.utc) - timedelta(days=ANALYSIS_WINDOW_DAYS)
+        try:
+            rows = HistoryCache(cache_path, cache_secret, os.getenv("SUPABASE_URL", ""),
+                                MATCH_ANALYSIS_COLUMNS).fetch(supabase, threshold)
+            return pd.DataFrame(rows, columns=MATCH_ANALYSIS_COLUMNS.split(","))
+        except HistoryChanged:
+            raise  # Never publish a partial input or overwrite its valid cache.
+        except Exception:
+            logger.warning("Incremental input unavailable; using the existing full read", exc_info=True)
     all_data = []
     limit = 1000
     offset = 0

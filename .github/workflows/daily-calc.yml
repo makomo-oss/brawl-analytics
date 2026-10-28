@@ -24,13 +24,29 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           
-      - name: Run Daily Calculation Script
+      - name: Restore encrypted history input
+        # History is authenticated/encrypted; never cache plaintext player data.
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: .analytics-cache/history.bin
+          key: analytics-history-v1-${{ runner.os }}-${{ github.ref_name }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: analytics-history-v1-${{ runner.os }}-${{ github.ref_name }}-
+
+      - name: Calculate using refreshed history partitions
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          ANALYTICS_HISTORY_CACHE: ${{ github.workspace }}/.analytics-cache/history.bin
         run: |
           cd backend
           python app/scripts/daily_calc.py
+
+      - name: Save encrypted history input
+        if: success() && hashFiles('.analytics-cache/history.bin') != ''
+        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: .analytics-cache/history.bin
+          key: analytics-history-v1-${{ runner.os }}-${{ github.ref_name }}-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Refresh the live Tier cache
         env:

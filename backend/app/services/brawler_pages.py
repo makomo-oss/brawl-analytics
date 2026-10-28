@@ -1,10 +1,20 @@
 """Compact live input for character pages, using the existing Tier calculations."""
 from functools import lru_cache
+from collections import OrderedDict
+from concurrent.futures import Future
+from copy import deepcopy
 from threading import RLock
+import time
 
 from fastapi import HTTPException
 
 _lock = RLock()
+_page_lock = RLock()
+_pages = OrderedDict()
+_pending = {}
+_epoch = 0
+_PAGE_LIMIT = 128
+_PAGE_TTL = 3600
 _FIELDS = ("score", "win_rate", "use_rate", "total_matches", "rank_position",
            "sample_sufficient", "confidence_interval", "adjusted_win_rate")
 _MAIN_MODES = {"soloShowdown", "duoShowdown", "brawlBall", "hotZone",
@@ -31,13 +41,54 @@ def _tier(generation, cohort, kind=None, scope=None):
 def clear_cache():
     with _lock:
         _cached_tier.cache_clear()
+    global _epoch
+    with _page_lock:
+        _epoch += 1
+        _pages.clear()
+        _pending.clear()
 
 
 def snapshot(character_id=None):
     from app.routers import meta
     rows = meta._get_cached_macro_data(meta.get_db())
     # A fresh database snapshot has a new identity, even when timestamps coincide.
-    generation = (id(rows), meta._MACRO_CACHE["timestamp"])
+    with _page_lock:
+        epoch = _epoch
+    generation = (epoch, id(rows), meta._MACRO_CACHE["timestamp"])
+    key = (generation, meta._normalize_id(character_id) if character_id else None)
+    with _page_lock:
+        cached = _pages.get(key)
+        if cached and time.monotonic() - cached[0] < _PAGE_TTL:
+            _pages.move_to_end(key)
+            return deepcopy(cached[1])
+        pending = _pending.get(key)
+        owner = pending is None
+        if owner:
+            pending = Future()
+            _pending[key] = pending
+    if not owner:
+        return deepcopy(pending.result())
+    try:
+        result = _build_snapshot(generation, character_id)
+        with _page_lock:
+            if epoch == _epoch:
+                _pages[key] = (time.monotonic(), result)
+                _pages.move_to_end(key)
+                while len(_pages) > _PAGE_LIMIT:
+                    _pages.popitem(last=False)
+        pending.set_result(result)
+        return deepcopy(result)
+    except Exception as exc:
+        pending.set_exception(exc)
+        raise
+    finally:
+        with _page_lock:
+            if _pending.get(key) is pending:
+                del _pending[key]
+
+
+def _build_snapshot(generation, character_id):
+    from app.routers import meta
     overview = {cohort: _tier(generation, cohort) for cohort in ("global", "gachi")}
     names = {name for data in overview.values() for name, stats in data["characters"].items()
              if stats["total_matches"] > 0}

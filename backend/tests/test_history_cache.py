@@ -170,7 +170,8 @@ def test_cache_loss_corruption_and_key_rotation_rebuild(tmp_path, failure):
         assert any('/rpc/' not in r.url.path for r in source.requests)
 
 
-def test_concurrent_change_retries_affected_partition(tmp_path):
+def test_concurrent_change_retries_affected_partition(tmp_path, caplog):
+    caplog.set_level('INFO', logger='app.services.history_cache')
     source = Source([observation(1)])
     def insert():
         source.rows.append(observation(2))
@@ -178,6 +179,7 @@ def test_concurrent_change_retries_affected_partition(tmp_path):
     source.after_read = insert
     with source.client() as db:
         assert cache(tmp_path).fetch(db, NOW - timedelta(days=60)) == source.rows
+    assert '2 rows, 3 downloaded' in caplog.text
 
 
 def test_continuous_changes_fail_without_replacing_valid_cache(tmp_path):

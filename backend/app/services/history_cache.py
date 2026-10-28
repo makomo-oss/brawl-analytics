@@ -118,9 +118,9 @@ class HistoryCache:
         first_day = threshold.date()
         # Verify before any raw reads. A missing migration is handled by the caller.
         manifest = self._manifest(client, first_day)
+        fetched = 0
         for _ in range(3):
             candidate = {}
-            fetched = 0
             for day, revision in sorted(manifest.items()):
                 entry = saved.get(day)
                 if entry is None or entry['revision'] != revision:

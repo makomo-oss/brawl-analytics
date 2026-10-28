@@ -17,6 +17,7 @@ load_dotenv(os.path.join(os.path.dirname(backend_dir), ".env"))
 
 from app.services.brawl_api import get_player
 from app.services.player_profiles import profile_record
+from app.services.db_reads import execute_read
 from app.algorithm.statistics import (ANALYSIS_WINDOW_DAYS, RECENT_WINDOW_DAYS,
                                       HALF_LIFE_DAYS, OLDER_HALF_LIFE_DAYS, posterior_rate)
 
@@ -121,16 +122,20 @@ def fetch_player_rank_segments(client: Client = None, match_df: pd.DataFrame = N
     columns = ("player_tag, updated_at, unlocked_characters" if refresh_profiles
                else PLAYER_RANK_COLUMNS)
     all_players = []
-    offset = 0
+    last_tag = None
     limit = 1000
     while True:
-        res = supabase.table("players").select(columns).not_.like("name", "Mock (Error:%").order("player_tag").range(offset, offset + limit - 1).execute()
+        query = (supabase.table("players").select(columns)
+                 .not_.like("name", "Mock (Error:%").order("player_tag").limit(limit))
+        if last_tag is not None:
+            query = query.gt("player_tag", last_tag)
+        res = execute_read(query)
         if not res.data:
             break
         all_players.extend(res.data)
         if len(res.data) < limit:
             break
-        offset += limit
+        last_tag = res.data[-1]["player_tag"]
         
     mythic_tags = set()
     legendary_tags = set()
@@ -597,6 +602,8 @@ def run_daily_calculation(client: Client = None):
     }
 
 def main():
+    # Cursor URLs can contain player identifiers; keep batch logs to summaries.
+    logging.getLogger("httpx").setLevel(logging.WARNING)
     run_daily_calculation()
 
 if __name__ == "__main__":

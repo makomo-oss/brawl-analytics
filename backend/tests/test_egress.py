@@ -25,18 +25,21 @@ def test_rank_projection_keeps_all_brackets_and_pagination():
                 {"player_tag": "MASTERS", "ranked_rank": 19},
                 {"player_tag": "PRO", "ranked_rank": 20},
                 {"player_tag": "MISSING", "ranked_rank": None}]
+    players.sort(key=lambda p: p['player_tag'])
 
     def handler(request):
         requests.append(request)
-        offset = int(request.url.params["offset"])
-        return httpx.Response(200, json=players[offset:offset + 1000])
+        after = request.url.params.get('player_tag')
+        eligible = players if after is None else [p for p in players if p['player_tag'] > after[3:]]
+        return httpx.Response(200, json=eligible[:1000])
 
     with database(handler) as db:
         segments = daily_calc.fetch_player_rank_segments(db)
     assert segments == {"mythic": {"MYTHIC"}, "legendary": {"LEGENDARY"},
                         "masters": {"MASTERS", "PRO"},
                         "all_elite": {"MYTHIC", "LEGENDARY", "MASTERS", "PRO"}}
-    assert [r.url.params["offset"] for r in requests] == ["0", "1000"]
+    assert [r.url.params.get('player_tag') for r in requests] == [None, 'gt.' + players[999]['player_tag']]
+    assert all('offset' not in r.url.params for r in requests)
     assert all(r.url.params["select"] ==
                "player_tag,ranked_rank:unlocked_characters->ranked_rank" for r in requests)
     assert all(r.url.params["name"] == "not.like.Mock (Error:%" for r in requests)

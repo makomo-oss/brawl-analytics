@@ -1,5 +1,5 @@
 from concurrent.futures import ThreadPoolExecutor
-from threading import Event
+from threading import Event, Lock
 from types import SimpleNamespace
 
 import pytest
@@ -179,6 +179,56 @@ def test_failure_is_retryable():
     assert error.value.status_code == 503
     assert pairs(db) == {}
     assert len(calls) == 2
+
+
+def test_distinct_cold_requests_limit_database_work_and_keep_cache_hits_fast(monkeypatch):
+    from threading import BoundedSemaphore
+    monkeypatch.setattr(meta, "_PAIR_READ_SLOTS", BoundedSemaphore(2))
+    lock, entered, release = Lock(), Event(), Event()
+    active, peak, calls = [0], [0], []
+    class DB:
+        def rpc(self, name, params):
+            char = params["p_character"]
+            def execute():
+                with lock:
+                    calls.append(char)
+                    active[0] += 1
+                    peak[0] = max(peak[0], active[0])
+                    if active[0] == 2:
+                        entered.set()
+                try:
+                    assert release.wait(5)
+                    return SimpleNamespace(data=[{"char_a": char}])
+                finally:
+                    with lock:
+                        active[0] -= 1
+            return SimpleNamespace(execute=execute)
+    db = DB()
+    with ThreadPoolExecutor(max_workers=9) as pool:
+        futures = [pool.submit(pairs, db, f"hero{i}") for i in range(8)]
+        try:
+            assert entered.wait(2)
+            # A hit does not acquire a database slot even while both are busy.
+            meta._PAIR_CONTEXT_CACHE[("gachi", None, None, "all", None, "cached")] = (meta.time.time(), {"cached": []})
+            assert pool.submit(pairs, db, "cached").result(timeout=1) == {"cached": []}
+            with lock:
+                assert len(calls) == 2
+        finally:
+            release.set()
+        assert all(f.result(timeout=3) for f in futures)
+    assert peak[0] == 2 and len(calls) == 8
+
+
+def test_failed_rpc_releases_database_slot(monkeypatch):
+    from threading import BoundedSemaphore
+    monkeypatch.setattr(meta, "_PAIR_READ_SLOTS", BoundedSemaphore(1))
+    def fail(): raise RuntimeError("failed")
+    db = SimpleNamespace(rpc=lambda *args: SimpleNamespace(execute=fail))
+    with pytest.raises(HTTPException):
+        pairs(db)
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        good = SimpleNamespace(rpc=lambda *args: SimpleNamespace(execute=lambda: SimpleNamespace(data=[])))
+        assert pool.submit(pairs, good).result(timeout=1) == {}
 
 
 def test_clear_during_query_cannot_restore_old_statistics():

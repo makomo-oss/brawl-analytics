@@ -4,7 +4,7 @@ import time
 import logging
 from collections import OrderedDict
 from concurrent.futures import Future
-from threading import Lock
+from threading import BoundedSemaphore, Lock
 from app.database import get_db
 from app.services.db_reads import execute_read
 from app.algorithm.statistics import blend_tier_score, normal_tier_boundaries, posterior_rate, supported_win_lift, wilson_interval, MIN_TIER_MATCHES, MIN_TIER_WEIGHT, TIER_EVIDENCE_MATCHES, TIER_WIN_WEIGHT, TIER_USAGE_WEIGHT, ANALYSIS_WINDOW_DAYS, RECENT_WINDOW_DAYS, HALF_LIFE_DAYS, OLDER_HALF_LIFE_DAYS
@@ -42,6 +42,9 @@ _PAIR_PENDING = {}
 _PAIR_CACHE_GENERATION = 0
 _PAIR_CACHE_TTL = 3600  # Match the aggregate snapshot; the daily batch clears both.
 _PAIR_CACHE_LIMIT = 256
+# Different cold character pages share the same small database. Cache hits and
+# same-key followers bypass this gate; only the owners of new RPCs use slots.
+_PAIR_READ_SLOTS = BoundedSemaphore(2)
 _MODE_MAPS_CACHE = {} # mode -> (set of map_ids, timestamp)
 
 def clear_meta_cache():
@@ -289,7 +292,8 @@ def _contextual_pairs(db, type, sub_type, selected_id, rank_tier, mode=None, cha
         rpc_name = "character_pair_stats"
         params["p_character"] = character_id
     try:
-        rows = execute_read(db.rpc(rpc_name, params)).data or []
+        with _PAIR_READ_SLOTS:
+            rows = execute_read(db.rpc(rpc_name, params)).data or []
         by_char = {}
         for row in rows:
             by_char.setdefault(_normalize_id(row["char_a"]), []).append(row)

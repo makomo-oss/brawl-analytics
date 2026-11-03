@@ -40,7 +40,7 @@ export function ArenaNavigation({ pathname, visible }: { pathname: string; visib
     <header className="arena-site-header">
       <div className="arena-header-inner">
         <Link href="/" className="arena-brand" aria-label="ブロラボ ホーム">
-          <BurolaboIcon size={32} glow={false} />
+          <BurolaboIcon size={32} />
           <span>ブロラボ<small>BRAWL LAB</small></span>
         </Link>
         <nav ref={desktop.navigation} className="arena-site-tabbar" aria-label="メインナビゲーション">

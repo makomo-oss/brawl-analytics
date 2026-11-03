@@ -339,8 +339,9 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
         if (res.status === 404) {
           setErrorMsg("そのプレイヤーIDは存在しません。")
         } else {
-          const error = await res.json().catch(() => null)
-          setErrorMsg(typeof error?.detail === "string" ? error.detail : "データの取得に失敗しました。")
+          const error: unknown = await res.json().catch(() => null)
+          const detail = error && typeof error === "object" && "detail" in error ? error.detail : null
+          setErrorMsg(typeof detail === "string" ? detail : "データの取得に失敗しました。")
         }
         return
       }

@@ -1,12 +1,16 @@
 import httpx
 import logging
 import asyncio
+import time
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 from app.config import BRAWL_API_TOKEN, BRAWL_API_PROXY, BRAWL_API_BASE_URL
 
 logger = logging.getLogger(__name__)
 
 # シングルトン HTTP クライアントの参照
 _http_client: httpx.AsyncClient | None = None
+_rate_limited_until = 0.0
 
 def get_http_client() -> httpx.AsyncClient:
     """
@@ -38,11 +42,33 @@ async def close_http_client() -> None:
 class BrawlAPIError(RuntimeError):
     """The upstream service failed; never substitute synthetic production data."""
 
+class BrawlAPIRateLimited(BrawlAPIError):
+    """The shared upstream client is temporarily rate limited."""
+
+class BrawlBattlelogNotFound(BrawlAPIError):
+    """The upstream battlelog is unavailable for this tag."""
+
+
+def _retry_delay(header: str | None) -> float:
+    if header and header.isascii() and header.isdecimal() and len(header) <= 10:
+        return max(1, int(header))
+    if header:
+        try:
+            retry_at = parsedate_to_datetime(header).replace(tzinfo=timezone.utc)
+            return max(1, (retry_at - datetime.now(timezone.utc)).total_seconds())
+        except (TypeError, ValueError, OverflowError):
+            pass
+    return 30
+
+
 async def _get_resource(path: str, tag: str, suffix: str = ""):
+    global _rate_limited_until
     clean_tag = tag.replace("%23", "").replace("#", "").strip().upper()
     from urllib.parse import quote
     url = f"{BRAWL_API_BASE_URL}/{path}/%23{quote(clean_tag, safe='')}{suffix}"
     for attempt in range(3):
+        if time.monotonic() < _rate_limited_until:
+            raise BrawlAPIRateLimited("Brawl API returned HTTP 429 (cooldown active)")
         try:
             response = await get_http_client().get(url, headers={
                 "Authorization": f"Bearer {BRAWL_API_TOKEN}", "Accept": "application/json"
@@ -51,9 +77,15 @@ async def _get_resource(path: str, tag: str, suffix: str = ""):
             return response.json()
         except httpx.HTTPStatusError as exc:
             status = exc.response.status_code
+            if status == 429:
+                retry_at = time.monotonic() + _retry_delay(exc.response.headers.get("Retry-After"))
+                _rate_limited_until = max(_rate_limited_until, retry_at)
+                raise BrawlAPIRateLimited(f"Brawl API returned HTTP 429 for {path}{suffix}") from exc
             if status == 404:
+                if suffix == "/battlelog":
+                    raise BrawlBattlelogNotFound("Brawl API returned HTTP 404 for players/battlelog") from exc
                 raise ValueError("Player not found" if path == "players" else "Club not found") from exc
-            if status not in (429, 500, 502, 503, 504) or attempt == 2:
+            if status not in (500, 502, 503, 504) or attempt == 2:
                 raise BrawlAPIError(f"Brawl API returned HTTP {status}") from exc
         except httpx.RequestError as exc:
             if attempt == 2:

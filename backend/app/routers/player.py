@@ -1,12 +1,13 @@
 from fastapi import APIRouter, HTTPException, Query, Header
 from pydantic import BaseModel, StrictBool
-from app.services.brawl_api import get_player_battlelog, get_player
+from app.services.brawl_api import BrawlAPIError, BrawlAPIRateLimited, BrawlBattlelogNotFound, get_player_battlelog, get_player
 from app.database import get_db
 from app.services.player_profiles import profile_record
 from app.services.battle_records import clean_tag as normalize_player_tag, parse_battlelog
 from app.services.player_analysis import get_saved_player_analysis, invalidate_player_analysis
 import logging
 import asyncio
+import json
 from datetime import datetime, timezone
 from typing import Literal
 
@@ -63,6 +64,40 @@ def _save_synced_player(db, tag: str, player_info: dict, battlelog: dict) -> int
         db.table("match_raw_history").upsert(records, returning="minimal").execute()
     invalidate_player_analysis(tag)
     return len(records)
+
+
+def _saved_dashboard(tag: str) -> dict | None:
+    db = get_db()
+    profiles = (db.table("players").select("name,trophies,highest_trophies,unlocked_characters")
+                .eq("player_tag", tag).limit(1).execute().data)
+    if not profiles:
+        return None
+    profile = profiles[0]
+    name = profile.get("name")
+    characters = profile.get("unlocked_characters") or {}
+    if isinstance(characters, str):
+        try:
+            characters = json.loads(characters)
+        except json.JSONDecodeError:
+            characters = {}
+    if not isinstance(characters, dict):
+        characters = {}
+    if not name or name.startswith("Mock (Error:") or characters.get("profile_status") not in (None, "verified"):
+        return None
+    rows = (db.table("match_raw_history").select("match_at,mode,map_id,match_type,result,hero_used")
+            .eq("player_tag", tag).order("match_at", desc=True).order("match_id", desc=True)
+            .limit(25).execute().data or [])
+    return {
+        "player_tag": tag,
+        "source": "saved",
+        "profile": {key: profile.get(key) for key in ("name", "trophies", "highest_trophies")},
+        "brawlers": characters.get("brawlers") or [],
+        "recent_battles": [
+            {"time": row["match_at"] + "Z", "mode": row["mode"], "map": row["map_id"],
+             "type": row["match_type"], "result": row["result"], "hero": row["hero_used"].lower()}
+            for row in rows
+        ],
+    }
 
 @router.get("/search")
 async def search_players(q: str = Query(..., min_length=1, description="Player tag or name to search")):
@@ -249,17 +284,32 @@ async def get_dashboard(player_tag: str):
         # 1. プレイヤー基本情報とバトルログを完全並列フェッチ (待ち時間半減)
         player_info, battlelog = await asyncio.gather(
             get_player(clean_tag),
-            get_player_battlelog(clean_tag)
+            get_player_battlelog(clean_tag),
+            return_exceptions=True,
         )
+        if isinstance(player_info, BaseException):
+            raise player_info
+        missing_battlelog = isinstance(battlelog, BrawlBattlelogNotFound)
+        if missing_battlelog:
+            try:
+                saved = await asyncio.to_thread(_saved_dashboard, clean_tag)
+            except Exception:
+                logger.exception("Could not load saved dashboard")
+                saved = None
+            if saved and saved["recent_battles"]:
+                return saved
+            battlelog = {"items": []}
+        elif isinstance(battlelog, BaseException):
+            raise battlelog
         
         # 2. 同期の成功を返す前にプロフィールと対応する試合を保存する。
         try:
-            db = get_db()
             ranked_rank = player_info.get("rankedRank") or 0
             highest_ranked_rank = int(player_info.get("highestAllTimeRankedRank") or player_info.get("highestSeasonRankedRank") or ranked_rank)
             icon_id = (player_info.get("icon") or {}).get("id", 28000000) or 28000000
             
-            await asyncio.to_thread(_save_synced_player, db, clean_tag, player_info, battlelog)
+            if not missing_battlelog:
+                await asyncio.to_thread(_save_synced_player, get_db(), clean_tag, player_info, battlelog)
 
             _PLAYER_SEARCH_ENRICH_CACHE[clean_tag] = (
                 {"icon_id": icon_id, "highest_ranked_rank": highest_ranked_rank},
@@ -461,6 +511,7 @@ async def get_dashboard(player_tag: str):
 
         return {
             "player_tag": clean_tag,
+            **({"source": "profile-only"} if missing_battlelog else {}),
             "profile": {
                 "name": player_info.get("name", "Unknown"),
                 "icon_id": (player_info.get("icon") or {}).get("id", 28000000),
@@ -491,6 +542,17 @@ async def get_dashboard(player_tag: str):
         }
     except HTTPException:
         raise
+    except BrawlAPIError as exc:
+        logger.warning("Dashboard upstream error: %s", exc)
+        try:
+            saved = await asyncio.to_thread(_saved_dashboard, clean_tag)
+            if saved is not None:
+                return saved
+        except Exception:
+            logger.exception("Could not load saved dashboard")
+        if isinstance(exc, BrawlAPIRateLimited):
+            raise HTTPException(status_code=503, detail="ブロスタのAPIが混み合っています。時間をおいて再試行してください。") from exc
+        raise HTTPException(status_code=502, detail="戦績データを取得できませんでした。時間をおいて再試行してください。") from exc
     except ValueError as e:
         if str(e) == "Player not found":
             raise HTTPException(status_code=404, detail="Player not found")

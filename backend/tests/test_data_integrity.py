@@ -11,10 +11,41 @@ from app.routers import meta, player
 @pytest.mark.parametrize("status", [403, 429, 500])
 @pytest.mark.parametrize("method", ["get_player", "get_player_battlelog", "get_club", "get_club_members"])
 def test_upstream_failure_never_returns_fake_data(monkeypatch, status, method):
+    monkeypatch.setattr(brawl_api, "_rate_limited_until", 0)
     response = httpx.Response(status, request=httpx.Request("GET", "https://example.com"))
     monkeypatch.setattr(brawl_api, "get_http_client", lambda: SimpleNamespace(get=AsyncMock(return_value=response)))
     with pytest.raises(brawl_api.BrawlAPIError):
         asyncio.run(getattr(brawl_api, method)("#ABC"))
+
+
+def test_rate_limit_stops_requests_until_retry_after(monkeypatch):
+    request = httpx.Request("GET", "https://example.com")
+    client = SimpleNamespace(get=AsyncMock(side_effect=[
+        httpx.Response(429, headers={"Retry-After": "60"}, request=request),
+        httpx.Response(200, json={"items": []}, request=request),
+    ]))
+    now = 100
+    monkeypatch.setattr(brawl_api, "_rate_limited_until", 0)
+    monkeypatch.setattr(brawl_api, "time", SimpleNamespace(monotonic=lambda: now))
+    monkeypatch.setattr(brawl_api, "get_http_client", lambda: client)
+
+    with pytest.raises(brawl_api.BrawlAPIRateLimited):
+        asyncio.run(brawl_api.get_player("#ABC"))
+    now += 59
+    with pytest.raises(brawl_api.BrawlAPIRateLimited):
+        asyncio.run(brawl_api.get_player_battlelog("#ABC"))
+    assert client.get.await_count == 1
+    now += 1
+    assert asyncio.run(brawl_api.get_player_battlelog("#ABC")) == {"items": []}
+
+
+def test_battlelog_404_is_distinct_from_missing_player(monkeypatch):
+    response = httpx.Response(404, request=httpx.Request("GET", "https://example.com"))
+    monkeypatch.setattr(brawl_api, "get_http_client", lambda: SimpleNamespace(get=AsyncMock(return_value=response)))
+    with pytest.raises(brawl_api.BrawlBattlelogNotFound):
+        asyncio.run(brawl_api.get_player_battlelog("#ABC"))
+    with pytest.raises(ValueError, match="Player not found"):
+        asyncio.run(brawl_api.get_player("#ABC"))
 
 
 def test_transient_battlelog_failure_is_retried(monkeypatch):
@@ -59,9 +90,62 @@ def test_survival_result_does_not_imply_winning_every_matchup():
 def test_dashboard_failure_is_http_error(monkeypatch):
     monkeypatch.setattr(player,"get_player",AsyncMock(side_effect=brawl_api.BrawlAPIError("offline")))
     monkeypatch.setattr(player,"get_player_battlelog",AsyncMock(return_value={"items":[]}))
+    monkeypatch.setattr(player, "_saved_dashboard", lambda tag: None)
     with pytest.raises(Exception) as error:
         asyncio.run(player.get_dashboard("ABC"))
     assert error.value.status_code == 502
+
+
+@pytest.mark.parametrize("has_saved_battles", [True, False])
+def test_dashboard_displays_existing_player_when_battlelog_returns_404(monkeypatch, has_saved_battles):
+    from unittest.mock import Mock
+
+    saved = {"source": "saved", "recent_battles": [row()]}
+    monkeypatch.setattr(player, "get_player", AsyncMock(return_value={"tag": "#ABC", "name": "Player"}))
+    monkeypatch.setattr(player, "get_player_battlelog", AsyncMock(side_effect=brawl_api.BrawlBattlelogNotFound()))
+    monkeypatch.setattr(player, "_saved_dashboard", lambda tag: saved if has_saved_battles else None)
+    monkeypatch.setattr(player, "_PLAYER_SEARCH_ENRICH_CACHE", {})
+    monkeypatch.setattr(meta, "_get_cached_macro_data", lambda db: [])
+    monkeypatch.setattr(player, "get_db", lambda: None)
+    save = Mock()
+    monkeypatch.setattr(player, "_save_synced_player", save)
+
+    result = asyncio.run(player.get_dashboard("ABC"))
+    if has_saved_battles:
+        assert result == saved
+    else:
+        assert result["profile"]["name"] == "Player"
+        assert result["source"] == "profile-only"
+        assert result["recent_battles"] == []
+    save.assert_not_called()
+
+
+@pytest.mark.parametrize("has_profile", [True, False])
+def test_rate_limited_dashboard_loads_saved_data(monkeypatch, has_profile):
+    from unittest.mock import MagicMock
+
+    profile = {"name": "Player", "trophies": 1200, "highest_trophies": 1300,
+               "unlocked_characters": {"profile_status": "verified", "brawlers": [{"id": 1}]}}
+    match = dict(row(), match_at="2026-11-03T01:00:00")
+    db = MagicMock()
+    profiles = db.table.return_value.select.return_value.eq.return_value
+    profiles.limit.return_value.execute.return_value.data = [profile] if has_profile else []
+    profiles.order.return_value.order.return_value.limit.return_value.execute.return_value.data = [match]
+    monkeypatch.setattr(player, "get_db", lambda: db)
+    monkeypatch.setattr(player, "get_player", AsyncMock(return_value={"tag": "#ABC"}))
+    monkeypatch.setattr(player, "get_player_battlelog", AsyncMock(side_effect=brawl_api.BrawlAPIRateLimited()))
+
+    if has_profile:
+        saved = asyncio.run(player.get_dashboard("ABC"))
+        assert saved["source"] == "saved"
+        assert saved["profile"]["name"] == "Player"
+        assert saved["recent_battles"][0]["hero"] == "colt"
+        assert saved["recent_battles"][0]["time"] == "2026-11-03T01:00:00Z"
+        assert saved["brawlers"] == [{"id": 1}]
+    else:
+        with pytest.raises(player.HTTPException) as error:
+            asyncio.run(player.get_dashboard("ABC"))
+        assert error.value.status_code == 503
 
 
 @pytest.mark.parametrize("route", [player.get_dashboard, player.sync_player])

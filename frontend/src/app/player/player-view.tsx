@@ -78,6 +78,7 @@ interface Brawler {
 
 interface DashboardData {
   player_tag: string;
+  source?: "saved" | "profile-only";
   profile?: {
     name: string;
     icon_id: number;
@@ -338,7 +339,8 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
         if (res.status === 404) {
           setErrorMsg("そのプレイヤーIDは存在しません。")
         } else {
-          setErrorMsg("データの取得に失敗しました。")
+          const error = await res.json().catch(() => null)
+          setErrorMsg(typeof error?.detail === "string" ? error.detail : "データの取得に失敗しました。")
         }
         return
       }
@@ -728,6 +730,11 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
 
       {data && !errorMsg && (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 mt-8">
+          {data.source === "saved" && (
+            <p role="status" className="rounded-md border border-primary/20 bg-primary/5 p-4 text-sm">
+              最新の戦績を取得できなかったため、保存済みのプロフィールと戦績を表示しています。
+            </p>
+          )}
           {data.profile && (
             /* Profile Card */
             <Card className="border-t-4 border-t-blue-500 shadow-md mb-8">
@@ -741,7 +748,7 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                     <CardTitle className="text-3xl font-extrabold tracking-tight">{data.profile?.name}</CardTitle>
                     <div className="flex flex-wrap justify-center md:justify-start items-center gap-2 mt-2 text-muted-foreground">
                       <span className="font-medium">{data.player_tag}</span>
-                      <span 
+                      {data.source !== "saved" && <span
                         className={`text-xs px-2.5 py-1 rounded-full font-semibold transition-all flex items-center gap-1.5 ${
                           data.profile?.club_name && data.profile.club_name !== "No Club" && data.profile.club_name !== "クラブ未所属"
                             ? "bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 hover:bg-purple-500/20 cursor-pointer shadow-sm"
@@ -759,7 +766,7 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                       >
                         <Building2 className="w-3.5 h-3.5" />
                         {(!data.profile?.club_name || data.profile.club_name === "No Club") ? "クラブ未所属" : data.profile.club_name}
-                      </span>
+                      </span>}
                     </div>
                   </div>
                   <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto mt-4 md:mt-0">
@@ -767,8 +774,8 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                   <div className="text-sm font-semibold text-muted-foreground flex items-center justify-center md:justify-end gap-1">
                     <Trophy className="w-4 h-4 text-yellow-500" /> トロフィー
                   </div>
-                  <div className="text-2xl font-black text-primary mt-1">{data.profile?.trophies != null ? data.profile.trophies.toLocaleString() : 0}</div>
-                  <div className="text-xs text-muted-foreground">最高: {data.profile?.highest_trophies != null ? data.profile.highest_trophies.toLocaleString() : 0}</div>
+                  <div className="text-2xl font-black text-primary mt-1">{data.profile?.trophies?.toLocaleString() ?? "—"}</div>
+                  <div className="text-xs text-muted-foreground">最高: {data.profile?.highest_trophies?.toLocaleString() ?? "—"}</div>
                 </div>
                 {data.profile?.ranked_elo ? (
                   <div className="flex items-center justify-center w-full sm:w-auto gap-3">
@@ -913,7 +920,7 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                         scoreDisplay = <p className="font-bold text-sm text-purple-400 drop-shadow-sm px-2 py-1 bg-purple-500/10 rounded-md border border-purple-500/20">ランク戦</p>;
                       } else if (isFriendly) {
                         scoreDisplay = <p className="font-bold text-sm text-gray-400 drop-shadow-sm">フレンド</p>;
-                      } else {
+                      } else if (battle.trophy_change != null || data.source !== "saved") {
                         scoreDisplay = (
                           <p className={`font-bold text-xl drop-shadow-sm ${battle.trophy_change > 0 ? 'text-green-500' : battle.trophy_change < 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
                             {battle.trophy_change > 0 ? '+' : ''}{battle.trophy_change} 🏆
@@ -954,7 +961,7 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                       </div>
                       
                       {/* Teams section */}
-                      <div className="p-3 grid grid-cols-1 sm:grid-cols-2 gap-4 bg-secondary/10">
+                      <div className={data.source === "saved" ? "hidden" : "p-3 grid grid-cols-1 sm:grid-cols-2 gap-4 bg-secondary/10"}>
                         {/* My Team */}
                         <div className="space-y-3 relative">
                           <p className="text-xs font-bold text-primary tracking-widest border-b border-primary/20 pb-1.5 flex items-center gap-2">
@@ -1031,7 +1038,7 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
             </Tabs>
             ) : (
               <div className="py-12 text-center text-muted-foreground bg-secondary/20 rounded-xl border border-dashed">
-                バトル履歴がありません。
+                {data.source === "profile-only" ? "ブロスタのAPIから、このプレイヤーのバトル履歴を取得できませんでした。" : "バトル履歴がありません。"}
               </div>
             )}
           </TabsContent>

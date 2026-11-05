@@ -102,7 +102,6 @@ export const metadata: Metadata = {
     apple: [
       { url: "/apple-touch-icon.png?v=5", sizes: "180x180", type: "image/png" },
     ],
-    shortcut: ["/favicon.ico?v=5"],
   },
 
   // ─── その他 ───
@@ -134,11 +133,6 @@ export default function RootLayout({
   return (
     <html lang="ja" className="dark">
       <head>
-        <link rel="icon" type="image/svg+xml" href="/icon.svg?v=5" />
-        <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=5" />
-        <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png?v=5" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=5" />
-        <link rel="shortcut icon" href="/favicon.ico?v=5" />
         <link rel="describedby" type="application/json" href="/data/index.json" />
         <link rel="describedby" type="application/ld+json" href="/data/catalog.jsonld" />
         <JsonLdStructuredData />

@@ -1,16 +1,17 @@
-import { pageMetadata, searchCopy } from "@/lib/seo";
+import { pageMetadata } from "@/lib/seo";
+import { playerCopy } from "@/lib/page-copy";
+import { PlayerFaq, PlayerHeader } from "./player-intro";
 
 export const metadata = pageMetadata(
-  searchCopy.player.title,
-  searchCopy.player.description,
+  playerCopy.title,
+  playerCopy.description,
   "/player",
 );
 
 export default function PlayerLayout({ children }: { children: React.ReactNode }) {
   return <>
-    <header className="mb-8 space-y-2">
-      <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">ブロスタ戦績検索・勝率確認</h1>
-    </header>
+    <PlayerHeader />
     {children}
+    <PlayerFaq />
   </>;
 }

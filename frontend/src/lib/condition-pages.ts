@@ -1,6 +1,7 @@
 import { brawlerEntries, type BrawlerSnapshot, type CharacterStats, type Cohort } from "./brawler-page-data"
 import { translateMap, translateMode } from "./translations"
 import { SITE_URL } from "./seo"
+import { normalizeDate } from "./dates"
 
 export const MODE_SLUGS: Record<string, string> = {
   soloShowdown: "solo-showdown", duoShowdown: "duo-showdown", brawlBall: "brawl-ball",
@@ -21,11 +22,7 @@ export interface ConditionPageData {
   entry: ConditionEntry; related: ConditionEntry[]
   cohorts: Record<Cohort, { rows: RankingRow[]; updatedAt: string | null; windowDays: number }>
 }
-export const normalizeDate = (date: string | null) => {
-  if (!date) return null
-  const stamp = Date.parse(/(?:Z|[+-]\d{2}:?\d{2})$/i.test(date) ? date : `${date}Z`)
-  return Number.isFinite(stamp) ? new Date(stamp).toISOString() : null
-}
+export { normalizeDate }
 
 // One canonical URL combines the two cohorts. No rank/filter URL combinations.
 export function conditionIndex(snapshot: BrawlerSnapshot): ConditionIndex {

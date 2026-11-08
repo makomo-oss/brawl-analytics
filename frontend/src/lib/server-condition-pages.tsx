@@ -1,7 +1,8 @@
 import { cache } from "react"
 import { notFound } from "next/navigation"
 import { getSnapshot } from "./server-brawler-pages"
-import { conditionIndex, conditionPage, conditionCopy, conditionSchema, conditionBreadcrumbs, collectionSchema } from "./condition-pages"
+import { conditionPageCopy } from "./page-copy"
+import { conditionIndex, conditionPage, conditionSchema, conditionBreadcrumbs, collectionSchema } from "./condition-pages"
 import { pageMetadata } from "./seo"
 import { ConditionDetailView, ConditionDirectoryView } from "@/components/condition-pages"
 import { pageSchema } from "./llm-data"
@@ -11,7 +12,7 @@ export const conditionParams = async (kind: "modes" | "maps") => (await getCondi
 export async function conditionMetadata(kind: "modes" | "maps", slug: string) {
   const entry = (await getConditionIndex())[kind].find(row => row.slug === slug)
   if (!entry) return {}
-  const copy = conditionCopy(entry)
+  const copy = conditionPageCopy(conditionPage(await getSnapshot(), entry, await getConditionIndex()))
   return pageMetadata(copy.title, copy.description, entry.path)
 }
 function JsonLd({ value }: { value: unknown }) {

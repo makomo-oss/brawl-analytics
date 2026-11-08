@@ -19,6 +19,8 @@ import { Swords, Ban, Check, RefreshCw, Trophy, Target, User, Search, X } from "
 import { API_URL } from "@/lib/config"
 import Link from "@/components/document-link"
 import { conditionPath } from "@/lib/condition-pages"
+import { FaqSection } from "@/components/faq-section"
+import { COMPANION_FAQ } from "@/lib/faq"
 import { isDraftCategories, type DraftCategories } from "@/lib/draft-categories"
 
 function toKatakana(str: string): string {
@@ -651,6 +653,7 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
           <Link href="/maps" className="hover:text-primary">マップ一覧</Link>
           {conditionPath("modes", selectedMode) && <Link href={conditionPath("modes", selectedMode)!} className="hover:text-primary">{translateMode(selectedMode)}のランキング</Link>}
         </nav>
+        <FaqSection id="faq-companion" items={COMPANION_FAQ} />
       </div>
     )
   }

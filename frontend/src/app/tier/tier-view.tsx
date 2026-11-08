@@ -25,6 +25,11 @@ import DocumentLink from "@/components/document-link"
 
 import { characterDetailUrl, initialMatchup, type InitialMatchups } from "@/lib/matchup-preview"
 import { fetchPublicStats, getCachedPublicStats } from "@/lib/public-stats-cache"
+import { tierSummary } from "@/lib/page-insights"
+import { tierFaq } from "@/lib/faq"
+import { DataSummary } from "@/components/data-summary"
+import { RankingTable } from "@/components/ranking-table"
+import { FaqSection } from "@/components/faq-section"
 
 const INITIAL_TIER_KEY = "global:all:all:"
 
@@ -41,6 +46,9 @@ const tierConfig: Record<string, { color: string; label: string; bg: string }> =
 
 export default function TierListPage({ initialTierData, initialMatchups }: { initialTierData: TierListData; initialMatchups: InitialMatchups }) {
   useBrawlerCatalog()
+  // Built from the server payload only, so server and client text match.
+  const initialSummary = tierSummary(initialTierData, "global")
+  const initialFaq = tierFaq(initialSummary, initialTierData)
   const [tierData, setTierData] = useState<any>(initialTierData)
   const [loading, setLoading] = useState(false)
   const [selectedChar, setSelectedChar] = useState<any>(null)
@@ -258,6 +266,7 @@ export default function TierListPage({ initialTierData, initialMatchups }: { ini
               : "—"}
           </p>
         )}
+        <DataSummary summary={initialSummary} />
       </div>
 
       <Tabs value={selectedType} onValueChange={handleTypeChange} className="space-y-6">
@@ -408,6 +417,8 @@ export default function TierListPage({ initialTierData, initialMatchups }: { ini
         </div>
       </Tabs>
       <Link href="/brawlers" className="inline-block text-sm font-medium text-primary hover:underline">キャラ詳細一覧を見る</Link>
+      <RankingTable id="tier-top" title="全体Tier 上位10キャラ" rows={initialSummary?.top || []} />
+      <FaqSection id="faq-tier" items={initialFaq} />
 
       {/* キャラクター詳細モーダル (Sheet) */}
       {selectedChar && <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>

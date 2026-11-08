@@ -41,7 +41,7 @@ try {
   assert.match(cold, /aria-labelledby="draft-mode-label"/)
   assert.doesNotMatch(cold, /PRIVATE|self\.__next_f|モードを選択|マップを選択/)
   for (const path of ["/modes", "/maps"]) assert(cold.includes(`href="${path}"`))
-  assert.match(cold, /name="robots" content="index, follow"/)
+  assert.match(cold, /name="robots" content="index, follow[,"]/)
   assert.match(cold, /rel="canonical" href="https:\/\/brawl-lab.sozai-hub.com\/companion"/)
   release(); held = null; await drain()
   assert.equal((await request()).headers.get("X-Brawler-Rendering"), "live")

@@ -7,6 +7,8 @@ import { ArrowRight, MapPin, Trophy } from "lucide-react"
 import type { Cohort } from "@/lib/brawler-page-data"
 import { conditionBreadcrumbs, type ConditionEntry, type ConditionIndex, type ConditionPageData } from "@/lib/condition-pages"
 import { getModeIconUrl, translateMode } from "@/lib/translations"
+import { conditionSummary } from "@/lib/page-insights"
+import { DataSummary } from "@/components/data-summary"
 
 const card = "rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-4 sm:p-6"
 const heading = "text-2xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-primary via-purple-400 to-cyan-400 bg-clip-text text-transparent"
@@ -30,6 +32,7 @@ function EntryLinks({ entries }: { entries: ConditionEntry[] }) {
 }
 export function ConditionDirectoryView({ index, kind }: { index: ConditionIndex; kind: "modes" | "maps" }) {
   return <div className="arena-workspace arena-conditions space-y-6 sm:space-y-8"><Breadcrumbs kind={kind} /><h1 className={heading}>{kind === "modes" ? "モード別キャラランキング" : "マップ別キャラランキング"}</h1>
+    {index[kind].length > 0 && <p className="text-sm leading-relaxed text-muted-foreground">{index[kind].length}{kind === "modes" ? "モード" : "マップ"}ごとに、全体とガチバトル（エリート以上）のキャラ別勝率・使用率ランキングを掲載しています。</p>}
     <div className="flex gap-3 text-sm font-bold"><Link prefetch={false} href="/modes" aria-current={kind === "modes" ? "page" : undefined} className="rounded-lg border border-primary/20 px-4 py-2 text-primary hover:bg-primary/10">モード一覧</Link><Link prefetch={false} href="/maps" aria-current={kind === "maps" ? "page" : undefined} className="rounded-lg border border-cyan-500/20 px-4 py-2 text-cyan-400 hover:bg-cyan-500/10">マップ一覧</Link></div>
     <EntryLinks entries={index[kind]} />
   </div>
@@ -37,7 +40,7 @@ export function ConditionDirectoryView({ index, kind }: { index: ConditionIndex;
 export function ConditionDetailView({ data }: { data: ConditionPageData }) {
   const [selected, setSelected] = useState<Cohort>(data.cohorts.global.rows.length ? "global" : "gachi")
   return <div className="arena-workspace arena-conditions space-y-6 sm:space-y-8"><Breadcrumbs entry={data.entry} kind={data.entry.kind} />
-    <header className="space-y-3"><h1 className={`${heading} flex items-center gap-3`}>{data.entry.kind === "modes" && <Image src={getModeIconUrl(data.entry.modeIds[0])} alt="" width={40} height={40} className="w-10 h-10 object-contain shrink-0 drop-shadow-md" />}<span>{data.entry.label}のキャラランキング</span></h1>{data.entry.kind === "maps" && <ModeIcons entry={data.entry} />}</header>
+    <header className="space-y-3"><h1 className={`${heading} flex items-center gap-3`}>{data.entry.kind === "modes" && <Image src={getModeIconUrl(data.entry.modeIds[0])} alt="" width={40} height={40} className="w-10 h-10 object-contain shrink-0 drop-shadow-md" />}<span>{data.entry.label}のキャラランキング</span></h1>{data.entry.kind === "maps" && <ModeIcons entry={data.entry} />}<DataSummary summary={conditionSummary(data)} /></header>
     <div role="tablist" aria-label="集計対象" className="grid grid-cols-2 gap-1.5 max-w-[600px] mx-auto rounded-xl bg-card/80 border border-border/50 p-1.5">
       {(["global", "gachi"] as const).map(type => <button key={type} type="button" role="tab" id={`${type}-tab`} aria-selected={selected === type} aria-controls={`${type}-panel`} tabIndex={selected === type ? 0 : -1} onClick={() => setSelected(type)}
         onKeyDown={event => { if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return; event.preventDefault(); const next = event.key === "Home" ? "global" : event.key === "End" ? "gachi" : selected === "global" ? "gachi" : "global"; setSelected(next); document.getElementById(`${next}-tab`)?.focus() }}

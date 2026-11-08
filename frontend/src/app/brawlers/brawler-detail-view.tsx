@@ -8,6 +8,10 @@ import { ArrowLeft, ArrowRight, BarChart3, MapPin, Swords, TrendingUp, TrendingD
 import type { BrawlerPageData, Cohort, CohortData, ConditionRow, PairRow } from "@/lib/brawler-page-data"
 import { conditionPath, MODE_SLUGS } from "@/lib/condition-pages"
 import DocumentLink from "@/components/document-link"
+import { brawlerSummary } from "@/lib/page-insights"
+import { brawlerFaq } from "@/lib/faq"
+import { DataSummary } from "@/components/data-summary"
+import { FaqSection } from "@/components/faq-section"
 
 const count = (value: number) => value.toLocaleString("ja-JP")
 const percent = (value: number) => `${value.toFixed(1)}%`
@@ -120,7 +124,7 @@ function StatsPanel({ data }: { data: CohortData }) {
       </section>
     </div>
     <p className="text-xs text-muted-foreground">相性：{data.matchupScope}の補正勝率。敵・味方にそのキャラがいる試合のチーム成績です。</p>
-    <p className="text-xs text-muted-foreground">集計：直近{data.windowDays}日・記録されたプレイヤーごとの対戦件数。更新：{data.updatedLabel}（日本時間）</p>
+    <p className="text-xs text-muted-foreground">集計：直近{data.windowDays}日・記録されたプレイヤーごとの対戦件数。更新：{data.updatedAt ? <time dateTime={data.updatedAt}>{data.updatedLabel}</time> : data.updatedLabel}（日本時間）</p>
   </div>
 }
 
@@ -135,6 +139,7 @@ export default function BrawlerDetailView({ data }: { data: BrawlerPageData }) {
       {data.imageUrl && <Image src={data.imageUrl} alt={data.nameJa} width={80} height={80} className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl border-4 border-background ring-2 ring-primary/20 bg-primary/10 shadow-xl shrink-0" priority />}
       <div className="min-w-0"><p className="text-xs font-bold text-muted-foreground mb-1">ブロスタ キャラ分析</p><h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-primary via-purple-400 to-cyan-400 bg-clip-text text-transparent">{data.nameJa}の勝率・相性</h1></div>
     </header>
+    <DataSummary summary={brawlerSummary(data)} />
     <div role="tablist" aria-label="集計対象" className="grid grid-cols-2 gap-1.5 max-w-[600px] mx-auto rounded-xl bg-card/80 backdrop-blur-sm border border-border/50 shadow-sm p-1.5">
       {(["global", "gachi"] as const).map(type => <button key={type} type="button" role="tab" id={`${type}-tab`} aria-selected={selected === type} aria-controls={`${type}-panel`}
         tabIndex={selected === type ? 0 : -1} onClick={() => setSelected(type)}
@@ -156,5 +161,6 @@ export default function BrawlerDetailView({ data }: { data: BrawlerPageData }) {
       <Link href="/tier" className="group flex items-center gap-3 rounded-2xl bg-zinc-900/40 hover:bg-zinc-900/80 border border-zinc-800/80 hover:border-purple-500/40 p-4 transition-all duration-300"><span className="rounded-xl bg-purple-500/10 p-2.5"><Trophy aria-hidden="true" className="w-5 h-5 text-purple-400" /></span><span className="group-hover:text-purple-300 transition-colors">Tier表に戻る</span><ArrowLeft aria-hidden="true" className="w-4 h-4 text-muted-foreground ml-auto" /></Link>
       <Link href="/brawlers" className="group flex items-center gap-3 rounded-2xl bg-zinc-900/40 hover:bg-zinc-900/80 border border-zinc-800/80 hover:border-cyan-500/40 p-4 transition-all duration-300"><span className="rounded-xl bg-cyan-500/10 p-2.5"><Users aria-hidden="true" className="w-5 h-5 text-cyan-400" /></span><span className="group-hover:text-cyan-300 transition-colors">他のキャラを見る</span><ArrowRight aria-hidden="true" className="w-4 h-4 text-muted-foreground ml-auto transition-transform group-hover:translate-x-1" /></Link>
     </div>
+    <FaqSection id="faq-brawler" items={brawlerFaq(data)} />
   </div>
 }

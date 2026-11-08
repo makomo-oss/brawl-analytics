@@ -1,5 +1,5 @@
 import { build } from "esbuild"
-import { readFile, writeFile, mkdir, rm } from "node:fs/promises"
+import { readFile, writeFile, mkdir, rm, readdir } from "node:fs/promises"
 import { resolve } from "node:path"
 import { createHash } from "node:crypto"
 
@@ -89,7 +89,11 @@ const links = [...html.matchAll(/<link\b[^>]*>/g)].map(match => match[0]).filter
   /rel="(?:stylesheet|icon|apple-touch-icon|shortcut icon)"/.test(link) || /as="font"/.test(link)).join("")
 const bodyClass = html.match(/<body class="([^"]*)"/)?.[1]
 if (!links.includes('rel="stylesheet"') || !bodyClass) throw new Error("Could not find the existing app stylesheet or font")
-const sources = await Promise.all(["edge/server.tsx", "edge/worker.ts", "edge/public-data.ts", "src/lib/llm-data.ts", "src/lib/site-schema.ts", "src/lib/brawler-page-data.ts", "src/lib/condition-pages.ts", "src/lib/seo.ts"].map(path => readFile(resolve(root, path), "utf8")))
+// Hash every shared lib and edge source so server-only copy changes also
+// invalidate cached documents.
+const sourceFiles = (await Promise.all(["src/lib", "edge"].map(async dir => (await readdir(resolve(root, dir), { recursive: true }))
+  .filter(name => /\.tsx?$/.test(name)).map(name => `${dir}/${name.split("\\").join("/")}`)))).flat().sort()
+const sources = await Promise.all(sourceFiles.map(path => readFile(resolve(root, path), "utf8")))
 await mkdir(resolve(root, "edge"), { recursive: true })
 await writeFile(resolve(root, "edge/generated-shell.json"), JSON.stringify({ links, bodyClass, client: clientPath, version: hash(output.toString() + sources.join("") + links + bodyClass) }))
 // Pre-render the cold-start fallback using exactly the live renderer/payload.

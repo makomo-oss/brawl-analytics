@@ -1,4 +1,8 @@
-import { ConditionDirectory } from "@/lib/server-condition-pages"
+import { ConditionDirectory, getConditionIndex } from "@/lib/server-condition-pages"
 import { pageMetadata } from "@/lib/seo"
-export const metadata = pageMetadata("ブロスタ マップ別最強キャラランキング", "マップ別のキャラ勝率・使用率ランキング。", "/maps")
+import { conditionHubCopy } from "@/lib/page-copy"
+export async function generateMetadata() {
+  const copy = conditionHubCopy("maps", await getConditionIndex())
+  return pageMetadata(copy.title, copy.description, "/maps")
+}
 export default function Page() { return <ConditionDirectory kind="maps" /> }

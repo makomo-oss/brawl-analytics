@@ -23,6 +23,8 @@ import { BrawlerPreviewLink } from "@/components/brawler-preview-link";
 
 import { characterDetailUrl, initialMatchup, type InitialMatchups } from "@/lib/matchup-preview";
 import { fetchPublicStats, getCachedPublicStats } from "@/lib/public-stats-cache";
+import { tierSummary } from "@/lib/page-insights";
+import { DataSummary } from "@/components/data-summary";
 
 interface RecentSearch {
   tag: string;
@@ -34,6 +36,8 @@ export default function CockpitHomePage({ initialTierData, initialMatchups }: { 
   const router = useRouter();
   const [searchInput, setSearchInput] = useState("");
   const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
+  // Server payload only, so the hydrated text matches the HTML.
+  const homeSummary = tierSummary(initialTierData, "gachi");
   const [tierData, setTierData] = useState<any>(initialTierData);
   const [loadingTier, setLoadingTier] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
@@ -488,6 +492,7 @@ export default function CockpitHomePage({ initialTierData, initialMatchups }: { 
             詳細Tier表を見る <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
+        <DataSummary summary={homeSummary} />
 
         {loadingTier ? (
           <div className="arena-meta-grid">

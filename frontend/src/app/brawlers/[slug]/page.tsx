@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation"
-import { pageMetadata, brawlerSearchCopy, SITE_URL } from "@/lib/seo"
+import { pageMetadata, SITE_URL } from "@/lib/seo"
+import { brawlerCopy } from "@/lib/page-copy"
 import { getBrawlerEntries, getBrawlerPage } from "@/lib/server-brawler-pages"
 import BrawlerDetailView from "../brawler-detail-view"
 import { pageSchema } from "@/lib/llm-data"
@@ -14,7 +15,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params
   const data = await getBrawlerPage(slug)
   if (!data) notFound()
-  const copy = brawlerSearchCopy(data.nameJa)
+  const copy = brawlerCopy(data)
   const metadata = pageMetadata(copy.title, copy.description, `/brawlers/${slug}`)
   if (![data.cohorts.global, data.cohorts.gachi].some(cohort => cohort.stats?.sample_sufficient)) metadata.robots = { index: false, follow: true, googleBot: { index: false, follow: true } }
   return metadata

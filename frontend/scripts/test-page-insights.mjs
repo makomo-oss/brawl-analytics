@@ -101,6 +101,22 @@ for (const entry of [...index.modes, ...index.maps]) {
   if (s) { assert.ok(s.text.startsWith(s.date.long)); assert.ok(copy.description.length <= 150) }
 }
 
+// llms.txt: real top names and links, no invented numbers, and no ranking
+// sections when the data is unusable.
+const { llmsTxt, llmsFullTxt } = await compile("src/lib/llms-txt.ts")
+const llms = llmsTxt(snapshot)
+assert.match(llms, /^# ブロラボ/)
+assert.ok(llms.includes(`1. [${rows[0].name}](https://brawl-lab.sozai-hub.com/brawlers/${rows[0].slug}): Tier ${rows[0].tier}、勝率${rows[0].winRate.toFixed(1)}%`))
+assert.ok(llms.includes("https://brawl-lab.sozai-hub.com/about"))
+assert.doesNotMatch(llms, bad)
+const full = llmsFullTxt(snapshot, index)
+assert.ok(full.includes(index.maps[0].path))
+assert.doesNotMatch(full, bad)
+const empty = structuredClone(snapshot)
+for (const type of ["global", "gachi"]) Object.values(empty.overview[type].characters).forEach(stats => { stats.sample_sufficient = false })
+assert.doesNotMatch(llmsTxt(empty), /上位|勝率\d/)
+assert.doesNotMatch(llmsFullTxt(empty, { modes: [], maps: [] }), /全キャラの統計|勝率\d/)
+
 assert.equal(clampDescription("あ。".repeat(100), 60).endsWith("。"), true)
 assert.equal(PLAYER_FAQ.every(item => !/#[0-9A-Z]{4,}/.test(item.answer)), true)
 console.log(`page insights ok: ${sufficient} judged, ${insufficientPages} without tier, ${index.modes.length + index.maps.length} conditions`)

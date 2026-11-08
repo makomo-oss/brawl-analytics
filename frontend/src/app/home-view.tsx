@@ -562,7 +562,6 @@ export default function CockpitHomePage({ initialTierData, initialMatchups }: { 
         </div>
         <BrawlerDirectoryLink className="arena-directory-action">キャラ一覧を見る<ArrowRight aria-hidden="true" /></BrawlerDirectoryLink>
       </section>
-      <footer className="arena-home-footer"><span>ブロラボ <small>BRAWL LAB</small></span><p>非公式ファンツール · PLAY SMART. HAVE FUN.</p></footer>
 
       {/* 既存のキャラクター対面詳細・データ取得を維持 */}
       {selectedChar && <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>

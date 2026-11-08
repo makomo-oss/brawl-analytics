@@ -110,9 +110,10 @@ for (const { slug } of brawlerEntries(snapshot)) await writeDocument({ kind: "de
 for (const category of ["modes", "maps"]) for (const entry of conditionDirectory[category]) await writeDocument({ kind: "condition", path: entry.path, data: conditionPage(snapshot, entry, conditionDirectory) })
 for (const kind of ["home", "tier"]) await writeDocument(JSON.parse(await readFile(resolve(overviewDir, `${kind}.json`), "utf8")))
 await writeDocument({ kind: "player", path: "/player" })
+await writeDocument({ kind: "about", path: "/about" })
 await writeDocument(companion)
 await build({ ...common, entryPoints: ["edge/worker.ts"], outfile: "out/_worker.js" })
-await writeFile(resolve(root, "out/_routes.json"), JSON.stringify({ version: 1, include: ["/", "/tier", "/player", "/player/", "/companion", "/companion/", "/brawlers", "/brawlers/*", "/modes", "/modes/*", "/maps", "/maps/*", "/data/*", "/sitemap.xml"], exclude: [] }))
+await writeFile(resolve(root, "out/_routes.json"), JSON.stringify({ version: 1, include: ["/", "/tier", "/player", "/player/", "/about", "/about/", "/llms.txt", "/llms-full.txt", "/companion", "/companion/", "/brawlers", "/brawlers/*", "/modes", "/modes/*", "/maps", "/maps/*", "/data/*", "/sitemap.xml"], exclude: [] }))
 console.log(`Live character pages built: ${clientPath}`)
 // Browser-oriented React UI dependencies may keep MessageChannels open in Node.
 // Every build/write above is awaited; this command has no remaining work.

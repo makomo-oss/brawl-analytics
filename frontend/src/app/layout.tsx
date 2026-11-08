@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Inter } from "next/font/google";
 import { MainNav } from "@/components/main-nav";
+import { SiteFooter } from "@/components/site-footer";
 import { SITE_URL, searchCopy } from "@/lib/seo";
 import { siteNodes } from "@/lib/site-schema";
 
@@ -141,6 +142,7 @@ export default function RootLayout({
         <MainNav />
         <main id="main-content" tabIndex={-1} className="container mx-auto px-3 py-4 sm:p-6 lg:p-8 max-w-7xl pb-24 lg:pb-8">
           {children}
+          <SiteFooter />
         </main>
       </body>
     </html>

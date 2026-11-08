@@ -11,13 +11,15 @@ import type { TierListData } from "@/lib/tier-data"
 import type { InitialMatchups } from "@/lib/matchup-preview"
 import PlayerView from "@/app/player/player-view"
 import { PlayerFaq, PlayerHeader } from "@/app/player/player-intro"
+import AboutView from "@/app/about/about-view"
+import { SiteFooter } from "@/components/site-footer"
 import DraftCompanionPage from "@/app/companion/companion-view"
 import type { DraftCategories } from "@/lib/draft-categories"
 import { createRouteLoader, isRuntimePath } from "./route-loader"
 import { navigationDirection } from "@/lib/arena-navigation-motion"
 
 export type OverviewPage = ({ kind: "home"; path: "/" } | { kind: "tier"; path: "/tier" }) & { tierData: TierListData; initialMatchups: InitialMatchups }
-export type ToolPage = { kind: "player"; path: "/player" } | { kind: "companion"; path: "/companion"; categories: DraftCategories }
+export type ToolPage = { kind: "player"; path: "/player" } | { kind: "about"; path: "/about" } | { kind: "companion"; path: "/companion"; categories: DraftCategories }
 export type RuntimePage = PublicPage | OverviewPage | ToolPage
 
 function PageView({ page, href }: { page: RuntimePage; href: string }) {
@@ -26,6 +28,7 @@ function PageView({ page, href }: { page: RuntimePage; href: string }) {
     <PlayerView defaultTag={new URL(href, "https://brawl-lab.sozai-hub.com").searchParams.get("tag") || ""} />
     <PlayerFaq />
   </>
+  if (page.kind === "about") return <AboutView />
   if (page.kind === "companion") return <DraftCompanionPage initialCategories={page.categories} />
   return page.kind === "home" ? <HomeView initialTierData={page.tierData} initialMatchups={page.initialMatchups} /> : page.kind === "tier" ? <TierView initialTierData={page.tierData} initialMatchups={page.initialMatchups} /> : page.kind === "detail" ? <BrawlerDetailView data={page.data} /> : page.kind === "directory" ? <BrawlerDirectoryView entries={page.entries} /> : page.kind === "condition" ? <ConditionDetailView data={page.data} /> : <ConditionDirectoryView index={page.index} kind={page.category} />
 }
@@ -170,6 +173,7 @@ export function App({ page }: { page: RuntimePage }) {
           </div>
         </RuntimeHref.Provider></RuntimePathname.Provider>
       </Activity>)}
+      <SiteFooter />
     </main>
   </RuntimePathname.Provider></RuntimeRouter.Provider>
 }

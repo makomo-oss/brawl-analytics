@@ -7,6 +7,17 @@ import { translateMap, translateMode } from "@/lib/translations"
 import type { OverviewPage, RuntimePage } from "./app"
 import { dataResponse } from "./public-data"
 import { isDraftCategories } from "@/lib/draft-categories"
+import { llmsFullTxt, llmsTxt } from "@/lib/llms-txt"
+import { ABOUT_REVISED } from "@/lib/about"
+import { normalizeDate } from "@/lib/dates"
+
+// Non-HTML documents generated from the same snapshot and cache as pages.
+const TEXT_TYPES: Record<string, string> = { "/sitemap.xml": "application/xml; charset=utf-8", "/llms.txt": "text/plain; charset=utf-8", "/llms-full.txt": "text/plain; charset=utf-8" }
+const contentType = (path: string) => TEXT_TYPES[path] || "text/html; charset=utf-8"
+const extraHeaders = (path: string): Record<string, string> => path.startsWith("/llms") ? { "X-Robots-Tag": "noindex" } : {}
+function textBody(path: string, index: BrawlerSnapshot, conditions: ConditionIndex) {
+  return path === "/sitemap.xml" ? xml(index, conditions) : path === "/llms.txt" ? llmsTxt(index) : llmsFullTxt(index, conditions)
+}
 
 const FRESH_SECONDS = 300
 const STALE_SECONDS = 86400
@@ -186,7 +197,7 @@ async function liveCondition(env: Parameters<PagesFunction<Env>>[0]["env"], orig
 }
 
 function xml(index: BrawlerSnapshot, conditions: ConditionIndex = { modes: [], maps: [] }) {
-  const paths = ["/", "/tier", "/player", "/companion", "/brawlers", "/modes", "/maps"]
+  const paths = ["/", "/tier", "/player", "/companion", "/brawlers", "/modes", "/maps", "/about"]
   const entries = brawlerEntries(index).filter(entry => Object.values(index.overview).some(data => data.characters[entry.name]?.sample_sufficient))
   const dates = Object.values(index.overview).flatMap(data => {
     const raw = data.updated_at
@@ -195,7 +206,9 @@ function xml(index: BrawlerSnapshot, conditions: ConditionIndex = { modes: [], m
     return Number.isFinite(stamp) ? [new Date(stamp).toISOString()] : []
   }).sort().reverse()
   const conditionUrls = [...conditions.modes, ...conditions.maps].map(entry => `<url><loc>${SITE_URL}${escapeHtml(entry.path)}</loc>${entry.updatedAt ? `<lastmod>${escapeHtml(entry.updatedAt)}</lastmod>` : ""}</url>`).join("")
-  return `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${paths.map(path => `<url><loc>${SITE_URL}${path}</loc></url>`).join("")}${conditionUrls}${entries.map(entry => `<url><loc>${SITE_URL}/brawlers/${escapeHtml(entry.slug)}</loc>${dates[0] ? `<lastmod>${dates[0]}</lastmod>` : ""}</url>`).join("")}</urlset>`
+  const cohortDate = (type: "global" | "gachi") => normalizeDate(index.overview[type].updated_at)
+  const lastmod: Record<string, string | null | undefined> = { "/": cohortDate("gachi"), "/tier": cohortDate("global"), "/brawlers": dates[0], "/modes": dates[0], "/maps": dates[0], "/about": ABOUT_REVISED }
+  return `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${paths.map(path => `<url><loc>${SITE_URL}${path}</loc>${lastmod[path] ? `<lastmod>${lastmod[path]}</lastmod>` : ""}</url>`).join("")}${conditionUrls}${entries.map(entry => `<url><loc>${SITE_URL}/brawlers/${escapeHtml(entry.slug)}</loc>${dates[0] ? `<lastmod>${dates[0]}</lastmod>` : ""}</url>`).join("")}</urlset>`
 }
 
 const worker = {
@@ -204,9 +217,9 @@ const worker = {
     if (url.pathname.startsWith("/data/")) return dataResponse(request, source => worker.fetch(source, env, ctx))
     const isCondition = /^\/(?:modes|maps)(?:\/|$)/.test(url.pathname)
     const isOverview = url.pathname === "/" || /^\/tier\/?$/.test(url.pathname)
-    const isTool = /^\/player\/?$/.test(url.pathname)
+    const isTool = /^\/(?:player|about)\/?$/.test(url.pathname)
     const isCompanion = /^\/companion\/?$/.test(url.pathname)
-    const isDynamic = isTool || isCompanion || isOverview || isCondition || url.pathname === "/brawlers" || url.pathname.startsWith("/brawlers/") || url.pathname === "/sitemap.xml"
+    const isDynamic = isTool || isCompanion || isOverview || isCondition || url.pathname === "/brawlers" || url.pathname.startsWith("/brawlers/") || !!TEXT_TYPES[url.pathname]
     if (!isDynamic) return env.ASSETS.fetch(request)
     if (!["GET", "HEAD"].includes(request.method)) return new Response("Method not allowed", { status: 405, headers: { Allow: "GET, HEAD" } })
     const path = url.pathname === "/" ? "/" : url.pathname.replace(/\/$/, "")
@@ -215,10 +228,10 @@ const worker = {
       // Tool documents contain no player data or query values. Reuse the same
       // shell as public pages so every entry URL can navigate without reloads.
       const document = await env.ASSETS.fetch(new Request(`${url.origin}/__rendered-pages${path}.document`))
-      const body = document.ok ? document.body : renderPage({ kind: "player", path: "/player" })
+      const body = document.ok ? document.body : renderPage(path === "/about" ? { kind: "about", path: "/about" } : { kind: "player", path: "/player" })
       return new Response(request.method === "HEAD" ? null : body, { headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "public, max-age=0, must-revalidate" } })
     }
-    if (!/^\/(?:brawlers|modes|maps)(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)?$/.test(path) && path !== "/sitemap.xml" && !isOverview && !isCompanion) return env.ASSETS.fetch(new Request(`${url.origin}/404.html`)).then(response => new Response(request.method === "HEAD" ? null : response.body, { status: 404, headers: response.headers }))
+    if (!/^\/(?:brawlers|modes|maps)(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)?$/.test(path) && !TEXT_TYPES[path] && !isOverview && !isCompanion) return env.ASSETS.fetch(new Request(`${url.origin}/404.html`)).then(response => new Response(request.method === "HEAD" ? null : response.body, { status: 404, headers: response.headers }))
     const key = new Request(`${url.origin}/__brawler-cache/${runtimeVersion}${path}`)
     const cache = await caches.open("brawler-pages")
     let cached = await cache.match(key)
@@ -251,7 +264,7 @@ const worker = {
           const initialMatchups = await overviewPreviews(env, url.origin, path === "/" ? "home" : "tier")
           body = renderPage({ ...(path === "/" ? { kind: "home", path: "/" } as const : { kind: "tier", path: "/tier" } as const), tierData: index.overview[path === "/" ? "gachi" : "global"], initialMatchups })
         }
-        else if (path === "/sitemap.xml") body = xml(index, await conditionManifest(env, url.origin, signal))
+        else if (TEXT_TYPES[path]) body = textBody(path, index, await conditionManifest(env, url.origin, signal))
         else if (path === "/brawlers") body = renderPage({ kind: "directory", path, entries: brawlerEntries(index) })
         else {
           const entry = brawlerEntries(index).find(entry => path === `/brawlers/${entry.slug}`)
@@ -269,7 +282,7 @@ const worker = {
         }
       }
       const response = new Response(body, { headers: {
-        "Content-Type": path === "/sitemap.xml" ? "application/xml; charset=utf-8" : "text/html; charset=utf-8",
+        "Content-Type": contentType(path), ...extraHeaders(path),
         "Cache-Control": `public, max-age=${STALE_SECONDS}`,
         "X-Brawler-Generated": String(Date.now()), "X-Brawler-Rendering": "live",
       } })
@@ -289,7 +302,7 @@ const worker = {
         }
         // Ready-to-serve documents avoid parsing and rendering the same build
         // snapshot on every cold edge location (including during API outages).
-        const document = path === "/sitemap.xml" ? null : await env.ASSETS.fetch(new Request(`${url.origin}/__rendered-pages${path === "/" ? "/index" : path}.document`))
+        const document = TEXT_TYPES[path] ? null : await env.ASSETS.fetch(new Request(`${url.origin}/__rendered-pages${path === "/" ? "/index" : path}.document`))
         if (document?.ok) {
           cached = new Response(document.body, { headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": `public, max-age=${STALE_SECONDS}`, "X-Brawler-Generated": "0", "X-Brawler-Rendering": "snapshot" } })
         } else if (isCompanion) {
@@ -309,9 +322,9 @@ const worker = {
           const snapshot = await readJson(await env.ASSETS.fetch(new Request(`${url.origin}/__brawler-snapshots/${assetName}.json`)))
           validateSnapshot(snapshot)
           const data = path.startsWith("/brawlers/") ? brawlerPage(snapshot, assetName) : null
-          const body = path === "/sitemap.xml" ? xml(snapshot, await buildConditionManifest(env, url.origin)) : path === "/brawlers" ? renderPage({ kind: "directory", path, entries: brawlerEntries(snapshot) }) : data ? renderPage({ kind: "detail", path, data }) : null
+          const body = TEXT_TYPES[path] ? textBody(path, snapshot, await buildConditionManifest(env, url.origin)) : path === "/brawlers" ? renderPage({ kind: "directory", path, entries: brawlerEntries(snapshot) }) : data ? renderPage({ kind: "detail", path, data }) : null
           if (body) cached = new Response(body, { headers: {
-            "Content-Type": path === "/sitemap.xml" ? "application/xml; charset=utf-8" : "text/html; charset=utf-8",
+            "Content-Type": contentType(path), ...extraHeaders(path),
             "Cache-Control": `public, max-age=${STALE_SECONDS}`,
             "X-Brawler-Generated": "0", "X-Brawler-Rendering": "snapshot",
           } })

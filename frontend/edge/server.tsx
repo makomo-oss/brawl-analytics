@@ -4,9 +4,10 @@ import { SITE_URL, searchCopy } from "@/lib/seo"
 import shell from "./generated-shell.json"
 import { collectionSchema, conditionSchema, conditionBreadcrumbs, normalizeDate } from "@/lib/condition-pages"
 import { pageSchema, dataPath, indexablePage } from "@/lib/llm-data"
-import { siteNodes, SITE_ID, reference } from "@/lib/site-schema"
+import { siteNodes, SITE_ID, PUBLISHER_ID, reference } from "@/lib/site-schema"
 import { brawlerCopy, companionCopy, conditionHubCopy, conditionPageCopy, playerCopy, tierCopy } from "@/lib/page-copy"
 import { tierSummary } from "@/lib/page-insights"
+import { aboutCopy, ABOUT_REVISED } from "@/lib/about"
 import { COMPANION_FAQ, PLAYER_FAQ, brawlerFaq, faqNode, tierFaq } from "@/lib/faq"
 
 export const escapeHtml = (text: string) => text.replace(/[&<>"']/g, value => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[value]!)
@@ -18,6 +19,7 @@ function pageCopy(page: RuntimePage) {
     case "tier": return tierCopy(page.tierData, Date.now())
     case "player": return playerCopy
     case "companion": return companionCopy
+    case "about": return aboutCopy
     case "detail": return brawlerCopy(page.data)
     case "condition": return conditionPageCopy(page.data)
     case "conditions": return conditionHubCopy(page.category, page.index)
@@ -39,6 +41,7 @@ function generalNodes(page: RuntimePage, url: string, name: string) {
     }
     nodes.push(faqNode(url, tierFaq(summary, page.tierData)))
   }
+  if (page.kind === "about") Object.assign(webPage, { "@type": "AboutPage", about: reference(PUBLISHER_ID), dateModified: ABOUT_REVISED })
   if (page.kind === "player") nodes.push(faqNode(url, PLAYER_FAQ))
   if (page.kind === "companion") nodes.push(faqNode(url, COMPANION_FAQ))
   return nodes.filter(Boolean) as Record<string, unknown>[]
@@ -46,7 +49,7 @@ function generalNodes(page: RuntimePage, url: string, name: string) {
 
 export function renderPage(page: RuntimePage) {
   const overview = page.kind === "home" || page.kind === "tier"
-  const general = overview || page.kind === "player" || page.kind === "companion"
+  const general = overview || page.kind === "player" || page.kind === "companion" || page.kind === "about"
   const isDetail = page.kind === "detail"
   const name = isDetail ? page.data.nameJa : ""
   const copy = pageCopy(page)

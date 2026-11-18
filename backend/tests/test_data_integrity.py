@@ -362,14 +362,47 @@ def test_cleanup_deletes_only_expired_battles_and_checks_remaining(monkeypatch):
 
     db = Mock()
     db.table.return_value.select.return_value.lt.return_value.execute.side_effect = [
-        SimpleNamespace(count=2), SimpleNamespace(count=0)
+        SimpleNamespace(count=6500), SimpleNamespace(count=1500), SimpleNamespace(count=0)
+    ]
+    db.rpc.return_value.execute.side_effect = [
+        SimpleNamespace(data=5000), SimpleNamespace(data=1500)
     ]
     monkeypatch.setattr(cleanup_task, "get_db", lambda: db)
-    assert asyncio.run(cleanup_task.run_cleanup_task()) == {"deleted_count": 2, "remaining_expired": 0}
-    db.table.return_value.delete.assert_called_once_with(returning="minimal")
-    cutoff = db.table.return_value.delete.return_value.lt.call_args.args
-    assert cutoff[0] == "match_at"
-    assert (pd.Timestamp.now(tz="UTC") - pd.Timestamp(cutoff[1])).days == 60
+    assert asyncio.run(cleanup_task.run_cleanup_task()) == {"deleted_count": 6500, "remaining_expired": 0}
+    assert db.rpc.call_count == 2
+    first_call = db.rpc.call_args_list[0].args
+    assert first_call[0] == "cleanup_expired_match_history"
+    assert first_call[1]["p_batch_size"] == cleanup_task.CLEANUP_BATCH_SIZE
+    assert (pd.Timestamp.now(tz="UTC") - pd.Timestamp(first_call[1]["p_before"])).days == 60
+
+
+def test_cleanup_raises_when_batch_makes_no_progress(monkeypatch):
+    from unittest.mock import Mock
+    from app.tasks import cleanup_task
+
+    db = Mock()
+    db.table.return_value.select.return_value.lt.return_value.execute.side_effect = [
+        SimpleNamespace(count=10), SimpleNamespace(count=10)
+    ]
+    db.rpc.return_value.execute.return_value = SimpleNamespace(data=0)
+    monkeypatch.setattr(cleanup_task, "get_db", lambda: db)
+    with pytest.raises(RuntimeError, match="made no progress"):
+        asyncio.run(cleanup_task.run_cleanup_task())
+
+
+def test_cleanup_raises_when_batches_exhausted(monkeypatch):
+    from unittest.mock import Mock
+    from app.tasks import cleanup_task
+
+    db = Mock()
+    db.table.return_value.select.return_value.lt.return_value.execute.side_effect = [
+        SimpleNamespace(count=5), SimpleNamespace(count=4), SimpleNamespace(count=3)
+    ]
+    db.rpc.return_value.execute.return_value = SimpleNamespace(data=1)
+    monkeypatch.setattr(cleanup_task, "MAX_CLEANUP_BATCHES", 2)
+    monkeypatch.setattr(cleanup_task, "get_db", lambda: db)
+    with pytest.raises(RuntimeError, match="incomplete: 3 expired observations remain"):
+        asyncio.run(cleanup_task.run_cleanup_task())
 
 
 def test_crawler_anchors_come_from_verified_profiles():

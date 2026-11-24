@@ -51,8 +51,12 @@ export function brawlerEntries(snapshot: BrawlerSnapshot) {
         sample_sufficient: stats.sample_sufficient === true,
       } : null
     }
+    const tierOf = (type: Cohort) =>
+      Object.entries(snapshot.overview[type]?.tiers || {}).find(([, names]) => names.includes(name))?.[0] || "N/A"
     return { name, slug: brawlerSlug(name), nameJa: live?.nameJa || info.nameJa, imageUrl: live?.imageUrl || info.imageUrl,
-      rarity: live?.rarity || null, directoryStats: { global: directoryStats("global"), gachi: directoryStats("gachi") },
+      rarity: live?.rarity || null,
+      tiers: { global: tierOf("global"), gachi: tierOf("gachi") },
+      directoryStats: { global: directoryStats("global"), gachi: directoryStats("gachi") },
     }
   })
   if (entries.some(entry => !entry.slug) || new Set(entries.map(entry => entry.slug)).size !== entries.length) throw new Error("Invalid or duplicate character URLs")

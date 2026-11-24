@@ -5,7 +5,7 @@
 import { useBrawlerCatalog } from "@/lib/use-brawler-catalog"
 import { useState, useEffect, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -435,50 +435,17 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
 
 
   return (
-    <div className="arena-workspace arena-dashboard space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <Card className="relative z-50 bg-card border-primary/20 shadow-sm overflow-visible">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle>{searchMode === "player" ? "プレイヤー同期" : "クラブ検索"}</CardTitle>
-            <div className="flex bg-secondary/80 p-1 rounded-lg border border-primary/10">
-              <Button
-                variant={searchMode === "player" ? "default" : "ghost"}
-                size="sm"
-                className="h-8 text-xs font-semibold gap-1.5"
-                onClick={() => {
-                  setSearchMode("player")
-                  setErrorMsg(null)
-                }}
-              >
-                <Users className="w-3.5 h-3.5" />
-                プレイヤー
-              </Button>
-              <Button
-                variant={searchMode === "club" ? "default" : "ghost"}
-                size="sm"
-                className="h-8 text-xs font-semibold gap-1.5"
-                onClick={() => {
-                  setSearchMode("club")
-                  setErrorMsg(null)
-                }}
-              >
-                <Building2 className="w-3.5 h-3.5" />
-                クラブ
-              </Button>
-            </div>
-          </div>
-          <CardDescription>
-            {searchMode === "player" 
-              ? "Brawl Starsのプレイヤー名またはタグを入力して最新データを取得します。"
-              : "クラブ名またはクラブタグ(#CLUB123)を入力してクラブ情報とメンバーを検索します。"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col gap-4 max-w-md relative z-50" ref={searchContainerRef}>
-            {searchMode === "player" ? (
-              <div className="relative flex gap-4 w-full">
-                <Input 
-                  placeholder="プレイヤータグまたは名前"
+    <div className="arena-workspace arena-dashboard space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      {/* Unified NEO-STARR Search Toolbar */}
+      <section className="arena-player-toolbar relative z-50" ref={searchContainerRef} aria-label="プレイヤー・クラブ検索">
+        <div className="relative flex-1 min-w-0 w-full md:max-w-xl">
+          {searchMode === "player" ? (
+            <div className="relative flex gap-2.5 sm:gap-3 w-full">
+              <div className="relative flex-1 min-w-0">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b] pointer-events-none" aria-hidden="true" />
+                <Input
+                  placeholder="プレイヤータグ (#...) または 名前で検索"
+                  aria-label="プレイヤータグまたは名前"
                   value={playerTag}
                   onChange={(e) => {
                     setPlayerTag(e.target.value)
@@ -498,82 +465,87 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                   onFocus={() => {
                     if (playerTag.trim().length > 0) setShowSuggestions(true)
                   }}
-                  className="bg-background"
+                  className="pl-9"
                 />
-                <Button onClick={() => handleSync()} disabled={loading} className="px-8 shadow-lg shadow-primary/20">
-                  {loading ? "取得中..." : (
-                    <>
-                      <Search className="w-4 h-4 mr-2" />
-                      同期
-                    </>
-                  )}
-                </Button>
-                
-                {/* プレイヤーサジェストドロップダウン */}
-                {showSuggestions && (isSearching || suggestions.length > 0) && (
-                  <div className="absolute top-full left-0 w-full max-w-full mt-2 bg-card text-card-foreground border border-border rounded-md shadow-2xl z-[100] max-h-64 overflow-y-auto">
-                    {isSearching ? (
-                      <div className="p-3 text-sm text-muted-foreground text-center animate-pulse">検索中...</div>
-                    ) : (
-                      <ul className="py-1">
-                        {suggestions.map((p, idx) => (
-                          <li 
-                            key={idx} 
-                            className="px-4 py-3 text-sm hover:bg-accent hover:text-accent-foreground cursor-pointer flex gap-4 items-center transition-colors border-b last:border-b-0"
-                            onClick={() => {
-                              const tag = p.player_tag.startsWith("#") ? p.player_tag : `#${p.player_tag}`
-                              setShowSuggestions(false)
-                              setSuggestions([])
-                              setPlayerTag(tag)
-                              handleSync(tag)
-                            }}
-                          >
-                            <Avatar className="w-10 h-10 border-2 border-primary/20 shrink-0 shadow-sm">
-                              <AvatarImage src={`https://cdn.brawlify.com/profile-icons/regular/${p.icon_id || 28000000}.png`} />
-                              <AvatarFallback className="bg-primary/10"><User className="w-5 h-5 text-primary/70" /></AvatarFallback>
-                            </Avatar>
-                            <div className="flex flex-col gap-1.5 w-full overflow-hidden">
-                              <div className="flex items-center gap-2">
-                                <span className="font-bold truncate text-base">{p.name}</span>
-                                <Badge variant="secondary" className="text-[10px] font-mono bg-primary/10 text-primary border-primary/20 shrink-0">#{p.player_tag.replace(/^#+/, "")}</Badge>
-                              </div>
-                              <div className="flex items-center gap-3 text-xs font-medium">
-                                <span className="flex items-center gap-1 text-yellow-600 dark:text-yellow-500 font-bold">
-                                  <Trophy className="w-3.5 h-3.5" />
-                                  {p.trophies != null ? p.trophies.toLocaleString() : 0}
-                                </span>
-                                {p.highest_trophies != null && p.highest_trophies > 0 && (
-                                  <span className="flex items-center gap-1 text-muted-foreground opacity-80 whitespace-nowrap">
-                                    最高: {p.highest_trophies.toLocaleString()}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                            {p.highest_ranked_rank > 0 && (() => {
-                              const rank = getRankImage(p.highest_ranked_rank);
-                              if (!rank) return null;
-                              return (
-                                <div className="shrink-0 flex items-center justify-center bg-black/5 dark:bg-white/5 rounded-full p-1" title={rank.name}>
-                                  <img 
-                                    src={rank.url} 
-                                    alt="Rank" 
-                                    className="w-8 h-8 object-contain drop-shadow-md" 
-                                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                                  />
-                                </div>
-                              );
-                            })()}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                )}
               </div>
-            ) : (
-              <div className="relative flex gap-4 w-full">
-                <Input 
-                  placeholder="クラブ名 または タグ(#CLUB123)" 
+              <Button onClick={() => handleSync()} disabled={loading} className="shrink-0 px-5 sm:px-7">
+                {loading ? "取得中..." : (
+                  <>
+                    <Search className="w-4 h-4 mr-1.5" />
+                    同期
+                  </>
+                )}
+              </Button>
+
+              {/* プレイヤーサジェストドロップダウン */}
+              {showSuggestions && (isSearching || suggestions.length > 0) && (
+                <div className="absolute top-full left-0 w-full max-w-full mt-2 bg-[#141f3d] text-card-foreground border border-white/15 rounded-xl shadow-2xl z-[100] max-h-64 overflow-y-auto backdrop-blur-md">
+                  {isSearching ? (
+                    <div className="p-3 text-sm text-muted-foreground text-center animate-pulse">検索中...</div>
+                  ) : (
+                    <ul className="py-1">
+                      {suggestions.map((p, idx) => (
+                        <li
+                          key={idx}
+                          className="px-4 py-3 text-sm hover:bg-white/10 cursor-pointer flex gap-3.5 items-center transition-colors border-b border-white/10 last:border-b-0"
+                          onClick={() => {
+                            const tag = p.player_tag.startsWith("#") ? p.player_tag : `#${p.player_tag}`
+                            setShowSuggestions(false)
+                            setSuggestions([])
+                            setPlayerTag(tag)
+                            handleSync(tag)
+                          }}
+                        >
+                          <Avatar className="w-10 h-10 border border-white/20 shrink-0 shadow-sm">
+                            <AvatarImage src={`https://cdn.brawlify.com/profile-icons/regular/${p.icon_id || 28000000}.png`} />
+                            <AvatarFallback className="bg-primary/10"><User className="w-5 h-5 text-primary/70" /></AvatarFallback>
+                          </Avatar>
+                          <div className="flex flex-col gap-1 w-full overflow-hidden">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold truncate text-base text-white">{p.name}</span>
+                              <Badge variant="secondary" className="text-[10px] font-mono tabular-nums bg-white/10 text-[#ffe359] border-white/15 shrink-0">#{p.player_tag.replace(/^#+/, "")}</Badge>
+                            </div>
+                            <div className="flex items-center gap-3 text-xs font-medium tabular-nums">
+                              <span className="flex items-center gap-1 text-[#ffce00] font-bold">
+                                <Trophy className="w-3.5 h-3.5" />
+                                {p.trophies != null ? p.trophies.toLocaleString() : 0}
+                              </span>
+                              {p.highest_trophies != null && p.highest_trophies > 0 && (
+                                <span className="flex items-center gap-1 text-muted-foreground whitespace-nowrap">
+                                  最高: {p.highest_trophies.toLocaleString()}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          {p.highest_ranked_rank > 0 && (() => {
+                            const rank = getRankImage(p.highest_ranked_rank);
+                            if (!rank) return null;
+                            return (
+                              <div className="shrink-0 flex items-center justify-center bg-white/5 rounded-full p-1" title={rank.name}>
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={rank.url}
+                                  alt="Rank"
+                                  className="w-8 h-8 object-contain drop-shadow-md"
+                                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                />
+                              </div>
+                            );
+                          })()}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="relative flex gap-2.5 sm:gap-3 w-full">
+              <div className="relative flex-1 min-w-0">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b] pointer-events-none" aria-hidden="true" />
+                <Input
+                  placeholder="クラブ名 または タグ(#CLUB123)"
+                  aria-label="クラブ名またはタグ"
                   value={clubInput}
                   onChange={(e) => {
                     setClubInput(e.target.value)
@@ -593,225 +565,334 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                   onFocus={() => {
                     if (clubInput.trim().length > 0) setShowClubSuggestions(true)
                   }}
-                  className="bg-background"
+                  className="pl-9"
                 />
-                <Button onClick={() => handleSyncClub()} disabled={loadingClub} className="px-8 shadow-lg shadow-primary/20">
-                  {loadingClub ? "検索中..." : (
-                    <>
-                      <Search className="w-4 h-4 mr-2" />
-                      検索
-                    </>
-                  )}
-                </Button>
-
-                {/* クラブサジェストドロップダウン */}
-                {showClubSuggestions && (isSearchingClub || clubSuggestions.length > 0) && (
-                  <div className="absolute top-full left-0 w-full max-w-full mt-2 bg-card text-card-foreground border border-border rounded-md shadow-2xl z-[100] max-h-64 overflow-y-auto">
-                    {isSearchingClub ? (
-                      <div className="p-3 text-sm text-muted-foreground text-center animate-pulse">検索中...</div>
-                    ) : (
-                      <ul className="py-1">
-                        {clubSuggestions.map((c, idx) => (
-                          <li 
-                            key={idx} 
-                            className="px-4 py-3 text-sm hover:bg-accent hover:text-accent-foreground cursor-pointer flex gap-4 items-center transition-colors border-b last:border-b-0"
-                            onClick={() => {
-                              const tag = c.club_tag.startsWith("#") ? c.club_tag : `#${c.club_tag}`
-                              setShowClubSuggestions(false)
-                              setClubSuggestions([])
-                              setClubInput(tag)
-                              handleSyncClub(tag)
-                            }}
-                          >
-                            <Avatar className="w-10 h-10 border-2 border-primary/20 shrink-0 shadow-sm bg-primary/10">
-                              <AvatarImage src={`https://cdn.brawlify.com/club-badges/regular/${c.badge_id || 16000000}.png`} />
-                              <AvatarFallback className="bg-primary/10"><Building2 className="w-5 h-5 text-primary" /></AvatarFallback>
-                            </Avatar>
-                            <div className="flex flex-col gap-1 w-full overflow-hidden">
-                              <div className="flex items-center gap-2">
-                                <span className="font-bold truncate text-base">{c.name}</span>
-                                <Badge variant="secondary" className="text-[10px] font-mono bg-primary/10 text-primary border-primary/20 shrink-0">#{c.club_tag.replace(/^#+/, "")}</Badge>
-                              </div>
-                              <div className="flex items-center gap-3 text-xs font-medium text-muted-foreground">
-                                <span className="flex items-center gap-1 text-yellow-600 dark:text-yellow-500 font-bold">
-                                  <Trophy className="w-3.5 h-3.5" />
-                                  {c.trophies ? c.trophies.toLocaleString() : 0}
-                                </span>
-                                <span>必要: {c.required_trophies ? c.required_trophies.toLocaleString() : 0} 🏆</span>
-                              </div>
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                )}
               </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+              <Button onClick={() => handleSyncClub()} disabled={loadingClub} className="shrink-0 px-5 sm:px-7">
+                {loadingClub ? "検索中..." : (
+                  <>
+                    <Search className="w-4 h-4 mr-1.5" />
+                    検索
+                  </>
+                )}
+              </Button>
+
+              {/* クラブサジェストドロップダウン */}
+              {showClubSuggestions && (isSearchingClub || clubSuggestions.length > 0) && (
+                <div className="absolute top-full left-0 w-full max-w-full mt-2 bg-[#141f3d] text-card-foreground border border-white/15 rounded-xl shadow-2xl z-[100] max-h-64 overflow-y-auto backdrop-blur-md">
+                  {isSearchingClub ? (
+                    <div className="p-3 text-sm text-muted-foreground text-center animate-pulse">検索中...</div>
+                  ) : (
+                    <ul className="py-1">
+                      {clubSuggestions.map((c, idx) => (
+                        <li
+                          key={idx}
+                          className="px-4 py-3 text-sm hover:bg-white/10 cursor-pointer flex gap-3.5 items-center transition-colors border-b border-white/10 last:border-b-0"
+                          onClick={() => {
+                            const tag = c.club_tag.startsWith("#") ? c.club_tag : `#${c.club_tag}`
+                            setShowClubSuggestions(false)
+                            setClubSuggestions([])
+                            setClubInput(tag)
+                            handleSyncClub(tag)
+                          }}
+                        >
+                          <Avatar className="w-10 h-10 border border-white/20 shrink-0 shadow-sm bg-primary/10">
+                            <AvatarImage src={`https://cdn.brawlify.com/club-badges/regular/${c.badge_id || 16000000}.png`} />
+                            <AvatarFallback className="bg-primary/10"><Building2 className="w-5 h-5 text-primary" /></AvatarFallback>
+                          </Avatar>
+                          <div className="flex flex-col gap-1 w-full overflow-hidden">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold truncate text-base text-white">{c.name}</span>
+                              <Badge variant="secondary" className="text-[10px] font-mono tabular-nums bg-white/10 text-[#ffe359] border-white/15 shrink-0">#{c.club_tag.replace(/^#+/, "")}</Badge>
+                            </div>
+                            <div className="flex items-center gap-3 text-xs font-medium text-muted-foreground tabular-nums">
+                              <span className="flex items-center gap-1 text-[#ffce00] font-bold">
+                                <Trophy className="w-3.5 h-3.5" />
+                                {c.trophies ? c.trophies.toLocaleString() : 0}
+                              </span>
+                              <span>必要: {c.required_trophies ? c.required_trophies.toLocaleString() : 0} 🏆</span>
+                            </div>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="arena-tier-seg-group shrink-0" role="tablist" aria-label="検索対象切替">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={searchMode === "player"}
+            className={`arena-tier-seg-btn inline-flex items-center gap-1.5${searchMode === "player" ? " is-active" : ""}`}
+            onClick={() => {
+              setSearchMode("player")
+              setErrorMsg(null)
+            }}
+          >
+            <Users className="w-3.5 h-3.5" />
+            <span>プレイヤー戦績</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={searchMode === "club"}
+            className={`arena-tier-seg-btn inline-flex items-center gap-1.5${searchMode === "club" ? " is-active" : ""}`}
+            onClick={() => {
+              setSearchMode("club")
+              setErrorMsg(null)
+            }}
+          >
+            <Building2 className="w-3.5 h-3.5" />
+            <span>クラブ分析</span>
+          </button>
+        </div>
+      </section>
 
       {errorMsg && (
-        <div className="p-4 rounded-md bg-destructive/15 text-destructive font-medium border border-destructive/20 animate-in fade-in zoom-in duration-300">
+        <div role="alert" className="p-4 rounded-xl bg-destructive/15 text-destructive font-medium border border-destructive/30 animate-in fade-in zoom-in duration-300">
           {errorMsg}
         </div>
       )}
 
       {/* クラブ詳細表示カード */}
       {clubData && !errorMsg && (
-        <Card className="border-t-4 border-t-purple-500 shadow-md mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <CardHeader className="pb-6">
-            <div className="flex flex-col md:flex-row items-center md:items-start gap-6 text-center md:text-left">
-              <Avatar className="w-20 h-20 md:w-24 md:h-24 border-4 border-background shadow-xl bg-purple-500/10">
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <section className="arena-trophy-banner">
+            <div className="arena-player-identity">
+              <Avatar className="w-16 h-16 sm:w-20 sm:h-20 border-2 border-[#ffce00]/40 shadow-xl bg-purple-500/15 shrink-0">
                 <AvatarImage src={`https://cdn.brawlify.com/club-badges/regular/${clubData.badge_id || 16000000}.png`} />
-                <AvatarFallback className="bg-purple-500/20 text-purple-600 text-2xl font-bold"><Building2 className="w-10 h-10" /></AvatarFallback>
+                <AvatarFallback className="bg-purple-500/20 text-purple-300 text-2xl font-bold"><Building2 className="w-9 h-9" /></AvatarFallback>
               </Avatar>
-              <div className="flex-1">
-                <div className="flex items-center justify-center md:justify-start gap-3">
-                  <CardTitle className="text-3xl font-extrabold tracking-tight">{clubData.name}</CardTitle>
-                  <Badge variant="outline" className="font-mono text-xs">#{clubData.club_tag}</Badge>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white truncate">{clubData.name}</h2>
+                  <Badge variant="outline" className="font-mono text-xs tabular-nums border-white/20 text-[#ffe359]">#{clubData.club_tag}</Badge>
                 </div>
-                <p className="text-sm text-muted-foreground mt-2 max-w-xl">{clubData.description || "説明なし"}</p>
-              </div>
-              <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto mt-4 md:mt-0">
-                <div className="text-center md:text-right bg-yellow-500/10 px-5 py-3 rounded-xl w-full sm:w-auto border border-yellow-500/20">
-                  <div className="text-sm font-semibold text-yellow-600 dark:text-yellow-400 flex items-center justify-center md:justify-end gap-1">
-                    <Trophy className="w-4 h-4 text-yellow-500" /> 総トロフィー
-                  </div>
-                  <div className="text-2xl font-black text-yellow-600 dark:text-yellow-400 mt-1">{clubData.trophies?.toLocaleString()}</div>
-                  <div className="text-xs text-muted-foreground mt-0.5">必要: {clubData.required_trophies?.toLocaleString()} 🏆</div>
-                </div>
-                <div className="text-center md:text-right bg-primary/5 px-5 py-3 rounded-xl w-full sm:w-auto border border-primary/10">
-                  <div className="text-sm font-semibold text-muted-foreground flex items-center justify-center md:justify-end gap-1">
-                    <Users className="w-4 h-4 text-primary" /> メンバー数
-                  </div>
-                  <div className="text-2xl font-black text-primary mt-1">{clubData.members?.length || 0} / 30</div>
-                </div>
+                <p className="text-sm text-[#b6c5e2] mt-1.5 max-w-2xl">{clubData.description || "説明なし"}</p>
               </div>
             </div>
-          </CardHeader>
-          <CardContent className="border-t pt-6">
-            <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-foreground/90">
-              <Users className="w-5 h-5 text-primary" /> 所属メンバー一覧
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-              {clubData.members && clubData.members.length > 0 ? (
-                clubData.members.map((m: any, idx: number) => (
-                  <div
-                    key={idx}
-                    onClick={() => {
-                      setSearchMode("player")
-                      setPlayerTag(m.tag)
-                      handleSync(m.tag)
-                    }}
-                    className="flex items-center gap-3 p-3 rounded-xl bg-secondary/30 hover:bg-primary/10 border border-transparent hover:border-primary/20 transition-all cursor-pointer group shadow-sm"
-                  >
-                    <Avatar className="w-10 h-10 border border-primary/20 shrink-0 group-hover:scale-105 transition-transform">
-                      <AvatarImage src={`https://cdn.brawlify.com/profile-icons/regular/${m.icon?.id || m.icon_id || 28000000}.png`} />
-                      <AvatarFallback className="bg-primary/10 font-bold"><User className="w-5 h-5 text-primary/70" /></AvatarFallback>
-                    </Avatar>
-                    <div className="flex flex-col overflow-hidden">
-                      <span className="font-bold text-sm truncate group-hover:text-primary transition-colors" title={m.name}>{m.name}</span>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <span className="capitalize text-[11px] font-semibold px-1.5 py-0.2 rounded bg-background border">{translateRole(m.role)}</span>
-                        <span className="font-mono text-yellow-600 dark:text-yellow-500 font-bold">{m.trophies?.toLocaleString()} 🏆</span>
+
+            <div className="arena-kpi-strip">
+              <div className="arena-kpi-box">
+                <span className="text-[11px] font-semibold text-[#b6c5e2] flex items-center gap-1">
+                  <Trophy className="w-3.5 h-3.5 text-[#ffce00]" /> 総トロフィー
+                </span>
+                <strong className="mt-1 block text-xl sm:text-2xl font-black text-[#ffce00] tabular-nums">
+                  {clubData.trophies?.toLocaleString() ?? "—"}
+                </strong>
+              </div>
+              <div className="arena-kpi-box">
+                <span className="text-[11px] font-semibold text-[#b6c5e2] flex items-center gap-1">
+                  <Users className="w-3.5 h-3.5 text-[#7dd3fc]" /> メンバー数
+                </span>
+                <strong className="mt-1 block text-xl sm:text-2xl font-black text-white tabular-nums">
+                  {clubData.members?.length || 0} / 30
+                </strong>
+              </div>
+              <div className="arena-kpi-box">
+                <span className="text-[11px] font-semibold text-[#b6c5e2] block">必要トロフィー</span>
+                <strong className="mt-1 block text-xl sm:text-2xl font-black text-[#cbd5e1] tabular-nums">
+                  {clubData.required_trophies?.toLocaleString() ?? "—"}
+                </strong>
+              </div>
+            </div>
+          </section>
+
+          <Card className="border-white/10">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg font-bold flex items-center gap-2">
+                <Users className="w-5 h-5 text-primary" /> 所属メンバー一覧
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                {clubData.members && clubData.members.length > 0 ? (
+                  clubData.members.map((m: any, idx: number) => (
+                    <button
+                      type="button"
+                      key={idx}
+                      onClick={() => {
+                        setSearchMode("player")
+                        setPlayerTag(m.tag)
+                        handleSync(m.tag)
+                      }}
+                      className="flex items-center gap-3 p-3 rounded-xl bg-[rgba(12,19,38,0.85)] hover:bg-[rgba(24,36,70,0.9)] border border-white/10 hover:border-[#ffce00]/50 transition-all cursor-pointer group text-left min-w-0"
+                    >
+                      <Avatar className="w-10 h-10 border border-white/15 shrink-0 group-hover:scale-105 transition-transform">
+                        <AvatarImage src={`https://cdn.brawlify.com/profile-icons/regular/${m.icon?.id || m.icon_id || 28000000}.png`} />
+                        <AvatarFallback className="bg-primary/10 font-bold"><User className="w-5 h-5 text-primary/70" /></AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col overflow-hidden min-w-0 flex-1">
+                        <span className="font-bold text-sm truncate text-white group-hover:text-[#ffce00] transition-colors" title={m.name}>{m.name}</span>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5 tabular-nums">
+                          <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded bg-white/10 text-[#cbd5e1]">{translateRole(m.role)}</span>
+                          <span className="font-mono text-[#ffce00] font-bold">{m.trophies?.toLocaleString()} 🏆</span>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="col-span-full py-8 text-center text-muted-foreground">メンバー情報が見つかりませんでした。</div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+                    </button>
+                  ))
+                ) : (
+                  <div className="col-span-full py-8 text-center text-muted-foreground">メンバー情報が見つかりませんでした。</div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       )}
 
 
       {data && !errorMsg && (
-        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 mt-8">
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 mt-4">
           {data.source === "saved" && (
-            <p role="status" className="rounded-md border border-primary/20 bg-primary/5 p-4 text-sm">
+            <p role="status" className="rounded-xl border border-primary/25 bg-primary/10 p-4 text-sm">
               最新の戦績を取得できなかったため、保存済みのプロフィールと戦績を表示しています。
             </p>
           )}
           {data.profile && (
-            /* Profile Card */
-            <Card className="border-t-4 border-t-blue-500 shadow-md mb-8">
-              <CardHeader className="pb-8">
-                <div className="flex flex-col md:flex-row items-center md:items-start gap-6 text-center md:text-left">
-                  <Avatar className="w-20 h-20 md:w-24 md:h-24 border-4 border-background shadow-xl">
+            /* Loaded Player Hero */
+            <div className="arena-player-hero">
+              <section className="arena-trophy-banner" aria-label="プレイヤープロフィール">
+                <div className="arena-player-identity">
+                  <Avatar className="w-16 h-16 sm:w-20 sm:h-20 border-2 border-[#ffce00]/45 shadow-xl shrink-0">
                     <AvatarImage src={`https://cdn.brawlify.com/profile-icons/regular/${data.profile?.icon_id || 28000000}.png`} />
-                    <AvatarFallback className="bg-primary/10 text-2xl font-bold"><User className="w-10 h-10 text-primary/70" /></AvatarFallback>
+                    <AvatarFallback className="bg-primary/10 text-2xl font-bold"><User className="w-9 h-9 text-primary/70" /></AvatarFallback>
                   </Avatar>
-                  <div className="flex-1">
-                    <CardTitle className="text-3xl font-extrabold tracking-tight">{data.profile?.name}</CardTitle>
-                    <div className="flex flex-wrap justify-center md:justify-start items-center gap-2 mt-2 text-muted-foreground">
-                      <span className="font-medium">{data.player_tag}</span>
-                      {data.source !== "saved" && <span
-                        className={`text-xs px-2.5 py-1 rounded-full font-semibold transition-all flex items-center gap-1.5 ${
-                          data.profile?.club_name && data.profile.club_name !== "No Club" && data.profile.club_name !== "クラブ未所属"
-                            ? "bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 hover:bg-purple-500/20 cursor-pointer shadow-sm"
-                            : "bg-secondary text-secondary-foreground"
-                        }`}
-                        onClick={() => {
-                          if (data.profile?.club_name && data.profile.club_name !== "No Club" && data.profile.club_name !== "クラブ未所属") {
-                            const tagOrName = data.profile.club_tag || data.profile.club_name;
-                            setSearchMode("club");
-                            setClubInput(tagOrName);
-                            handleSyncClub(tagOrName);
-                          }
-                        }}
-                        title={data.profile?.club_name && data.profile.club_name !== "No Club" && data.profile.club_name !== "クラブ未所属" ? "クリックしてクラブ詳細を表示" : ""}
-                      >
-                        <Building2 className="w-3.5 h-3.5" />
-                        {(!data.profile?.club_name || data.profile.club_name === "No Club") ? "クラブ未所属" : data.profile.club_name}
-                      </span>}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white truncate">{data.profile?.name}</h2>
+                      <span className="font-mono text-xs px-2 py-0.5 rounded bg-white/10 border border-white/15 text-[#cbd5e1] tabular-nums">
+                        {data.player_tag}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 mt-2">
+                      {data.source !== "saved" && (() => {
+                        const hasClub = Boolean(data.profile?.club_name && data.profile.club_name !== "No Club" && data.profile.club_name !== "クラブ未所属");
+                        if (hasClub) {
+                          return (
+                            <button
+                              type="button"
+                              className="text-xs px-3 py-1 rounded-full font-semibold transition-all inline-flex items-center gap-1.5 bg-purple-500/15 text-purple-200 border border-purple-400/30 hover:bg-purple-500/25 hover:border-purple-300/60"
+                              onClick={() => {
+                                const tagOrName = data.profile?.club_tag || data.profile?.club_name || "";
+                                if (!tagOrName) return;
+                                setSearchMode("club");
+                                setClubInput(tagOrName);
+                                handleSyncClub(tagOrName);
+                              }}
+                              title="クリックしてクラブ詳細を表示"
+                            >
+                              <Building2 className="w-3.5 h-3.5" />
+                              <span>所属クラブ: {data.profile?.club_name} →</span>
+                            </button>
+                          );
+                        }
+                        return (
+                          <span className="text-xs px-2.5 py-1 rounded-full font-semibold inline-flex items-center gap-1.5 bg-white/10 text-[#b6c5e2]">
+                            <Building2 className="w-3.5 h-3.5" />
+                            <span>クラブ未所属</span>
+                          </span>
+                        );
+                      })()}
                     </div>
                   </div>
-                  <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto mt-4 md:mt-0">
-                <div className="text-center md:text-right bg-primary/5 px-4 py-3 rounded-xl w-full sm:w-auto">
-                  <div className="text-sm font-semibold text-muted-foreground flex items-center justify-center md:justify-end gap-1">
-                    <Trophy className="w-4 h-4 text-yellow-500" /> トロフィー
-                  </div>
-                  <div className="text-2xl font-black text-primary mt-1">{data.profile?.trophies?.toLocaleString() ?? "—"}</div>
-                  <div className="text-xs text-muted-foreground">最高: {data.profile?.highest_trophies?.toLocaleString() ?? "—"}</div>
                 </div>
-                {data.profile?.ranked_elo ? (
-                  <div className="flex items-center justify-center w-full sm:w-auto gap-3">
-                    {data.profile.ranked_rank > 0 && (() => {
-                      const rankInfo = getRankImage(data.profile.ranked_rank);
-                      if (!rankInfo) return null;
-                      return (
-                        <div className="relative w-14 h-14 md:w-16 md:h-16 drop-shadow-md flex items-center justify-center transform hover:scale-105 transition-transform">
-                          <img 
-                            src={rankInfo.url} 
-                            alt={rankInfo.name} 
-                            className="w-full h-full object-contain" 
-                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                          />
-                          {rankInfo.tier && (
-                            <div className="absolute -bottom-1 -right-1 bg-slate-900/90 backdrop-blur-md px-1.5 py-0.5 rounded text-[11px] font-black text-white border border-white/20 shadow-md leading-none">
-                              {rankInfo.tier}
-                            </div>
+
+                <div className="arena-kpi-strip">
+                  <div className="arena-kpi-box">
+                    <span className="text-[11px] font-semibold text-[#b6c5e2] flex items-center gap-1">
+                      <Trophy className="w-3.5 h-3.5 text-[#ffce00]" /> 現在トロフィー
+                    </span>
+                    <strong className="mt-1 block text-xl sm:text-2xl font-black text-[#ffce00] tabular-nums">
+                      {data.profile?.trophies?.toLocaleString() ?? "—"}
+                    </strong>
+                  </div>
+                  <div className="arena-kpi-box">
+                    <span className="text-[11px] font-semibold text-[#b6c5e2] block">最高トロフィー</span>
+                    <strong className="mt-1 block text-xl sm:text-2xl font-black text-white tabular-nums">
+                      {data.profile?.highest_trophies?.toLocaleString() ?? "—"}
+                    </strong>
+                  </div>
+                  <div className="arena-kpi-box">
+                    <span className="text-[11px] font-semibold text-[#b6c5e2] block">3v3 勝利数</span>
+                    <strong className="mt-1 block text-xl sm:text-2xl font-black text-[#7dd3fc] tabular-nums">
+                      {data.profile?.["3v3_victories"]?.toLocaleString() ?? "—"}
+                    </strong>
+                  </div>
+                  <div className="arena-kpi-box">
+                    <span className="text-[11px] font-semibold text-[#b6c5e2] block">レベル</span>
+                    <strong className="mt-1 block text-xl sm:text-2xl font-black text-[#34d399] tabular-nums">
+                      {data.profile?.level != null ? `Lv.${data.profile.level}` : "—"}
+                    </strong>
+                  </div>
+                </div>
+              </section>
+
+              {data.profile?.ranked_elo ? (
+                <aside className="arena-rank-pedestal" aria-label="ガチバトルランク">
+                  {(() => {
+                    const rankInfo = data.profile.ranked_rank > 0 ? getRankImage(data.profile.ranked_rank) : null;
+                    return (
+                      <>
+                        <div className="arena-rank-emblem-box relative">
+                          {rankInfo ? (
+                            <>
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={rankInfo.url}
+                                alt={rankInfo.name}
+                                className="w-full h-full object-contain"
+                                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                              />
+                              {rankInfo.tier && (
+                                <div className="absolute -bottom-1 -right-1 bg-[#090e1d]/95 px-1.5 py-0.5 rounded text-[11px] font-black text-[#ffce00] border border-[#ffce00]/40 shadow-md leading-none tabular-nums">
+                                  {rankInfo.tier}
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <Swords className="w-8 h-8 text-[#a855f7]" aria-hidden="true" />
                           )}
                         </div>
-                      )
-                    })()}
-                    <div className="flex-1 text-center md:text-right bg-purple-500/5 px-4 py-3 rounded-xl border border-purple-500/10">
-                      <div className="text-sm font-semibold text-purple-600 dark:text-purple-400 flex items-center justify-center md:justify-end gap-1">
-                        <Swords className="w-4 h-4" /> 現在スコア
-                      </div>
-                      <div className="text-2xl font-black text-purple-600 dark:text-purple-400 mt-1">{data.profile.ranked_elo != null ? data.profile.ranked_elo.toLocaleString() : 0}</div>
-                      <div className="text-xs text-purple-500/70">最高: {data.profile.highest_ranked_elo != null ? data.profile.highest_ranked_elo.toLocaleString() : 0}</div>
+                        <div className="min-w-0">
+                          <div className="text-[11px] font-mono uppercase tracking-widest text-[#b6c5e2]">RANKED EMBLEM</div>
+                          <div className="text-base font-extrabold text-white mt-0.5">
+                            {rankInfo ? `${rankInfo.name}${rankInfo.tier ? ` ${rankInfo.tier}` : ""}` : "ガチバトル"}
+                          </div>
+                          <div className="text-3xl font-black text-[#ffce00] tabular-nums leading-tight mt-1">
+                            {data.profile.ranked_elo.toLocaleString()}
+                            <span className="text-xs font-mono text-[#b6c5e2] ml-1.5">ELO</span>
+                          </div>
+                          <div className="text-xs text-[#94a3b8] tabular-nums mt-1">
+                            最高: {data.profile.highest_ranked_elo != null ? data.profile.highest_ranked_elo.toLocaleString() : 0}
+                          </div>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </aside>
+              ) : (
+                <aside className="arena-rank-pedestal" aria-label="トロフィーサマリー">
+                  <div className="arena-rank-emblem-box">
+                    <Trophy className="w-8 h-8 text-[#ffce00]" aria-hidden="true" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[11px] font-mono uppercase tracking-widest text-[#b6c5e2]">TROPHY SUMMARY</div>
+                    <div className="text-base font-extrabold text-white mt-0.5">キャリア最高記録</div>
+                    <div className="text-3xl font-black text-[#ffce00] tabular-nums leading-tight mt-1">
+                      {data.profile?.highest_trophies?.toLocaleString() ?? "—"}
+                    </div>
+                    <div className="text-xs text-[#94a3b8] tabular-nums mt-1">
+                      3v3勝利: {data.profile?.["3v3_victories"]?.toLocaleString() ?? "—"}
                     </div>
                   </div>
-                ) : null}
-              </div>
-                </div>
-              </CardHeader>
-            </Card>
+                </aside>
+              )}
+            </div>
           )}
           <PlayerAutoSync key={`auto-sync-${data.player_tag}`} playerTag={data.player_tag} onCollected={() => setAnalysisRevision(value => value + 1)} />
           <PlayerAnalysis key={data.player_tag} playerTag={data.player_tag} revision={analysisRevision} />
@@ -930,46 +1011,46 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                       }
 
                       return (
-                        <Card key={i} className="bg-card border border-primary/10 overflow-hidden hover:bg-primary/5 transition-colors">
+                        <Card key={i} className={`arena-match-card ${battle.result === 'victory' ? 'is-win' : battle.result === 'defeat' ? 'is-loss' : 'is-draw'} p-0 gap-0 overflow-hidden transition-colors`}>
                       {/* Header section */}
-                       <div className="p-3 border-b border-primary/10 flex justify-between items-center bg-secondary/30">
+                       <div className="p-3 border-b border-white/10 flex justify-between items-center bg-white/[0.03]">
                          <div className="flex items-center gap-3 min-w-0 flex-1">
-                           <div className={`w-1.5 h-11 rounded-full ${battle.result === 'victory' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]' : battle.result === 'defeat' ? 'bg-destructive shadow-[0_0_10px_rgba(239,68,68,0.5)]' : 'bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)]'}`} />
                            <div className="min-w-0">
                              <div className="flex items-center gap-2 mb-1">
                                <Badge variant={battle.result === 'victory' ? 'default' : battle.result === 'defeat' ? 'destructive' : 'outline'} className="uppercase text-[10px] px-2 font-bold tracking-wider">
                                  {battle.result === 'victory' ? '勝利' : battle.result === 'defeat' ? '敗北' : '引き分け'}
                                </Badge>
-                               <span className="text-[10px] text-muted-foreground/60 font-medium tracking-wide">{formatBattleTime(battle.time)}</span>
+                               <span className="text-[11px] text-muted-foreground font-medium tracking-wide tabular-nums">{formatBattleTime(battle.time)}</span>
                              </div>
                              <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
+                               {/* eslint-disable-next-line @next/next/no-img-element */}
                                <img src={getModeIconUrl(battle.mode)} alt={battle.mode} className="w-4 h-4 object-contain drop-shadow-md" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-                               <span className="font-medium text-foreground/80">{translateMode(battle.mode)}</span>
+                               <span className="font-semibold text-foreground/90">{translateMode(battle.mode)}</span>
                                <span className="opacity-40">|</span>
                                <span className="truncate">{translateMap(battle.map)}</span>
                              </div>
                            </div>
                         </div>
-                        <div className="text-right flex items-center gap-4">
-                          <Avatar className="w-9 h-9 sm:w-12 sm:h-12 border-2 border-primary/30 shadow-[0_0_15px_rgba(var(--primary),0.2)]">
+                        <div className="text-right flex items-center gap-3 sm:gap-4 shrink-0">
+                          <Avatar className="w-9 h-9 sm:w-12 sm:h-12 border border-white/20 shadow-sm">
                             <AvatarImage src={mainBInfo.imageUrl} />
                             <AvatarFallback className="bg-primary/10"><User className="w-5 h-5 text-primary/70" /></AvatarFallback>
                           </Avatar>
-                          <div className="w-14 sm:w-20 text-right flex justify-end">
+                          <div className="w-16 sm:w-20 text-right flex justify-end tabular-nums">
                             {scoreDisplay}
                           </div>
                         </div>
                       </div>
                       
                       {/* Teams section */}
-                      <div className={data.source === "saved" ? "hidden" : "p-3 grid grid-cols-1 sm:grid-cols-2 gap-4 bg-secondary/10"}>
+                      <div className={data.source === "saved" ? "hidden" : "p-3 grid grid-cols-1 sm:grid-cols-2 gap-4 bg-black/15"}>
                         {/* My Team */}
                         <div className="space-y-3 relative">
-                          <p className="text-xs font-bold text-primary tracking-widest border-b border-primary/20 pb-1.5 flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                          <p className="text-xs font-bold text-[#7dd3fc] tracking-widest border-b border-white/10 pb-1.5 flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-[#38bdf8]" />
                             味方チーム
                           </p>
-                          <div className="flex flex-col gap-2.5">
+                          <div className="flex flex-col gap-2">
                             {battle.my_team && battle.my_team.map((p: any, idx: number) => {
                               const bInfo = getBrawlerInfo(p.brawler);
                               const isMe = (p.tag || "").replace(/^#+/, "").toUpperCase().replace(/O/g, "0") === data.player_tag.replace(/^#+/, "").toUpperCase().replace(/O/g, "0");
@@ -977,17 +1058,17 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                                 <div 
                                   key={idx} 
                                   onClick={() => handleSync(p.tag)}
-                                  className={`flex items-center gap-3 p-1.5 rounded-xl transition-colors group cursor-pointer ${isMe ? 'bg-primary/10 border border-primary/20' : 'hover:bg-white/5 border border-transparent'}`}
+                                  className={`flex items-center gap-3 p-1.5 rounded-xl transition-colors group cursor-pointer ${isMe ? 'bg-[#ffce00]/10 border border-[#ffce00]/30' : 'hover:bg-white/5 border border-transparent'}`}
                                 >
-                                  <Avatar className={`w-10 h-10 shadow-sm transition-transform group-hover:scale-105 ${isMe ? 'border border-primary ring-2 ring-primary/30 ring-offset-1 ring-offset-background' : 'border border-primary/20'}`}>
+                                  <Avatar className={`w-10 h-10 shadow-sm transition-transform group-hover:scale-105 ${isMe ? 'border border-[#ffce00] ring-2 ring-[#ffce00]/25' : 'border border-white/15'}`}>
                                     <AvatarImage src={bInfo.imageUrl} />
                                     <AvatarFallback className="bg-primary/10"><User className="w-5 h-5 text-primary/70" /></AvatarFallback>
                                   </Avatar>
                                   <div className="flex flex-col overflow-hidden">
-                                    <span className={`text-sm truncate max-w-[120px] font-bold tracking-wide ${isMe ? 'text-primary' : 'text-foreground/90'}`} title={p.name}>
+                                    <span className={`text-sm truncate max-w-[140px] font-bold tracking-wide ${isMe ? 'text-[#ffce00]' : 'text-foreground/95'}`} title={p.name}>
                                       {p.name}
                                     </span>
-                                    <span className="text-[10px] text-muted-foreground/40 group-hover:text-muted-foreground/80 transition-colors font-medium tracking-wider">{bInfo.nameJa}</span>
+                                    <span className="text-[11px] text-muted-foreground group-hover:text-foreground/80 transition-colors font-medium">{bInfo.nameJa}</span>
                                   </div>
                                 </div>
                               )
@@ -995,14 +1076,14 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                           </div>
                         </div>
                         {/* Opponent Teams */}
-                        <div className="space-y-3 border-t sm:border-t-0 sm:border-l border-primary/10 pt-3 sm:pt-0 sm:pl-4 relative">
-                          <p className="text-xs font-bold text-destructive tracking-widest border-b border-destructive/20 pb-1.5 flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-destructive" />
+                        <div className="space-y-3 border-t sm:border-t-0 sm:border-l border-white/10 pt-3 sm:pt-0 sm:pl-4 relative">
+                          <p className="text-xs font-bold text-[#fda4af] tracking-widest border-b border-white/10 pb-1.5 flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-[#fb7185]" />
                             相手チーム
                           </p>
-                          <div className="flex flex-col gap-2.5">
+                          <div className="flex flex-col gap-2">
                             {battle.opponent_teams && battle.opponent_teams.map((team: any, t_idx: number) => (
-                              <div key={t_idx} className="space-y-2.5">
+                              <div key={t_idx} className="space-y-2">
                                 {Array.isArray(team) && team.map((p: any, idx: number) => {
                                   const bInfo = getBrawlerInfo(p.brawler);
                                   return (
@@ -1011,13 +1092,13 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                                       onClick={() => handleSync(p.tag)}
                                       className="flex items-center gap-3 p-1.5 rounded-xl hover:bg-white/5 transition-colors group cursor-pointer border border-transparent"
                                     >
-                                      <Avatar className="w-10 h-10 border border-destructive/30 shadow-sm transition-transform group-hover:scale-105">
+                                      <Avatar className="w-10 h-10 border border-rose-400/30 shadow-sm transition-transform group-hover:scale-105">
                                         <AvatarImage src={bInfo.imageUrl} />
                                         <AvatarFallback className="bg-destructive/10"><User className="w-4 h-4 text-destructive/70" /></AvatarFallback>
                                       </Avatar>
                                       <div className="flex flex-col overflow-hidden">
-                                        <span className="text-sm truncate max-w-[120px] font-bold tracking-wide text-foreground/90" title={p.name}>{p.name}</span>
-                                        <span className="text-[10px] text-muted-foreground/40 group-hover:text-muted-foreground/80 transition-colors font-medium tracking-wider">{bInfo.nameJa}</span>
+                                        <span className="text-sm truncate max-w-[140px] font-bold tracking-wide text-foreground/95" title={p.name}>{p.name}</span>
+                                        <span className="text-[11px] text-muted-foreground group-hover:text-foreground/80 transition-colors font-medium">{bInfo.nameJa}</span>
                                       </div>
                                     </div>
                                   )
@@ -1069,34 +1150,35 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                   // Detail pages run in Pages Functions, outside Next's static RSC router.
                   // eslint-disable-next-line @next/next/no-html-link-for-pages
                   <a key={brawler.id} href={brawlerPath(brawler.name)} aria-label={`${getBrawlerInfo(brawler.name).nameJa}の詳細を見る`} className="block min-w-0 rounded-xl focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2">
-                  <Card className="h-full overflow-hidden hover:border-primary/50 transition-colors bg-gradient-to-br from-card to-card/50">
-                    <div className="p-3 pb-2 flex gap-3 items-center border-b border-border/50">
+                  <Card className="h-full overflow-hidden border-white/10 bg-[rgba(14,22,44,0.9)] hover:border-[#ffce00]/60 transition-colors">
+                    <div className="p-3 pb-2 flex gap-3 items-center border-b border-white/10">
                       <div className="relative">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img 
                           src={`https://cdn.brawlify.com/brawlers/borders/${brawler.id}.png`} 
                           alt={brawler.name} 
-                          className="w-12 h-12 rounded-lg border-2 border-background shadow-sm bg-secondary/30 object-cover"
+                          className="w-12 h-12 rounded-lg border border-white/20 shadow-sm bg-[#090e1d]/70 object-cover"
                           onError={(e) => { e.currentTarget.src = 'https://cdn.brawlify.com/brawler/shelly.png'; }}
                         />
-                        <div className="absolute -bottom-1 -right-1 bg-yellow-500 text-black text-[9px] font-black w-5 h-5 rounded-sm flex items-center justify-center border border-black shadow-sm">
+                        <div className="absolute -bottom-1 -right-1 bg-[#ffce00] text-[#0f1526] text-[9px] font-black w-5 h-5 rounded-sm flex items-center justify-center border border-[#090e1d] shadow-sm tabular-nums">
                           {power}
                         </div>
                       </div>
                       <div className="flex-1 overflow-hidden">
-                        <h4 className="font-extrabold text-lg truncate tracking-tight">{getBrawlerInfo(brawler.name).nameJa}</h4>
-                        <div className="flex items-center gap-1.5 mt-0.5 text-xs font-semibold text-muted-foreground">
-                          <Trophy className="w-3.5 h-3.5 text-yellow-500" />
-                          <span className="text-yellow-600 dark:text-yellow-400">{brawler.trophies || 0}</span>
+                        <h4 className="font-extrabold text-lg truncate tracking-tight text-white">{getBrawlerInfo(brawler.name).nameJa}</h4>
+                        <div className="flex items-center gap-1.5 mt-0.5 text-xs font-semibold text-muted-foreground tabular-nums">
+                          <Trophy className="w-3.5 h-3.5 text-[#ffce00]" />
+                          <span className="text-[#ffce00]">{brawler.trophies || 0}</span>
                           <span className="opacity-50">/</span>
                           <span>{brawler.highestTrophies || brawler.trophies || 0}</span>
                         </div>
                       </div>
                     </div>
                     
-                    <div className="px-3 py-2.5 bg-secondary/10 flex flex-col gap-2">
-                      <div className="flex items-center justify-between text-xs font-medium">
+                    <div className="px-3 py-2.5 bg-white/[0.02] flex flex-col gap-2">
+                      <div className="flex items-center justify-between text-xs font-medium tabular-nums">
                         <span className="text-muted-foreground">パワーレベル</span>
-                        <span className={power === 11 ? "text-green-500 font-bold" : ""}>{power} / {maxPower}</span>
+                        <span className={power === 11 ? "text-[#34d399] font-bold" : ""}>{power} / {maxPower}</span>
                       </div>
                       <Progress value={powerRatio} className="h-1.5" />
                       
@@ -1162,20 +1244,20 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
     
       {/* プレイヤー名検索 複数候補選択モーダル */}
       <Sheet open={candidateModalOpen} onOpenChange={setCandidateModalOpen}>
-        <SheetContent side="bottom" className="sm:max-w-lg mx-auto rounded-t-3xl max-h-[85vh] p-0 flex flex-col bg-zinc-950 border-zinc-800">
-          <SheetHeader className="p-6 pb-3 border-b border-zinc-800 text-left">
+        <SheetContent side="bottom" className="sm:max-w-lg mx-auto rounded-t-3xl max-h-[85vh] p-0 flex flex-col border-white/15">
+          <SheetHeader className="p-6 pb-3 border-b border-white/10 text-left">
             <div className="flex items-center gap-2">
               <Users className="w-5 h-5 text-primary" />
               <SheetTitle className="text-lg font-bold text-white">
                 プレイヤーの選択（{candidates.length}件の候補）
               </SheetTitle>
             </div>
-            <SheetDescription className="text-xs text-zinc-400">
+            <SheetDescription className="text-xs text-[#b6c5e2]">
               該当するプレイヤーを選択して戦績を表示します。
             </SheetDescription>
           </SheetHeader>
 
-          <div className="flex-1 overflow-y-auto p-4 space-y-2 divide-y divide-zinc-800/50">
+          <div className="flex-1 overflow-y-auto p-4 space-y-2 divide-y divide-white/10">
             {candidates.map((p: any) => {
               const pTag = p.player_tag || p.tag;
               const rank = p.highest_ranked_rank > 0 ? getRankImage(p.highest_ranked_rank) : null;
@@ -1187,18 +1269,18 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                     setCandidateModalOpen(false);
                     handleSync(pTag);
                   }}
-                  className="w-full pt-2 first:pt-0 p-3 flex items-center justify-between rounded-2xl hover:bg-zinc-900/90 border border-transparent hover:border-zinc-700 transition-all text-left group"
+                  className="w-full pt-2 first:pt-0 p-3 flex items-center justify-between rounded-2xl hover:bg-white/10 border border-transparent hover:border-white/15 transition-all text-left group"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <Avatar className="w-12 h-12 rounded-xl border border-zinc-700 shadow-md shrink-0">
+                    <Avatar className="w-12 h-12 rounded-xl border border-white/15 shadow-md shrink-0">
                       <AvatarImage src={`https://cdn.brawlify.com/profile-icons/regular/${p.icon_id || 28000000}.png`} />
                       <AvatarFallback>{p.name?.[0]}</AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
-                      <div className="font-bold text-base text-zinc-100 group-hover:text-primary transition-colors truncate">
+                      <div className="font-bold text-base text-white group-hover:text-[#ffce00] transition-colors truncate">
                         {p.name}
                       </div>
-                      <div className="text-xs text-zinc-400 font-mono">
+                      <div className="text-xs text-[#94a3b8] font-mono tabular-nums">
                         #{pTag.replace(/^#/, "")}
                       </div>
                     </div>
@@ -1206,17 +1288,18 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
 
                   <div className="flex items-center gap-3 shrink-0">
                     {rank && (
-                      <div className="flex items-center gap-1.5 bg-zinc-800/80 px-2.5 py-1 rounded-xl border border-zinc-700/60" title={`最高ランク: ${rank.name} ${rank.tier}`}>
+                      <div className="flex items-center gap-1.5 bg-white/10 px-2.5 py-1 rounded-xl border border-white/15" title={`最高ランク: ${rank.name} ${rank.tier}`}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={rank.url} alt={rank.name} className="w-6 h-6 object-contain" />
-                        <span className="text-xs font-bold text-zinc-200">{rank.tier}</span>
+                        <span className="text-xs font-bold text-white">{rank.tier}</span>
                       </div>
                     )}
-                    <div className="text-right">
-                      <div className="font-extrabold text-sm text-amber-400">
+                    <div className="text-right tabular-nums">
+                      <div className="font-extrabold text-sm text-[#ffce00]">
                         🏆 {p.trophies?.toLocaleString()}
                       </div>
                       {p.highest_trophies > 0 && (
-                        <div className="text-[11px] text-zinc-500">
+                        <div className="text-[11px] text-[#94a3b8]">
                           最高 {p.highest_trophies?.toLocaleString()}
                         </div>
                       )}

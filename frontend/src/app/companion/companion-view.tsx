@@ -6,16 +6,13 @@ import { draftDataUrls, cachedDraftDetails, fetchDraftBase, fetchDraftDetails, p
 import { useBrawlerCatalog } from "@/lib/use-brawler-catalog"
 import { useState, useEffect, useMemo, useRef } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { translateMode, translateMap, getModeIconUrl } from "@/lib/translations"
 import { getBrawlerInfo, BRAWLER_MAP } from "@/lib/brawlers"
-import { Swords, Ban, Check, RefreshCw, Trophy, Target, User, Search, X } from "lucide-react"
+import { Swords, Ban, Check, RefreshCw, Trophy, Target, User, Search, X, Undo2 } from "lucide-react"
 import { API_URL } from "@/lib/config"
 import Link from "@/components/document-link"
 import { conditionPath } from "@/lib/condition-pages"
@@ -37,6 +34,13 @@ function toHiragana(str: string): string {
 
 type Phase = "setup" | "ban" | "pick" | "done"
 type Team = "blue" | "red"
+type DraftSnapshot = {
+  phase: Phase
+  allyBans: string[]
+  enemyBans: string[]
+  bluePicks: string[]
+  redPicks: string[]
+}
 
 // フェーズ進行と動的ウェイト定義
 // 敵確定数 = enemyPicks.length
@@ -63,6 +67,7 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
   const [enemyBans, setEnemyBans] = useState<string[]>([])
   const [bluePicks, setBluePicks] = useState<string[]>([])
   const [redPicks, setRedPicks] = useState<string[]>([])
+  const [draftHistory, setDraftHistory] = useState<DraftSnapshot[]>([])
 
   // Character Search State
   const [charSearchQuery, setCharSearchQuery] = useState("")
@@ -204,8 +209,20 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
     setEnemyBans([])
     setBluePicks([])
     setRedPicks([])
+    setDraftHistory([])
     setCharSearchQuery("")
     setMetaData(null)
+  }
+
+  const handleUndo = () => {
+    if (draftHistory.length === 0) return
+    const prev = draftHistory[draftHistory.length - 1]
+    setDraftHistory(h => h.slice(0, -1))
+    setPhase(prev.phase)
+    setAllyBans(prev.allyBans)
+    setEnemyBans(prev.enemyBans)
+    setBluePicks(prev.bluePicks)
+    setRedPicks(prev.redPicks)
   }
 
   // ドラフトロジック：現在どちらのターンか？
@@ -235,7 +252,18 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
   // キャラクターを選択したときの処理
   const handleSelectCharacter = (charName: string) => {
     if (phase === "pick" && !detailsReady) return
+    if (phase !== "ban" && phase !== "pick") return
+
+    const snapshot: DraftSnapshot = {
+      phase,
+      allyBans: [...allyBans],
+      enemyBans: [...enemyBans],
+      bluePicks: [...bluePicks],
+      redPicks: [...redPicks],
+    }
+
     if (phase === "ban") {
+      setDraftHistory(h => [...h, snapshot])
       if (currentTurnTeam === myTeam) {
         const newBans = [...allyBans, charName]
         setAllyBans(newBans)
@@ -247,6 +275,7 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
         }
       }
     } else if (phase === "pick") {
+      setDraftHistory(h => [...h, snapshot])
       if (currentTurnTeam === "blue") {
         const newBlue = [...bluePicks, charName]
         setBluePicks(newBlue)
@@ -558,88 +587,124 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
 
   if (phase === "setup") {
     return (
-      <div className="arena-workspace arena-draft arena-draft-setup max-w-3xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <div className="text-center space-y-4">
-          <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+      <div className="arena-workspace arena-draft arena-draft-setup max-w-3xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="text-center space-y-2.5">
+          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
             ブロスタ ガチバトルのピック支援
           </h1>
-          <p className="text-muted-foreground">
-            マップ適性と敵の編成から、リアルタイムで最適なキャラクターを弾き出します。
+          <p className="text-sm text-muted-foreground">
+            モード・マップ・チームを選んでドラフトを開始します。
           </p>
         </div>
 
-        <Card className="border-primary/20 shadow-lg">
-          <CardHeader>
-            <CardTitle>ドラフト初期設定</CardTitle>
-            <CardDescription>現在の試合環境を入力してください。</CardDescription>
-            {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-3">
-                <label id="draft-mode-label" className="text-sm font-bold">モード</label>
-                <Select disabled={loading} value={selectedMode} onValueChange={(val) => setSelectedMode(val || "")}>
-                  <SelectTrigger aria-labelledby="draft-mode-label" className="bg-secondary/50">
-                    <SelectValue placeholder="モードを選択">
-                      {selectedMode ? translateMode(selectedMode) : "モードを選択"}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.modes.map((m: string) => (
-                      <SelectItem key={m} value={m}>{translateMode(m)}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-3">
-                <label id="draft-map-label" className="text-sm font-bold">マップ</label>
-                <Select disabled={loading} value={selectedMap} onValueChange={(val) => setSelectedMap(val || "")}>
-                  <SelectTrigger aria-labelledby="draft-map-label" className="bg-secondary/50">
-                    <SelectValue placeholder="マップを選択">
-                      {selectedMap ? translateMap(selectedMap) : "マップを選択"}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableMaps.map((m: string) => (
-                      <SelectItem key={m} value={m}>{translateMap(m)}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+        <Card className="arena-setup-card">
+          {error && (
+            <CardHeader className="pb-0">
+              <p role="alert" className="text-sm text-destructive">{error}</p>
+            </CardHeader>
+          )}
+          <CardContent className="space-y-6 p-5 sm:p-7">
+            <div className="space-y-2.5">
+              <span id="draft-mode-label" className="arena-setup-label">モード</span>
+              <div role="radiogroup" aria-labelledby="draft-mode-label" className="arena-mode-grid">
+                {categories.modes.map((m: string) => (
+                  <button
+                    key={m}
+                    type="button"
+                    role="radio"
+                    aria-checked={selectedMode === m}
+                    data-mode={m}
+                    disabled={loading}
+                    onClick={() => setSelectedMode(m)}
+                    className={`arena-mode-tile${selectedMode === m ? " is-active" : ""}`}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={getModeIconUrl(m)} alt="" className="w-6 h-6 object-contain shrink-0" />
+                    <span>{translateMode(m)}</span>
+                  </button>
+                ))}
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-3">
-                <label className="text-sm font-bold">自チーム</label>
-                <Tabs value={myTeam} onValueChange={(val) => setMyTeam(val as Team)}>
-                  <TabsList className="grid w-full grid-cols-2 h-11 bg-secondary/50">
-                    <TabsTrigger value="blue" className="h-full data-[state=active]:!bg-blue-600 data-[state=active]:!text-white">
-                      青チーム
-                    </TabsTrigger>
-                    <TabsTrigger value="red" className="h-full data-[state=active]:!bg-red-600 data-[state=active]:!text-white">
-                      赤チーム
-                    </TabsTrigger>
-                  </TabsList>
-                </Tabs>
+            <div className="space-y-2.5">
+              <span id="draft-map-label" className="arena-setup-label">マップ</span>
+              <div role="radiogroup" aria-labelledby="draft-map-label" className="arena-map-grid">
+                {availableMaps.map((m: string) => {
+                  const isSelected = selectedMap === m
+                  return (
+                    <button
+                      key={m}
+                      type="button"
+                      role="radio"
+                      aria-checked={isSelected}
+                      disabled={loading}
+                      onClick={() => setSelectedMap(m)}
+                      className={`arena-map-card${isSelected ? " is-active" : ""}`}
+                    >
+                      <span className="truncate">{translateMap(m)}</span>
+                      {isSelected && <Check aria-hidden="true" className="w-4 h-4 shrink-0" />}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2.5">
+                <span id="draft-myteam-label" className="arena-setup-label">自チーム</span>
+                <div role="radiogroup" aria-labelledby="draft-myteam-label" className="arena-team-grid">
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={myTeam === "blue"}
+                    disabled={loading}
+                    onClick={() => setMyTeam("blue")}
+                    className={`arena-team-btn is-blue${myTeam === "blue" ? " is-active" : ""}`}
+                  >
+                    青チーム
+                  </button>
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={myTeam === "red"}
+                    disabled={loading}
+                    onClick={() => setMyTeam("red")}
+                    className={`arena-team-btn is-red${myTeam === "red" ? " is-active" : ""}`}
+                  >
+                    赤チーム
+                  </button>
+                </div>
               </div>
 
-              <div className="space-y-3">
-                <label className="text-sm font-bold">先攻チーム</label>
-                <Tabs value={firstPickTeam} onValueChange={(val) => setFirstPickTeam(val as Team)}>
-                  <TabsList className="grid w-full grid-cols-2 h-11 bg-secondary/50">
-                    <TabsTrigger value="blue" className="h-full data-[state=active]:!bg-blue-600 data-[state=active]:!text-white">
-                      青チーム
-                    </TabsTrigger>
-                    <TabsTrigger value="red" className="h-full data-[state=active]:!bg-red-600 data-[state=active]:!text-white">
-                      赤チーム
-                    </TabsTrigger>
-                  </TabsList>
-                </Tabs>
+              <div className="space-y-2.5">
+                <span id="draft-firstpick-label" className="arena-setup-label">先攻チーム</span>
+                <div role="radiogroup" aria-labelledby="draft-firstpick-label" className="arena-team-grid">
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={firstPickTeam === "blue"}
+                    disabled={loading}
+                    onClick={() => setFirstPickTeam("blue")}
+                    className={`arena-team-btn is-blue${firstPickTeam === "blue" ? " is-active" : ""}`}
+                  >
+                    青チーム
+                  </button>
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={firstPickTeam === "red"}
+                    disabled={loading}
+                    onClick={() => setFirstPickTeam("red")}
+                    className={`arena-team-btn is-red${firstPickTeam === "red" ? " is-active" : ""}`}
+                  >
+                    赤チーム
+                  </button>
+                </div>
               </div>
             </div>
 
             <Button
-              className="w-full mt-4"
+              className="w-full min-h-[50px] text-base font-extrabold"
               size="lg"
               onClick={handleStartDraft}
               disabled={loading || !selectedMap}
@@ -679,18 +744,21 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
           </p>
         </div>
 
-        {phase !== "done" && (
-          <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
+          {phase !== "done" && (
             <span className="text-sm font-bold">
               現在: <span className={currentTurnTeam === "blue" ? "text-blue-500" : "text-red-500"}>
                 {currentTurnTeam === "blue" ? "青チームのターン" : "赤チームのターン"}
               </span>
             </span>
-            <Button variant="outline" size="sm" onClick={handleReset}>
-              <RefreshCw className="w-4 h-4 mr-2" /> リセット
-            </Button>
-          </div>
-        )}
+          )}
+          <Button variant="outline" size="sm" onClick={handleUndo} disabled={draftHistory.length === 0}>
+            <Undo2 className="w-4 h-4 mr-1.5" /> 1つ戻す
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleReset}>
+            <RefreshCw className="w-4 h-4 mr-1.5" /> リセット
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -705,26 +773,26 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
 
               {/* Blue Team Area */}
               <div className="space-y-3">
-                <h3 className="font-bold text-blue-500 flex flex-col items-center justify-center bg-blue-500/10 p-1 sm:p-2 rounded-lg text-[10px] sm:text-base leading-tight">
+                <h3 className="font-bold text-blue-500 flex flex-col items-center justify-center bg-blue-500/10 p-1.5 sm:p-2 rounded-lg text-xs sm:text-base leading-tight">
                   <span>青チーム</span>
-                  <span className="font-normal">{firstPickTeam === "blue" ? "(先攻)" : "(後攻)"}</span>
+                  <span className="font-normal text-[11px] sm:text-sm">{firstPickTeam === "blue" ? "(先攻)" : "(後攻)"}</span>
                 </h3>
                 <div className="flex flex-col gap-3">
                   {[0, 1, 2].map(i => {
                     const charName = bluePicks[i]
                     const isActive = phase === "pick" && currentTurnTeam === "blue" && bluePicks.length === i
                     return (
-                      <div key={`blue-${i}`} className={`h-12 sm:h-16 rounded-lg border-2 flex flex-col sm:flex-row items-center justify-center sm:justify-start p-1 sm:p-2 gap-1 sm:gap-3 transition-all ${isActive ? 'border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)] animate-pulse' : 'border-secondary bg-secondary/20'}`}>
+                      <div key={`blue-${i}`} className={`arena-draft-pick-slot h-14 sm:h-16 rounded-lg border-2 flex items-center justify-start px-2 py-1.5 sm:p-2 gap-2 sm:gap-3 transition-all min-w-0 ${isActive ? 'is-active border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)] animate-pulse' : 'border-secondary bg-secondary/20'}`}>
                         {charName ? (
                           <>
-                            <div className="w-6 h-6 sm:w-10 sm:h-10 border border-blue-500/50 rounded-md shrink-0 bg-primary/10 relative">
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 border border-blue-500/50 rounded-md shrink-0 bg-primary/10 relative overflow-hidden">
                               {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img src={getBrawlerInfo(charName).imageUrl} alt={charName} className="object-cover w-full h-full rounded-sm absolute inset-0 z-10" />
                             </div>
-                            <span className="font-bold text-[8px] sm:text-sm truncate w-full text-center sm:text-left">{getBrawlerInfo(charName).nameJa}</span>
+                            <span className="font-bold text-xs sm:text-sm truncate min-w-0 flex-1">{getBrawlerInfo(charName).nameJa}</span>
                           </>
                         ) : (
-                          <span className="text-muted-foreground text-[10px] sm:text-sm mx-auto">選択 {i+1}</span>
+                          <span className="text-muted-foreground text-xs sm:text-sm mx-auto tabular-nums">選択 {i+1}</span>
                         )}
                       </div>
                     )
@@ -734,26 +802,26 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
 
               {/* Red Team Area */}
               <div className="space-y-3">
-                <h3 className="font-bold text-red-500 flex flex-col items-center justify-center bg-red-500/10 p-1 sm:p-2 rounded-lg text-[10px] sm:text-base leading-tight">
+                <h3 className="font-bold text-red-500 flex flex-col items-center justify-center bg-red-500/10 p-1.5 sm:p-2 rounded-lg text-xs sm:text-base leading-tight">
                   <span>赤チーム</span>
-                  <span className="font-normal">{firstPickTeam === "red" ? "(先攻)" : "(後攻)"}</span>
+                  <span className="font-normal text-[11px] sm:text-sm">{firstPickTeam === "red" ? "(先攻)" : "(後攻)"}</span>
                 </h3>
                 <div className="flex flex-col gap-3">
                   {[0, 1, 2].map(i => {
                     const charName = redPicks[i]
                     const isActive = phase === "pick" && currentTurnTeam === "red" && redPicks.length === i
                     return (
-                      <div key={`red-${i}`} className={`h-12 sm:h-16 rounded-lg border-2 flex flex-col sm:flex-row items-center justify-center sm:justify-start p-1 sm:p-2 gap-1 sm:gap-3 transition-all ${isActive ? 'border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.5)] animate-pulse' : 'border-secondary bg-secondary/20'}`}>
+                      <div key={`red-${i}`} className={`arena-draft-pick-slot h-14 sm:h-16 rounded-lg border-2 flex items-center justify-start px-2 py-1.5 sm:p-2 gap-2 sm:gap-3 transition-all min-w-0 ${isActive ? 'is-active border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.5)] animate-pulse' : 'border-secondary bg-secondary/20'}`}>
                         {charName ? (
                           <>
-                            <div className="w-6 h-6 sm:w-10 sm:h-10 border border-red-500/50 rounded-md shrink-0 bg-primary/10 relative">
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 border border-red-500/50 rounded-md shrink-0 bg-primary/10 relative overflow-hidden">
                               {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img src={getBrawlerInfo(charName).imageUrl} alt={charName} className="object-cover w-full h-full rounded-sm absolute inset-0 z-10" />
                             </div>
-                            <span className="font-bold text-[8px] sm:text-sm truncate w-full text-center sm:text-left">{getBrawlerInfo(charName).nameJa}</span>
+                            <span className="font-bold text-xs sm:text-sm truncate min-w-0 flex-1">{getBrawlerInfo(charName).nameJa}</span>
                           </>
                         ) : (
-                          <span className="text-muted-foreground text-[10px] sm:text-sm mx-auto">選択 {i+1}</span>
+                          <span className="text-muted-foreground text-xs sm:text-sm mx-auto tabular-nums">選択 {i+1}</span>
                         )}
                       </div>
                     )
@@ -763,33 +831,33 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
 
               {/* Bans Area */}
               <div className="space-y-3 col-span-2 md:col-span-1">
-                <h3 className="font-bold text-slate-500 flex flex-col items-center justify-center bg-slate-500/10 p-1 sm:p-2 rounded-lg text-[10px] sm:text-base leading-tight">
-                  <span className="flex items-center gap-1"><Ban className="w-3 h-3 sm:w-4 sm:h-4" /> BAN指定</span>
-                  <span className="font-normal opacity-0">.</span>
+                <h3 className="font-bold text-muted-foreground flex flex-col items-center justify-center bg-secondary/30 p-1.5 sm:p-2 rounded-lg text-xs sm:text-base leading-tight">
+                  <span className="flex items-center gap-1"><Ban className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> BAN指定</span>
+                  <span className="font-normal opacity-0 text-[11px] sm:text-sm">.</span>
                 </h3>
-                <div className="grid grid-cols-2 md:grid-cols-1 md:gap-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-1 gap-3 sm:gap-4">
                   {/* Ally Bans */}
-                  <div className="space-y-2">
+                  <div className="space-y-2 min-w-0">
                     <div className="text-xs text-center font-bold text-muted-foreground">味方 BAN</div>
                     <div className="flex flex-col gap-2">
                       {[0, 1, 2].map(i => {
                         const charName = allyBans[i]
                         const isActive = phase === "ban" && currentTurnTeam === myTeam && allyBans.length === i
                         return (
-                          <div key={`allyban-${i}`} className={`h-12 sm:h-16 rounded-lg border-2 flex flex-col sm:flex-row items-center justify-center sm:justify-start p-1 sm:p-2 gap-1 sm:gap-3 relative overflow-hidden ${isActive ? 'border-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)] animate-pulse' : 'border-secondary bg-slate-900/50'}`}>
+                          <div key={`allyban-${i}`} className={`arena-draft-ban-slot h-12 sm:h-16 rounded-lg border-2 flex items-center justify-start px-2 py-1 sm:p-2 gap-2 sm:gap-3 relative overflow-hidden min-w-0 ${isActive ? 'is-active border-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)] animate-pulse' : 'border-secondary bg-secondary/20'}`}>
                             {charName ? (
                               <>
-                                <div className="w-6 h-6 sm:w-10 sm:h-10 opacity-50 grayscale rounded-md shrink-0 bg-primary/10 relative">
+                                <div className="w-7 h-7 sm:w-10 sm:h-10 opacity-60 grayscale rounded-md shrink-0 bg-primary/10 relative overflow-hidden">
                                   {/* eslint-disable-next-line @next/next/no-img-element */}
                                   <img src={getBrawlerInfo(charName).imageUrl} alt={charName} className="object-cover w-full h-full rounded-sm absolute inset-0 z-10" />
                                 </div>
-                                <div className="absolute inset-0 bg-red-500/20 flex items-center justify-center pointer-events-none">
-                                  <div className="w-full h-0.5 bg-red-500 rotate-45 absolute" />
+                                <div className="absolute inset-0 bg-red-500/15 flex items-center justify-center pointer-events-none">
+                                  <div className="w-full h-0.5 bg-red-500/70 rotate-45 absolute" />
                                 </div>
-                                <span className="font-bold text-[8px] sm:text-sm truncate w-full text-center sm:text-left z-10 hidden sm:block">{getBrawlerInfo(charName).nameJa}</span>
+                                <span className="font-bold text-[11px] sm:text-sm truncate min-w-0 flex-1 z-10">{getBrawlerInfo(charName).nameJa}</span>
                               </>
                             ) : (
-                              <span className="text-[10px] sm:text-sm text-muted-foreground mx-auto">BAN</span>
+                              <span className="text-xs sm:text-sm text-muted-foreground mx-auto">BAN</span>
                             )}
                           </div>
                         )
@@ -797,27 +865,27 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
                     </div>
                   </div>
                   {/* Enemy Bans */}
-                  <div className="space-y-2">
+                  <div className="space-y-2 min-w-0">
                     <div className="text-xs text-center font-bold text-muted-foreground">相手 BAN</div>
                     <div className="flex flex-col gap-2">
                       {[0, 1, 2].map(i => {
                         const charName = enemyBans[i]
                         const isActive = phase === "ban" && currentTurnTeam !== myTeam && enemyBans.length === i
                         return (
-                          <div key={`enemyban-${i}`} className={`h-12 sm:h-16 rounded-lg border-2 flex flex-col sm:flex-row items-center justify-center sm:justify-start p-1 sm:p-2 gap-1 sm:gap-3 relative overflow-hidden ${isActive ? 'border-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)] animate-pulse' : 'border-secondary bg-slate-900/50'}`}>
+                          <div key={`enemyban-${i}`} className={`arena-draft-ban-slot h-12 sm:h-16 rounded-lg border-2 flex items-center justify-start px-2 py-1 sm:p-2 gap-2 sm:gap-3 relative overflow-hidden min-w-0 ${isActive ? 'is-active border-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)] animate-pulse' : 'border-secondary bg-secondary/20'}`}>
                             {charName ? (
                               <>
-                                <div className="w-6 h-6 sm:w-10 sm:h-10 opacity-50 grayscale rounded-md shrink-0 bg-primary/10 relative">
+                                <div className="w-7 h-7 sm:w-10 sm:h-10 opacity-60 grayscale rounded-md shrink-0 bg-primary/10 relative overflow-hidden">
                                   {/* eslint-disable-next-line @next/next/no-img-element */}
                                   <img src={getBrawlerInfo(charName).imageUrl} alt={charName} className="object-cover w-full h-full rounded-sm absolute inset-0 z-10" />
                                 </div>
-                                <div className="absolute inset-0 bg-red-500/20 flex items-center justify-center pointer-events-none">
-                                  <div className="w-full h-0.5 bg-red-500 rotate-45 absolute" />
+                                <div className="absolute inset-0 bg-red-500/15 flex items-center justify-center pointer-events-none">
+                                  <div className="w-full h-0.5 bg-red-500/70 rotate-45 absolute" />
                                 </div>
-                                <span className="font-bold text-[8px] sm:text-sm truncate w-full text-center sm:text-left z-10 hidden sm:block">{getBrawlerInfo(charName).nameJa}</span>
+                                <span className="font-bold text-[11px] sm:text-sm truncate min-w-0 flex-1 z-10">{getBrawlerInfo(charName).nameJa}</span>
                               </>
                             ) : (
-                              <span className="text-[10px] sm:text-sm text-muted-foreground mx-auto">BAN</span>
+                              <span className="text-xs sm:text-sm text-muted-foreground mx-auto">BAN</span>
                             )}
                           </div>
                         )
@@ -832,7 +900,7 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
 
           {/* Win Rate Prediction (Done Phase) */}
           {phase === "done" && (
-            <Card className="col-span-1 md:col-span-2 shadow-lg border-primary/20 bg-gradient-to-b from-background to-secondary/10">
+            <Card className="col-span-1 md:col-span-2 shadow-lg border-primary/20 bg-secondary/20">
               <CardContent className="p-8 flex flex-col items-center justify-center space-y-4">
                 <div className="flex items-center gap-3 text-primary">
                   <Trophy className="w-8 h-8 text-yellow-500" />
@@ -849,25 +917,25 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
                     />
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-5xl font-extrabold">{predictionStats.winRate}%</span>
+                    <span className="text-5xl font-extrabold tabular-nums">{predictionStats.winRate}%</span>
                   </div>
                 </div>
                 <div className="grid grid-cols-3 gap-2 w-full max-w-md bg-secondary/30 p-3 rounded-lg border border-primary/10 text-center">
                   <div className="space-y-1">
                     <div className="text-[10px] text-muted-foreground font-medium">マップ適性</div>
-                    <div className="text-xs font-bold text-foreground">
+                    <div className="text-xs font-bold text-foreground tabular-nums">
                       {predictionStats.allyEnvAvg.toFixed(1)} vs {predictionStats.enemyEnvAvg.toFixed(1)}
                     </div>
                   </div>
                   <div className="space-y-1">
                     <div className="text-[10px] text-muted-foreground font-medium">対面相性優位</div>
-                    <div className={`text-xs font-bold ${predictionStats.matchupAdvantage >= 0 ? 'text-blue-500' : 'text-red-500'}`}>
+                    <div className={`text-xs font-bold tabular-nums ${predictionStats.matchupAdvantage >= 0 ? 'text-blue-500' : 'text-red-500'}`}>
                       {predictionStats.matchupAdvantage >= 0 ? `+${(predictionStats.matchupAdvantage * 100 / 50).toFixed(1)}%` : `${(predictionStats.matchupAdvantage * 100 / 50).toFixed(1)}%`}
                     </div>
                   </div>
                   <div className="space-y-1">
                     <div className="text-[10px] text-muted-foreground font-medium">味方シナジー</div>
-                    <div className={`text-xs font-bold ${predictionStats.allySynergyTotal >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                    <div className={`text-xs font-bold tabular-nums ${predictionStats.allySynergyTotal >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
                       {predictionStats.allySynergyTotal >= 0 ? `+${predictionStats.allySynergyTotal.toFixed(1)}%` : `${predictionStats.allySynergyTotal.toFixed(1)}%`}
                     </div>
                   </div>
@@ -889,7 +957,7 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
               <CardHeader className="py-3 px-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b bg-secondary/10">
                 <div className="flex items-center gap-2">
                   <CardTitle className="text-sm font-bold text-foreground">キャラクター選択</CardTitle>
-                  <Badge variant="secondary" className="text-xs font-mono h-5 px-1.5">
+                  <Badge variant="secondary" className="text-xs font-mono tabular-nums h-5 px-1.5">
                     {filteredBrawlers.length} / {Object.keys(BRAWLER_MAP).length}
                   </Badge>
                 </div>
@@ -901,10 +969,11 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
                     placeholder="キャラ名検索 (ひらがな/英語)..."
                     value={charSearchQuery}
                     onChange={(e) => setCharSearchQuery(e.target.value)}
-                    className="h-8 pl-8 pr-8 text-xs bg-background/80 focus-visible:ring-1"
+                    className="h-8 pl-8 pr-8 text-xs focus-visible:ring-1"
                   />
                   {charSearchQuery && (
                     <button
+                      type="button"
                       onClick={() => setCharSearchQuery("")}
                       className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-0.5"
                     >
@@ -935,7 +1004,7 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
                             className={`flex flex-col items-center justify-center min-h-[44px] min-w-[44px] gap-1 cursor-pointer transition-all hover:scale-105 group ${excluded ? 'opacity-20 cursor-not-allowed grayscale' : ''}`}
                             title={info.nameJa}
                           >
-                            <div className="w-9 h-9 sm:w-12 sm:h-12 border-2 border-black/20 dark:border-white/10 group-hover:border-primary transition-colors shrink-0 rounded-md bg-primary/10 relative overflow-hidden flex items-center justify-center shadow-sm">
+                            <div className="w-9 h-9 sm:w-12 sm:h-12 border-2 border-white/15 group-hover:border-primary transition-colors shrink-0 rounded-md bg-primary/10 relative overflow-hidden flex items-center justify-center shadow-sm">
                               {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img
                                 src={info.imageUrl}
@@ -961,7 +1030,7 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
 
         {/* Right: Suggestions */}
         <div className="lg:col-span-4">
-          <Card className="border-primary/50 shadow-lg bg-card/80 backdrop-blur-md h-full flex flex-col">
+          <Card className="border-primary/40 shadow-lg backdrop-blur-md h-full flex flex-col">
             <CardHeader className="border-b bg-primary/5">
               <CardTitle className="flex items-center gap-2">
                 <Target className="w-5 h-5 text-primary" />
@@ -995,13 +1064,13 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
                       return (
                         <div
                           key={sug.name}
-                          className="flex items-center gap-3 p-3 rounded-lg border bg-background hover:bg-secondary/50 transition-colors cursor-pointer"
+                          className="flex items-center gap-3 p-3 rounded-lg border border-border/60 bg-secondary/20 hover:bg-secondary/40 transition-colors cursor-pointer"
                           onClick={() => handleSelectCharacter(sug.name)}
                         >
-                          <div className="font-black text-lg w-6 text-center text-muted-foreground">
+                          <div className="font-black text-lg w-6 text-center text-muted-foreground tabular-nums">
                             {index + 1}
                           </div>
-                          <div className="w-8 h-8 sm:w-10 sm:h-10 border-2 border-black/20 dark:border-white/10 transition-colors shrink-0 rounded-md bg-primary/10 relative">
+                          <div className="w-8 h-8 sm:w-10 sm:h-10 border-2 border-white/15 transition-colors shrink-0 rounded-md bg-primary/10 relative overflow-hidden">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={info.imageUrl} alt={info.nameJa} className="object-cover w-full h-full rounded-sm absolute inset-0 z-10" />
                           </div>
@@ -1015,10 +1084,10 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
                               {sug.badges ? (
                                 sug.badges.map((b: any, bIdx: number) => {
                                   let badgeStyle = "bg-secondary text-secondary-foreground border-border"
-                                  if (b.type === "counter") badgeStyle = "bg-red-500/15 text-red-600 dark:text-red-400 border-red-500/30"
-                                  else if (b.type === "synergy") badgeStyle = "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30"
-                                  else if (b.type === "map") badgeStyle = "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30"
-                                  else if (b.type === "mode") badgeStyle = "bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/30"
+                                  if (b.type === "counter") badgeStyle = "bg-red-500/15 text-red-400 border-red-500/30"
+                                  else if (b.type === "synergy") badgeStyle = "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
+                                  else if (b.type === "map") badgeStyle = "bg-blue-500/15 text-blue-400 border-blue-500/30"
+                                  else if (b.type === "mode") badgeStyle = "bg-purple-500/15 text-purple-400 border-purple-500/30"
 
                                   return (
                                     <span
@@ -1036,7 +1105,7 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
                           </div>
 
                           <div className="text-right shrink-0">
-                            <Badge variant={phase === "ban" ? "destructive" : "default"} className="font-mono text-xs shadow-sm">
+                            <Badge variant={phase === "ban" ? "destructive" : "default"} className="font-mono tabular-nums text-xs shadow-sm">
                               {sug.score.toFixed(1)}点
                             </Badge>
                           </div>

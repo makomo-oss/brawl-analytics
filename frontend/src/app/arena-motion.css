@@ -40,10 +40,10 @@
   from { scale: .12 1; }
   to { scale: .84 1; }
 }
-.arena-route-progress {position:fixed;inset:78px 0 auto;z-index:60;height:2px;background:#ffe16b;transform-origin:left;scale:.6 1;pointer-events:none}
-.arena-route-error {margin-bottom:20px;padding:16px;border:1px solid #ff998a;border-radius:10px;background:#202c47;color:#f8f6ec}
+.arena-route-progress {position:fixed;inset:76px 0 auto;z-index:60;height:2px;background:#ffce00;transform-origin:left;scale:.6 1;pointer-events:none}
+.arena-route-error {margin-bottom:20px;padding:16px;border:1px solid #fb7185;border-radius:12px;background:#121c36;color:#f8fafc}
 .arena-route-error p {margin-bottom:12px}
-.arena-route-error :is(button,a) {display:inline-flex;align-items:center;min-height:44px;margin-right:16px;color:#ffe16b;text-decoration:underline;text-underline-offset:4px;cursor:pointer}
+.arena-route-error :is(button,a) {display:inline-flex;align-items:center;min-height:44px;margin-right:16px;color:#ffce00;text-decoration:underline;text-underline-offset:4px;cursor:pointer}
 #main-content {--arena-route-distance:24px}
 #main-content[data-route-direction="forward"] {--arena-route-offset:var(--arena-route-distance)}
 #main-content[data-route-direction="backward"] {--arena-route-offset:calc(-1 * var(--arena-route-distance))}

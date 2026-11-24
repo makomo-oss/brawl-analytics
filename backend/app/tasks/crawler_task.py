@@ -38,62 +38,42 @@ async def upsert_batches(db, table: str, records: list[dict], batch_size: int):
                                table, attempt + 1, WRITE_ATTEMPTS)
                 await asyncio.sleep(0.5 * 2 ** attempt)
 
+def _normalize_tag(value) -> str:
+    return str(value or "").replace("#", "").upper().strip()
+
+
 def select_anchor_tags(db) -> set[str]:
-    """Seed Ranked discovery from recently verified Elite+ profiles."""
-    profiles = {}
-    offset = 0
-    fresh_after = datetime.now(timezone.utc) - timedelta(days=1)
-    while True:
-        rows = ((db.table("players")
-                 .select("player_tag,updated_at,rank:unlocked_characters->>ranked_rank")
-                 .eq("unlocked_characters->>profile_status", "verified")
-                 .order("player_tag").range(offset, offset + 999).execute()).data or [])
-        for row in rows:
-            tag = str(row.get("player_tag") or "").replace("#", "").upper()
-            if tag:
-                rank = str(row.get("rank") or "")
-                try:
-                    updated = datetime.fromisoformat(str(row.get("updated_at") or "").replace("Z", "+00:00"))
-                    if updated.tzinfo is None:
-                        updated = updated.replace(tzinfo=timezone.utc)
-                except ValueError:
-                    updated = datetime.min.replace(tzinfo=timezone.utc)
-                profiles[tag] = (int(rank) if rank.isdigit() else 0, updated)
-        if len(rows) < 1000:
-            break
-        offset += 1000
-    candidates = sorted(profiles)
-    if not candidates:
+    """Seed Ranked discovery from recently verified Elite+ profiles via bounded RPC."""
+    rows = db.rpc("select_crawler_anchor_tags", {"p_limit": ANCHOR_LIMIT}).execute().data or []
+    anchors = set()
+    for row in rows:
+        raw_tag = row.get("player_tag") if isinstance(row, dict) else row
+        tag = _normalize_tag(raw_tag)
+        if tag:
+            anchors.add(tag)
+    if not anchors:
         raise RuntimeError("Crawler has no verified player anchors")
-    fresh_elite = [tag for tag in candidates
-                   if profiles[tag][0] >= 13 and profiles[tag][1] >= fresh_after]
-    anchors = random.sample(fresh_elite, min(ANCHOR_LIMIT, len(fresh_elite)))
-    others = [tag for tag in candidates if tag not in anchors]
-    anchors.extend(random.sample(others, min(ANCHOR_LIMIT - len(anchors), len(others))))
-    return set(anchors)
+    return anchors
 
 
 def select_elite_refresh_tags(db, excluded: set[str]) -> list[str]:
     """Rotate older Elite+ profiles so their recent Ranked logs are not lost."""
-    cutoff = (datetime.now(timezone.utc) - timedelta(hours=6)).isoformat()
+    excluded_tags = {_normalize_tag(tag) for tag in (excluded or set()) if _normalize_tag(tag)}
+    rows = db.rpc("select_crawler_elite_refresh_tags", {
+        "p_excluded": sorted(excluded_tags),
+        "p_limit": ELITE_REFRESH_LIMIT,
+    }).execute().data or []
     selected = []
-    offset = 0
-    while len(selected) < ELITE_REFRESH_LIMIT:
-        rows = ((db.table("players")
-                 .select("player_tag,rank:unlocked_characters->>ranked_rank")
-                 .eq("unlocked_characters->>profile_status", "verified")
-                 .lt("updated_at", cutoff).order("updated_at")
-                 .range(offset, offset + 999).execute()).data or [])
-        for row in rows:
-            tag = str(row.get("player_tag") or "").replace("#", "").upper()
-            rank = str(row.get("rank") or "")
-            if tag and tag not in excluded and rank.isdigit() and int(rank) >= 13:
-                selected.append(tag)
-                if len(selected) == ELITE_REFRESH_LIMIT:
-                    break
-        if len(rows) < 1000:
+    seen = set()
+    for row in rows:
+        raw_tag = row.get("player_tag") if isinstance(row, dict) else row
+        tag = _normalize_tag(raw_tag)
+        if not tag or tag in excluded_tags or tag in seen:
+            continue
+        seen.add(tag)
+        selected.append(tag)
+        if len(selected) == ELITE_REFRESH_LIMIT:
             break
-        offset += 1000
     return selected
 
 

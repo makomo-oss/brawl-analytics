@@ -410,33 +410,19 @@ def test_crawler_anchors_come_from_verified_profiles():
     from app.tasks.crawler_task import select_anchor_tags
 
     db = Mock()
-    query = db.table.return_value.select.return_value.eq.return_value.order.return_value.range.return_value
-    query.execute.return_value.data = [{"player_tag": "#ABC", "rank": "16"},
-                                       {"player_tag": "DEF", "rank": "13"}]
+    db.rpc.return_value.execute.return_value.data = ["#abc", "DEF", "abc"]
     assert select_anchor_tags(db) == {"ABC", "DEF"}
-    db.table.return_value.select.return_value.eq.assert_called_once_with(
-        "unlocked_characters->>profile_status", "verified"
-    )
+    db.rpc.assert_called_once_with("select_crawler_anchor_tags", {"p_limit": 10})
 
 
-def test_crawler_anchors_include_elite_outside_recent_profiles(monkeypatch):
+def test_crawler_anchors_raise_when_empty():
     from unittest.mock import Mock
     from app.tasks.crawler_task import select_anchor_tags
 
     db = Mock()
-    query = db.table.return_value.select.return_value.eq.return_value.order.return_value.range.return_value
-    query.execute.side_effect = [
-        SimpleNamespace(data=[{"player_tag": f"LOW{i}", "rank": "2"} for i in range(1000)]),
-        SimpleNamespace(data=[{"player_tag": "ELITE", "rank": "13",
-                              "updated_at": pd.Timestamp.now(tz="UTC").isoformat()},
-                              {"player_tag": "LEGEND", "rank": "16",
-                               "updated_at": pd.Timestamp.now(tz="UTC").isoformat()}]),
-    ]
-    monkeypatch.setattr("app.tasks.crawler_task.random.sample", lambda values, count: list(values)[:count])
-    anchors = select_anchor_tags(db)
-    assert len(anchors) == 10
-    assert {"ELITE", "LEGEND"} <= anchors
-    assert query.execute.call_count == 2
+    db.rpc.return_value.execute.return_value.data = []
+    with pytest.raises(RuntimeError, match="no verified player anchors"):
+        select_anchor_tags(db)
 
 
 def test_elite_refresh_skips_recent_or_anchor_players():
@@ -444,15 +430,12 @@ def test_elite_refresh_skips_recent_or_anchor_players():
     from app.tasks.crawler_task import select_elite_refresh_tags
 
     db = Mock()
-    query = (db.table.return_value.select.return_value.eq.return_value.lt.return_value
-             .order.return_value.range.return_value)
-    query.execute.return_value.data = [
-        {"player_tag": "ANCHOR", "rank": "18"},
-        {"player_tag": "OLD_ELITE", "rank": "13"},
-        {"player_tag": "OLD_LOW", "rank": "12"},
-    ]
-    assert select_elite_refresh_tags(db, {"ANCHOR"}) == ["OLD_ELITE"]
-    db.table.return_value.select.return_value.eq.return_value.lt.assert_called_once()
+    db.rpc.return_value.execute.return_value.data = ["ANCHOR", "#old_elite", "OLD_ELITE", ""]
+    assert select_elite_refresh_tags(db, {"#anchor"}) == ["OLD_ELITE"]
+    db.rpc.assert_called_once_with("select_crawler_elite_refresh_tags", {
+        "p_excluded": ["ANCHOR"],
+        "p_limit": 50,
+    })
 
 
 def test_encountered_targets_include_high_rank_and_new_players(monkeypatch):

@@ -15,7 +15,7 @@ BRAWL_API_PROXY = os.getenv("BRAWL_API_PROXY", "")
 BRAWL_API_BASE_URL = "https://api.brawlstars.com/v1"
 
 # Cron Secret for automated batch processes
-CRON_SECRET = os.getenv("CRON_SECRET", "default_secret_for_local_dev")
+CRON_SECRET = os.getenv("CRON_SECRET", "")
 # Domain-separated scheduler key; it does not disclose the database credential.
 # An explicit value can override this when configuring environments independently.
 AUTO_SYNC_SECRET = os.getenv("AUTO_SYNC_SECRET") or (

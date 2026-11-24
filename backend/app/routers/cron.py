@@ -27,11 +27,11 @@ async def _run_batch_with_status(run_id: str):
                    error_code=str(getattr(exc, "code", "")),
                    error_column=column.group(1) if column else None)
 
-def verify_cron_secret(cron_secret: str = Header(None)):
+def verify_cron_secret(cron_secret: str | None = Header(None)):
     """
     リクエストヘッダーの CRON_SECRET を検証する依存関係
     """
-    if not cron_secret or cron_secret != CRON_SECRET:
+    if not CRON_SECRET or not cron_secret or not hmac.compare_digest(cron_secret, CRON_SECRET):
         raise HTTPException(status_code=401, detail="Unauthorized")
     return cron_secret
 

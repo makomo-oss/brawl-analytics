@@ -2,13 +2,13 @@ import urllib.request
 import asyncio
 import logging
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.routers.match import router as match_router
 from app.routers.player import router as player_router
 from app.routers.meta import router as meta_router
-from app.routers.cron import router as cron_router
+from app.routers.cron import router as cron_router, verify_cron_secret
 from app.routers.club import router as club_router
 
 logger = logging.getLogger(__name__)
@@ -46,7 +46,7 @@ app.add_middleware(
         "https://brawl-lab.sozai-hub.com",
     ],
     allow_origin_regex=r"https://.*\.pages\.dev",
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -63,6 +63,7 @@ def read_root():
 
 # RenderのIPアドレスを確認するための追加コード
 @app.get("/my-ip")
-def get_my_ip():
-    ip = urllib.request.urlopen("https://api.ipify.org").read().decode("utf-8")
+def get_my_ip(_secret: str = Depends(verify_cron_secret)):
+    with urllib.request.urlopen("https://api.ipify.org", timeout=5) as response:
+        ip = response.read().decode("utf-8")
     return {"render_ip": ip}

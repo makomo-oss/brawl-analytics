@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Response
 import math
 import time
 import logging
@@ -6,6 +6,7 @@ from collections import OrderedDict
 from concurrent.futures import Future
 from threading import BoundedSemaphore, Lock
 from app.database import get_db
+from app.routers.cron import verify_cron_secret
 from app.services.db_reads import execute_read
 from app.algorithm.statistics import blend_tier_score, normal_tier_boundaries, posterior_rate, supported_win_lift, wilson_interval, MIN_TIER_MATCHES, MIN_TIER_WEIGHT, TIER_EVIDENCE_MATCHES, TIER_WIN_WEIGHT, TIER_USAGE_WEIGHT, ANALYSIS_WINDOW_DAYS, RECENT_WINDOW_DAYS, HALF_LIFE_DAYS, OLDER_HALF_LIFE_DAYS
 
@@ -84,7 +85,7 @@ def brawler_page_data(character_id: str, response: Response):
     return snapshot(character_id)
 
 @router.post("/clear-cache")
-def api_clear_cache():
+def api_clear_cache(_secret: str = Depends(verify_cron_secret)):
     clear_meta_cache()
     return {"status": "ok", "message": "Meta cache cleared successfully"}
 
@@ -658,7 +659,7 @@ def get_character_detail(character_id: str, type: str = "global", rank_tier: str
     return detail
 
 @router.get("/debug/db")
-def debug_db():
+def debug_db(_secret: str = Depends(verify_cron_secret)):
     db = get_db()
     try:
         # Check match_raw_history

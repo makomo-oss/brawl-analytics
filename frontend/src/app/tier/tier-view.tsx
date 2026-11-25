@@ -547,13 +547,6 @@ export default function TierListPage({ initialTierData, initialMatchups }: { ini
                           const info = getBrawlerInfo(charId)
                           const stats = tierData?.characters?.[charId]
                           const hasStats = Boolean(stats && stats.total_matches > 0)
-                          const wrClass = hasStats
-                            ? stats!.win_rate >= 53
-                              ? "is-high"
-                              : stats!.win_rate >= 50
-                                ? "is-mid"
-                                : "is-low"
-                            : ""
 
                           return (
                             <BrawlerPreviewLink
@@ -574,21 +567,9 @@ export default function TierListPage({ initialTierData, initialMatchups }: { ini
                                   className="object-cover w-full h-full relative z-10"
                                   onError={(e) => { e.currentTarget.src = 'https://cdn.brawlify.com/brawler/shelly.png'; }}
                                 />
-                                <User className="w-5 h-5 text-primary/40 absolute" />
+                                <User className="w-6 h-6 text-primary/40 absolute" />
                               </div>
-                              <div className="arena-tier-chip-info">
-                                <div className="arena-tier-chip-name">{info.nameJa}</div>
-                                <div className="arena-tier-chip-meta">
-                                  {hasStats ? (
-                                    <>
-                                      <span className={`arena-tier-chip-wr ${wrClass}`}>{stats!.win_rate.toFixed(1)}%</span>
-                                      <span className="arena-tier-chip-ur">使用 {stats!.use_rate.toFixed(1)}%</span>
-                                    </>
-                                  ) : (
-                                    <span className="arena-tier-chip-ur">データ不足</span>
-                                  )}
-                                </div>
-                              </div>
+                              <span className="arena-tier-chip-name">{info.nameJa}</span>
                             </BrawlerPreviewLink>
                           )
                         })}

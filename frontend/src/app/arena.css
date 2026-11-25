@@ -164,22 +164,18 @@ body:has(.arena-home, .arena-workspace) {
 .arena-history-chip > .font-mono { flex-shrink: 0; color: #8496ba; font-size: 10px; }
 .arena-search-error { background: rgba(251, 113, 133, 0.12); border-color: rgba(251, 113, 133, 0.35); color: #fecdd3; }
 
-/* Elevated THE MATCHUP LAB Stage */
+/* THE MATCHUP LAB Stage (Classic STARR ARENA palette with readable labels) */
 .arena-home-stage {
   height: 438px; position: relative;
-  background:
-    radial-gradient(290px 230px at 26% 38%, rgba(255, 206, 0, 0.22), transparent 72%),
-    radial-gradient(290px 230px at 78% 58%, rgba(52, 211, 153, 0.2), transparent 72%),
-    radial-gradient(460px 280px at 84% 14%, rgba(99, 102, 241, 0.36), transparent 64%),
-    linear-gradient(145deg, #223072 0%, #141d46 52%, #0c132d 100%);
-  border: 1px solid rgba(146, 163, 255, 0.44);
-  border-radius: 20px; overflow: hidden; isolation: isolate;
-  box-shadow: 0 24px 52px rgba(3, 6, 18, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  background: #303bad;
+  border: 1px solid #6c79dc;
+  border-radius: 17px; overflow: hidden; isolation: isolate;
+  box-shadow: 0 9px 24px #060b1c25;
   z-index: 1;
 }
 .arena-stage-corner {
   position: absolute; width: 14px; height: 14px;
-  border-color: rgba(255, 206, 0, 0.52); border-style: solid;
+  border-color: rgba(209, 215, 255, 0.45); border-style: solid;
   pointer-events: none; z-index: 3;
 }
 .arena-stage-corner.is-tl { top: 10px; left: 10px; border-width: 2px 0 0 2px; border-radius: 4px 0 0 0; }
@@ -188,29 +184,29 @@ body:has(.arena-home, .arena-workspace) {
 .arena-stage-corner.is-br { bottom: 10px; right: 10px; border-width: 0 2px 2px 0; border-radius: 0 0 4px 0; }
 .arena-stage-grid {
   position: absolute; inset: 0; z-index: -2;
-  background-image: linear-gradient(rgba(210, 220, 255, 0.055) 1px, transparent 1px), linear-gradient(90deg, rgba(210, 220, 255, 0.055) 1px, transparent 1px);
-  background-size: 32px 32px;
+  background-image: linear-gradient(#c8cfff0c 1px, transparent 1px), linear-gradient(90deg, #c8cfff0c 1px, transparent 1px);
+  background-size: 34px 34px;
 }
 .arena-stage-label {
   display: flex; justify-content: space-between; gap: 15px;
-  color: #e0e7ff; font-size: 11px; font-weight: 700; letter-spacing: 0.14em; padding: 18px 24px;
+  color: #d1d7ff; font-size: 11px; font-weight: 700; letter-spacing: 0.14em; padding: 18px 24px;
 }
 .arena-stage-watermark {
   position: absolute; right: 18px; top: 56px;
   font-family: Impact, "Arial Narrow", sans-serif; font-size: 106px; line-height: 0.9;
-  letter-spacing: -2px; transform: rotate(-8deg); color: rgba(129, 140, 248, 0.22); z-index: -1;
+  letter-spacing: -2px; transform: rotate(-8deg); color: #6a75ef; opacity: 0.35; z-index: -1;
 }
 .arena-fighter {
   position: absolute; width: 192px;
-  background: linear-gradient(160deg, #ffe97a 0%, #ffce00 100%);
-  border: 2px solid #121a33; border-radius: 13px; padding: 11px 12px 13px;
-  box-shadow: 0 18px 34px rgba(5, 9, 24, 0.55), 7px 9px 0 rgba(7, 11, 28, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.55);
-  color: #1c223c;
+  background: #ffe16b;
+  border: 2px solid #17203a; border-radius: 13px; padding: 11px 12px 13px;
+  box-shadow: 6px 7px 0 #121b4699;
+  color: #272441;
 }
 .arena-fighter-amber { left: 34px; top: 64px; transform: rotate(-9deg); z-index: 1; }
 .arena-fighter-spike {
   right: 30px; top: 112px; width: 180px; transform: rotate(10deg);
-  background: linear-gradient(160deg, #d7f0b4 0%, #b4dc88 100%); z-index: 2;
+  background: #c6e1a2; z-index: 2;
 }
 .arena-fighter-role {
   display: flex; align-items: center; justify-content: space-between; gap: 6px;
@@ -218,41 +214,41 @@ body:has(.arena-home, .arena-workspace) {
 }
 .arena-fighter-role-icon {
   display: inline-grid; place-items: center; width: 24px; height: 24px;
-  background: #141d38; color: #ffe359; border-radius: 6px; flex-shrink: 0;
+  background: #1c2541; color: #fff5c2; border-radius: 6px; flex-shrink: 0;
 }
 .arena-fighter-role-icon > svg { width: 14px; height: 14px; }
-.arena-fighter > img { width: 100%; height: 156px; object-fit: contain; margin: 8px 0; filter: drop-shadow(0 6px 0 rgba(18, 25, 48, 0.16)); }
+.arena-fighter > img { width: 100%; height: 156px; object-fit: contain; margin: 8px 0; filter: drop-shadow(0 5px 0 #212a3b16); }
 .arena-fighter-spike > img { height: 142px; }
-.arena-fighter-name { display: block; border-top: 1px solid rgba(28, 34, 60, 0.22); font-size: 18px; letter-spacing: -0.02em; font-weight: 900; line-height: 1.2; padding-top: 8px; }
+.arena-fighter-name { display: block; border-top: 1px solid #2a2b4933; font-size: 18px; letter-spacing: -0.02em; font-weight: 900; line-height: 1.2; padding-top: 8px; }
 .arena-fighter-name > small { display: block; font-size: 11px; font-weight: 700; letter-spacing: 0; margin-top: 2px; }
 .arena-stage-versus {
   position: absolute; left: 45%; top: 43%; height: 60px; width: 60px;
-  display: grid; place-items: center; border: 2px solid #121a33; border-radius: 12px;
-  background: linear-gradient(135deg, #fff9e6 0%, #ffe999 100%);
-  box-shadow: 0 12px 24px rgba(5, 9, 24, 0.45), 5px 5px 0 rgba(10, 17, 46, 0.55);
-  color: #1e2a5a; font-family: Impact, "Arial Black", sans-serif; font-size: 32px;
+  display: grid; place-items: center; border: 2px solid #17203a; border-radius: 11px;
+  background: #fff5d8;
+  box-shadow: 4px 4px 0 #14215955;
+  color: #26326b; font-family: Impact, "Arial Black", sans-serif; font-size: 32px;
   letter-spacing: -1px; transform: rotate(-9deg); z-index: 4;
 }
 .arena-stage-sticker {
   position: absolute; right: 18px; top: 60px; transform: rotate(6deg);
-  background: linear-gradient(135deg, #ffa08c, #ff7e67);
-  border: 2px solid #161d36; border-radius: 7px; padding: 6px 12px;
-  color: #171c33; font-size: 12px; font-weight: 900;
-  box-shadow: 0 10px 20px rgba(5, 9, 24, 0.4), 4px 4px 0 rgba(7, 11, 28, 0.45);
+  background: #ff947e;
+  border: 1.5px solid #23213a; border-radius: 7px; padding: 6px 12px;
+  color: #23213a; font-size: 12px; font-weight: 900;
+  box-shadow: none;
   z-index: 5;
 }
 .arena-stage-action {
   position: absolute; bottom: 16px; left: 20px; right: 20px;
   display: flex; align-items: center; justify-content: space-between; gap: 14px;
-  border: 1px solid rgba(255, 206, 0, 0.55); border-radius: 11px; padding: 11px 16px; min-height: 46px;
-  background: linear-gradient(90deg, rgba(13, 21, 45, 0.94), rgba(22, 34, 68, 0.92));
-  backdrop-filter: blur(12px);
-  color: #f8fafc; font-size: 13px; font-weight: 800; z-index: 6;
-  box-shadow: 0 10px 24px rgba(3, 6, 18, 0.58), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  border: 1px solid #8290e7; border-radius: 8px; padding: 11px 16px; min-height: 46px;
+  background: #172147;
+  backdrop-filter: none;
+  color: #f2f1ff; font-size: 13px; font-weight: 700; z-index: 6;
+  box-shadow: none;
 }
 .arena-stage-action > span { display: flex; gap: 9px; align-items: center; }
-.arena-stage-action svg { height: 17px; width: 17px; color: #ffce00; }
-.arena-stage-action:focus-visible { outline: 3px solid #ffce00; outline-offset: 3px; }
+.arena-stage-action svg { height: 16px; width: 16px; color: inherit; }
+.arena-stage-action:focus-visible { outline: 3px solid #ffe16b; outline-offset: 3px; }
 
 /* 3 Color-Coded Tool Entry Cards */
 .arena-tool-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
@@ -385,7 +381,7 @@ body:has(.arena-home, .arena-workspace) {
 
 @media(hover:hover) {
   .arena-tab-link:not(.is-active):hover { background: rgba(255, 255, 255, 0.06); color: #f8fafc; }
-  .arena-stage-action:hover { background: linear-gradient(90deg, rgba(20, 31, 64, 0.98), rgba(30, 46, 90, 0.96)); border-color: #ffce00; color: #ffe359; }
+  .arena-stage-action:hover { background: #25315e; border-color: #c3ccff; color: #f2f1ff; }
   .arena-search-form .arena-search-button:not(:disabled):hover { filter: brightness(1.06); }
   .arena-search-suggestion:hover, .arena-history-chip:hover { background: rgba(28, 41, 79, 0.95); border-color: rgba(255, 206, 0, 0.36); }
   .arena-tool-card:hover { transform: translateY(-3px); border-color: var(--tool-accent, #ffce00); }

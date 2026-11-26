@@ -134,6 +134,12 @@ export default function RootLayout({
   return (
     <html lang="ja" className="dark">
       <head>
+        <meta name="google-adsense-account" content="ca-pub-3162408161627830" />
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3162408161627830"
+          crossOrigin="anonymous"
+        />
         <link rel="alternate" type="text/plain" title="LLMs.txt" href="/llms.txt" />
         <link rel="describedby" type="application/json" href="/data/index.json" />
         <link rel="describedby" type="application/ld+json" href="/data/catalog.jsonld" />

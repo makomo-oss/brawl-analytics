@@ -5,7 +5,7 @@ import { useBrawlerCatalog } from "@/lib/use-brawler-catalog"
 import { useState, useEffect, useRef } from "react"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Trophy, Swords, Search, X, TrendingUp, TrendingDown, AlertTriangle, User, Users, ArrowRight, Clock3 } from "lucide-react"
+import { Trophy, Swords, Search, X, TrendingUp, TrendingDown, AlertTriangle, User, Users, ArrowRight, Clock3, MapPin, Layers } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -139,6 +139,9 @@ export default function TierListPage({ initialTierData, initialMatchups, initial
 
           setSubType((prevSubType) => {
             setSelectedId((prevSelectedId) => {
+              if (prevSubType === "mode" && !data.modes.includes(prevSelectedId)) {
+                return data.modes.length > 0 ? data.modes[0] : ""
+              }
               if (prevSubType === "map" && !data.maps.includes(prevSelectedId)) {
                 return data.maps.length > 0 ? data.maps[0] : ""
               }
@@ -347,26 +350,17 @@ export default function TierListPage({ initialTierData, initialMatchups, initial
               }
             </p>
           )}
-          <div className="flex flex-wrap items-center gap-3 pt-0.5">
-            {!loading && tierData && (
-              <p className="text-muted-foreground text-xs flex items-center gap-1.5">
-                <Clock3 aria-hidden="true" className="w-3.5 h-3.5" />
-                最終更新：{updatedLabel
-                  ? <time dateTime={updatedAt!.toISOString()}>{updatedLabel}（日本時間）</time>
-                  : "—"}
-              </p>
-            )}
-            <nav aria-label="関連ランキング" className="flex flex-wrap items-center gap-2">
-              <DocumentLink href="/modes" className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/[0.04] px-2.5 py-1 text-xs font-bold text-slate-200 hover:border-primary/50 hover:text-primary transition-colors">モード別</DocumentLink>
-              <DocumentLink href="/maps" className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/[0.04] px-2.5 py-1 text-xs font-bold text-slate-200 hover:border-cyan-400/50 hover:text-cyan-300 transition-colors">マップ別</DocumentLink>
-              <BrawlerDirectoryLink className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/[0.04] px-2.5 py-1 text-xs font-bold text-slate-200 hover:border-primary/50 hover:text-primary transition-colors">
-                <Users aria-hidden="true" className="w-3.5 h-3.5" />キャラ一覧<ArrowRight aria-hidden="true" className="w-3 h-3" />
-              </BrawlerDirectoryLink>
-            </nav>
-          </div>
+          {!loading && tierData && (
+            <p className="text-muted-foreground text-xs flex items-center gap-1.5 pt-0.5">
+              <Clock3 aria-hidden="true" className="w-3.5 h-3.5" />
+              最終更新：{updatedLabel
+                ? <time dateTime={updatedAt!.toISOString()}>{updatedLabel}（日本時間）</time>
+                : "—"}
+            </p>
+          )}
         </div>
 
-        <div className="arena-tier-seg-group shrink-0" role="group" aria-label="集計対象切替">
+        <div className="arena-tier-seg-group arena-tier-primary-switch shrink-0" role="group" aria-label="集計対象切替">
           <button
             type="button"
             className={`arena-tier-seg-btn ${selectedType === "global" ? "is-active" : ""}`}
@@ -381,10 +375,44 @@ export default function TierListPage({ initialTierData, initialMatchups, initial
             aria-pressed={selectedType === "gachi"}
             onClick={() => handleTypeChange("gachi")}
           >
-            ガチバトルTier
+            <Trophy aria-hidden="true" className="w-4 h-4 shrink-0" />
+            <span>ガチバトルTier</span>
           </button>
         </div>
       </header>
+
+      <nav aria-label="関連ランキング" className="arena-tier-quicknav">
+        <DocumentLink href="/modes" className="arena-tier-quickcard is-mode">
+          <span className="arena-tier-quickcard-icon" aria-hidden="true">
+            <Swords className="w-4 h-4" />
+          </span>
+          <span className="arena-tier-quickcard-body">
+            <span className="arena-tier-quickcard-title">モード別</span>
+            <span className="arena-tier-quickcard-sub">ルールごとの最強キャラ</span>
+          </span>
+          <ArrowRight aria-hidden="true" className="arena-tier-quickcard-arrow w-4 h-4" />
+        </DocumentLink>
+        <DocumentLink href="/maps" className="arena-tier-quickcard is-map">
+          <span className="arena-tier-quickcard-icon" aria-hidden="true">
+            <MapPin className="w-4 h-4" />
+          </span>
+          <span className="arena-tier-quickcard-body">
+            <span className="arena-tier-quickcard-title">マップ別</span>
+            <span className="arena-tier-quickcard-sub">マップ画像から環境を確認</span>
+          </span>
+          <ArrowRight aria-hidden="true" className="arena-tier-quickcard-arrow w-4 h-4" />
+        </DocumentLink>
+        <BrawlerDirectoryLink className="arena-tier-quickcard is-brawlers">
+          <span className="arena-tier-quickcard-icon" aria-hidden="true">
+            <Users className="w-4 h-4" />
+          </span>
+          <span className="arena-tier-quickcard-body">
+            <span className="arena-tier-quickcard-title">キャラ一覧</span>
+            <span className="arena-tier-quickcard-sub">全キャラの詳細・相性データ</span>
+          </span>
+          <ArrowRight aria-hidden="true" className="arena-tier-quickcard-arrow w-4 h-4" />
+        </BrawlerDirectoryLink>
+      </nav>
 
       <DataSummary summary={loading ? null : activeSummary} />
 
@@ -392,31 +420,37 @@ export default function TierListPage({ initialTierData, initialMatchups, initial
         {selectedType === "gachi" ? (
           <>
             <div className="arena-tier-filter-row">
-              <div className="arena-tier-seg-group" role="group" aria-label="条件種別">
-                <button
-                  type="button"
-                  className={`arena-tier-seg-btn ${subType === "all" ? "is-active" : ""}`}
-                  aria-pressed={subType === "all"}
-                  onClick={() => handleSubTypeChange("all")}
-                >
-                  すべて
-                </button>
-                <button
-                  type="button"
-                  className={`arena-tier-seg-btn ${subType === "mode" ? "is-active" : ""}`}
-                  aria-pressed={subType === "mode"}
-                  onClick={() => handleSubTypeChange("mode")}
-                >
-                  モード別
-                </button>
-                <button
-                  type="button"
-                  className={`arena-tier-seg-btn ${subType === "map" ? "is-active" : ""}`}
-                  aria-pressed={subType === "map"}
-                  onClick={() => handleSubTypeChange("map")}
-                >
-                  マップ別
-                </button>
+              <div className="arena-tier-filter-group">
+                <span className="arena-tier-filter-label">絞り込み</span>
+                <div className="arena-tier-seg-group arena-tier-scope-switch" role="group" aria-label="条件種別">
+                  <button
+                    type="button"
+                    className={`arena-tier-seg-btn ${subType === "all" ? "is-active" : ""}`}
+                    aria-pressed={subType === "all"}
+                    onClick={() => handleSubTypeChange("all")}
+                  >
+                    <Layers aria-hidden="true" className="w-3.5 h-3.5 shrink-0" />
+                    <span>すべて</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`arena-tier-seg-btn ${subType === "mode" ? "is-active" : ""}`}
+                    aria-pressed={subType === "mode"}
+                    onClick={() => handleSubTypeChange("mode")}
+                  >
+                    <Swords aria-hidden="true" className="w-3.5 h-3.5 shrink-0" />
+                    <span>モード別</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`arena-tier-seg-btn ${subType === "map" ? "is-active" : ""}`}
+                    aria-pressed={subType === "map"}
+                    onClick={() => handleSubTypeChange("map")}
+                  >
+                    <MapPin aria-hidden="true" className="w-3.5 h-3.5 shrink-0" />
+                    <span>マップ別</span>
+                  </button>
+                </div>
               </div>
 
               {subType === "mode" && (
@@ -425,7 +459,7 @@ export default function TierListPage({ initialTierData, initialMatchups, initial
                     <button
                       key={m}
                       type="button"
-                      className={`arena-tier-seg-btn inline-flex items-center gap-1.5 ${selectedId === m ? "is-active" : ""}`}
+                      className={`arena-tier-seg-btn arena-tier-mode-pill ${selectedId === m ? "is-active" : ""}`}
                       aria-pressed={selectedId === m}
                       onClick={() => setSelectedId(m)}
                     >
@@ -453,19 +487,22 @@ export default function TierListPage({ initialTierData, initialMatchups, initial
               )}
             </div>
 
-            <div className="arena-tier-filter-row">
-              <div className="arena-tier-seg-group" role="group" aria-label="ランク帯フィルター">
-                {RANK_TIERS.map((tier) => (
-                  <button
-                    key={tier.id}
-                    type="button"
-                    className={`arena-tier-seg-btn ${selectedRankTier === tier.id ? "is-active" : ""}`}
-                    aria-pressed={selectedRankTier === tier.id}
-                    onClick={() => setSelectedRankTier(tier.id)}
-                  >
-                    {tier.label}
-                  </button>
-                ))}
+            <div className="arena-tier-filter-row arena-tier-filter-row-sub">
+              <div className="arena-tier-filter-group">
+                <span className="arena-tier-filter-label">ランク帯</span>
+                <div className="arena-tier-seg-group" role="group" aria-label="ランク帯フィルター">
+                  {RANK_TIERS.map((tier) => (
+                    <button
+                      key={tier.id}
+                      type="button"
+                      className={`arena-tier-seg-btn ${selectedRankTier === tier.id ? "is-active" : ""}`}
+                      aria-pressed={selectedRankTier === tier.id}
+                      onClick={() => setSelectedRankTier(tier.id)}
+                    >
+                      {tier.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div className="arena-tier-search-wrap relative">

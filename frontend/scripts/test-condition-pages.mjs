@@ -90,6 +90,9 @@ try {
   assert(requestedPaths.length - beforeRequests <= 4, "A detail refresh must not scan unrelated scopes")
   inventoryOffline = false
   for (const path of ["/modes", "/maps", index.maps[0].path]) assert.equal((await request(path)).status, 200)
+  const mapsHubHtml = await (await request("/maps")).text()
+  assert.match(mapsHubHtml, /aria-label="モードフィルター"/)
+  assert.match(mapsHubHtml, /https:\/\/cdn\.brawlify\.com\/maps\/regular\/\d+\.png/)
   await drain()
   const sitemap = await (await request("/sitemap.xml")).text()
   for (const entry of entries) assert(sitemap.includes(entry.path), `Missing sitemap entry ${entry.path}`)

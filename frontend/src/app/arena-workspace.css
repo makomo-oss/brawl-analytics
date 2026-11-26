@@ -484,6 +484,79 @@ html.dark {
 .arena-detail section[class*="bg-zinc-900"] { background: rgba(16, 25, 48, 0.92); border-color: rgba(255, 255, 255, 0.11); }
 
 /* =========================================================
+   MAP DIRECTORY CARDS & PREVIEWS
+   ========================================================= */
+.arena-map-browse-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 16px;
+}
+.arena-map-list-item-deferred {
+  content-visibility: auto;
+  contain-intrinsic-size: auto none auto 280px;
+}
+.arena-map-browse-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  background: linear-gradient(180deg, rgba(22, 33, 62, 0.9) 0%, rgba(14, 21, 42, 0.96) 100%);
+  box-shadow: 0 10px 26px rgba(3, 6, 18, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  text-decoration: none;
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+.arena-map-browse-card:focus-visible {
+  outline: 3px solid #ffce00;
+  outline-offset: 3px;
+}
+.arena-map-preview {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 204px;
+  padding: 12px;
+  background:
+    linear-gradient(rgba(148, 163, 184, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.06) 1px, transparent 1px),
+    radial-gradient(240px 160px at 50% 45%, rgba(56, 189, 248, 0.12), rgba(9, 14, 29, 0.92));
+  background-size: 20px 20px, 20px 20px, 100% 100%;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+  overflow: hidden;
+}
+.arena-map-preview.is-compact {
+  height: 184px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+.arena-map-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 18px rgba(2, 6, 20, 0.65));
+  transition: transform 200ms ease;
+}
+.arena-map-preview-fallback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #8496ba;
+  font-size: 11px;
+  font-weight: 700;
+}
+.arena-map-browse-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 15px;
+  margin-top: auto;
+}
+
+/* =========================================================
    PLAYER / CLUB DASHBOARD (NEO-STARR HYBRID)
    ========================================================= */
 .arena-player-toolbar {
@@ -576,6 +649,14 @@ body:has(.arena-workspace, .arena-home) [data-slot="select-item"][data-highlight
     border-color: var(--rarity-glow);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 16px 34px rgba(3, 6, 18, 0.6);
   }
+  .arena-map-browse-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(255, 206, 0, 0.45);
+    box-shadow: 0 16px 34px rgba(3, 6, 18, 0.58), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  }
+  .arena-map-browse-card:hover .arena-map-preview-img {
+    transform: scale(1.03);
+  }
   .arena-mode-tile:hover:not([aria-checked="true"]),
   .arena-map-card:hover:not([aria-checked="true"]),
   .arena-team-btn:hover:not([aria-checked="true"]) {
@@ -585,7 +666,7 @@ body:has(.arena-workspace, .arena-home) [data-slot="select-item"][data-highlight
 
 @media(prefers-reduced-motion:reduce) {
   .arena-workspace, .arena-workspace * { animation: none !important; transition: none !important; }
-  .arena-jewel-card:hover, .arena-tier-chip:hover { transform: none !important; }
+  .arena-jewel-card:hover, .arena-tier-chip:hover, .arena-map-browse-card:hover, .arena-map-browse-card:hover .arena-map-preview-img { transform: none !important; }
 }
 
 @media(max-width:900px) {
@@ -615,4 +696,7 @@ body:has(.arena-workspace, .arena-home) [data-slot="select-item"][data-highlight
   .arena-tier-chip-name { font-size: 11px; }
   .arena-jewel-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .arena-jewel-card { height: 196px; }
+  .arena-map-browse-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .arena-map-preview { height: 156px; padding: 8px; }
+  .arena-map-browse-meta { padding: 10px 11px; gap: 8px; }
 }

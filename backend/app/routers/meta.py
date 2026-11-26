@@ -22,6 +22,13 @@ async def brawler_catalog(response: Response):
     return await get_brawler_catalog()
 
 
+@router.get("/maps")
+async def map_catalog(response: Response):
+    from app.services.map_catalog import get_map_catalog
+    response.headers["Cache-Control"] = "public, max-age=300"
+    return await get_map_catalog()
+
+
 USAGE_ADJUSTMENT_CAP = 2.0
 GACHI_TIER_THRESHOLDS = ((57, "S+"), (54, "S"), (52, "A+"), (50, "A"), (48, "B"), (46, "C"))
 MIN_DISPLAY_MATCHUP_MATCHES = 5
@@ -69,8 +76,10 @@ def clear_meta_cache():
         _PAIR_CACHE_GENERATION += 1
     from app.services.brawler_pages import clear_cache
     from app.services.brawler_catalog import clear_catalog_cache
+    from app.services.map_catalog import clear_map_catalog_cache
     clear_cache()
     clear_catalog_cache()
+    clear_map_catalog_cache()
 
 
 @router.get("/brawler-pages")

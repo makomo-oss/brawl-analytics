@@ -21,11 +21,18 @@ from app.services.brawler_catalog import (
     refresh_brawler_catalog,
     valid_rarity,
 )
+from app.services.map_catalog import (
+    MAP_CATALOG_PATH,
+    merge_map_catalog,
+    refresh_map_catalog,
+)
 
 logger = logging.getLogger(__name__)
 REPO_ROOT = Path(__file__).resolve().parents[3]
 BACKEND_CATALOG_PATH = CATALOG_PATH
 FRONTEND_CATALOG_PATH = REPO_ROOT / "frontend" / "src" / "lib" / "brawler-catalog.json"
+BACKEND_MAP_CATALOG_PATH = MAP_CATALOG_PATH
+FRONTEND_MAP_CATALOG_PATH = REPO_ROOT / "frontend" / "src" / "lib" / "map-catalog.json"
 
 
 def _valid_jp_name(name_ja: str | None, name: str) -> str | None:
@@ -128,22 +135,48 @@ async def sync_catalog_files(
     return changed, len(rows)
 
 
+async def sync_map_catalog_files(
+    backend_path: Path = BACKEND_MAP_CATALOG_PATH,
+    frontend_path: Path = FRONTEND_MAP_CATALOG_PATH,
+    check_only: bool = False,
+) -> tuple[bool, int]:
+    existing = json.loads(backend_path.read_text(encoding="utf-8")) if backend_path.exists() else {}
+    rows = merge_map_catalog(existing, await refresh_map_catalog(existing))
+    serialized = json.dumps(rows, ensure_ascii=False, indent=2) + "\n"
+    changed = False
+    for path in (backend_path, frontend_path):
+        current = path.read_text(encoding="utf-8") if path.exists() else ""
+        if current != serialized:
+            changed = True
+            if not check_only:
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(serialized, encoding="utf-8")
+    return changed, len(rows)
+
+
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Sync backend and frontend brawler catalog JSON seed files.")
+    parser = argparse.ArgumentParser(description="Sync backend and frontend brawler & map catalog JSON seed files.")
     parser.add_argument("--api-url", default=os.getenv("SYNC_API_URL", ""), help="Optional live backend URL (e.g. Render) to also pull official API discoveries from.")
     parser.add_argument("--check", action="store_true", help="Exit with code 1 if catalog seed files are out of date without writing.")
     args = parser.parse_args(argv)
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
-    changed, count = asyncio.run(sync_catalog_files(
-        api_url=args.api_url,
-        cron_secret=os.getenv("CRON_SECRET", ""),
-        check_only=args.check,
-    ))
+
+    async def run():
+        b_changed, b_count = await sync_catalog_files(
+            api_url=args.api_url,
+            cron_secret=os.getenv("CRON_SECRET", ""),
+            check_only=args.check,
+        )
+        m_changed, m_count = await sync_map_catalog_files(check_only=args.check)
+        return b_changed, b_count, m_changed, m_count
+
+    b_changed, b_count, m_changed, m_count = asyncio.run(run())
+    changed = b_changed or m_changed
     if args.check:
-        print(f"Brawler catalog check: {count} brawlers ({'out of date' if changed else 'up to date'})")
+        print(f"Catalog check: {b_count} brawlers ({'out of date' if b_changed else 'up to date'}), {m_count} maps ({'out of date' if m_changed else 'up to date'})")
         return 1 if changed else 0
-    print(f"Brawler catalog sync complete: {count} brawlers ({'updated' if changed else 'no changes'})")
+    print(f"Catalog sync complete: {b_count} brawlers ({'updated' if b_changed else 'no changes'}), {m_count} maps ({'updated' if m_changed else 'no changes'})")
     return 0
 
 

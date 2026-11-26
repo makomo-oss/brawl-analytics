@@ -59,13 +59,19 @@ export function brawlerSummary(data: BrawlerPageData): ContentSummary | null {
   if (!date || !finite(stats.win_rate, stats.use_rate, stats.total_matches)) return null
   const rank = finite(stats.rank_position) ? `・${stats.rank_position}位` : ""
   const parts = [`${date.long}時点の${COHORT_LABEL[type]}データでは、${data.nameJa}はTier ${cohort.tier}${rank}、勝率${pct(stats.win_rate)}・使用率${pct(stats.use_rate, 2)}です（直近${cohort.windowDays}日・${count(stats.total_matches)}件のプレイヤー戦績）。`]
+  if (type === "global") {
+    const gachi = data.cohorts.gachi
+    if (gachi.stats?.sample_sufficient === true && gachi.tier !== "N/A" && finite(gachi.stats.win_rate)) {
+      parts.push(`${COHORT_LABEL.gachi}ではTier ${gachi.tier}（勝率${pct(gachi.stats.win_rate)}）です。`)
+    }
+  }
   const mode = bestMode(data, type)
   if (mode) parts.push(`得意なモードは${mode.label}（勝率${pct(mode.win_rate)}）`)
   const map = cohort.maps[0]
   if (map && finite(map.win_rate)) parts.push(`${mode ? "、" : ""}おすすめマップは${map.label}（勝率${pct(map.win_rate)}）`)
   if (mode || map) parts.push("です。")
   const counters = cohort.unfavorable.slice(0, 2).map(row => row.nameJa)
-  if (counters.length) parts.push(`苦手な相手は${counters.join("・")}です。`)
+  if (counters.length) parts.push(`カウンター（苦手な相手）は${counters.join("・")}です。`)
   return { date, text: parts.join("") }
 }
 
@@ -86,7 +92,14 @@ export function conditionSummary(data: ConditionPageData): ContentSummary | null
   const total = cohort.rows.reduce((sum, row) => sum + (finite(row.total_matches) ? row.total_matches : 0), 0)
   if (!date || !top.length || total <= 0) return null
   const ranked = top.map((row, i) => `${i + 1}位は${row.nameJa}（勝率${pct(row.win_rate)}）`).join("、")
-  return { date, text: `${date.long}時点の${data.entry.label}・${COHORT_LABEL[type]}データ（直近${cohort.windowDays}日・${count(total)}件のプレイヤー戦績）では、Tierスコア${ranked}です。` }
+  let gachiNote = ""
+  if (type === "global") {
+    const gachiTop = data.cohorts.gachi.rows.filter(row => row.sample_sufficient && finite(row.win_rate)).slice(0, 2)
+    if (gachiTop.length) {
+      gachiNote = `${COHORT_LABEL.gachi}では${gachiTop.map((row, i) => `${i + 1}位${row.nameJa}（勝率${pct(row.win_rate)}）`).join("・")}が上位です。`
+    }
+  }
+  return { date, text: `${date.long}時点の${data.entry.label}・${COHORT_LABEL[type]}データ（直近${cohort.windowDays}日・${count(total)}件のプレイヤー戦績）では、Tierスコア${ranked}です。${gachiNote}` }
 }
 
 // Trim at a sentence end so descriptions never stop mid-number.

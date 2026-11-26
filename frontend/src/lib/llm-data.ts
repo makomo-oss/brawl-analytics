@@ -1,7 +1,7 @@
 import type { BrawlerPageData, CharacterStats, Cohort, PairRow, brawlerEntries } from "./brawler-page-data"
 import { conditionPath, MODE_SLUGS, type ConditionIndex, type ConditionPageData } from "./condition-pages"
 import { SITE_URL } from "./seo"
-import { SITE_ID, PUBLISHER_ID, GAME_ID, CATALOG_ID, reference, siteNodes } from "./site-schema"
+import { SITE_ID, PUBLISHER_ID, GAME_ID, CATALOG_ID, LICENSE_URL, catalogNode, reference, siteNodes } from "./site-schema"
 import { filterAndSortBrawlers } from "./brawler-directory"
 import { translateMode } from "./translations"
 
@@ -83,7 +83,7 @@ export function pageSchema(page: PublicPage, base: { "@graph"?: Node[] } | Node,
       if (page.kind === "detail" ? !page.data.cohorts[type].stats : !page.data.cohorts[type].rows.length) return []
       const dataset: Node = { "@type": "Dataset", "@id": datasetId(page.path, type), name: `${name}・${cohortName(type)}の対戦統計`, url,
         description: `${name}の${cohortName(type)}における直近${cohort.windowDays}日のキャラ分析。勝率・使用率・プレイヤーごとの対戦件数を、記録された戦績から集計したデータです。`,
-        inLanguage: "ja", isAccessibleForFree: true, creator: reference(PUBLISHER_ID), includedInDataCatalog: reference(CATALOG_ID),
+        inLanguage: "ja", isAccessibleForFree: true, license: LICENSE_URL, creator: reference(PUBLISHER_ID), includedInDataCatalog: catalogNode(),
         about: [reference(GAME_ID), reference(entityId(page.path)), { "@type": "DefinedTerm", termCode: type, name: cohortName(type) }],
         measurementTechnique: "記録されたプレイヤーごとの対戦ログの集計",
         variableMeasured: [{ "@type": "PropertyValue", propertyID: "win_rate_percent", name: "勝率", unitText: "%" }, { "@type": "PropertyValue", propertyID: "use_rate_percent", name: "使用率", unitText: "%" }, { "@type": "PropertyValue", propertyID: "player_battle_records", name: "集計件数", unitText: "プレイヤーごとの対戦件数" }],
@@ -98,8 +98,13 @@ export function pageSchema(page: PublicPage, base: { "@graph"?: Node[] } | Node,
       return [dataset]
     })
     const collection = nodes.find(node => node["@id"] === url)
-    if (collection) { collection.about = reference(entityId(page.path)); collection.hasPart = datasets.map(node => reference(String(node["@id"]))) }
-    else nodes.push({ "@type": "WebPage", "@id": url, url, name: `${name}の勝率・相性`, isPartOf: reference(SITE_ID), about: reference(GAME_ID), mainEntity: reference(entityId(page.path)), hasPart: datasets.map(node => reference(String(node["@id"]))) })
+    const latestModified = datasets.map(node => node.dateModified).filter((v): v is string => typeof v === "string").sort().reverse()[0]
+    if (collection) {
+      collection.about = reference(entityId(page.path))
+      collection.hasPart = datasets.map(node => reference(String(node["@id"])))
+      if (latestModified) collection.dateModified = latestModified
+    }
+    else nodes.push({ "@type": "WebPage", "@id": url, url, name: `${name}の勝率・相性`, isPartOf: reference(SITE_ID), about: reference(GAME_ID), mainEntity: reference(entityId(page.path)), hasPart: datasets.map(node => reference(String(node["@id"]))), ...(latestModified ? { dateModified: latestModified } : {}) })
     nodes.push(...datasets)
   } else if ("entities" in data) {
     if (page.kind === "directory") {

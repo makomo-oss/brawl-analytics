@@ -9,7 +9,7 @@ const compile = async entry => {
   return import(`data:text/javascript;base64,${Buffer.from(output.outputFiles[0].contents).toString("base64")}`)
 }
 const { tierSummary, rankedRows, brawlerSummary, conditionSummary, clampDescription } = await compile("src/lib/page-insights.ts")
-const { tierFaq, brawlerFaq, faqNode, PLAYER_FAQ } = await compile("src/lib/faq.ts")
+const { tierFaq, brawlerFaq, conditionFaq, faqNode, PLAYER_FAQ, COMPANION_FAQ } = await compile("src/lib/faq.ts")
 const { tierCopy, brawlerCopy, conditionPageCopy } = await compile("src/lib/page-copy.ts")
 const { jstDate } = await compile("src/lib/dates.ts")
 const { searchCopy, brawlerSearchCopy } = await compile("src/lib/seo.ts")
@@ -98,15 +98,31 @@ const bare = structuredClone(sample)
 for (const type of ["global", "gachi"]) Object.assign(bare.cohorts[type], { unfavorable: [], maps: [], allies: [] })
 assert.deepEqual(brawlerFaq(bare).map(item => item.question).filter(q => /カウンター|マップ|味方/.test(q)), [])
 
-// Conditions.
+// Conditions & related brawlers graph coverage.
+const inbound = new Map(entries.map(entry => [entry.slug, 0]))
+for (const entry of entries) {
+  const data = brawlerPage(snapshot, entry.slug)
+  assert.ok(Array.isArray(data.relatedBrawlers) && data.relatedBrawlers.length > 0)
+  assert.ok(!data.relatedBrawlers.some(row => row.slug === entry.slug))
+  for (const row of data.relatedBrawlers) inbound.set(row.slug, (inbound.get(row.slug) || 0) + 1)
+}
+assert.ok([...inbound.values()].every(n => n >= 4), "Every brawler must receive balanced internal links")
+
 const index = conditionIndex(snapshot)
 for (const entry of [...index.modes, ...index.maps]) {
   const data = conditionPage(snapshot, entry, index)
-  const copy = conditionPageCopy(data)
-  assert.doesNotMatch(copy.title + copy.description, bad)
+  const copy = conditionPageCopy(data, now)
+  const faq = conditionFaq(data)
+  assert.doesNotMatch(copy.title + copy.description + JSON.stringify(faq), bad)
+  assert.ok(faq.length >= 2)
   const s = conditionSummary(data)
   if (s) { assert.ok(s.text.startsWith(s.date.long)); assert.ok(copy.description.length <= 150) }
 }
+const gachiTierFaq = tierFaq(summary, global, gachiSummary)
+assert.ok(gachiTierFaq.some(item => item.question.includes("ガチバトル")))
+assert.ok(PLAYER_FAQ.some(item => item.question.includes("見方")))
+assert.ok(PLAYER_FAQ.some(item => item.question.includes("内部レート")))
+assert.ok(COMPANION_FAQ.some(item => item.question.includes("1-2-2-1")))
 
 // llms.txt: real top names and links, no invented numbers, and no ranking
 // sections when the data is unusable.

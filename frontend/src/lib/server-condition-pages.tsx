@@ -3,9 +3,10 @@ import { notFound } from "next/navigation"
 import { getSnapshot } from "./server-brawler-pages"
 import { conditionPageCopy } from "./page-copy"
 import { conditionIndex, conditionPage, conditionSchema, conditionBreadcrumbs, collectionSchema } from "./condition-pages"
-import { pageMetadata } from "./seo"
+import { pageMetadata, SITE_URL } from "./seo"
 import { ConditionDetailView, ConditionDirectoryView } from "@/components/condition-pages"
 import { pageSchema } from "./llm-data"
+import { conditionFaq, faqNode } from "./faq"
 
 export const getConditionIndex = cache(async () => conditionIndex(await getSnapshot()))
 export const conditionParams = async (kind: "modes" | "maps") => (await getConditionIndex())[kind].map(({ slug }) => ({ slug }))
@@ -23,7 +24,10 @@ export async function ConditionPage({ kind, slug }: { kind: "modes" | "maps"; sl
   const entry = index[kind].find(row => row.slug === slug)
   if (!entry) notFound()
   const data = conditionPage(await getSnapshot(), entry, index)
-  return <><JsonLd value={pageSchema({ kind: "condition", path: entry.path, data }, conditionSchema(data))} /><ConditionDetailView data={data} /></>
+  const baseSchema = pageSchema({ kind: "condition", path: entry.path, data }, conditionSchema(data))
+  const faq = faqNode(`${SITE_URL}${entry.path}`, conditionFaq(data))
+  const structured = faq ? { ...baseSchema, "@graph": [...baseSchema["@graph"], faq] } : baseSchema
+  return <><JsonLd value={structured} /><ConditionDetailView data={data} /></>
 }
 export async function ConditionDirectory({ kind }: { kind: "modes" | "maps" }) {
   const index = await getConditionIndex()

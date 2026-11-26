@@ -134,6 +134,7 @@ export default function RootLayout({
   return (
     <html lang="ja" className="dark">
       <head>
+        <link rel="alternate" type="text/plain" title="LLMs.txt" href="/llms.txt" />
         <link rel="describedby" type="application/json" href="/data/index.json" />
         <link rel="describedby" type="application/ld+json" href="/data/catalog.jsonld" />
         <JsonLdStructuredData />

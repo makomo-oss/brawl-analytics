@@ -10,7 +10,9 @@ import { getModeIconUrl, translateMode } from "@/lib/translations"
 import { countMapsByMode, filterMapsByMode, getMapImageUrl } from "@/lib/maps"
 import { useMapCatalog } from "@/lib/use-map-catalog"
 import { conditionSummary } from "@/lib/page-insights"
+import { conditionFaq } from "@/lib/faq"
 import { DataSummary } from "@/components/data-summary"
+import { FaqSection } from "@/components/faq-section"
 
 const card = "rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-4 sm:p-6"
 const heading = "text-2xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-primary via-purple-400 to-cyan-400 bg-clip-text text-transparent"
@@ -106,7 +108,7 @@ export function ConditionDirectoryView({ index, kind }: { index: ConditionIndex;
   const visibleEntries = kind === "maps" ? filterMapsByMode(index.maps, selectedMode) : index.modes
 
   return <div className="arena-workspace arena-conditions space-y-6 sm:space-y-8"><Breadcrumbs kind={kind} /><h1 className={heading}>{kind === "modes" ? "モード別キャラランキング" : "マップ別キャラランキング"}</h1>
-    {index[kind].length > 0 && <p className="text-sm leading-relaxed text-muted-foreground">{index[kind].length}{kind === "modes" ? "モード" : "マップ"}ごとに、全体とガチバトル（エリート以上）のキャラ別勝率・使用率ランキングを掲載しています。</p>}
+    {index[kind].length > 0 && <p className="text-sm leading-relaxed text-muted-foreground">{index[kind].length}{kind === "modes" ? "モード" : "マップ（ステージ）"}ごとに、全体とガチバトル（エリート以上）のキャラ別勝率・使用率ランキングを掲載しています。</p>}
     <div className="flex gap-3 text-sm font-bold"><Link prefetch={false} href="/modes" aria-current={kind === "modes" ? "page" : undefined} className="rounded-lg border border-primary/20 px-4 py-2 text-primary hover:bg-primary/10">モード一覧</Link><Link prefetch={false} href="/maps" aria-current={kind === "maps" ? "page" : undefined} className="rounded-lg border border-cyan-500/20 px-4 py-2 text-cyan-400 hover:bg-cyan-500/10">マップ一覧</Link></div>
     {kind === "maps" && modeOptions.length > 0 && (
       <section aria-label="モードでマップを絞り込む" className="arena-dir-filterbar space-y-3">
@@ -196,5 +198,6 @@ export function ConditionDetailView({ data }: { data: ConditionPageData }) {
       <Link href="/tier" className="hover:underline">Tier表</Link>
       <Link href="/companion" className="hover:underline">BAN・ピックツール</Link>
     </nav>
+    <FaqSection id="faq-condition" items={conditionFaq(data)} />
   </div>
 }

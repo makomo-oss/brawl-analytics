@@ -1,6 +1,6 @@
 // Content revision of /about (also its sitemap lastmod). Update when the
 // methodology text changes.
-export const ABOUT_REVISED = "2026-11-09T00:00:00Z"
+export const ABOUT_REVISED = "2026-11-27T00:00:00Z"
 
 export const aboutCopy = {
   title: "ブロラボについて・集計方法｜データの出典と更新頻度",

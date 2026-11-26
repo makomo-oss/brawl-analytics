@@ -43,12 +43,13 @@ export default function AboutView() {
       <p className={text}>AIアシスタントや外部ツール向けに、集計データの一覧とJSONを公開しています。</p>
       <ul className={`${text} list-disc pl-5 space-y-1`}>
         <li><a className="text-primary hover:underline" href="/llms.txt">/llms.txt</a>（サイト概要と現在の上位キャラ）</li>
+        <li><a className="text-primary hover:underline" href="/llms-full.txt">/llms-full.txt</a>（全キャラの統計とモード・マップ一覧）</li>
         <li><a className="text-primary hover:underline" href="/data/index.json">/data/index.json</a>（データ一覧）</li>
         <li><a className="text-primary hover:underline" href="/data/catalog.jsonld">/data/catalog.jsonld</a>（データカタログ）</li>
       </ul>
     </Section>
-    <Section id="citation" title="引用について">
-      <p className={text}>データを紹介・引用する場合は「ブロラボ（https://brawl-lab.sozai-hub.com）」と集計日時を記載してください。順位や勝率は集計のたびに変わります。</p>
+    <Section id="citation" title="引用・データ利用について">
+      <p className={text}>本サイトおよび公開JSONデータ（/data/ 配下）の集計結果は、出典として「ブロラボ（https://brawl-lab.sozai-hub.com）」と集計日時を明記のうえ、記事・動画・AIアシスタントの回答等に無料で引用・利用できます。順位や勝率は集計のたびに変わります。</p>
     </Section>
     <Section id="disclaimer" title="免責事項">
       <p className={text}>{FAN_CONTENT_NOTICE}統計は記録された対戦にもとづく参考値で、ゲームの結果を保証するものではありません。</p>

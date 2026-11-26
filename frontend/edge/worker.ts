@@ -1,7 +1,7 @@
 import { brawlerEntries, brawlerPage, type BrawlerSnapshot, type CharacterStats } from "@/lib/brawler-page-data"
 import { isTierListData } from "@/lib/tier-data"
 import { SITE_URL } from "@/lib/seo"
-import { renderPage, escapeHtml, runtimeVersion } from "./server"
+import { renderPage, renderNotFound, escapeHtml, runtimeVersion } from "./server"
 import { conditionPage, conditionIndex, MODE_SLUGS, mapSlug, type ConditionEntry, type ConditionIndex } from "@/lib/condition-pages"
 import { translateMap, translateMode } from "@/lib/translations"
 import type { OverviewPage, RuntimePage } from "./app"
@@ -233,7 +233,11 @@ const worker = {
       const body = document.ok ? document.body : renderPage(path === "/about" ? { kind: "about", path: "/about" } : { kind: "player", path: "/player" })
       return new Response(request.method === "HEAD" ? null : body, { headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "public, max-age=0, must-revalidate" } })
     }
-    if (!/^\/(?:brawlers|modes|maps)(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)?$/.test(path) && !TEXT_TYPES[path] && !isOverview && !isCompanion) return env.ASSETS.fetch(new Request(`${url.origin}/404.html`)).then(response => new Response(request.method === "HEAD" ? null : response.body, { status: 404, headers: response.headers }))
+    const notFoundResponse = () => new Response(request.method === "HEAD" ? null : renderNotFound(), {
+      status: 404,
+      headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store", "X-Robots-Tag": "noindex, follow" },
+    })
+    if (!/^\/(?:brawlers|modes|maps)(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)?$/.test(path) && !TEXT_TYPES[path] && !isOverview && !isCompanion) return notFoundResponse()
     const key = new Request(`${url.origin}/__brawler-cache/${runtimeVersion}${path}`)
     const cache = await caches.open("brawler-pages")
     let cached = await cache.match(key)
@@ -252,10 +256,7 @@ const worker = {
         body = renderPage({ kind: "companion", path: "/companion", categories })
       } else if (isCondition) {
         const page = await liveCondition(env, url.origin, path, signal)
-        if (!page) {
-          const missing = await env.ASSETS.fetch(new Request(`${url.origin}/404.html`))
-          return new Response(missing.body, { status: 404, headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" } })
-        }
+        if (!page) return notFoundResponse()
         body = renderPage(page)
       } else {
         const index = await inputs(env, signal)
@@ -264,7 +265,7 @@ const worker = {
           // build's compact TOP5 so a refreshed document can still open panels
           // immediately; each panel revalidates its own live/filtered data.
           const initialMatchups = await overviewPreviews(env, url.origin, path === "/" ? "home" : "tier")
-          body = renderPage({ ...(path === "/" ? { kind: "home", path: "/" } as const : { kind: "tier", path: "/tier" } as const), tierData: index.overview[path === "/" ? "gachi" : "global"], initialMatchups, catalog: index.catalog })
+          body = renderPage({ ...(path === "/" ? { kind: "home", path: "/" } as const : { kind: "tier", path: "/tier", gachiTierData: index.overview.gachi } as const), tierData: index.overview[path === "/" ? "gachi" : "global"], initialMatchups, catalog: index.catalog })
         }
         else if (TEXT_TYPES[path]) body = textBody(path, index, await conditionManifest(env, url.origin, signal))
         else if (path === "/brawlers") body = renderPage({ kind: "directory", path, entries: brawlerEntries(index) })
@@ -272,8 +273,7 @@ const worker = {
           const entry = brawlerEntries(index).find(entry => path === `/brawlers/${entry.slug}`)
           if (!entry) {
             // Never cache a missing URL: a newly observed character can appear immediately.
-            const missing = await env.ASSETS.fetch(new Request(`${url.origin}/404.html`))
-            return new Response(request.method === "HEAD" ? null : missing.body, { status: 404, headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" } })
+            return notFoundResponse()
           }
           const snapshot = await api(env, `/meta/brawler-pages/${encodeURIComponent(entry.name)}`, signal)
           validateSnapshot(snapshot)

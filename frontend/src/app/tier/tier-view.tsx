@@ -84,11 +84,12 @@ const sheetTierGradient: Record<string, string> = {
   "N/A": "from-slate-500 to-stone-500",
 }
 
-export default function TierListPage({ initialTierData, initialMatchups }: { initialTierData: TierListData; initialMatchups: InitialMatchups }) {
+export default function TierListPage({ initialTierData, initialMatchups, initialGachiTierData }: { initialTierData: TierListData; initialMatchups: InitialMatchups; initialGachiTierData?: TierListData | null }) {
   useBrawlerCatalog()
   // Built from the server payload only, so server and client text match.
   const initialSummary = tierSummary(initialTierData, "global")
-  const initialFaq = tierFaq(initialSummary, initialTierData)
+  const initialGachiSummary = tierSummary(initialGachiTierData, "gachi")
+  const initialFaq = tierFaq(initialSummary, initialTierData, initialGachiSummary)
   const [tierData, setTierData] = useState<TierListData | null>(initialTierData)
   const [loading, setLoading] = useState(false)
   const [selectedChar, setSelectedChar] = useState<CharacterDetail | null>(null)
@@ -104,7 +105,10 @@ export default function TierListPage({ initialTierData, initialMatchups }: { ini
   const [categories, setCategories] = useState<CategoryData>({ modes: [], maps: [] })
 
   // クライアントサイド・インメモリキャッシュ (0ms即時切り替え用)
-  const dataCacheRef = useRef<Record<string, TierListData | CategoryData>>({ [INITIAL_TIER_KEY]: initialTierData })
+  const dataCacheRef = useRef<Record<string, TierListData | CategoryData>>({
+    [INITIAL_TIER_KEY]: initialTierData,
+    ...(initialGachiTierData ? { "gachi:all:all:": initialGachiTierData } : {}),
+  })
   const [detailRequest, setDetailRequest] = useState<{ url: string; hasPreview: boolean; nonce: number } | null>(null)
 
   const fetchWithDedup = async (cacheKey: string, url: string): Promise<TierListData | null> => {
@@ -603,6 +607,9 @@ export default function TierListPage({ initialTierData, initialMatchups }: { ini
 
       <Link href="/brawlers" className="inline-block text-sm font-medium text-primary hover:underline">キャラ詳細一覧を見る</Link>
       <RankingTable id="tier-top" title={`${activeScopeLabel}Tier 上位10キャラ`} rows={loading ? [] : activeSummary?.top || []} />
+      {selectedType === "global" && initialGachiSummary && (
+        <RankingTable id="tier-gachi-top" title="ガチバトル（エリート以上）Tier 上位5キャラ" rows={initialGachiSummary.top.slice(0, 5)} />
+      )}
       <FaqSection id="faq-tier" items={initialFaq} />
 
       {/* キャラクター詳細モーダル (Sheet) */}

@@ -22,6 +22,7 @@ import { applyBrawlerCatalog } from "@/lib/use-brawler-catalog"
 
 export type OverviewPage = ({ kind: "home"; path: "/" } | { kind: "tier"; path: "/tier" }) & {
   tierData: TierListData
+  gachiTierData?: TierListData
   initialMatchups: InitialMatchups
   catalog?: BrawlerSnapshot["catalog"]
 }
@@ -36,7 +37,7 @@ function PageView({ page, href }: { page: RuntimePage; href: string }) {
   </>
   if (page.kind === "about") return <AboutView />
   if (page.kind === "companion") return <DraftCompanionPage initialCategories={page.categories} />
-  return page.kind === "home" ? <HomeView initialTierData={page.tierData} initialMatchups={page.initialMatchups} /> : page.kind === "tier" ? <TierView initialTierData={page.tierData} initialMatchups={page.initialMatchups} /> : page.kind === "detail" ? <BrawlerDetailView data={page.data} /> : page.kind === "directory" ? <BrawlerDirectoryView entries={page.entries} /> : page.kind === "condition" ? <ConditionDetailView data={page.data} /> : <ConditionDirectoryView index={page.index} kind={page.category} />
+  return page.kind === "home" ? <HomeView initialTierData={page.tierData} initialMatchups={page.initialMatchups} /> : page.kind === "tier" ? <TierView initialTierData={page.tierData} initialGachiTierData={page.gachiTierData} initialMatchups={page.initialMatchups} /> : page.kind === "detail" ? <BrawlerDetailView data={page.data} /> : page.kind === "directory" ? <BrawlerDirectoryView entries={page.entries} /> : page.kind === "condition" ? <ConditionDetailView data={page.data} /> : <ConditionDirectoryView index={page.index} kind={page.category} />
 }
 
 const primaryPaths = new Set(["/", "/player", "/tier", "/brawlers", "/companion"])

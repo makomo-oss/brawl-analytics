@@ -43,6 +43,7 @@ export default function BrawlerDirectoryView({ entries }: { entries: ReturnType<
             <Users aria-hidden="true" className="w-7 h-7 shrink-0" />
             <span className="tabular-nums">キャラ一覧 ({visible.length} / {entries.length})</span>
           </h1>
+          <p className="text-xs sm:text-sm text-muted-foreground">全{entries.length}キャラのTier・勝率・使用率を、全体とガチバトル（エリート以上）の対戦データで比較できます。</p>
         </div>
 
         <div className="arena-tier-seg-group shrink-0" role="group" aria-label="集計対象切替">

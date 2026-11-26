@@ -7,6 +7,7 @@ import { SITE_URL } from "./seo"
 import { SITE_SECTIONS } from "./site-sections"
 import { COHORT_LABEL, tierSummary } from "./page-insights"
 import { jstDate } from "./dates"
+import { translateMode } from "./translations"
 
 const md = (text: string) => text.replace(/[[\]]/g, "")
 const pct = (value: number, digits = 1) => `${value.toFixed(digits)}%`
@@ -41,6 +42,12 @@ function ranking(index: BrawlerSnapshot, type: Cohort, limit: number) {
 }
 
 const footer = [
+  "## 主な機能とよくある質問（要点）",
+  "",
+  "- 戦績確認: 登録不要・無料でプレイヤー名やタグからトロフィー、ガチバトルランク、バトル履歴、期間別（直近7・30・60日）のキャラ・モード・マップ別成績を確認できます。非公開の内部レートは公式APIに存在しないため非対応です。",
+  "- Tier算出: 直近60日（直近30日重視）の対戦記録をもとに、モード・マップ平均比の勝ちやすさ（70%）と使用率（30%）のスコアで評価します。",
+  "- BAN・ピック提案: ガチバトル（エリート以上）の対戦データから、マップ適性・モード適性・敵へのカウンター・味方シナジーを組み合わせて6BANおよび1-2-2-1順のピック候補を提案します。",
+  "",
   "## データと集計方法",
   "",
   `- [集計方法・運営情報](${SITE_URL}/about): データの出典、Tierの決め方、全体とガチバトルの違い、更新頻度`,
@@ -69,9 +76,13 @@ export function llmsFullTxt(index: BrawlerSnapshot, conditions: ConditionIndex) 
   }
   const characters = brawlerEntries(index).flatMap(entry => {
     const parts = (["global", "gachi"] as const).map(type => stat(type, entry.name)).filter(Boolean)
-    return parts.length ? [`- [${md(entry.nameJa)}](${SITE_URL}/brawlers/${entry.slug}): ${parts.join(" ／ ")}`] : []
+    const alias = entry.name && entry.name.toLowerCase() !== entry.nameJa.toLowerCase() ? ` (${md(entry.name)})` : ""
+    return parts.length ? [`- [${md(entry.nameJa)}](${SITE_URL}/brawlers/${entry.slug})${alias}: ${parts.join(" ／ ")}`] : []
   })
-  const list = (kind: "modes" | "maps") => conditions[kind].map(entry => `- [${md(entry.label)}](${SITE_URL}${entry.path})`)
+  const list = (kind: "modes" | "maps") => conditions[kind].map(entry => {
+    const modes = kind === "maps" && entry.modeIds.length ? `（${entry.modeIds.map(translateMode).join("・")}）` : ""
+    return `- [${md(entry.label)}](${SITE_URL}${entry.path})${modes}`
+  })
   return [
     ...header(index), ...ranking(index, "global", 10), ...ranking(index, "gachi", 10),
     ...(characters.length ? ["## 全キャラの統計", "", ...characters, ""] : []),

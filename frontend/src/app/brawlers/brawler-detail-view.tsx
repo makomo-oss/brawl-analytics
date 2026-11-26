@@ -157,6 +157,26 @@ export default function BrawlerDetailView({ data }: { data: BrawlerPageData }) {
     {(["global", "gachi"] as const).map(type => <section key={type} role="tabpanel" id={`${type}-panel`} aria-labelledby={`${type}-tab`} hidden={selected !== type}>
       <StatsPanel data={data.cohorts[type]} />
     </section>)}
+    {data.relatedBrawlers && data.relatedBrawlers.length > 0 && (
+      <section aria-labelledby="related-brawlers-title" className="rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-4 sm:p-6 space-y-3">
+        <h2 id="related-brawlers-title" className="font-bold text-lg text-zinc-100">他のキャラの勝率・評価</h2>
+        <ul className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+          {data.relatedBrawlers.map(row => (
+            <li key={row.slug}>
+              <Link prefetch={false} href={`/brawlers/${row.slug}`} className="group flex items-center gap-2.5 rounded-xl border border-zinc-800/80 bg-zinc-950/40 p-2.5 hover:border-primary/40 hover:bg-primary/5 transition-colors">
+                {row.imageUrl && <Image src={row.imageUrl} alt="" width={36} height={36} loading="lazy" className="w-9 h-9 rounded-lg border border-zinc-700/60 shrink-0" />}
+                <span className="min-w-0">
+                  <span className="block text-sm font-bold text-zinc-100 group-hover:text-primary truncate">{row.nameJa}</span>
+                  <span className="block text-[11px] text-muted-foreground tabular-nums">
+                    {row.tier !== "N/A" ? `Tier ${row.tier}` : "データ不足"}{row.winRate !== null ? ` · 勝率${row.winRate.toFixed(1)}%` : ""}
+                  </span>
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
     <div className="grid sm:grid-cols-2 gap-3 text-sm font-bold">
       <Link href="/tier" className="group flex items-center gap-3 rounded-2xl bg-zinc-900/40 hover:bg-zinc-900/80 border border-zinc-800/80 hover:border-purple-500/40 p-4 transition-all duration-300"><span className="rounded-xl bg-purple-500/10 p-2.5"><Trophy aria-hidden="true" className="w-5 h-5 text-purple-400" /></span><span className="group-hover:text-purple-300 transition-colors">Tier表に戻る</span><ArrowLeft aria-hidden="true" className="w-4 h-4 text-muted-foreground ml-auto" /></Link>
       <Link href="/brawlers" className="group flex items-center gap-3 rounded-2xl bg-zinc-900/40 hover:bg-zinc-900/80 border border-zinc-800/80 hover:border-cyan-500/40 p-4 transition-all duration-300"><span className="rounded-xl bg-cyan-500/10 p-2.5"><Users aria-hidden="true" className="w-5 h-5 text-cyan-400" /></span><span className="group-hover:text-cyan-300 transition-colors">他のキャラを見る</span><ArrowRight aria-hidden="true" className="w-4 h-4 text-muted-foreground ml-auto transition-transform group-hover:translate-x-1" /></Link>

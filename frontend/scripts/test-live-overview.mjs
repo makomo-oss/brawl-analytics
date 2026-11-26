@@ -82,7 +82,12 @@ try {
     assert(live.includes("https://cdn.brawlify.com/brawlers/borders/16999998.png"))
     assert(Array.isArray(pageData(live).catalog) && pageData(live).catalog.some(row => row.nameJa === "ライブ新キャラ"))
     assert(live.includes('"dateModified":"2026-10-16T00:00:00.000Z"'))
-    if (path === "/tier") assert(live.includes('dateTime="2026-10-16T00:00:00.000Z"'))
+    assert(live.includes('rel="alternate" type="text/plain" title="LLMs.txt" href="https://brawl-lab.sozai-hub.com/llms.txt"'))
+    if (path === "/tier") {
+      assert(live.includes('dateTime="2026-10-16T00:00:00.000Z"'))
+      assert(live.includes("ガチバトル（エリート以上）Tier 上位5キャラ"))
+      assert(live.includes("現環境のガチバトル（エリート以上）で最強のキャラは？"))
+    }
     assert.equal((await request(path)).headers.get("X-Brawler-Rendering"), "live")
   }
   // The same Worker observes the new generation without a rebuild.

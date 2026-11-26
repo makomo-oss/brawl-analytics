@@ -1,4 +1,4 @@
-import { publicCatalog, publicData, indexablePage, type PublicPage } from "@/lib/llm-data"
+import { publicCatalog, publicData, type PublicPage } from "@/lib/llm-data"
 import { SITE_URL } from "@/lib/seo"
 
 async function readPage(response: Response, path: string): Promise<PublicPage> {
@@ -46,9 +46,9 @@ export async function dataResponse(request: Request, fetchPage: (request: Reques
     return new Response(request.method === "HEAD" ? null : JSON.stringify(payload), { headers: {
       "Content-Type": `${isLinkedData ? "application/ld+json" : "application/json"}; charset=utf-8`, "X-Content-Type-Options": "nosniff", "Cache-Control": "public, max-age=0, must-revalidate",
       "Content-Location": `${SITE_URL}${url.pathname}`,
+      "X-Robots-Tag": "noindex, follow",
       Link: `<${SITE_URL}/data/catalog.jsonld>; rel="describedby"${isCatalog ? "" : `, <${SITE_URL}${paths[0]}>; rel="canonical"`}`,
       ...(!isCatalog && sources[0].headers.get("X-Brawler-Rendering") ? { "X-Brawler-Rendering": sources[0].headers.get("X-Brawler-Rendering")! } : {}),
-      ...(!isCatalog && !indexablePage(pages[0]) ? { "X-Robots-Tag": "noindex, follow" } : {}),
     } })
   } catch (error) {
     console.error("Public statistics unavailable", url.pathname, String(error))

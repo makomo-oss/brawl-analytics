@@ -590,10 +590,10 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
       <div className="arena-workspace arena-draft arena-draft-setup max-w-3xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="text-center space-y-2.5">
           <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-            ブロスタ ガチバトルのピック支援
+            ブロスタ ガチバトル ピックツール（BAN・ピック提案）
           </h1>
           <p className="text-sm text-muted-foreground">
-            モード・マップ・チームを選んでドラフトを開始します。
+            モード・マップ・チームを選んでドラフトを開始します。最新の対戦データからおすすめBAN・ピック候補・カウンター相性を無料で提案します。
           </p>
         </div>
 
@@ -717,6 +717,7 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
           <Link href="/modes" className="hover:text-primary">モード一覧</Link>
           <Link href="/maps" className="hover:text-primary">マップ一覧</Link>
           {conditionPath("modes", selectedMode) && <Link href={conditionPath("modes", selectedMode)!} className="hover:text-primary">{translateMode(selectedMode)}のランキング</Link>}
+          {selectedMap && conditionPath("maps", selectedMap) && <Link href={conditionPath("maps", selectedMap)!} className="hover:text-primary">{translateMap(selectedMap)}のランキング</Link>}
         </nav>
         <FaqSection id="faq-companion" items={COMPANION_FAQ} />
       </div>

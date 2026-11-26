@@ -30,7 +30,9 @@ for (const entry of [...directory.modes, ...directory.maps]) {
   assert.deepEqual(datasets.map(node => node["@id"]), exported.datasets.map(node => node.id))
   for (const dataset of datasets) {
     assert(dataset.description.length >= 50)
+    assert.equal(dataset.includedInDataCatalog["@type"], "DataCatalog")
     assert.match(dataset.includedInDataCatalog["@id"], /\/data\/catalog\.jsonld#catalog$/)
+    assert.equal(dataset.license, "https://brawl-lab.sozai-hub.com/about#citation")
     assert.equal(dataset.distribution.contentUrl, `https://brawl-lab.sozai-hub.com${dataPath(entry.path)}`)
     assert.equal(dataset.variableMeasured.find(row => row.propertyID === "win_rate_percent").unitText, "%")
   }
@@ -101,6 +103,7 @@ try {
   const response = await Promise.race([request("/data/brawlers/amber.json"), new Promise((_, reject) => setTimeout(() => reject(new Error("JSON blocked on cold API")), 200))])
   assert.equal(response.status, 200)
   assert.match(response.headers.get("Content-Type"), /application\/json/)
+  assert.match(response.headers.get("X-Robots-Tag"), /noindex/)
   assert.match(response.headers.get("Link"), /\/brawlers\/amber>; rel="canonical"/)
   assert.deepEqual(await response.json(), character)
   const html = await (await request("/brawlers/amber")).text()

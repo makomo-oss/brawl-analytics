@@ -4,6 +4,7 @@ import { brawlerCopy } from "@/lib/page-copy"
 import { getBrawlerEntries, getBrawlerPage } from "@/lib/server-brawler-pages"
 import BrawlerDetailView from "../brawler-detail-view"
 import { pageSchema } from "@/lib/llm-data"
+import { brawlerFaq, faqNode } from "@/lib/faq"
 
 export const dynamicParams = false
 
@@ -33,8 +34,11 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
       { "@type": "ListItem", position: 3, name: data.nameJa, item: `${SITE_URL}/brawlers/${slug}` },
     ],
   }
+  const base = pageSchema({ kind: "detail", path: `/brawlers/${slug}`, data }, jsonLd)
+  const faq = faqNode(`${SITE_URL}/brawlers/${slug}`, brawlerFaq(data))
+  const structured = faq ? { ...base, "@graph": [...base["@graph"], faq] } : base
   return <>
-    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(pageSchema({ kind: "detail", path: `/brawlers/${slug}`, data }, jsonLd)).replace(/</g, "\\u003c") }} />
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structured).replace(/</g, "\\u003c") }} />
     <BrawlerDetailView data={data} />
   </>
 }

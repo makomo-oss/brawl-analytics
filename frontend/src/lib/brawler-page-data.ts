@@ -31,9 +31,17 @@ export interface CohortData {
   favorable: PairRow[]; unfavorable: PairRow[]; allies: PairRow[]
   matchupScope: string
 }
+export interface RelatedBrawler {
+  slug: string
+  nameJa: string
+  imageUrl: string
+  tier: string
+  winRate: number | null
+}
 export interface BrawlerPageData {
   name: string; slug: string; nameJa: string; imageUrl: string
   cohorts: Record<Cohort, CohortData>
+  relatedBrawlers?: RelatedBrawler[]
 }
 
 export function brawlerEntries(snapshot: BrawlerSnapshot) {
@@ -105,5 +113,37 @@ export function brawlerPage(snapshot: BrawlerSnapshot, slug: string): BrawlerPag
       matchupScope: type === "global" ? "全体Tierの3対3" : "ガチバトル・エリート以上",
     }
   }
-  return { ...entry, cohorts: { global: cohort("global"), gachi: cohort("gachi") } }
+  // Deterministic ring + same-rarity links ensure every character URL receives
+  // balanced internal links even when it is outside top-meta matchup lists.
+  const index = entries.findIndex(item => item.slug === slug)
+  const seen = new Set([slug])
+  const relatedBrawlers: RelatedBrawler[] = []
+  const pushRelated = (candidate: typeof entries[number] | undefined) => {
+    if (!candidate || seen.has(candidate.slug) || relatedBrawlers.length >= 6) return
+    seen.add(candidate.slug)
+    const stats = candidate.directoryStats.global || candidate.directoryStats.gachi
+    const tier = candidate.tiers.global !== "N/A" ? candidate.tiers.global : candidate.tiers.gachi
+    relatedBrawlers.push({
+      slug: candidate.slug,
+      nameJa: candidate.nameJa,
+      imageUrl: candidate.imageUrl,
+      tier,
+      winRate: stats?.sample_sufficient ? stats.win_rate : null,
+    })
+  }
+  if (entries.length > 1 && index >= 0) {
+    for (const offset of [-2, -1, 1, 2]) {
+      pushRelated(entries[(index + offset + entries.length) % entries.length])
+    }
+    if (entry.rarity?.id != null) {
+      for (let step = 1; step < entries.length && relatedBrawlers.length < 6; step++) {
+        const candidate = entries[(index + step) % entries.length]
+        if (candidate.rarity?.id === entry.rarity.id) pushRelated(candidate)
+      }
+    }
+    for (let step = 3; step < entries.length && relatedBrawlers.length < 6; step++) {
+      pushRelated(entries[(index + step) % entries.length])
+    }
+  }
+  return { ...entry, cohorts: { global: cohort("global"), gachi: cohort("gachi") }, relatedBrawlers }
 }

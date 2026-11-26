@@ -7,13 +7,14 @@
   font-size: 14px; font-weight: 800; box-shadow: 0 8px 24px rgba(3, 6, 18, 0.5);
 }
 .arena-skip-link:focus { transform: translateY(0); outline: 3px solid #fff5d8; outline-offset: 3px; }
+html { scroll-padding-top: 88px; }
 #main-content { scroll-margin-top: 96px; }
 #main-content:focus { outline: none; }
 
 /* Header & Navigation */
 .arena-site-header {
   position: sticky; top: 0; z-index: 50;
-  background: rgba(9, 14, 29, 0.86);
+  background: rgba(9, 14, 29, 0.96);
   border-bottom: 1px solid rgba(255, 255, 255, 0.09);
   color: #f8fafc;
   backdrop-filter: blur(18px);
@@ -437,6 +438,13 @@ body:has(.arena-home, .arena-workspace) {
   .arena-bottom-link > svg { width: 20px; height: 20px; stroke-width: 1.8; }
   .arena-bottom-link.is-active { color: #ffce00; }
   .arena-home-hero { grid-template-columns: 1fr; gap: 24px; }
+  html {
+    scroll-padding-top: 76px;
+    scroll-padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+  }
+  #main-content {
+    padding-bottom: calc(6rem + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 @media(max-width:700px) {

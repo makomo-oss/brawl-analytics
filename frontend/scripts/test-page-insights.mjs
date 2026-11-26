@@ -41,6 +41,13 @@ assert.ok(summary.text.includes(global.metrics.analyzed_matches.toLocaleString("
 assert.equal(summary.top.length, Math.min(10, rows.length))
 assert.doesNotMatch(summary.text, bad)
 
+const gachi = snapshot.overview.gachi
+const gachiSummary = tierSummary(gachi, "gachi")
+assert.ok(gachiSummary.text.includes("ガチバトル（エリート以上）Tierスコア1位は"))
+const customScopeSummary = tierSummary(gachi, "gachi", undefined, "エメラルドハント・ガチバトル（レジェンド）")
+assert.ok(customScopeSummary.text.includes("エメラルドハント・ガチバトル（レジェンド）Tierスコア1位は"))
+assert.doesNotMatch(customScopeSummary.text, bad)
+
 // Invalid, empty or insufficient data: no summary, static copy, no numbers.
 const insufficient = structuredClone(global)
 Object.values(insufficient.characters).forEach(stats => { stats.sample_sufficient = false })

@@ -140,7 +140,7 @@ export default function RootLayout({
       </head>
       <body className={`${inter.className} min-h-screen bg-background text-foreground antialiased`}>
         <MainNav />
-        <main id="main-content" tabIndex={-1} className="container mx-auto px-3 py-4 sm:p-6 lg:p-8 max-w-7xl pb-24 lg:pb-8">
+        <main id="main-content" tabIndex={-1} className="container mx-auto px-3 pt-4 pb-24 sm:px-6 sm:pt-6 sm:pb-24 lg:p-8 max-w-7xl">
           {children}
           <SiteFooter />
         </main>

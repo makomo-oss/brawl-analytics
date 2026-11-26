@@ -31,7 +31,7 @@ export function rankedRows(data: TierListData | null | undefined, nameOf: (id: s
   }).sort((a, b) => a.rank - b.rank || a.slug.localeCompare(b.slug))
 }
 
-export function tierSummary(data: TierListData | null | undefined, cohort: Cohort, nameOf?: (id: string) => string): TierSummary | null {
+export function tierSummary(data: TierListData | null | undefined, cohort: Cohort, nameOf?: (id: string) => string, scopeLabel?: string): TierSummary | null {
   const date = jstDate(data?.updated_at)
   const rows = rankedRows(data, nameOf)
   const analyzedMatches = Number(data?.metrics?.analyzed_matches)
@@ -39,7 +39,7 @@ export function tierSummary(data: TierListData | null | undefined, cohort: Cohor
   if (!date || rows.length < 3 || !finite(analyzedMatches) || analyzedMatches <= 0) return null
   const [first, second, third] = rows
   const best = rows.reduce((a, b) => b.winRate > a.winRate ? b : a)
-  const text = `${date.long}時点（直近${windowDays}日・${count(analyzedMatches)}件のプレイヤー戦績）の${COHORT_LABEL[cohort]}Tierスコア1位は${first.name}（Tier ${first.tier}・勝率${pct(first.winRate)}）、2位は${second.name}（Tier ${second.tier}・勝率${pct(second.winRate)}）、3位は${third.name}（Tier ${third.tier}・勝率${pct(third.winRate)}）です。`
+  const text = `${date.long}時点（直近${windowDays}日・${count(analyzedMatches)}件のプレイヤー戦績）の${scopeLabel || COHORT_LABEL[cohort]}Tierスコア1位は${first.name}（Tier ${first.tier}・勝率${pct(first.winRate)}）、2位は${second.name}（Tier ${second.tier}・勝率${pct(second.winRate)}）、3位は${third.name}（Tier ${third.tier}・勝率${pct(third.winRate)}）です。`
     + (best.id !== first.id ? `集計対象のうち勝率が最も高いのは${best.name}（${pct(best.winRate)}）です。` : "")
   return { date, text, cohort, windowDays, analyzedMatches, top: rows.slice(0, 10) }
 }

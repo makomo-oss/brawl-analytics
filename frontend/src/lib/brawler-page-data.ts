@@ -1,5 +1,5 @@
 import { canonicalBrawlerName, brawlerSlug } from "./brawler-paths"
-import { getBrawlerInfo } from "./brawlers"
+import { getBrawlerInfo, getBrawlerRarity } from "./brawlers"
 import type { TierListData } from "./tier-data"
 import { translateMap, translateMode } from "./translations"
 
@@ -54,7 +54,7 @@ export function brawlerEntries(snapshot: BrawlerSnapshot) {
     const tierOf = (type: Cohort) =>
       Object.entries(snapshot.overview[type]?.tiers || {}).find(([, names]) => names.includes(name))?.[0] || "N/A"
     return { name, slug: brawlerSlug(name), nameJa: live?.nameJa || info.nameJa, imageUrl: live?.imageUrl || info.imageUrl,
-      rarity: live?.rarity || null,
+      rarity: live?.rarity || getBrawlerRarity(canonicalBrawlerName(name)) || null,
       tiers: { global: tierOf("global"), gachi: tierOf("gachi") },
       directoryStats: { global: directoryStats("global"), gachi: directoryStats("gachi") },
     }

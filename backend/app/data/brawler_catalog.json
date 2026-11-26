@@ -1,5 +1,15 @@
 [
   {
+    "id": 16000111,
+    "name": "Thunder Frogs",
+    "nameJa": "サンダーフロッグ",
+    "imageUrl": "https://cdn.brawlify.com/brawlers/borders/16000111.png",
+    "rarity": {
+      "id": 6,
+      "name": "Legendary"
+    }
+  },
+  {
     "id": 16000110,
     "name": "Vince",
     "nameJa": "ヴィンス",

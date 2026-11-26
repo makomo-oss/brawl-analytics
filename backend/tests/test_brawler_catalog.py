@@ -103,3 +103,13 @@ def test_successful_refresh_adds_future_brawler_and_reuses_hourly_cache(monkeypa
     assert first["brawlers"][0]["rarity"] == {"id": 5, "name": "Mythic"}
     assert catalog._next_refresh == 100 + 60 * 60
     assert client.get.await_count == 3
+
+
+def test_bundled_catalog_includes_thunder_frogs():
+    by_name = {row["name"].lower(): row for row in catalog._catalog}
+    entry = by_name.get("thunder frogs")
+    assert entry is not None
+    assert entry["id"] == 16000111
+    assert entry["nameJa"] == "サンダーフロッグ"
+    assert entry["imageUrl"].startswith("https://cdn.brawlify.com/") and entry["imageUrl"].endswith(".png")
+    assert entry["rarity"] == {"id": 6, "name": "Legendary"}

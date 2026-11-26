@@ -310,6 +310,22 @@ export default function TierListPage({ initialTierData, initialMatchups }: { ini
 
   const visibleCount = filteredRows.reduce((sum, row) => sum + row.chars.length, 0)
 
+  const rankLabel = selectedRankTier === "all"
+    ? "エリート以上"
+    : (RANK_TIERS.find((tier) => tier.id === selectedRankTier)?.label || "エリート以上")
+  const contextPrefix = subType === "mode" && selectedId
+    ? `${translateMode(selectedId)}・`
+    : subType === "map" && selectedId
+      ? `${translateMap(selectedId)}・`
+      : ""
+  const activeScopeLabel = selectedType === "global"
+    ? "全体"
+    : `${contextPrefix}ガチバトル（${rankLabel}）`
+  const activeSummary = selectedType === "global"
+    ? (tierData === initialTierData ? initialSummary : tierSummary(tierData, "global"))
+    : tierSummary(tierData, "gachi", undefined, activeScopeLabel)
+  const selectedInfo = selectedChar ? getBrawlerInfo(selectedChar.character_id) : null
+
   return (
     <div className="arena-workspace arena-tier space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-7xl mx-auto">
       <header className="arena-tier-header">
@@ -366,7 +382,7 @@ export default function TierListPage({ initialTierData, initialMatchups }: { ini
         </div>
       </header>
 
-      <DataSummary summary={initialSummary} />
+      <DataSummary summary={loading ? null : activeSummary} />
 
       <section className="arena-tier-filterbar" aria-label="ティア表フィルター">
         {selectedType === "gachi" ? (
@@ -559,14 +575,16 @@ export default function TierListPage({ initialTierData, initialMatchups }: { ini
                             >
                               <div className="arena-tier-chip-avatar relative overflow-hidden flex items-center justify-center shrink-0">
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img
-                                  loading="lazy"
-                                  decoding="async"
-                                  src={info.imageUrl}
-                                  alt={info.nameJa}
-                                  className="object-cover w-full h-full relative z-10"
-                                  onError={(e) => { e.currentTarget.src = 'https://cdn.brawlify.com/brawler/shelly.png'; }}
-                                />
+                                {info.imageUrl && (
+                                  <img
+                                    loading="lazy"
+                                    decoding="async"
+                                    src={info.imageUrl}
+                                    alt={info.nameJa}
+                                    className="object-cover w-full h-full relative z-10"
+                                    onError={(e) => { e.currentTarget.src = 'https://cdn.brawlify.com/brawler/shelly.png'; }}
+                                  />
+                                )}
                                 <User className="w-6 h-6 text-primary/40 absolute" />
                               </div>
                               <span className="arena-tier-chip-name">{info.nameJa}</span>
@@ -584,7 +602,7 @@ export default function TierListPage({ initialTierData, initialMatchups }: { ini
       </div>
 
       <Link href="/brawlers" className="inline-block text-sm font-medium text-primary hover:underline">キャラ詳細一覧を見る</Link>
-      <RankingTable id="tier-top" title="全体Tier 上位10キャラ" rows={initialSummary?.top || []} />
+      <RankingTable id="tier-top" title={`${activeScopeLabel}Tier 上位10キャラ`} rows={loading ? [] : activeSummary?.top || []} />
       <FaqSection id="faq-tier" items={initialFaq} />
 
       {/* キャラクター詳細モーダル (Sheet) */}
@@ -596,12 +614,14 @@ export default function TierListPage({ initialTierData, initialMatchups }: { ini
                 <div className="flex items-center gap-4 mb-2">
                   <div className="w-20 h-20 shrink-0 border-2 shadow-xl ring-2 ring-primary/20 rounded-xl bg-primary/10 relative overflow-hidden flex items-center justify-center">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={getBrawlerInfo(selectedChar.character_id).imageUrl}
-                      alt={selectedChar.character_id}
-                      className="object-cover w-full h-full rounded-lg absolute inset-0 z-10"
-                      onError={(e) => { e.currentTarget.src = 'https://cdn.brawlify.com/brawler/shelly.png'; }}
-                    />
+                    {selectedInfo?.imageUrl && (
+                      <img
+                        src={selectedInfo.imageUrl}
+                        alt={selectedChar.character_id}
+                        className="object-cover w-full h-full rounded-lg absolute inset-0 z-10"
+                        onError={(e) => { e.currentTarget.src = 'https://cdn.brawlify.com/brawler/shelly.png'; }}
+                      />
+                    )}
                     <User className="w-8 h-8 text-primary/40" />
                   </div>
                   <div>

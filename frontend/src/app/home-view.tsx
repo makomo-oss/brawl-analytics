@@ -383,17 +383,21 @@ export default function CockpitHomePage({ initialTierData, initialMatchups }: { 
             <span className="flex items-center gap-1 text-zinc-500 font-medium">
               <Clock className="w-3.5 h-3.5" /> 履歴:
             </span>
-            {recentSearches.map((item) => (
-              <button
-                key={item.tag}
-                type="button"
-                onClick={() => handleSearch(item.tag, item.name)}
-                className="arena-history-chip inline-flex items-center gap-1 px-2.5 py-2 rounded-full bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 hover:text-white border border-zinc-700/50 transition-colors"
-              >
-                <span className="font-medium">{item.name || item.tag}</span>
-                <span className="text-[10px] text-zinc-500 font-mono">{item.tag}</span>
-              </button>
-            ))}
+            {recentSearches.map((item) => {
+              const normalizeTag = (v: string) => v.trim().replace(/^#+/, "").toUpperCase();
+              const hasDistinctName = Boolean(item.name && normalizeTag(item.name) !== normalizeTag(item.tag));
+              return (
+                <button
+                  key={item.tag}
+                  type="button"
+                  onClick={() => handleSearch(item.tag, item.name)}
+                  className="arena-history-chip inline-flex items-center gap-1 px-2.5 py-2 rounded-full bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 hover:text-white border border-zinc-700/50 transition-colors"
+                >
+                  <span className="font-medium">{hasDistinctName ? item.name : item.tag}</span>
+                  {hasDistinctName && <span className="text-[10px] text-zinc-500 font-mono">{item.tag}</span>}
+                </button>
+              );
+            })}
           </div>
         )}
         </div>
@@ -521,14 +525,20 @@ export default function CockpitHomePage({ initialTierData, initialMatchups }: { 
                   </div>
 
                   <div className="arena-meta-portrait">
-                    <img loading="lazy" decoding="async"
-                      src={info.imageUrl}
-                      alt={info.nameJa}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.currentTarget.src = "https://cdn.brawlify.com/brawler/shelly.png";
-                      }}
-                    />
+                    {info.imageUrl ? (
+                      <img loading="lazy" decoding="async"
+                        src={info.imageUrl}
+                        alt={info.nameJa}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = "https://cdn.brawlify.com/brawler/shelly.png";
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <User className="w-8 h-8 text-primary/40" />
+                      </div>
+                    )}
                   </div>
 
                   <div className="arena-meta-copy">

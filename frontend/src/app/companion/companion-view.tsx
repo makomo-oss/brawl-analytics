@@ -785,9 +785,13 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
                       <div key={`blue-${i}`} className={`arena-draft-pick-slot h-14 sm:h-16 rounded-lg border-2 flex items-center justify-start px-2 py-1.5 sm:p-2 gap-2 sm:gap-3 transition-all min-w-0 ${isActive ? 'is-active border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)] animate-pulse' : 'border-secondary bg-secondary/20'}`}>
                         {charName ? (
                           <>
-                            <div className="w-8 h-8 sm:w-10 sm:h-10 border border-blue-500/50 rounded-md shrink-0 bg-primary/10 relative overflow-hidden">
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 border border-blue-500/50 rounded-md shrink-0 bg-primary/10 relative overflow-hidden flex items-center justify-center">
                               {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img src={getBrawlerInfo(charName).imageUrl} alt={charName} className="object-cover w-full h-full rounded-sm absolute inset-0 z-10" />
+                              {getBrawlerInfo(charName).imageUrl ? (
+                                <img src={getBrawlerInfo(charName).imageUrl} alt={charName} className="object-cover w-full h-full rounded-sm absolute inset-0 z-10" />
+                              ) : (
+                                <User className="w-4 h-4 text-primary/40" />
+                              )}
                             </div>
                             <span className="font-bold text-xs sm:text-sm truncate min-w-0 flex-1">{getBrawlerInfo(charName).nameJa}</span>
                           </>
@@ -814,9 +818,13 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
                       <div key={`red-${i}`} className={`arena-draft-pick-slot h-14 sm:h-16 rounded-lg border-2 flex items-center justify-start px-2 py-1.5 sm:p-2 gap-2 sm:gap-3 transition-all min-w-0 ${isActive ? 'is-active border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.5)] animate-pulse' : 'border-secondary bg-secondary/20'}`}>
                         {charName ? (
                           <>
-                            <div className="w-8 h-8 sm:w-10 sm:h-10 border border-red-500/50 rounded-md shrink-0 bg-primary/10 relative overflow-hidden">
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 border border-red-500/50 rounded-md shrink-0 bg-primary/10 relative overflow-hidden flex items-center justify-center">
                               {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img src={getBrawlerInfo(charName).imageUrl} alt={charName} className="object-cover w-full h-full rounded-sm absolute inset-0 z-10" />
+                              {getBrawlerInfo(charName).imageUrl ? (
+                                <img src={getBrawlerInfo(charName).imageUrl} alt={charName} className="object-cover w-full h-full rounded-sm absolute inset-0 z-10" />
+                              ) : (
+                                <User className="w-4 h-4 text-primary/40" />
+                              )}
                             </div>
                             <span className="font-bold text-xs sm:text-sm truncate min-w-0 flex-1">{getBrawlerInfo(charName).nameJa}</span>
                           </>
@@ -847,9 +855,13 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
                           <div key={`allyban-${i}`} className={`arena-draft-ban-slot h-12 sm:h-16 rounded-lg border-2 flex items-center justify-start px-2 py-1 sm:p-2 gap-2 sm:gap-3 relative overflow-hidden min-w-0 ${isActive ? 'is-active border-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)] animate-pulse' : 'border-secondary bg-secondary/20'}`}>
                             {charName ? (
                               <>
-                                <div className="w-7 h-7 sm:w-10 sm:h-10 opacity-60 grayscale rounded-md shrink-0 bg-primary/10 relative overflow-hidden">
+                                <div className="w-7 h-7 sm:w-10 sm:h-10 opacity-60 grayscale rounded-md shrink-0 bg-primary/10 relative overflow-hidden flex items-center justify-center">
                                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                                  <img src={getBrawlerInfo(charName).imageUrl} alt={charName} className="object-cover w-full h-full rounded-sm absolute inset-0 z-10" />
+                                  {getBrawlerInfo(charName).imageUrl ? (
+                                    <img src={getBrawlerInfo(charName).imageUrl} alt={charName} className="object-cover w-full h-full rounded-sm absolute inset-0 z-10" />
+                                  ) : (
+                                    <User className="w-4 h-4 text-primary/40" />
+                                  )}
                                 </div>
                                 <div className="absolute inset-0 bg-red-500/15 flex items-center justify-center pointer-events-none">
                                   <div className="w-full h-0.5 bg-red-500/70 rotate-45 absolute" />
@@ -875,9 +887,13 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
                           <div key={`enemyban-${i}`} className={`arena-draft-ban-slot h-12 sm:h-16 rounded-lg border-2 flex items-center justify-start px-2 py-1 sm:p-2 gap-2 sm:gap-3 relative overflow-hidden min-w-0 ${isActive ? 'is-active border-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)] animate-pulse' : 'border-secondary bg-secondary/20'}`}>
                             {charName ? (
                               <>
-                                <div className="w-7 h-7 sm:w-10 sm:h-10 opacity-60 grayscale rounded-md shrink-0 bg-primary/10 relative overflow-hidden">
+                                <div className="w-7 h-7 sm:w-10 sm:h-10 opacity-60 grayscale rounded-md shrink-0 bg-primary/10 relative overflow-hidden flex items-center justify-center">
                                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                                  <img src={getBrawlerInfo(charName).imageUrl} alt={charName} className="object-cover w-full h-full rounded-sm absolute inset-0 z-10" />
+                                  {getBrawlerInfo(charName).imageUrl ? (
+                                    <img src={getBrawlerInfo(charName).imageUrl} alt={charName} className="object-cover w-full h-full rounded-sm absolute inset-0 z-10" />
+                                  ) : (
+                                    <User className="w-4 h-4 text-primary/40" />
+                                  )}
                                 </div>
                                 <div className="absolute inset-0 bg-red-500/15 flex items-center justify-center pointer-events-none">
                                   <div className="w-full h-0.5 bg-red-500/70 rotate-45 absolute" />
@@ -1006,12 +1022,14 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
                           >
                             <div className="w-9 h-9 sm:w-12 sm:h-12 border-2 border-white/15 group-hover:border-primary transition-colors shrink-0 rounded-md bg-primary/10 relative overflow-hidden flex items-center justify-center shadow-sm">
                               {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img
-                                src={info.imageUrl}
-                                alt={info.nameJa}
-                                className="object-cover w-full h-full rounded-sm absolute inset-0 z-10"
-                                onError={(e) => { e.currentTarget.src = 'https://cdn.brawlify.com/brawler/shelly.png'; }}
-                              />
+                              {info.imageUrl && (
+                                <img
+                                  src={info.imageUrl}
+                                  alt={info.nameJa}
+                                  className="object-cover w-full h-full rounded-sm absolute inset-0 z-10"
+                                  onError={(e) => { e.currentTarget.src = 'https://cdn.brawlify.com/brawler/shelly.png'; }}
+                                />
+                              )}
                               <User className="w-4 h-4 text-primary/40" />
                             </div>
                             <span className="text-[10px] font-medium truncate w-full text-center group-hover:text-primary transition-colors">
@@ -1038,7 +1056,7 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
               </CardTitle>
               <CardDescription>
                 {phase === "ban"
-                  ? "現在のマップで驚異となるキャラクター"
+                  ? "現在のマップで脅威となるキャラクター"
                   : "マップ適性と敵へのカウンター補正から算出"}
               </CardDescription>
             </CardHeader>
@@ -1070,9 +1088,13 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
                           <div className="font-black text-lg w-6 text-center text-muted-foreground tabular-nums">
                             {index + 1}
                           </div>
-                          <div className="w-8 h-8 sm:w-10 sm:h-10 border-2 border-white/15 transition-colors shrink-0 rounded-md bg-primary/10 relative overflow-hidden">
+                          <div className="w-8 h-8 sm:w-10 sm:h-10 border-2 border-white/15 transition-colors shrink-0 rounded-md bg-primary/10 relative overflow-hidden flex items-center justify-center">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={info.imageUrl} alt={info.nameJa} className="object-cover w-full h-full rounded-sm absolute inset-0 z-10" />
+                            {info.imageUrl ? (
+                              <img src={info.imageUrl} alt={info.nameJa} className="object-cover w-full h-full rounded-sm absolute inset-0 z-10" />
+                            ) : (
+                              <User className="w-4 h-4 text-primary/40" />
+                            )}
                           </div>
                           <div className="flex-1 min-w-0 space-y-1">
                             <div className="font-bold text-sm truncate flex items-center gap-2">

@@ -13,6 +13,12 @@ interface SyncState {
 }
 const timestamp = (value: string) => new Intl.DateTimeFormat("ja-JP", { timeZone: "Asia/Tokyo", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(value))
 const tokenKey = (tag: string) => `brawl:auto-sync:${tag}`
+const SYNC_STATE_TTL_MS = 30_000
+const syncStateCache = new Map<string, { state: SyncState; savedAt: number }>()
+function getFreshCachedSync(tag: string): SyncState | null {
+  const cached = syncStateCache.get(tag)
+  return cached && Date.now() - cached.savedAt < SYNC_STATE_TTL_MS ? cached.state : null
+}
 function readToken(tag: string) {
   const value = localStorage.getItem(tokenKey(tag))
   return value && /^[a-f0-9]{64}$/.test(value) ? value : null
@@ -20,7 +26,7 @@ function readToken(tag: string) {
 
 export default function PlayerAutoSync({ playerTag, onCollected }: { playerTag: string; onCollected: () => void }) {
   const tag = playerTag.replace(/^#+/, "").toUpperCase()
-  const [state, setState] = useState<SyncState | null>(null)
+  const [state, setState] = useState<SyncState | null>(() => getFreshCachedSync(tag))
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
   const [retry, setRetry] = useState(0)
@@ -45,6 +51,7 @@ export default function PlayerAutoSync({ playerTag, onCollected }: { playerTag: 
         if (!response.ok) throw new Error("自動同期の設定を取得できませんでした。")
         const result: SyncState = await response.json()
         if (!active || requestVersion.current !== version) return
+        syncStateCache.set(tag, { state: result, savedAt: Date.now() })
         if (lastCollection.current !== undefined && result.last_sync_at && lastCollection.current !== result.last_sync_at) onCollectedRef.current()
         lastCollection.current = result.last_sync_at
         setState(result)
@@ -53,7 +60,12 @@ export default function PlayerAutoSync({ playerTag, onCollected }: { playerTag: 
         if (active && !controller.signal.aborted) setError(err instanceof Error ? err.message : "自動同期の設定を確認できませんでした。")
       } finally { pending = false }
     }
-    refresh()
+    const cached = getFreshCachedSync(tag)
+    if (retry === 0 && cached) {
+      lastCollection.current = cached.last_sync_at
+    } else {
+      refresh()
+    }
     const interval = setInterval(refresh, 60000)
     document.addEventListener("visibilitychange", refresh)
     return () => { active = false; controller.abort(); clearInterval(interval); document.removeEventListener("visibilitychange", refresh) }
@@ -79,6 +91,7 @@ export default function PlayerAutoSync({ playerTag, onCollected }: { playerTag: 
         throw new Error(typeof result.detail === "string" ? result.detail : "自動同期の設定を保存できませんでした。")
       }
       const result: SyncState = await response.json()
+      syncStateCache.set(tag, { state: result, savedAt: Date.now() })
       setState(result)
       lastCollection.current = result.last_sync_at
     } catch (err) { setError(err instanceof Error ? err.message : "設定を保存できませんでした。") }

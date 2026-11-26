@@ -3,6 +3,7 @@ import catalogSeed from "./brawler-catalog.json"
 export interface BrawlerRarity { id: number; name: string }
 
 export const BRAWLER_MAP: Record<string, { ja: string, imageUrl: string, rarity?: BrawlerRarity | null }> = {
+  "thunder frogs": { ja: "サンダーフロッグ", imageUrl: "https://cdn.brawlify.com/brawlers/borders/16000111.png" },
   "wendy": { ja: "ウェンディ", imageUrl: "https://cdn.brawlify.com/brawlers/borders/16000108.png" },
   "nori": { ja: "ノリ", imageUrl: "https://cdn.brawlify.com/brawlers/borders/16000107.png" },
   "bolt": { ja: "ボルト", imageUrl: "https://cdn.brawlify.com/brawlers/borders/16000106.png" },

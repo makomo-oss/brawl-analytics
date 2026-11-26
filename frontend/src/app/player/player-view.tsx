@@ -353,6 +353,28 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
       dashboardCacheRef.current[cacheKey] = result
       setData(result)
       setAnalysisRevision(value => value + 1)
+      if (result.profile?.name) {
+        try {
+          const saved = localStorage.getItem("burolabo_recent_searches")
+          if (saved) {
+            const parsed = JSON.parse(saved)
+            if (Array.isArray(parsed)) {
+              const targetTag = `#${cacheKey}`
+              let updated = false
+              const next = parsed.map((entry: { tag?: string; name?: string }) => {
+                if (typeof entry?.tag === "string" && entry.tag.replace(/^#+/, "").toUpperCase().replace(/O/g, "0") === cacheKey && entry.name !== result.profile?.name) {
+                  updated = true
+                  return { ...entry, tag: targetTag, name: result.profile!.name }
+                }
+                return entry
+              })
+              if (updated) localStorage.setItem("burolabo_recent_searches", JSON.stringify(next))
+            }
+          }
+        } catch {
+          // ignore
+        }
+      }
       // URL を現在のタグで更新
       if (window.location.pathname === "/player") {
         window.history.replaceState(window.history.state, '', `/player?tag=${encodeURIComponent(cacheKey)}`)
@@ -437,7 +459,7 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
   return (
     <div className="arena-workspace arena-dashboard space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Unified NEO-STARR Search Toolbar */}
-      <section className="arena-player-toolbar relative z-50" ref={searchContainerRef} aria-label="プレイヤー・クラブ検索">
+      <section className="arena-player-toolbar relative z-40" ref={searchContainerRef} aria-label="プレイヤー・クラブ検索">
         <div className="relative flex-1 min-w-0 w-full md:max-w-xl">
           {searchMode === "player" ? (
             <div className="relative flex gap-2.5 sm:gap-3 w-full">
@@ -472,7 +494,7 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                 {loading ? "取得中..." : (
                   <>
                     <Search className="w-4 h-4 mr-1.5" />
-                    同期
+                    検索
                   </>
                 )}
               </Button>

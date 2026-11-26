@@ -20,7 +20,8 @@
     "test:live-companion": "node scripts/test-live-companion.mjs",
     "test:runtime-navigation": "node scripts/test-runtime-navigation.mjs",
     "test:arena-navigation-motion": "node scripts/test-arena-navigation-motion.mjs",
-    "test:page-insights": "node scripts/test-page-insights.mjs"
+    "test:page-insights": "node scripts/test-page-insights.mjs",
+    "test:translations-brawlers": "node scripts/test-translations-and-brawlers.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",

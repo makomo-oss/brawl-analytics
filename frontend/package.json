@@ -22,7 +22,8 @@
     "test:arena-navigation-motion": "node scripts/test-arena-navigation-motion.mjs",
     "test:page-insights": "node scripts/test-page-insights.mjs",
     "test:translations-brawlers": "node scripts/test-translations-and-brawlers.mjs",
-    "test:map-directory": "node scripts/test-map-directory.mjs"
+    "test:map-directory": "node scripts/test-map-directory.mjs",
+    "test:contact": "node scripts/test-contact-form.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",

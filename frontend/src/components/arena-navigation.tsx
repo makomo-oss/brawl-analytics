@@ -1,10 +1,11 @@
 "use client";
 
-import { ArrowUpRight, BarChart3, Home, Swords, Trophy, Users } from "lucide-react";
+import { ArrowUpRight, BarChart3, Home, MessageSquarePlus, Swords, Trophy, Users } from "lucide-react";
 import Link from "@/components/document-link";
 import { BrawlerDirectoryLink } from "@/components/brawler-directory-link";
 import { BurolaboIcon } from "@/components/brand-icon";
 import { useArenaTabIndicator } from "@/components/use-arena-tab-indicator";
+import { CONTACT_FROM_STORAGE_KEY } from "@/lib/contact";
 
 const destinations = [
   { href: "/", label: "ホーム", icon: Home },
@@ -47,9 +48,29 @@ export function ArenaNavigation({ pathname, visible }: { pathname: string; visib
           <span ref={desktop.indicator} className="arena-nav-indicator arena-desktop-indicator" aria-hidden="true" />
           {destinations.map(item => <Destination key={item.href} item={item} pathname={pathname} />)}
         </nav>
-        <Link href="/player" className="arena-mobile-dashboard" aria-current={isCurrent("/player", pathname) ? "page" : undefined}>
-          <BarChart3 aria-hidden="true" /><span>ダッシュボード</span><ArrowUpRight aria-hidden="true" />
-        </Link>
+        <div className="arena-header-actions">
+          <Link
+            href="/contact"
+            className={`arena-header-contact${pathname === "/contact" ? " is-active" : ""}`}
+            aria-current={pathname === "/contact" ? "page" : undefined}
+            aria-label="お問い合わせ・要望"
+            onClick={() => {
+              if (pathname && pathname !== "/contact") {
+                try {
+                  window.sessionStorage.setItem(CONTACT_FROM_STORAGE_KEY, pathname);
+                } catch {
+                  // Ignore storage restrictions.
+                }
+              }
+            }}
+          >
+            <MessageSquarePlus aria-hidden="true" />
+            <span>お問い合わせ</span>
+          </Link>
+          <Link href="/player" className="arena-mobile-dashboard" aria-current={isCurrent("/player", pathname) ? "page" : undefined}>
+            <BarChart3 aria-hidden="true" /><span>ダッシュボード</span><ArrowUpRight aria-hidden="true" />
+          </Link>
+        </div>
       </div>
     </header>
     <nav ref={mobile.navigation} className={`arena-bottom-nav pb-safe${visible ? "" : " is-hidden"}`} aria-label="モバイルナビゲーション">

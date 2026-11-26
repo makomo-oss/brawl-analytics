@@ -4,13 +4,15 @@ import { build } from "esbuild"
 
 const output = await build({ entryPoints: ["edge/route-loader.ts"], bundle: true, format: "esm", platform: "node", write: false })
 const { createRouteLoader, isRuntimePath, isRuntimePage } = await import(`data:text/javascript;base64,${Buffer.from(output.outputFiles[0].contents).toString("base64")}`)
-for (const path of ["/", "/player", "/tier", "/brawlers", "/companion", "/about", "/brawlers/amber", "/maps/beach-ball", "/modes/brawl-ball"]) assert(isRuntimePath(path))
+for (const path of ["/", "/player", "/tier", "/brawlers", "/companion", "/about", "/contact", "/brawlers/amber", "/maps/beach-ball", "/modes/brawl-ball"]) assert(isRuntimePath(path))
 for (const path of ["https://other.example/tier", "/api/private", "/icon.svg", "/data/index.json", "/llms.txt", "/sitemap.xml", "/brawlers/../player", "/brawlers/a/b"]) assert(!isRuntimePath(path))
 assert(!isRuntimePage({ kind: "player", path: "/tier" }, "/tier"))
 assert(!isRuntimePage({ kind: "tier", path: "/tier", tierData: {} }, "/tier"))
 assert(!isRuntimePage({ kind: "unknown", path: "/tier" }, "/tier"))
 assert(isRuntimePage({ kind: "about", path: "/about" }, "/about"))
 assert(!isRuntimePage({ kind: "about", path: "/player" }, "/player"))
+assert(isRuntimePage({ kind: "contact", path: "/contact" }, "/contact"))
+assert(!isRuntimePage({ kind: "contact", path: "/about" }, "/about"))
 const fixture = JSON.parse(await readFile(".seo-data/brawler-pages.json", "utf8"))
 const categories = JSON.parse(await readFile("out/__companion-snapshots/index.json", "utf8")).categories
 assert(!isRuntimePage({ kind: "companion", path: "/companion" }, "/companion"), "Reject empty tool documents")

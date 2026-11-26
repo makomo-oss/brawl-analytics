@@ -66,8 +66,28 @@ html { scroll-padding-top: 88px; }
 }
 [data-indicator-ready] > .arena-nav-indicator { opacity: 1; }
 .arena-site-tabbar[data-indicator-ready] .arena-tab-link.is-active { background: transparent; box-shadow: none; }
+.arena-header-actions {
+  display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+}
+.arena-header-contact {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  min-height: 40px; padding: 8px 14px; border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(18, 28, 54, 0.85);
+  color: #d7e2f8; font-size: 12px; font-weight: 700; white-space: nowrap;
+  text-decoration: none;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: background .16s, border-color .16s, color .16s;
+}
+.arena-header-contact svg { width: 15px; height: 15px; flex-shrink: 0; color: #ffce00; }
+.arena-header-contact.is-active,
+.arena-header-contact[aria-current="page"] {
+  border-color: rgba(255, 206, 0, 0.55);
+  background: rgba(255, 206, 0, 0.14);
+  color: #ffe359;
+}
 .arena-mobile-dashboard, .arena-bottom-nav { display: none; }
-.arena-tab-link:focus-visible, .arena-brand:focus-visible, .arena-mobile-dashboard:focus-visible, .arena-bottom-link:focus-visible {
+.arena-tab-link:focus-visible, .arena-brand:focus-visible, .arena-header-contact:focus-visible, .arena-mobile-dashboard:focus-visible, .arena-bottom-link:focus-visible {
   outline: 3px solid #ffce00; outline-offset: 4px;
 }
 
@@ -382,6 +402,7 @@ body:has(.arena-home, .arena-workspace) {
 
 @media(hover:hover) {
   .arena-tab-link:not(.is-active):hover { background: rgba(255, 255, 255, 0.06); color: #f8fafc; }
+  .arena-header-contact:not(.is-active):hover { background: rgba(28, 41, 79, 0.94); border-color: rgba(255, 206, 0, 0.45); color: #f8fafc; }
   .arena-stage-action:hover { background: #25315e; border-color: #c3ccff; color: #f2f1ff; }
   .arena-search-form .arena-search-button:not(:disabled):hover { filter: brightness(1.06); }
   .arena-search-suggestion:hover, .arena-history-chip:hover { background: rgba(28, 41, 79, 0.95); border-color: rgba(255, 206, 0, 0.36); }
@@ -395,8 +416,9 @@ body:has(.arena-home, .arena-workspace) {
 }
 
 @media(min-width:1024px) and (max-width:1150px) {
-  .arena-header-inner { gap: 18px; padding-inline: 22px; }
-  .arena-tab-link { gap: 6px; padding-inline: 11px; font-size: 12px; }
+  .arena-header-inner { gap: 14px; padding-inline: 20px; }
+  .arena-tab-link { gap: 6px; padding-inline: 10px; font-size: 12px; }
+  .arena-header-contact { padding-inline: 11px; gap: 6px; }
   .arena-home-hero { gap: 26px; }
   .arena-fighter { width: 170px; }
   .arena-fighter-amber { left: 24px; }
@@ -453,6 +475,8 @@ body:has(.arena-home, .arena-workspace) {
   .arena-brand > svg { width: 27px; height: 27px; }
   .arena-brand small { font-size: 10px; letter-spacing: 0.1em; }
   .arena-mobile-dashboard { gap: 6px; min-height: 40px; padding: 8px 10px; font-size: 11px; }
+  .arena-header-contact { min-width: 40px; min-height: 40px; padding: 8px 10px; }
+  .arena-header-contact > span { display: none; }
   .arena-home { padding: 4px 0 0; gap: 24px; }
   .arena-home-kicker { font-size: 10px; padding: 4px 10px; letter-spacing: 0.03em; }
   .arena-home-title { font-size: 40px; letter-spacing: -0.03em; line-height: 1.24; margin: 12px 0 12px; }

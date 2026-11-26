@@ -11,6 +11,7 @@ import { llmsFullTxt, llmsTxt } from "@/lib/llms-txt"
 import { ABOUT_REVISED } from "@/lib/about"
 import { normalizeDate } from "@/lib/dates"
 import { applyBrawlerCatalog } from "@/lib/use-brawler-catalog"
+import { handleContactRequest, type ContactEnv } from "./contact-api"
 
 // Non-HTML documents generated from the same snapshot and cache as pages.
 const TEXT_TYPES: Record<string, string> = { "/sitemap.xml": "application/xml; charset=utf-8", "/llms.txt": "text/plain; charset=utf-8", "/llms-full.txt": "text/plain; charset=utf-8" }
@@ -199,7 +200,7 @@ async function liveCondition(env: Parameters<PagesFunction<Env>>[0]["env"], orig
 }
 
 function xml(index: BrawlerSnapshot, conditions: ConditionIndex = { modes: [], maps: [] }) {
-  const paths = ["/", "/tier", "/player", "/companion", "/brawlers", "/modes", "/maps", "/about"]
+  const paths = ["/", "/tier", "/player", "/companion", "/brawlers", "/modes", "/maps", "/about", "/contact"]
   const entries = brawlerEntries(index).filter(entry => Object.values(index.overview).some(data => data.characters[entry.name]?.sample_sufficient))
   const dates = Object.values(index.overview).flatMap(data => {
     const raw = data.updated_at
@@ -216,10 +217,11 @@ function xml(index: BrawlerSnapshot, conditions: ConditionIndex = { modes: [], m
 const worker = {
   async fetch(request: Request, env, ctx): Promise<Response> {
     const url = new URL(request.url)
+    if (url.pathname === "/api/contact") return handleContactRequest(request, env as ContactEnv)
     if (url.pathname.startsWith("/data/")) return dataResponse(request, source => worker.fetch(source, env, ctx))
     const isCondition = /^\/(?:modes|maps)(?:\/|$)/.test(url.pathname)
     const isOverview = url.pathname === "/" || /^\/tier\/?$/.test(url.pathname)
-    const isTool = /^\/(?:player|about)\/?$/.test(url.pathname)
+    const isTool = /^\/(?:player|about|contact)\/?$/.test(url.pathname)
     const isCompanion = /^\/companion\/?$/.test(url.pathname)
     const isDynamic = isTool || isCompanion || isOverview || isCondition || url.pathname === "/brawlers" || url.pathname.startsWith("/brawlers/") || !!TEXT_TYPES[url.pathname]
     if (!isDynamic) return env.ASSETS.fetch(request)
@@ -230,7 +232,15 @@ const worker = {
       // Tool documents contain no player data or query values. Reuse the same
       // shell as public pages so every entry URL can navigate without reloads.
       const document = await env.ASSETS.fetch(new Request(`${url.origin}/__rendered-pages${path}.document`))
-      const body = document.ok ? document.body : renderPage(path === "/about" ? { kind: "about", path: "/about" } : { kind: "player", path: "/player" })
+      const body = document.ok
+        ? document.body
+        : renderPage(
+            path === "/about"
+              ? { kind: "about", path: "/about" }
+              : path === "/contact"
+                ? { kind: "contact", path: "/contact" }
+                : { kind: "player", path: "/player" },
+          )
       return new Response(request.method === "HEAD" ? null : body, { headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "public, max-age=0, must-revalidate" } })
     }
     const notFoundResponse = () => new Response(request.method === "HEAD" ? null : renderNotFound(), {

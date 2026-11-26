@@ -3,7 +3,7 @@ import { isTierListData } from "@/lib/tier-data"
 import { isDraftCategories } from "@/lib/draft-categories"
 
 export function isRuntimePath(path: string) {
-  return path === "/" || /^\/(?:player|companion|tier|about)$/.test(path) || /^\/(?:brawlers|modes|maps)(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)?$/.test(path)
+  return path === "/" || /^\/(?:player|companion|tier|about|contact)$/.test(path) || /^\/(?:brawlers|modes|maps)(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)?$/.test(path)
 }
 
 export function isRuntimePage(value: unknown, path: string): value is RuntimePage {
@@ -12,6 +12,7 @@ export function isRuntimePage(value: unknown, path: string): value is RuntimePag
   switch (page.kind) {
     case "player": return path === "/player"
     case "about": return path === "/about"
+    case "contact": return path === "/contact"
     case "companion": return path === "/companion" && isDraftCategories(page.categories)
     case "home": case "tier": return path === (page.kind === "home" ? "/" : "/tier") && isTierListData(page.tierData) && !!page.initialMatchups
     case "directory": return path === "/brawlers" && Array.isArray(page.entries)

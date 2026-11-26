@@ -7,6 +7,7 @@ export const SITE_SECTIONS = [
   { path: "/maps", label: "マップ別", description: "マップごとのキャラ別勝率ランキング" },
   { path: "/companion", label: "BAN・ピック", description: "ガチバトルのBAN・ピック候補を対戦データで提案" },
   { path: "/about", label: "運営・集計方法", description: "データの出典、集計方法、更新頻度、免責事項" },
+  { path: "/contact", label: "お問い合わせ・要望", description: "機能要望・不具合報告・データ修正依頼などの送信フォーム" },
 ] as const
 
 export const FAN_CONTENT_NOTICE = "このコンテンツは非公式であり、Supercellによって承認されたものではありません。詳しくはSupercellのファンコンテンツポリシー（www.supercell.com/fan-content-policy）をご覧ください。"

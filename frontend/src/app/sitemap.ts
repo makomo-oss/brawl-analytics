@@ -13,7 +13,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const details = brawlerEntries(snapshot).map(entry => brawlerPage(snapshot, entry.slug))
   const conditions = conditionIndex(snapshot)
   return [
-    ...["", "/tier", "/player", "/companion", "/brawlers", "/modes", "/maps", "/about"].map(path => ({ url: `${SITE_URL}${path || "/"}` })),
+    ...["", "/tier", "/player", "/companion", "/brawlers", "/modes", "/maps", "/about", "/contact"].map(path => ({ url: `${SITE_URL}${path || "/"}` })),
     ...[...conditions.modes, ...conditions.maps].map(entry => ({ url: `${SITE_URL}${entry.path}`, ...(entry.updatedAt ? { lastModified: new Date(entry.updatedAt) } : {}) })),
     ...details.flatMap(data => {
       if (!data || ![data.cohorts.global, data.cohorts.gachi].some(cohort => cohort.stats?.sample_sufficient)) return []

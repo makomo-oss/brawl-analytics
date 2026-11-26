@@ -8,6 +8,7 @@ import { siteNodes, SITE_ID, PUBLISHER_ID, GAME_ID, reference } from "@/lib/site
 import { brawlerCopy, companionCopy, conditionHubCopy, conditionPageCopy, playerCopy, tierCopy } from "@/lib/page-copy"
 import { tierSummary } from "@/lib/page-insights"
 import { aboutCopy, ABOUT_REVISED } from "@/lib/about"
+import { contactCopy } from "@/lib/contact"
 import { COMPANION_FAQ, PLAYER_FAQ, brawlerFaq, conditionFaq, faqNode, tierFaq } from "@/lib/faq"
 import { SITE_SECTIONS } from "@/lib/site-sections"
 import { applyBrawlerCatalog } from "@/lib/use-brawler-catalog"
@@ -22,6 +23,7 @@ function pageCopy(page: RuntimePage) {
     case "player": return playerCopy
     case "companion": return companionCopy
     case "about": return aboutCopy
+    case "contact": return contactCopy
     case "detail": return brawlerCopy(page.data)
     case "condition": return conditionPageCopy(page.data)
     case "conditions": return conditionHubCopy(page.category, page.index)
@@ -45,6 +47,7 @@ function generalNodes(page: RuntimePage, url: string, name: string, description:
     nodes.push(faqNode(url, tierFaq(summary, page.tierData, gachiSummary)))
   }
   if (page.kind === "about") Object.assign(webPage, { "@type": "AboutPage", about: reference(PUBLISHER_ID), dateModified: ABOUT_REVISED })
+  if (page.kind === "contact") Object.assign(webPage, { "@type": "ContactPage", about: reference(PUBLISHER_ID) })
   if (page.kind === "player" || page.kind === "companion") {
     const appId = `${url}#tool`
     webPage.mainEntity = reference(appId)
@@ -72,7 +75,7 @@ export function renderPage(page: RuntimePage) {
     applyBrawlerCatalog({ brawlers: page.catalog }, { notify: false })
   }
   const overview = page.kind === "home" || page.kind === "tier"
-  const general = overview || page.kind === "player" || page.kind === "companion" || page.kind === "about"
+  const general = overview || page.kind === "player" || page.kind === "companion" || page.kind === "about" || page.kind === "contact"
   const isDetail = page.kind === "detail"
   const name = isDetail ? page.data.nameJa : ""
   const copy = pageCopy(page)

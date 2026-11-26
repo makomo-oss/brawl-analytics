@@ -12,6 +12,7 @@ import type { InitialMatchups } from "@/lib/matchup-preview"
 import PlayerView from "@/app/player/player-view"
 import { PlayerFaq, PlayerHeader } from "@/app/player/player-intro"
 import AboutView from "@/app/about/about-view"
+import ContactView from "@/app/contact/contact-view"
 import { SiteFooter } from "@/components/site-footer"
 import DraftCompanionPage from "@/app/companion/companion-view"
 import type { DraftCategories } from "@/lib/draft-categories"
@@ -26,7 +27,7 @@ export type OverviewPage = ({ kind: "home"; path: "/" } | { kind: "tier"; path: 
   initialMatchups: InitialMatchups
   catalog?: BrawlerSnapshot["catalog"]
 }
-export type ToolPage = { kind: "player"; path: "/player" } | { kind: "about"; path: "/about" } | { kind: "companion"; path: "/companion"; categories: DraftCategories }
+export type ToolPage = { kind: "player"; path: "/player" } | { kind: "about"; path: "/about" } | { kind: "contact"; path: "/contact" } | { kind: "companion"; path: "/companion"; categories: DraftCategories }
 export type RuntimePage = PublicPage | OverviewPage | ToolPage
 
 function PageView({ page, href }: { page: RuntimePage; href: string }) {
@@ -36,6 +37,7 @@ function PageView({ page, href }: { page: RuntimePage; href: string }) {
     <PlayerFaq />
   </>
   if (page.kind === "about") return <AboutView />
+  if (page.kind === "contact") return <ContactView />
   if (page.kind === "companion") return <DraftCompanionPage initialCategories={page.categories} />
   return page.kind === "home" ? <HomeView initialTierData={page.tierData} initialMatchups={page.initialMatchups} /> : page.kind === "tier" ? <TierView initialTierData={page.tierData} initialGachiTierData={page.gachiTierData} initialMatchups={page.initialMatchups} /> : page.kind === "detail" ? <BrawlerDetailView data={page.data} /> : page.kind === "directory" ? <BrawlerDirectoryView entries={page.entries} /> : page.kind === "condition" ? <ConditionDetailView data={page.data} /> : <ConditionDirectoryView index={page.index} kind={page.category} />
 }

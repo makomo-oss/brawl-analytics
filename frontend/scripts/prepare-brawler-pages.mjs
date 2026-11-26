@@ -25,10 +25,15 @@ export async function fetchData(api, path, validate, fetcher = fetch) {
   }
 }
 
+export function validCatalog(data) {
+  return Array.isArray(data?.brawlers) && data.brawlers.length > 0 && data.brawlers.every(row =>
+    typeof row.name === 'string' && typeof row.nameJa === 'string' && typeof row.imageUrl === 'string' &&
+    (row.imageUrl === '' || /^https:\/\/cdn\.brawlify\.com\/.*\.png$/.test(row.imageUrl)))
+}
+
 export async function prepareBrawlerPages(api, directory) {
   if (!api) throw new Error('NEXT_PUBLIC_API_URL is required to build character pages')
-  const catalog = await fetchData(api, '/meta/brawlers', data => Array.isArray(data?.brawlers) && data.brawlers.length > 0 && data.brawlers.every(row =>
-    typeof row.name === 'string' && typeof row.nameJa === 'string' && typeof row.imageUrl === 'string' && /^https:\/\/cdn\.brawlify\.com\/.*\.png$/.test(row.imageUrl)))
+  const catalog = await fetchData(api, '/meta/brawlers', validCatalog)
   const snapshot = { overview: {}, details: {}, contexts: {}, contextUpdatedAt: {}, mapModes: {}, catalog: catalog.brawlers }
   const jobs = []
   for (const type of ['global', 'gachi']) {

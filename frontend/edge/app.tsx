@@ -17,8 +17,14 @@ import DraftCompanionPage from "@/app/companion/companion-view"
 import type { DraftCategories } from "@/lib/draft-categories"
 import { createRouteLoader, isRuntimePath } from "./route-loader"
 import { navigationDirection } from "@/lib/arena-navigation-motion"
+import type { BrawlerSnapshot } from "@/lib/brawler-page-data"
+import { applyBrawlerCatalog } from "@/lib/use-brawler-catalog"
 
-export type OverviewPage = ({ kind: "home"; path: "/" } | { kind: "tier"; path: "/tier" }) & { tierData: TierListData; initialMatchups: InitialMatchups }
+export type OverviewPage = ({ kind: "home"; path: "/" } | { kind: "tier"; path: "/tier" }) & {
+  tierData: TierListData
+  initialMatchups: InitialMatchups
+  catalog?: BrawlerSnapshot["catalog"]
+}
 export type ToolPage = { kind: "player"; path: "/player" } | { kind: "about"; path: "/about" } | { kind: "companion"; path: "/companion"; categories: DraftCategories }
 export type RuntimePage = PublicPage | OverviewPage | ToolPage
 
@@ -45,6 +51,10 @@ function updateDocumentHead(html: string) {
 }
 
 export function App({ page }: { page: RuntimePage }) {
+  // Apply server-provided live catalog synchronously so SSR and initial hydration agree.
+  if ("catalog" in page && Array.isArray(page.catalog)) {
+    applyBrawlerCatalog({ brawlers: page.catalog }, { notify: false })
+  }
   const [current, setCurrent] = useState<Visit>({ page, href: page.path })
   const [visits, setVisits] = useState<Visit[]>([{ page, href: page.path }])
   const [pending, setPending] = useState<string | null>(null)
@@ -102,6 +112,9 @@ export function App({ page }: { page: RuntimePage }) {
           history[mode === "replace" ? "replaceState" : "pushState"]({ arenaScroll: 0 }, "", nextHref)
         }
         updateDocumentHead(document.html)
+        if ("catalog" in document.page && Array.isArray(document.page.catalog)) {
+          applyBrawlerCatalog({ brawlers: document.page.catalog })
+        }
         const visit = { page: document.page, href: nextHref }
         const nextDirection = navigationDirection(displayedPath.current, url.pathname, mode, window.matchMedia("(max-width: 1023px)").matches)
         restore.current = { scroll, hash: url.hash }

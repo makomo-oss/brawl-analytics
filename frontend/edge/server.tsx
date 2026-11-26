@@ -9,6 +9,7 @@ import { brawlerCopy, companionCopy, conditionHubCopy, conditionPageCopy, player
 import { tierSummary } from "@/lib/page-insights"
 import { aboutCopy, ABOUT_REVISED } from "@/lib/about"
 import { COMPANION_FAQ, PLAYER_FAQ, brawlerFaq, faqNode, tierFaq } from "@/lib/faq"
+import { applyBrawlerCatalog } from "@/lib/use-brawler-catalog"
 
 export const escapeHtml = (text: string) => text.replace(/[&<>"']/g, value => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[value]!)
 const safeJson = (value: unknown) => JSON.stringify(value).replace(/</g, "\\u003c")
@@ -48,6 +49,9 @@ function generalNodes(page: RuntimePage, url: string, name: string) {
 }
 
 export function renderPage(page: RuntimePage) {
+  if ("catalog" in page && Array.isArray(page.catalog)) {
+    applyBrawlerCatalog({ brawlers: page.catalog }, { notify: false })
+  }
   const overview = page.kind === "home" || page.kind === "tier"
   const general = overview || page.kind === "player" || page.kind === "companion" || page.kind === "about"
   const isDetail = page.kind === "detail"

@@ -1,0 +1,63 @@
+name: Sync Brawler Catalog
+
+on:
+  schedule:
+    - cron: '0 3 * * *' # Daily at 12:00 PM JST
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-brawler-catalog
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r backend/requirements.txt
+
+      - name: Wake Render API if configured
+        if: ${{ secrets.RENDER_URL != '' }}
+        env:
+          RENDER_URL: ${{ secrets.RENDER_URL }}
+        run: |
+          for i in {1..6}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$RENDER_URL/ping" || echo "000")
+            if [ "$STATUS" -eq 200 ]; then
+              break
+            fi
+            sleep 10
+          done
+
+      - name: Sync backend and frontend brawler catalog seeds
+        env:
+          SYNC_API_URL: ${{ secrets.RENDER_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          BRAWL_API_TOKEN: ${{ secrets.BRAWL_API_TOKEN }}
+          BRAWL_API_PROXY: ${{ secrets.BRAWL_API_PROXY }}
+        working-directory: backend
+        run: python -m app.scripts.sync_brawler_catalog
+
+      - name: Commit and push catalog updates
+        run: |
+          if git diff --quiet -- backend/app/data/brawler_catalog.json frontend/src/lib/brawler-catalog.json; then
+            echo "Brawler catalog is already up to date."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add backend/app/data/brawler_catalog.json frontend/src/lib/brawler-catalog.json
+          git commit -m "chore: sync brawler catalog"
+          git push

@@ -1,9 +1,16 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { fetchData, validStats, validTier } from './prepare-brawler-pages.mjs'
+import { fetchData, validCatalog, validStats, validTier } from './prepare-brawler-pages.mjs'
 
 const stats = { score: 55, win_rate: 58, use_rate: 2.7, total_matches: 2827, sample_sufficient: true }
 const tier = { characters: { amber: stats }, tiers: { S: ['amber'] }, metrics: { analyzed_matches: 2827 } }
+
+test('accepts newly added brawlers with empty imageUrl while rejecting non-CDN image URLs', () => {
+  assert.equal(validCatalog({ brawlers: [{ name: 'New Hero', nameJa: '新キャラ', imageUrl: '' }] }), true)
+  assert.equal(validCatalog({ brawlers: [{ name: 'New Hero', nameJa: '新キャラ', imageUrl: 'https://cdn.brawlify.com/brawlers/borders/16000199.png' }] }), true)
+  assert.equal(validCatalog({ brawlers: [{ name: 'New Hero', nameJa: '新キャラ', imageUrl: 'https://evil.example/x.png' }] }), false)
+  assert.equal(validCatalog({ brawlers: [] }), false)
+})
 
 test('rejects invalid counts, percentages and incomplete Tier references', () => {
   assert.ok(validTier(tier))

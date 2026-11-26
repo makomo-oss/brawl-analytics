@@ -61,11 +61,8 @@ def _retry_delay(header: str | None) -> float:
     return 30
 
 
-async def _get_resource(path: str, tag: str, suffix: str = ""):
+async def _get_url(url: str, resource_label: str, not_found_kind: str | None = None):
     global _rate_limited_until
-    clean_tag = tag.replace("%23", "").replace("#", "").strip().upper()
-    from urllib.parse import quote
-    url = f"{BRAWL_API_BASE_URL}/{path}/%23{quote(clean_tag, safe='')}{suffix}"
     for attempt in range(3):
         if time.monotonic() < _rate_limited_until:
             raise BrawlAPIRateLimited("Brawl API returned HTTP 429 (cooldown active)")
@@ -80,17 +77,30 @@ async def _get_resource(path: str, tag: str, suffix: str = ""):
             if status == 429:
                 retry_at = time.monotonic() + _retry_delay(exc.response.headers.get("Retry-After"))
                 _rate_limited_until = max(_rate_limited_until, retry_at)
-                raise BrawlAPIRateLimited(f"Brawl API returned HTTP 429 for {path}{suffix}") from exc
-            if status == 404:
-                if suffix == "/battlelog":
+                raise BrawlAPIRateLimited(f"Brawl API returned HTTP 429 for {resource_label}") from exc
+            if status == 404 and not_found_kind:
+                if not_found_kind == "battlelog":
                     raise BrawlBattlelogNotFound("Brawl API returned HTTP 404 for players/battlelog") from exc
-                raise ValueError("Player not found" if path == "players" else "Club not found") from exc
+                raise ValueError("Player not found" if not_found_kind == "players" else "Club not found") from exc
             if status not in (500, 502, 503, 504) or attempt == 2:
                 raise BrawlAPIError(f"Brawl API returned HTTP {status}") from exc
         except httpx.RequestError as exc:
             if attempt == 2:
                 raise BrawlAPIError("Brawl API is unavailable") from exc
         await asyncio.sleep(0.5 * (2 ** attempt))
+
+
+async def _get_resource(path: str, tag: str, suffix: str = ""):
+    clean_tag = tag.replace("%23", "").replace("#", "").strip().upper()
+    from urllib.parse import quote
+    url = f"{BRAWL_API_BASE_URL}/{path}/%23{quote(clean_tag, safe='')}{suffix}"
+    not_found_kind = "battlelog" if suffix == "/battlelog" else path
+    return await _get_url(url, f"{path}{suffix}", not_found_kind=not_found_kind)
+
+
+async def get_brawlers():
+    return await _get_url(f"{BRAWL_API_BASE_URL}/brawlers", "brawlers")
+
 
 async def get_player_battlelog(player_tag: str):
     return await _get_resource("players", player_tag, "/battlelog")

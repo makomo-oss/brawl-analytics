@@ -10,12 +10,14 @@ import { isDraftCategories } from "@/lib/draft-categories"
 import { llmsFullTxt, llmsTxt } from "@/lib/llms-txt"
 import { ABOUT_REVISED } from "@/lib/about"
 import { normalizeDate } from "@/lib/dates"
+import { applyBrawlerCatalog } from "@/lib/use-brawler-catalog"
 
 // Non-HTML documents generated from the same snapshot and cache as pages.
 const TEXT_TYPES: Record<string, string> = { "/sitemap.xml": "application/xml; charset=utf-8", "/llms.txt": "text/plain; charset=utf-8", "/llms-full.txt": "text/plain; charset=utf-8" }
 const contentType = (path: string) => TEXT_TYPES[path] || "text/html; charset=utf-8"
 const extraHeaders = (path: string): Record<string, string> => path.startsWith("/llms") ? { "X-Robots-Tag": "noindex" } : {}
 function textBody(path: string, index: BrawlerSnapshot, conditions: ConditionIndex) {
+  if (Array.isArray(index.catalog)) applyBrawlerCatalog({ brawlers: index.catalog }, { notify: false })
   return path === "/sitemap.xml" ? xml(index, conditions) : path === "/llms.txt" ? llmsTxt(index) : llmsFullTxt(index, conditions)
 }
 
@@ -262,7 +264,7 @@ const worker = {
           // build's compact TOP5 so a refreshed document can still open panels
           // immediately; each panel revalidates its own live/filtered data.
           const initialMatchups = await overviewPreviews(env, url.origin, path === "/" ? "home" : "tier")
-          body = renderPage({ ...(path === "/" ? { kind: "home", path: "/" } as const : { kind: "tier", path: "/tier" } as const), tierData: index.overview[path === "/" ? "gachi" : "global"], initialMatchups })
+          body = renderPage({ ...(path === "/" ? { kind: "home", path: "/" } as const : { kind: "tier", path: "/tier" } as const), tierData: index.overview[path === "/" ? "gachi" : "global"], initialMatchups, catalog: index.catalog })
         }
         else if (TEXT_TYPES[path]) body = textBody(path, index, await conditionManifest(env, url.origin, signal))
         else if (path === "/brawlers") body = renderPage({ kind: "directory", path, entries: brawlerEntries(index) })

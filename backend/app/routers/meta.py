@@ -68,7 +68,9 @@ def clear_meta_cache():
         _PAIR_PENDING.clear()
         _PAIR_CACHE_GENERATION += 1
     from app.services.brawler_pages import clear_cache
+    from app.services.brawler_catalog import clear_catalog_cache
     clear_cache()
+    clear_catalog_cache()
 
 
 @router.get("/brawler-pages")

@@ -15,12 +15,13 @@ const subscribe = (listener: () => void) => { listeners.add(listener); return ()
 const snapshot = () => version
 const serverSnapshot = () => 0
 
-export function applyBrawlerCatalog(payload: unknown): boolean {
+export function applyBrawlerCatalog(payload: unknown, options: { notify?: boolean } = {}): boolean {
   if (!payload || typeof payload !== "object" || !("brawlers" in payload) || !Array.isArray(payload.brawlers) || payload.brawlers.length > 500) return false
   let changed = false
   let accepted = 0
   for (const row of payload.brawlers) {
-    if (!row || typeof row.name !== "string" || !row.name.trim() || row.name.length > 80 || !Number.isInteger(row.id)) continue
+    if (!row || typeof row.name !== "string" || !row.name.trim() || row.name.length > 80) continue
+    if (row.id !== undefined && !Number.isInteger(row.id)) continue
     const key = row.name.trim().toLowerCase()
     if (["__proto__", "constructor", "prototype"].includes(key)) continue
     const old = BRAWLER_MAP[key]
@@ -42,7 +43,7 @@ export function applyBrawlerCatalog(payload: unknown): boolean {
       changed = true
     }
   }
-  if (changed) { version += 1; listeners.forEach(listener => listener()) }
+  if (changed && options.notify !== false) { version += 1; listeners.forEach(listener => listener()) }
   return accepted > 0
 }
 

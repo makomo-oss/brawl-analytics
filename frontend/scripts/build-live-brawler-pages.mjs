@@ -33,7 +33,7 @@ for (const [kind, type] of [["home", "gachi"], ["tier", "global"]]) {
     kamo: detail.kamo, tenteki: detail.tenteki, kamo_scope: detail.kamo_scope, tenteki_scope: detail.tenteki_scope,
   }]))
   const initialMatchups = { global: kind === "tier" ? rows("global") : {}, gachi: rows("gachi") }
-  await writeFile(resolve(overviewDir, `${kind}.json`), JSON.stringify({ kind, path: kind === "home" ? "/" : "/tier", tierData: snapshot.overview[type], initialMatchups }))
+  await writeFile(resolve(overviewDir, `${kind}.json`), JSON.stringify({ kind, path: kind === "home" ? "/" : "/tier", tierData: snapshot.overview[type], initialMatchups, catalog: snapshot.catalog }))
 }
 const snapshotDir = resolve(root, "out/__brawler-snapshots")
 await mkdir(snapshotDir, { recursive: true })

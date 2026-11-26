@@ -21,12 +21,17 @@ globalThis.caches = { open: async () => ({
 globalThis.fetch = async input => {
   if (held) await held
   if (offline) return new Response("offline", { status: 503 })
-  if (new URL(input).pathname === "/meta/brawlers") return Response.json({ brawlers: snapshot.catalog })
+  if (new URL(input).pathname === "/meta/brawlers") return Response.json({ brawlers: [
+    ...snapshot.catalog,
+    { id: 16999998, name: "Live Future Hero", nameJa: "ライブ新キャラ", imageUrl: "https://cdn.brawlify.com/brawlers/borders/16999998.png", rarity: { id: 6, name: "Legendary" } },
+  ] })
   const data = structuredClone(snapshot)
   for (const type of ["global", "gachi"]) {
     data.details[type] = {}; data.contexts[type] = { modes: {}, maps: {} }
     data.overview[type].updated_at = updatedAt
     data.overview[type].metrics.analyzed_matches = 987654
+    data.overview[type].characters["live future hero"] = { ...data.overview[type].characters.amber, score: 99.9, rank_position: 1, sample_sufficient: true }
+    data.overview[type].tiers["S+"] = ["live future hero", ...(data.overview[type].tiers["S+"] || [])]
     if (empty) { data.overview[type].characters = {}; data.overview[type].tiers = {} }
   }
   return Response.json(data)
@@ -73,6 +78,9 @@ try {
     assert.deepEqual(pageData(live).initialMatchups, previews, "live refresh must preserve instant panel previews when the API index omits details")
     assert.equal(pageData(live).tierData.metrics.analyzed_matches, 987654, "previews must not replace fresh Tier statistics")
     assert(live.includes(updatedAt))
+    assert(live.includes("ライブ新キャラ"), "live overview SSR must render newly added catalog brawlers without a rebuild")
+    assert(live.includes("https://cdn.brawlify.com/brawlers/borders/16999998.png"))
+    assert(Array.isArray(pageData(live).catalog) && pageData(live).catalog.some(row => row.nameJa === "ライブ新キャラ"))
     assert(live.includes('"dateModified":"2026-10-16T00:00:00.000Z"'))
     if (path === "/tier") assert(live.includes('dateTime="2026-10-16T00:00:00.000Z"'))
     assert.equal((await request(path)).headers.get("X-Brawler-Rendering"), "live")

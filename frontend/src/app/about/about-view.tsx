@@ -4,7 +4,7 @@ import { ABOUT_REVISED } from "@/lib/about"
 import { jstDate } from "@/lib/dates"
 
 const card = "rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-4 sm:p-6 space-y-3 min-w-0"
-const heading = "text-2xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-primary via-purple-400 to-cyan-400 bg-clip-text text-transparent"
+const heading = "text-[1.625rem] sm:text-4xl leading-tight font-extrabold tracking-tight bg-gradient-to-r from-primary via-purple-400 to-cyan-400 bg-clip-text text-transparent"
 const text = "text-sm leading-relaxed text-muted-foreground break-words"
 
 function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {

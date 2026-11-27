@@ -15,7 +15,7 @@ import { DataSummary } from "@/components/data-summary"
 import { FaqSection } from "@/components/faq-section"
 
 const card = "rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-4 sm:p-6"
-const heading = "text-xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-primary via-purple-400 to-cyan-400 bg-clip-text text-transparent"
+const heading = "text-[1.625rem] sm:text-4xl leading-tight font-extrabold tracking-tight bg-gradient-to-r from-primary via-purple-400 to-cyan-400 bg-clip-text text-transparent"
 
 function entryMapName(entry: ConditionEntry): string {
   return entry.ids.global || entry.ids.gachi || entry.label

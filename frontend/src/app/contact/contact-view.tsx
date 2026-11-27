@@ -297,7 +297,7 @@ export default function ContactView() {
           <MessageSquarePlus className="h-3.5 w-3.5" aria-hidden="true" />
           FEEDBACK &amp; SUPPORT
         </p>
-        <h1 id={formTitleId} className="text-2xl sm:text-4xl font-extrabold tracking-tight">
+        <h1 id={formTitleId} className="text-[1.625rem] sm:text-4xl leading-tight font-extrabold tracking-tight">
           お問い合わせ・ご要望
         </h1>
         <p className="text-sm leading-relaxed text-muted-foreground">

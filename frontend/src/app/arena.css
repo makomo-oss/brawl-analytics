@@ -543,7 +543,7 @@ body:has(.arena-home, .arena-workspace) {
   .arena-tool-description { font-size: 11px; margin-bottom: 8px; }
 
   .arena-meta-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-  .arena-section-title { font-size: 17px; }
+  .arena-section-title { font-size: 19px; }
   .arena-directory-callout { flex-wrap: wrap; padding: 16px 14px; gap: 12px; }
   .arena-directory-callout h2 { font-size: 18px; }
   .arena-directory-action { margin-left: 0; width: 100%; justify-content: center; }

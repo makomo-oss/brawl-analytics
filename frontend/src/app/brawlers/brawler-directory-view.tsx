@@ -39,8 +39,8 @@ export default function BrawlerDirectoryView({ entries }: { entries: ReturnType<
             <span aria-current="page">キャラ一覧</span>
           </nav>
           <p className="arena-dir-eyebrow">JEWEL RARITY DIRECTORY</p>
-          <h1 className="flex items-center gap-2 sm:gap-2.5 text-xl sm:text-3xl font-extrabold tracking-tight">
-            <Users aria-hidden="true" className="w-6 h-6 sm:w-7 sm:h-7 shrink-0" />
+          <h1 className="flex items-center gap-2 sm:gap-2.5 text-[1.625rem] sm:text-3xl leading-tight font-extrabold tracking-tight">
+            <Users aria-hidden="true" className="w-7 h-7 shrink-0" />
             <span className="tabular-nums">キャラ一覧 ({visible.length} / {entries.length})</span>
           </h1>
           <p className="text-xs sm:text-sm leading-snug sm:leading-relaxed text-muted-foreground">全{entries.length}キャラのTier・勝率・使用率を、全体とガチバトル（エリート以上）の対戦データで比較できます。</p>

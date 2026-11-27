@@ -589,7 +589,7 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
     return (
       <div className="arena-workspace arena-draft arena-draft-setup max-w-3xl mx-auto space-y-3.5 sm:space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="text-center space-y-1.5 sm:space-y-2.5">
-          <h1 className="text-xl sm:text-4xl font-extrabold tracking-tight">
+          <h1 className="text-[1.625rem] sm:text-4xl leading-tight font-extrabold tracking-tight">
             ブロスタ ガチバトル ピックツール（BAN・ピック提案）
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground leading-snug sm:leading-relaxed">

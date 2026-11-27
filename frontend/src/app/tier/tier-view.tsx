@@ -338,8 +338,8 @@ export default function TierListPage({ initialTierData, initialMatchups, initial
       <header className="arena-tier-header">
         <div className="space-y-1.5 sm:space-y-2 min-w-0">
           <p className="arena-tier-eyebrow">COMPETITIVE TIER LIST</p>
-          <h1 className="text-xl sm:text-3xl font-extrabold tracking-tight flex items-center gap-2 sm:gap-2.5">
-            <Trophy aria-hidden="true" className="w-6 h-6 sm:w-7 sm:h-7 shrink-0" />
+          <h1 className="text-[1.625rem] sm:text-3xl leading-tight font-extrabold tracking-tight flex items-center gap-2 sm:gap-2.5">
+            <Trophy aria-hidden="true" className="w-7 h-7 shrink-0" />
             <span>ブロスタ最強キャラ・ティア表</span>
           </h1>
           {!loading && (

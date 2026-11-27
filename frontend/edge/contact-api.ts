@@ -21,14 +21,33 @@ function json(body: Record<string, unknown>, status = 200, extraHeaders: Record<
   })
 }
 
+const PAGES_HOST = "brawl-analytics.pages.dev"
+
+function isLocalHostname(hostname: string): boolean {
+  return hostname === "localhost" || hostname === "127.0.0.1"
+}
+
 function isAllowedOrigin(request: Request, requestOrigin: string): boolean {
   const origin = request.headers.get("Origin")
   if (origin) {
     if (origin === requestOrigin || origin === SITE_URL) return true
     try {
       const parsed = new URL(origin)
-      if (parsed.protocol === "https:" && parsed.hostname.endsWith(".pages.dev")) return true
-      if (parsed.protocol === "http:" && (parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1")) return true
+      if (
+        parsed.protocol === "https:" &&
+        parsed.port === "" &&
+        (parsed.hostname === PAGES_HOST || parsed.hostname.endsWith(`.${PAGES_HOST}`))
+      ) {
+        return true
+      }
+      const target = new URL(requestOrigin)
+      if (
+        parsed.protocol === "http:" &&
+        isLocalHostname(parsed.hostname) &&
+        isLocalHostname(target.hostname)
+      ) {
+        return true
+      }
     } catch {
       return false
     }

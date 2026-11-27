@@ -170,6 +170,18 @@ try {
   // /api/contact method, origin, content-type, malformed JSON, validation checks
   assert.equal((await worker.fetch(new Request("https://brawl-lab.sozai-hub.com/api/contact", { method: "GET" }), env, ctx)).status, 405)
   assert.equal((await postContact({ category: "bug", message: "テストメッセージです" }, { Origin: "https://evil.example" })).status, 403)
+  assert.equal((await postContact({ category: "bug", message: "テストメッセージです" }, { Origin: "https://evil.pages.dev" })).status, 403)
+  assert.equal((await postContact({ category: "bug", message: "テストメッセージです" }, { Origin: "https://evil-brawl-analytics.pages.dev" })).status, 403)
+  assert.equal((await postContact({ category: "bug", message: "テストメッセージです" }, { Origin: "http://localhost:3000" })).status, 403)
+  assert.equal(
+    (await postContact({ category: "bug", message: "プレビュー環境Origin許可テスト" }, { Origin: "https://07e3274c.brawl-analytics.pages.dev", "CF-Connecting-IP": "203.0.113.15" })).status,
+    200,
+  )
+  assert.equal(
+    (await postContact({ category: "bug", message: "PagesルートOrigin許可テスト" }, { Origin: "https://brawl-analytics.pages.dev", "CF-Connecting-IP": "203.0.113.16" })).status,
+    200,
+  )
+  webhookCalls = []
   assert.equal((await postContact("{bad json")).status, 400)
   assert.equal((await postContact({ category: "bug", message: "短い" })).status, 400)
 

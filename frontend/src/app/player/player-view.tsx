@@ -10,7 +10,6 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Search, Trophy, Swords, Building2, Users, User, Zap } from "lucide-react"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -490,7 +489,7 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                   className="pl-9"
                 />
               </div>
-              <Button onClick={() => handleSync()} disabled={loading} className="shrink-0 px-5 sm:px-7">
+              <Button onClick={() => handleSync()} disabled={loading} className="shrink-0 px-4 sm:px-7 min-h-11">
                 {loading ? "取得中..." : (
                   <>
                     <Search className="w-4 h-4 mr-1.5" />
@@ -509,7 +508,7 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                       {suggestions.map((p, idx) => (
                         <li
                           key={idx}
-                          className="px-4 py-3 text-sm hover:bg-white/10 cursor-pointer flex gap-3.5 items-center transition-colors border-b border-white/10 last:border-b-0"
+                          className="px-3 sm:px-4 py-3 min-h-14 text-sm hover:bg-white/10 cursor-pointer flex gap-3 sm:gap-3.5 items-center transition-colors border-b border-white/10 last:border-b-0"
                           onClick={() => {
                             const tag = p.player_tag.startsWith("#") ? p.player_tag : `#${p.player_tag}`
                             setShowSuggestions(false)
@@ -590,7 +589,7 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                   className="pl-9"
                 />
               </div>
-              <Button onClick={() => handleSyncClub()} disabled={loadingClub} className="shrink-0 px-5 sm:px-7">
+              <Button onClick={() => handleSyncClub()} disabled={loadingClub} className="shrink-0 px-4 sm:px-7 min-h-11">
                 {loadingClub ? "検索中..." : (
                   <>
                     <Search className="w-4 h-4 mr-1.5" />
@@ -609,7 +608,7 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                       {clubSuggestions.map((c, idx) => (
                         <li
                           key={idx}
-                          className="px-4 py-3 text-sm hover:bg-white/10 cursor-pointer flex gap-3.5 items-center transition-colors border-b border-white/10 last:border-b-0"
+                          className="px-3 sm:px-4 py-3 min-h-14 text-sm hover:bg-white/10 cursor-pointer flex gap-3 sm:gap-3.5 items-center transition-colors border-b border-white/10 last:border-b-0"
                           onClick={() => {
                             const tag = c.club_tag.startsWith("#") ? c.club_tag : `#${c.club_tag}`
                             setShowClubSuggestions(false)
@@ -798,7 +797,7 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                           return (
                             <button
                               type="button"
-                              className="text-xs px-3 py-1 rounded-full font-semibold transition-all inline-flex items-center gap-1.5 bg-purple-500/15 text-purple-200 border border-purple-400/30 hover:bg-purple-500/25 hover:border-purple-300/60"
+                              className="text-xs min-h-10 px-3 py-1.5 rounded-full font-semibold transition-all inline-flex items-center gap-1.5 bg-purple-500/15 text-purple-200 border border-purple-400/30 hover:bg-purple-500/25 hover:border-purple-300/60"
                               onClick={() => {
                                 const tagOrName = data.profile?.club_tag || data.profile?.club_name || "";
                                 if (!tagOrName) return;
@@ -920,9 +919,9 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
           <PlayerAnalysis key={data.player_tag} playerTag={data.player_tag} revision={analysisRevision} />
 
         <Tabs defaultValue="battles" className="w-full mt-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
-          <TabsList className="grid w-full grid-cols-2 mb-6 bg-secondary/50 p-1">
-            <TabsTrigger value="battles" className="rounded-md font-semibold text-md">バトル履歴</TabsTrigger>
-            <TabsTrigger value="characters" className="rounded-md font-semibold text-md">キャラクター</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 mb-6 bg-secondary/50 h-auto min-h-11 p-1">
+            <TabsTrigger value="battles" className="rounded-md font-semibold min-h-10 text-sm sm:text-base">バトル履歴</TabsTrigger>
+            <TabsTrigger value="characters" className="rounded-md font-semibold min-h-10 text-sm sm:text-base">キャラクター</TabsTrigger>
           </TabsList>
 
           <TabsContent value="battles" className="space-y-6">
@@ -931,21 +930,21 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
             </h2>
             {data.recent_battles && data.recent_battles.length > 0 ? (
             <Tabs defaultValue="all" value={battleTab} onValueChange={setBattleTab} className="w-full">
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
-                <TabsList className="bg-background/40">
-                  <TabsTrigger value="all">すべて</TabsTrigger>
-                  <TabsTrigger value="normal">通常マッチ</TabsTrigger>
-                  <TabsTrigger value="ranked">ガチバトル</TabsTrigger>
-                  <TabsTrigger value="friendly">フレンド</TabsTrigger>
+              <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3 md:gap-4 mb-4">
+                <TabsList className="w-full sm:w-fit flex overflow-x-auto no-scrollbar arena-hscroll-fade h-auto p-1 justify-start bg-background/40">
+                  <TabsTrigger value="all" className="flex-none min-h-10 px-3 text-xs sm:text-sm">すべて</TabsTrigger>
+                  <TabsTrigger value="normal" className="flex-none min-h-10 px-3 text-xs sm:text-sm">通常マッチ</TabsTrigger>
+                  <TabsTrigger value="ranked" className="flex-none min-h-10 px-3 text-xs sm:text-sm">ガチバトル</TabsTrigger>
+                  <TabsTrigger value="friendly" className="flex-none min-h-10 px-3 text-xs sm:text-sm">フレンド</TabsTrigger>
                 </TabsList>
 
                 {/* 高度なサブフィルター（勝敗＆モード絞り込み） */}
-                <div className="flex flex-wrap items-center gap-2">
-                  <div className="flex items-center gap-1 bg-secondary/40 p-1 rounded-lg border border-border/40">
+                <div className="w-full md:w-auto flex flex-col sm:flex-row sm:items-center gap-2">
+                  <div className="grid grid-cols-3 sm:flex items-center gap-1 bg-secondary/40 p-1 rounded-lg border border-border/40">
                     <Button 
                       variant={resultFilter === "all" ? "default" : "ghost"} 
                       size="sm" 
-                      className="h-9 text-xs px-2.5 font-bold"
+                      className="min-h-10 sm:h-9 text-xs px-2.5 font-bold"
                       onClick={() => setResultFilter("all")}
                     >
                       全結果
@@ -953,7 +952,7 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                     <Button 
                       variant={resultFilter === "victory" ? "default" : "ghost"} 
                       size="sm" 
-                      className="h-9 text-xs px-2.5 font-bold text-green-500 hover:text-green-400"
+                      className="min-h-10 sm:h-9 text-xs px-2.5 font-bold text-green-500 hover:text-green-400"
                       onClick={() => setResultFilter("victory")}
                     >
                       勝利のみ
@@ -961,7 +960,7 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                     <Button 
                       variant={resultFilter === "defeat" ? "default" : "ghost"} 
                       size="sm" 
-                      className="h-9 text-xs px-2.5 font-bold text-red-500 hover:text-red-400"
+                      className="min-h-10 sm:h-9 text-xs px-2.5 font-bold text-red-500 hover:text-red-400"
                       onClick={() => setResultFilter("defeat")}
                     >
                       敗北のみ
@@ -974,7 +973,7 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                     if (uniqueModes.length === 0) return null;
                     return (
                       <Select value={modeFilter} onValueChange={(val) => setModeFilter(val || "all")}>
-                        <SelectTrigger className="w-[140px] h-9 text-xs bg-secondary/40 border border-border/40">
+                        <SelectTrigger className="w-full sm:w-[160px] min-h-11 sm:h-9 text-xs bg-secondary/40 border border-border/40">
                           <SelectValue placeholder="モード絞り込み" />
                         </SelectTrigger>
                         <SelectContent>
@@ -991,7 +990,7 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
 
             <Card className="bg-card/40 backdrop-blur-md border-primary/20 shadow-xl overflow-hidden p-2">
               <TabsContent value={battleTab} className="mt-0 outline-none">
-              <ScrollArea className="h-[600px] pr-4">
+              <div className="md:max-h-[600px] md:overflow-y-auto md:pr-2">
                 <div className="space-y-3">
                   {data.recent_battles && (() => {
                     const filteredBattles = data.recent_battles.filter((b: any) => {
@@ -1026,7 +1025,7 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                         scoreDisplay = <p className="font-bold text-sm text-gray-400 drop-shadow-sm">フレンド</p>;
                       } else if (battle.trophy_change != null || data.source !== "saved") {
                         scoreDisplay = (
-                          <p className={`font-bold text-xl drop-shadow-sm ${battle.trophy_change > 0 ? 'text-green-500' : battle.trophy_change < 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                          <p className={`font-bold text-base sm:text-xl whitespace-nowrap drop-shadow-sm ${battle.trophy_change > 0 ? 'text-green-500' : battle.trophy_change < 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
                             {battle.trophy_change > 0 ? '+' : ''}{battle.trophy_change} 🏆
                           </p>
                         );
@@ -1035,7 +1034,7 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                       return (
                         <Card key={i} className={`arena-match-card ${battle.result === 'victory' ? 'is-win' : battle.result === 'defeat' ? 'is-loss' : 'is-draw'} p-0 gap-0 overflow-hidden transition-colors`}>
                       {/* Header section */}
-                       <div className="p-3 border-b border-white/10 flex justify-between items-center bg-white/[0.03]">
+                       <div className="p-3 border-b border-white/10 flex justify-between items-center gap-2 bg-white/[0.03]">
                          <div className="flex items-center gap-3 min-w-0 flex-1">
                            <div className="min-w-0">
                              <div className="flex items-center gap-2 mb-1">
@@ -1053,12 +1052,12 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                              </div>
                            </div>
                         </div>
-                        <div className="text-right flex items-center gap-3 sm:gap-4 shrink-0">
+                        <div className="text-right flex items-center gap-2 sm:gap-4 shrink-0">
                           <Avatar className="w-9 h-9 sm:w-12 sm:h-12 border border-white/20 shadow-sm">
                             <AvatarImage src={mainBInfo.imageUrl} />
                             <AvatarFallback className="bg-primary/10"><User className="w-5 h-5 text-primary/70" /></AvatarFallback>
                           </Avatar>
-                          <div className="w-16 sm:w-20 text-right flex justify-end tabular-nums">
+                          <div className="min-w-[3.75rem] w-auto sm:w-20 text-right flex justify-end tabular-nums">
                             {scoreDisplay}
                           </div>
                         </div>
@@ -1080,14 +1079,14 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                                 <div 
                                   key={idx} 
                                   onClick={() => handleSync(p.tag)}
-                                  className={`flex items-center gap-3 p-1.5 rounded-xl transition-colors group cursor-pointer ${isMe ? 'bg-[#ffce00]/10 border border-[#ffce00]/30' : 'hover:bg-white/5 border border-transparent'}`}
+                                  className={`flex items-center gap-2.5 sm:gap-3 p-1.5 rounded-xl transition-colors group cursor-pointer ${isMe ? 'bg-[#ffce00]/10 border border-[#ffce00]/30' : 'hover:bg-white/5 border border-transparent'}`}
                                 >
-                                  <Avatar className={`w-10 h-10 shadow-sm transition-transform group-hover:scale-105 ${isMe ? 'border border-[#ffce00] ring-2 ring-[#ffce00]/25' : 'border border-white/15'}`}>
+                                  <Avatar className={`w-9 h-9 sm:w-10 sm:h-10 shrink-0 shadow-sm transition-transform group-hover:scale-105 ${isMe ? 'border border-[#ffce00] ring-2 ring-[#ffce00]/25' : 'border border-white/15'}`}>
                                     <AvatarImage src={bInfo.imageUrl} />
                                     <AvatarFallback className="bg-primary/10"><User className="w-5 h-5 text-primary/70" /></AvatarFallback>
                                   </Avatar>
-                                  <div className="flex flex-col overflow-hidden">
-                                    <span className={`text-sm truncate max-w-[140px] font-bold tracking-wide ${isMe ? 'text-[#ffce00]' : 'text-foreground/95'}`} title={p.name}>
+                                  <div className="flex flex-col min-w-0 flex-1 overflow-hidden">
+                                    <span className={`text-sm truncate font-bold tracking-wide ${isMe ? 'text-[#ffce00]' : 'text-foreground/95'}`} title={p.name}>
                                       {p.name}
                                     </span>
                                     <span className="text-[11px] text-muted-foreground group-hover:text-foreground/80 transition-colors font-medium">{bInfo.nameJa}</span>
@@ -1112,14 +1111,14 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                                     <div 
                                       key={`${t_idx}-${idx}`} 
                                       onClick={() => handleSync(p.tag)}
-                                      className="flex items-center gap-3 p-1.5 rounded-xl hover:bg-white/5 transition-colors group cursor-pointer border border-transparent"
+                                      className="flex items-center gap-2.5 sm:gap-3 p-1.5 rounded-xl hover:bg-white/5 transition-colors group cursor-pointer border border-transparent"
                                     >
-                                      <Avatar className="w-10 h-10 border border-rose-400/30 shadow-sm transition-transform group-hover:scale-105">
+                                      <Avatar className="w-9 h-9 sm:w-10 sm:h-10 shrink-0 border border-rose-400/30 shadow-sm transition-transform group-hover:scale-105">
                                         <AvatarImage src={bInfo.imageUrl} />
                                         <AvatarFallback className="bg-destructive/10"><User className="w-4 h-4 text-destructive/70" /></AvatarFallback>
                                       </Avatar>
-                                      <div className="flex flex-col overflow-hidden">
-                                        <span className="text-sm truncate max-w-[140px] font-bold tracking-wide text-foreground/95" title={p.name}>{p.name}</span>
+                                      <div className="flex flex-col min-w-0 flex-1 overflow-hidden">
+                                        <span className="text-sm truncate font-bold tracking-wide text-foreground/95" title={p.name}>{p.name}</span>
                                         <span className="text-[11px] text-muted-foreground group-hover:text-foreground/80 transition-colors font-medium">{bInfo.nameJa}</span>
                                       </div>
                                     </div>
@@ -1136,7 +1135,7 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                     })
                   })()}
                 </div>
-              </ScrollArea>
+              </div>
               </TabsContent>
             </Card>
             </Tabs>
@@ -1147,10 +1146,10 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
             )}
           </TabsContent>
           <TabsContent value="characters" className="space-y-6">
-            <div className="flex flex-wrap items-center justify-end gap-2">
+            <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2">
               <span id="player-brawler-sort-label" className="text-sm font-semibold text-muted-foreground">並び替え</span>
               <Select value={brawlerSort} onValueChange={(value) => { if (value && Object.hasOwn(playerBrawlerSorts, value)) setBrawlerSort(value as PlayerBrawlerSort) }}>
-                <SelectTrigger aria-labelledby="player-brawler-sort-label" className="w-[220px] h-10 bg-secondary/40 border border-border/40">
+                <SelectTrigger aria-labelledby="player-brawler-sort-label" className="w-full sm:w-[220px] min-h-11 sm:h-10 bg-secondary/40 border border-border/40">
                   <SelectValue>{playerBrawlerSorts[brawlerSort]}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
@@ -1204,10 +1203,10 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                       </div>
                       <Progress value={powerRatio} className="h-1.5" />
                       
-                      <div className="grid grid-cols-4 gap-2 mt-2 pt-2 border-t border-border/50">
+                      <div className="grid grid-cols-4 gap-1.5 sm:gap-2 mt-2 pt-2 border-t border-border/50">
                         {/* Gadgets */}
-                        <div className="flex flex-col gap-1 items-center">
-                          <span className="text-[9px] font-bold text-green-500">ガジェット</span>
+                        <div className="flex flex-col gap-1 items-center min-w-0">
+                          <span className="text-[9px] font-bold text-green-500 whitespace-nowrap">ガジェット</span>
                           <div className="flex gap-1 justify-center flex-wrap">
                             {gadgets.length > 0 ? gadgets.map((g) => (
                               <img key={g.id} src={`https://cdn.brawlify.com/gadgets/regular/${g.id}.png`} alt={g.name} className="w-6 h-6 rounded-full border border-green-500/50 shadow-sm" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
@@ -1215,8 +1214,8 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                           </div>
                         </div>
                         {/* Star Powers */}
-                        <div className="flex flex-col gap-1 items-center">
-                          <span className="text-[9px] font-bold text-yellow-500">スターパワー</span>
+                        <div className="flex flex-col gap-1 items-center min-w-0">
+                          <span className="text-[9px] font-bold text-yellow-500 whitespace-nowrap">スターパワー</span>
                           <div className="flex gap-1 justify-center flex-wrap">
                             {starPowers.length > 0 ? starPowers.map((s) => (
                               <img key={s.id} src={`https://cdn.brawlify.com/star-powers/regular/${s.id}.png`} alt={s.name} className="w-6 h-6 rounded-full border border-yellow-500/50 shadow-sm" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
@@ -1224,8 +1223,8 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                           </div>
                         </div>
                         {/* Gears */}
-                        <div className="flex flex-col gap-1 items-center">
-                          <span className="text-[9px] font-bold text-blue-500">ギア</span>
+                        <div className="flex flex-col gap-1 items-center min-w-0">
+                          <span className="text-[9px] font-bold text-blue-500 whitespace-nowrap">ギア</span>
                           <div className="flex gap-1 justify-center flex-wrap">
                             {gears.length > 0 ? gears.map((g) => (
                               <img key={g.id} src={`https://cdn.brawlify.com/gears/regular/${g.id}.png`} alt={g.name} className="w-6 h-6 rounded-full border border-blue-500/50 shadow-sm" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
@@ -1233,8 +1232,8 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                           </div>
                         </div>
                         {/* Hypercharge */}
-                        <div className="flex flex-col gap-1 items-center">
-                          <span className="text-[9px] font-bold text-purple-500">ハイパー</span>
+                        <div className="flex flex-col gap-1 items-center min-w-0">
+                          <span className="text-[9px] font-bold text-purple-500 whitespace-nowrap">ハイパー</span>
                           <div className="flex gap-1 justify-center flex-wrap">
                             {hyperCharges.length > 0 ? hyperCharges.map((h) => (
                               <Avatar key={h.id} size="sm" title={h.name} className="rounded-full border border-purple-500/50 shadow-sm">
@@ -1266,8 +1265,8 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
     
       {/* プレイヤー名検索 複数候補選択モーダル */}
       <Sheet open={candidateModalOpen} onOpenChange={setCandidateModalOpen}>
-        <SheetContent side="bottom" className="sm:max-w-lg mx-auto rounded-t-3xl max-h-[85vh] p-0 flex flex-col border-white/15">
-          <SheetHeader className="p-6 pb-3 border-b border-white/10 text-left">
+        <SheetContent side="bottom" className="sm:max-w-lg mx-auto rounded-t-3xl max-h-[85dvh] p-0 flex flex-col border-white/15">
+          <SheetHeader className="p-4 pr-12 sm:p-6 sm:pr-12 pb-3 border-b border-white/10 text-left">
             <div className="flex items-center gap-2">
               <Users className="w-5 h-5 text-primary" />
               <SheetTitle className="text-lg font-bold text-white">
@@ -1279,7 +1278,7 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
             </SheetDescription>
           </SheetHeader>
 
-          <div className="flex-1 overflow-y-auto p-4 space-y-2 divide-y divide-white/10">
+          <div className="flex-1 overflow-y-auto p-3 sm:p-4 pb-safe space-y-2 divide-y divide-white/10">
             {candidates.map((p: any) => {
               const pTag = p.player_tag || p.tag;
               const rank = p.highest_ranked_rank > 0 ? getRankImage(p.highest_ranked_rank) : null;
@@ -1291,10 +1290,10 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                     setCandidateModalOpen(false);
                     handleSync(pTag);
                   }}
-                  className="w-full pt-2 first:pt-0 p-3 flex items-center justify-between rounded-2xl hover:bg-white/10 border border-transparent hover:border-white/15 transition-all text-left group"
+                  className="w-full pt-2 first:pt-0 p-3 flex items-center justify-between gap-2 sm:gap-3 rounded-2xl hover:bg-white/10 border border-transparent hover:border-white/15 transition-all text-left group"
                 >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <Avatar className="w-12 h-12 rounded-xl border border-white/15 shadow-md shrink-0">
+                  <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                    <Avatar className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl border border-white/15 shadow-md shrink-0">
                       <AvatarImage src={`https://cdn.brawlify.com/profile-icons/regular/${p.icon_id || 28000000}.png`} />
                       <AvatarFallback>{p.name?.[0]}</AvatarFallback>
                     </Avatar>
@@ -1308,7 +1307,7 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3 shrink-0">
+                  <div className="flex items-center gap-2 sm:gap-3 shrink-0">
                     {rank && (
                       <div className="flex items-center gap-1.5 bg-white/10 px-2.5 py-1 rounded-xl border border-white/15" title={`最高ランク: ${rank.name} ${rank.tier}`}>
                         {/* eslint-disable-next-line @next/next/no-img-element */}

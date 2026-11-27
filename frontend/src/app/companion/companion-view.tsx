@@ -589,7 +589,7 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
     return (
       <div className="arena-workspace arena-draft arena-draft-setup max-w-3xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="text-center space-y-2.5">
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
+          <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight">
             ブロスタ ガチバトル ピックツール（BAN・ピック提案）
           </h1>
           <p className="text-sm text-muted-foreground">
@@ -603,7 +603,7 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
               <p role="alert" className="text-sm text-destructive">{error}</p>
             </CardHeader>
           )}
-          <CardContent className="space-y-6 p-5 sm:p-7">
+          <CardContent className="space-y-6 p-4 sm:p-7">
             <div className="space-y-2.5">
               <span id="draft-mode-label" className="arena-setup-label">モード</span>
               <div role="radiogroup" aria-labelledby="draft-mode-label" className="arena-mode-grid">
@@ -713,11 +713,11 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
             </Button>
           </CardContent>
         </Card>
-        <nav aria-label="モード・マップのランキング" className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
-          <Link href="/modes" className="hover:text-primary">モード一覧</Link>
-          <Link href="/maps" className="hover:text-primary">マップ一覧</Link>
-          {conditionPath("modes", selectedMode) && <Link href={conditionPath("modes", selectedMode)!} className="hover:text-primary">{translateMode(selectedMode)}のランキング</Link>}
-          {selectedMap && conditionPath("maps", selectedMap) && <Link href={conditionPath("maps", selectedMap)!} className="hover:text-primary">{translateMap(selectedMap)}のランキング</Link>}
+        <nav aria-label="モード・マップのランキング" className="flex flex-wrap justify-center gap-x-5 gap-y-1 text-sm text-muted-foreground">
+          <Link href="/modes" className="inline-flex items-center min-h-10 sm:min-h-0 py-1 hover:text-primary">モード一覧</Link>
+          <Link href="/maps" className="inline-flex items-center min-h-10 sm:min-h-0 py-1 hover:text-primary">マップ一覧</Link>
+          {conditionPath("modes", selectedMode) && <Link href={conditionPath("modes", selectedMode)!} className="inline-flex items-center min-h-10 sm:min-h-0 py-1 hover:text-primary">{translateMode(selectedMode)}のランキング</Link>}
+          {selectedMap && conditionPath("maps", selectedMap) && <Link href={conditionPath("maps", selectedMap)!} className="inline-flex items-center min-h-10 sm:min-h-0 py-1 hover:text-primary">{translateMap(selectedMap)}のランキング</Link>}
         </nav>
         <FaqSection id="faq-companion" items={COMPANION_FAQ} />
       </div>
@@ -753,19 +753,19 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
               </span>
             </span>
           )}
-          <Button variant="outline" size="sm" onClick={handleUndo} disabled={draftHistory.length === 0}>
+          <Button variant="outline" size="sm" onClick={handleUndo} disabled={draftHistory.length === 0} className="min-h-11 sm:min-h-9 px-3">
             <Undo2 className="w-4 h-4 mr-1.5" /> 1つ戻す
           </Button>
-          <Button variant="outline" size="sm" onClick={handleReset}>
+          <Button variant="outline" size="sm" onClick={handleReset} className="min-h-11 sm:min-h-9 px-3">
             <RefreshCw className="w-4 h-4 mr-1.5" /> リセット
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start">
 
         {/* Left/Top: Draft Board */}
-        <div className="lg:col-span-8 space-y-6">
+        <div className="lg:col-span-8 space-y-4 sm:space-y-6">
           <Card className="border-primary/20 shadow-md">
             <CardHeader className="pb-3 border-b bg-secondary/10">
               <CardTitle className="text-lg">ドラフトボード</CardTitle>
@@ -783,7 +783,7 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
                     const charName = bluePicks[i]
                     const isActive = phase === "pick" && currentTurnTeam === "blue" && bluePicks.length === i
                     return (
-                      <div key={`blue-${i}`} className={`arena-draft-pick-slot h-14 sm:h-16 rounded-lg border-2 flex items-center justify-start px-2 py-1.5 sm:p-2 gap-2 sm:gap-3 transition-all min-w-0 ${isActive ? 'is-active border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)] animate-pulse' : 'border-secondary bg-secondary/20'}`}>
+                      <div key={`blue-${i}`} className={`arena-draft-pick-slot h-12 sm:h-16 rounded-lg border-2 flex items-center justify-start px-2 py-1.5 sm:p-2 gap-2 sm:gap-3 transition-all min-w-0 ${isActive ? 'is-active border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)] animate-pulse' : 'border-secondary bg-secondary/20'}`}>
                         {charName ? (
                           <>
                             <div className="w-8 h-8 sm:w-10 sm:h-10 border border-blue-500/50 rounded-md shrink-0 bg-primary/10 relative overflow-hidden flex items-center justify-center">
@@ -816,7 +816,7 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
                     const charName = redPicks[i]
                     const isActive = phase === "pick" && currentTurnTeam === "red" && redPicks.length === i
                     return (
-                      <div key={`red-${i}`} className={`arena-draft-pick-slot h-14 sm:h-16 rounded-lg border-2 flex items-center justify-start px-2 py-1.5 sm:p-2 gap-2 sm:gap-3 transition-all min-w-0 ${isActive ? 'is-active border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.5)] animate-pulse' : 'border-secondary bg-secondary/20'}`}>
+                      <div key={`red-${i}`} className={`arena-draft-pick-slot h-12 sm:h-16 rounded-lg border-2 flex items-center justify-start px-2 py-1.5 sm:p-2 gap-2 sm:gap-3 transition-all min-w-0 ${isActive ? 'is-active border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.5)] animate-pulse' : 'border-secondary bg-secondary/20'}`}>
                         {charName ? (
                           <>
                             <div className="w-8 h-8 sm:w-10 sm:h-10 border border-red-500/50 rounded-md shrink-0 bg-primary/10 relative overflow-hidden flex items-center justify-center">
@@ -842,7 +842,7 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
               <div className="space-y-3 col-span-2 md:col-span-1">
                 <h3 className="font-bold text-muted-foreground flex flex-col items-center justify-center bg-secondary/30 p-1.5 sm:p-2 rounded-lg text-xs sm:text-base leading-tight">
                   <span className="flex items-center gap-1"><Ban className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> BAN指定</span>
-                  <span className="font-normal opacity-0 text-[11px] sm:text-sm">.</span>
+                  <span className="hidden md:inline font-normal opacity-0 text-[11px] sm:text-sm">.</span>
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-1 gap-3 sm:gap-4">
                   {/* Ally Bans */}
@@ -853,7 +853,7 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
                         const charName = allyBans[i]
                         const isActive = phase === "ban" && currentTurnTeam === myTeam && allyBans.length === i
                         return (
-                          <div key={`allyban-${i}`} className={`arena-draft-ban-slot h-12 sm:h-16 rounded-lg border-2 flex items-center justify-start px-2 py-1 sm:p-2 gap-2 sm:gap-3 relative overflow-hidden min-w-0 ${isActive ? 'is-active border-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)] animate-pulse' : 'border-secondary bg-secondary/20'}`}>
+                          <div key={`allyban-${i}`} className={`arena-draft-ban-slot h-11 sm:h-16 rounded-lg border-2 flex items-center justify-start px-2 py-1 sm:p-2 gap-2 sm:gap-3 relative overflow-hidden min-w-0 ${isActive ? 'is-active border-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)] animate-pulse' : 'border-secondary bg-secondary/20'}`}>
                             {charName ? (
                               <>
                                 <div className="w-7 h-7 sm:w-10 sm:h-10 opacity-60 grayscale rounded-md shrink-0 bg-primary/10 relative overflow-hidden flex items-center justify-center">
@@ -885,7 +885,7 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
                         const charName = enemyBans[i]
                         const isActive = phase === "ban" && currentTurnTeam !== myTeam && enemyBans.length === i
                         return (
-                          <div key={`enemyban-${i}`} className={`arena-draft-ban-slot h-12 sm:h-16 rounded-lg border-2 flex items-center justify-start px-2 py-1 sm:p-2 gap-2 sm:gap-3 relative overflow-hidden min-w-0 ${isActive ? 'is-active border-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)] animate-pulse' : 'border-secondary bg-secondary/20'}`}>
+                          <div key={`enemyban-${i}`} className={`arena-draft-ban-slot h-11 sm:h-16 rounded-lg border-2 flex items-center justify-start px-2 py-1 sm:p-2 gap-2 sm:gap-3 relative overflow-hidden min-w-0 ${isActive ? 'is-active border-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)] animate-pulse' : 'border-secondary bg-secondary/20'}`}>
                             {charName ? (
                               <>
                                 <div className="w-7 h-7 sm:w-10 sm:h-10 opacity-60 grayscale rounded-md shrink-0 bg-primary/10 relative overflow-hidden flex items-center justify-center">
@@ -918,7 +918,7 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
           {/* Win Rate Prediction (Done Phase) */}
           {phase === "done" && (
             <Card className="col-span-1 md:col-span-2 shadow-lg border-primary/20 bg-secondary/20">
-              <CardContent className="p-8 flex flex-col items-center justify-center space-y-4">
+              <CardContent className="p-6 sm:p-8 flex flex-col items-center justify-center space-y-4">
                 <div className="flex items-center gap-3 text-primary">
                   <Trophy className="w-8 h-8 text-yellow-500" />
                   <h2 className="text-2xl font-bold">編成有利度（参考値）</h2>
@@ -967,9 +967,107 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
               </CardContent>
             </Card>
           )}
+        </div>
 
-          {/* Character Pool */}
-          {phase !== "done" && (
+        {/* Right / Mobile Below Board: Suggestions */}
+        <div className="lg:col-span-4 lg:col-start-9 lg:row-start-1 lg:row-span-2">
+          <Card className="border-primary/40 shadow-lg backdrop-blur-md h-full flex flex-col">
+            <CardHeader className="border-b bg-primary/5">
+              <CardTitle className="flex items-center gap-2">
+                <Target className="w-5 h-5 text-primary" />
+                {phase === "ban" ? "おすすめ BAN" : "おすすめ Pick"}
+              </CardTitle>
+              <CardDescription>
+                {phase === "ban"
+                  ? "現在のマップで脅威となるキャラクター"
+                  : "マップ適性と敵へのカウンター補正から算出"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex-1 pt-4 p-0">
+              {phase === "done" ? (
+                <div className="p-8 text-center text-muted-foreground">
+                  ドラフトが完了しました。試合の健闘を祈ります！
+                  <Button className="mt-4" onClick={handleReset}>新しいドラフトを始める</Button>
+                </div>
+              ) : phase === "pick" && !detailsReady ? (
+                <div className="p-4 text-sm text-muted-foreground" role="status">
+                  {detailsError ? <>
+                    <p role="alert" className="text-destructive">{detailsError}</p>
+                    <Button variant="outline" size="sm" className="mt-3" onClick={retryDraftDetails}>再試行</Button>
+                  </> : "データ読み込み中..."}
+                </div>
+              ) : (
+                <ScrollArea className="h-[340px] lg:h-[600px] px-3 sm:px-4">
+                  <div className="space-y-2.5 sm:space-y-3 pb-4">
+                    {suggestions.length === 0 && <p className="p-4 text-sm text-muted-foreground">この条件で推薦できる十分なデータがありません。キャラクターは手動で選択できます。</p>}
+                    {suggestions.map((sug: any, index: number) => {
+                      const info = getBrawlerInfo(sug.name)
+                      return (
+                        <button
+                          type="button"
+                          key={sug.name}
+                          className="w-full text-left flex items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3 min-h-14 rounded-lg border border-border/60 bg-secondary/20 hover:bg-secondary/40 transition-colors cursor-pointer"
+                          onClick={() => handleSelectCharacter(sug.name)}
+                        >
+                          <div className="font-black text-base sm:text-lg w-6 text-center text-muted-foreground tabular-nums shrink-0">
+                            {index + 1}
+                          </div>
+                          <div className="w-9 h-9 sm:w-10 sm:h-10 border-2 border-white/15 transition-colors shrink-0 rounded-md bg-primary/10 relative overflow-hidden flex items-center justify-center">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            {info.imageUrl ? (
+                              <img src={info.imageUrl} alt={info.nameJa} className="object-cover w-full h-full rounded-sm absolute inset-0 z-10" />
+                            ) : (
+                              <User className="w-4 h-4 text-primary/40" />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0 space-y-1">
+                            <div className="font-bold text-sm truncate flex items-center gap-2">
+                              <span>{info.nameJa}</span>
+                            </div>
+
+                            {/* スマート推薦タグ群 */}
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              {sug.badges ? (
+                                sug.badges.map((b: any, bIdx: number) => {
+                                  let badgeStyle = "bg-secondary text-secondary-foreground border-border"
+                                  if (b.type === "counter") badgeStyle = "bg-red-500/15 text-red-400 border-red-500/30"
+                                  else if (b.type === "synergy") badgeStyle = "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
+                                  else if (b.type === "map") badgeStyle = "bg-blue-500/15 text-blue-400 border-blue-500/30"
+                                  else if (b.type === "mode") badgeStyle = "bg-purple-500/15 text-purple-400 border-purple-500/30"
+
+                                  return (
+                                    <span
+                                      key={bIdx}
+                                      className={`inline-flex items-center text-[10px] px-1.5 py-0.5 rounded font-medium border ${badgeStyle}`}
+                                    >
+                                      {b.label}
+                                    </span>
+                                  )
+                                })
+                              ) : (
+                                <span className="text-xs text-primary font-medium truncate">{sug.reason}</span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="text-right shrink-0">
+                            <Badge variant={phase === "ban" ? "destructive" : "default"} className="font-mono tabular-nums text-xs shadow-sm">
+                              {sug.score.toFixed(1)}点
+                            </Badge>
+                          </div>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </ScrollArea>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Character Pool */}
+        {phase !== "done" && (
+          <div className="lg:col-span-8 lg:col-start-1">
             <Card className="border-primary/20 shadow-md">
               <CardHeader className="py-3 px-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b bg-secondary/10">
                 <div className="flex items-center gap-2">
@@ -981,26 +1079,28 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
 
                 {/* リアルタイム高速検索バー */}
                 <div className="relative w-full sm:w-64">
-                  <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                  <Search className="w-4 h-4 sm:w-3.5 sm:h-3.5 absolute left-3 sm:left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                   <Input
                     placeholder="キャラ名検索 (ひらがな/英語)..."
+                    aria-label="キャラ名検索"
                     value={charSearchQuery}
                     onChange={(e) => setCharSearchQuery(e.target.value)}
-                    className="h-8 pl-8 pr-8 text-xs focus-visible:ring-1"
+                    className="h-11 sm:h-9 pl-9 pr-11 text-base sm:text-xs focus-visible:ring-1"
                   />
                   {charSearchQuery && (
                     <button
                       type="button"
+                      aria-label="検索をクリア"
                       onClick={() => setCharSearchQuery("")}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-0.5"
+                      className="absolute right-0 top-0 h-11 w-11 sm:h-9 sm:w-9 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
                     >
-                      <X className="w-3.5 h-3.5" />
+                      <X className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                     </button>
                   )}
                 </div>
               </CardHeader>
-              <CardContent className="p-4">
-                <ScrollArea className="h-64 pr-3">
+              <CardContent className="p-3 sm:p-4">
+                <ScrollArea className="h-64 sm:h-72 pr-1.5 sm:pr-3">
                   {filteredBrawlers.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-48 text-muted-foreground gap-2">
                       <Search className="w-8 h-8 opacity-40" />
@@ -1044,103 +1144,8 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
                 </ScrollArea>
               </CardContent>
             </Card>
-          )}
-        </div>
-
-        {/* Right: Suggestions */}
-        <div className="lg:col-span-4">
-          <Card className="border-primary/40 shadow-lg backdrop-blur-md h-full flex flex-col">
-            <CardHeader className="border-b bg-primary/5">
-              <CardTitle className="flex items-center gap-2">
-                <Target className="w-5 h-5 text-primary" />
-                {phase === "ban" ? "おすすめ BAN" : "おすすめ Pick"}
-              </CardTitle>
-              <CardDescription>
-                {phase === "ban"
-                  ? "現在のマップで脅威となるキャラクター"
-                  : "マップ適性と敵へのカウンター補正から算出"}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1 pt-4 p-0">
-              {phase === "done" ? (
-                <div className="p-8 text-center text-muted-foreground">
-                  ドラフトが完了しました。試合の健闘を祈ります！
-                  <Button className="mt-4" onClick={handleReset}>新しいドラフトを始める</Button>
-                </div>
-              ) : phase === "pick" && !detailsReady ? (
-                <div className="p-4 text-sm text-muted-foreground" role="status">
-                  {detailsError ? <>
-                    <p role="alert" className="text-destructive">{detailsError}</p>
-                    <Button variant="outline" size="sm" className="mt-3" onClick={retryDraftDetails}>再試行</Button>
-                  </> : "データ読み込み中..."}
-                </div>
-              ) : (
-                <ScrollArea className="h-[400px] lg:h-[600px] px-4">
-                  <div className="space-y-3 pb-4">
-                    {suggestions.length === 0 && <p className="p-4 text-sm text-muted-foreground">この条件で推薦できる十分なデータがありません。キャラクターは手動で選択できます。</p>}
-                    {suggestions.map((sug: any, index: number) => {
-                      const info = getBrawlerInfo(sug.name)
-                      return (
-                        <div
-                          key={sug.name}
-                          className="flex items-center gap-3 p-3 rounded-lg border border-border/60 bg-secondary/20 hover:bg-secondary/40 transition-colors cursor-pointer"
-                          onClick={() => handleSelectCharacter(sug.name)}
-                        >
-                          <div className="font-black text-lg w-6 text-center text-muted-foreground tabular-nums">
-                            {index + 1}
-                          </div>
-                          <div className="w-8 h-8 sm:w-10 sm:h-10 border-2 border-white/15 transition-colors shrink-0 rounded-md bg-primary/10 relative overflow-hidden flex items-center justify-center">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            {info.imageUrl ? (
-                              <img src={info.imageUrl} alt={info.nameJa} className="object-cover w-full h-full rounded-sm absolute inset-0 z-10" />
-                            ) : (
-                              <User className="w-4 h-4 text-primary/40" />
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0 space-y-1">
-                            <div className="font-bold text-sm truncate flex items-center gap-2">
-                              <span>{info.nameJa}</span>
-                            </div>
-
-                            {/* スマート推薦タグ群 */}
-                            <div className="flex flex-wrap items-center gap-1.5">
-                              {sug.badges ? (
-                                sug.badges.map((b: any, bIdx: number) => {
-                                  let badgeStyle = "bg-secondary text-secondary-foreground border-border"
-                                  if (b.type === "counter") badgeStyle = "bg-red-500/15 text-red-400 border-red-500/30"
-                                  else if (b.type === "synergy") badgeStyle = "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
-                                  else if (b.type === "map") badgeStyle = "bg-blue-500/15 text-blue-400 border-blue-500/30"
-                                  else if (b.type === "mode") badgeStyle = "bg-purple-500/15 text-purple-400 border-purple-500/30"
-
-                                  return (
-                                    <span
-                                      key={bIdx}
-                                      className={`inline-flex items-center text-[10px] px-1.5 py-0.5 rounded font-medium border ${badgeStyle}`}
-                                    >
-                                      {b.label}
-                                    </span>
-                                  )
-                                })
-                              ) : (
-                                <span className="text-xs text-primary font-medium truncate">{sug.reason}</span>
-                              )}
-                            </div>
-                          </div>
-
-                          <div className="text-right shrink-0">
-                            <Badge variant={phase === "ban" ? "destructive" : "default"} className="font-mono tabular-nums text-xs shadow-sm">
-                              {sug.score.toFixed(1)}点
-                            </Badge>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                </ScrollArea>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+          </div>
+        )}
 
       </div>
     </div>

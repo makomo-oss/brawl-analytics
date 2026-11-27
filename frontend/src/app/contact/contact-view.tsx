@@ -346,7 +346,7 @@ export default function ContactView() {
             </div>
           </dl>
 
-          <div className="flex flex-wrap items-center gap-3 pt-1">
+          <div className="arena-contact-actions-row flex flex-wrap items-center gap-3 pt-1">
             <button
               type="button"
               onClick={handleResetToForm}

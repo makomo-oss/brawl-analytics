@@ -30,7 +30,7 @@ const pairStyles = {
 
 function ConditionTable({ rows, kind }: { rows: ConditionRow[]; kind: "モード" | "マップ" }) {
   if (!rows.length) return <p className="text-sm text-muted-foreground py-4">データ不足</p>
-  return <div className="overflow-x-auto"><table className="w-full text-sm">
+  return <div tabIndex={0} role="region" aria-label={`${kind}別の勝率テーブル`} className="arena-table-wrap mt-2"><table className="w-full text-sm">
     <thead><tr className="text-muted-foreground border-b border-border/50 text-xs">
       <th scope="col" className="text-left py-3 font-medium">{kind}</th>
       <th scope="col" className="text-right px-3 py-3 font-medium whitespace-nowrap">勝率</th>
@@ -41,7 +41,7 @@ function ConditionTable({ rows, kind }: { rows: ConditionRow[]; kind: "モード
         <span className="flex items-center gap-2">
           {kind === "モード" && <Image src={getModeIconUrl(row.id)} alt="" width={24} height={24} className="w-6 h-6 object-contain shrink-0 drop-shadow-md" />}
           {(kind === "モード" || row.modeIds?.some(mode => MODE_SLUGS[mode])) && conditionPath(kind === "モード" ? "modes" : "maps", row.id)
-            ? <DocumentLink href={conditionPath(kind === "モード" ? "modes" : "maps", row.id)!} className="hover:text-primary hover:underline">{row.label}</DocumentLink> : <span>{row.label}</span>}
+            ? <DocumentLink href={conditionPath(kind === "モード" ? "modes" : "maps", row.id)!} className="inline-flex items-center min-h-9 sm:min-h-0 hover:text-primary hover:underline">{row.label}</DocumentLink> : <span>{row.label}</span>}
         </span>
         {kind === "マップ" && <span className="flex flex-wrap gap-x-3 gap-y-1 mt-1 text-[10px] sm:text-xs font-normal text-muted-foreground">
           {row.modeIds?.length ? row.modeIds.map(mode => {
@@ -81,23 +81,23 @@ function StatsPanel({ data }: { data: CohortData }) {
   if (!stats) return <p className="text-muted-foreground py-8 text-center">この条件のデータはまだありません。</p>
   return <div className="space-y-6">
     <dl className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-      <div className="rounded-xl bg-purple-500/10 border border-purple-500/20 p-4 text-center shadow-inner">
+      <div className="rounded-xl bg-purple-500/10 border border-purple-500/20 p-3 sm:p-4 text-center shadow-inner">
         <dt className="flex justify-center items-center gap-1.5 text-xs text-muted-foreground mb-2"><Trophy aria-hidden="true" className="w-4 h-4 text-yellow-500" />Tier / 順位</dt>
         <dd className="flex flex-wrap justify-center items-center gap-2 font-black tabular-nums">
-          {stats.sample_sufficient ? <><span className={`rounded-lg bg-gradient-to-br px-3 py-1 text-2xl text-white shadow-sm ${tierColors[data.tier] || tierColors["N/A"]}`}>{data.tier}</span><span className="text-sm text-zinc-300">/ {stats.rank_position ?? "—"}位</span></> : <span className="text-sm text-muted-foreground">データ不足</span>}
+          {stats.sample_sufficient ? <><span className={`rounded-lg bg-gradient-to-br px-2.5 py-1 text-xl sm:text-2xl text-white shadow-sm ${tierColors[data.tier] || tierColors["N/A"]}`}>{data.tier}</span><span className="text-sm text-zinc-300">/ {stats.rank_position ?? "—"}位</span></> : <span className="text-sm text-muted-foreground">データ不足</span>}
         </dd>
       </div>
-      <div className="rounded-xl bg-secondary/20 p-4 text-center shadow-inner">
+      <div className="rounded-xl bg-secondary/20 p-3 sm:p-4 text-center shadow-inner">
         <dt className="flex justify-center items-center gap-1.5 text-xs text-muted-foreground mb-2"><TrendingUp aria-hidden="true" className={`w-4 h-4 ${winColor(stats.win_rate)}`} />勝率</dt>
-        <dd className={`text-2xl sm:text-3xl font-black tabular-nums ${winColor(stats.win_rate)}`}>{percent(stats.win_rate)}</dd>
+        <dd className={`text-xl sm:text-3xl font-black tabular-nums ${winColor(stats.win_rate)}`}>{percent(stats.win_rate)}</dd>
       </div>
-      <div className="rounded-xl bg-secondary/20 p-4 text-center shadow-inner">
+      <div className="rounded-xl bg-secondary/20 p-3 sm:p-4 text-center shadow-inner">
         <dt className="flex justify-center items-center gap-1.5 text-xs text-muted-foreground mb-2"><Users aria-hidden="true" className="w-4 h-4 text-primary" />使用率</dt>
-        <dd className="text-2xl sm:text-3xl font-black tabular-nums text-primary">{stats.use_rate.toFixed(2)}%</dd>
+        <dd className="text-xl sm:text-3xl font-black tabular-nums text-primary">{stats.use_rate.toFixed(2)}%</dd>
       </div>
-      <div className="rounded-xl bg-secondary/20 p-4 text-center shadow-inner">
+      <div className="rounded-xl bg-secondary/20 p-3 sm:p-4 text-center shadow-inner">
         <dt className="flex justify-center items-center gap-1.5 text-xs text-muted-foreground mb-2"><Swords aria-hidden="true" className="w-4 h-4 text-cyan-400" />集計件数</dt>
-        <dd className="text-2xl sm:text-3xl font-black tabular-nums">{count(stats.total_matches)}</dd>
+        <dd className="text-xl sm:text-3xl font-black tabular-nums">{count(stats.total_matches)}</dd>
       </div>
     </dl>
     {stats.confidence_interval && <p className="text-xs text-muted-foreground">勝率の95%信頼区間：{percent(stats.confidence_interval[0])}〜{percent(stats.confidence_interval[1])}</p>}
@@ -150,7 +150,7 @@ export default function BrawlerDetailView({ data }: { data: BrawlerPageData }) {
           setSelected(next)
           document.getElementById(`${next}-tab`)?.focus()
         }}
-        className={`flex flex-wrap justify-center items-center gap-x-2 gap-y-0.5 rounded-lg px-2 sm:px-4 py-3 text-sm sm:text-base font-bold transition-all focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${selected === type ? "bg-secondary/60 text-foreground shadow-sm border border-border/30" : "border border-transparent text-muted-foreground hover:bg-secondary/30 hover:text-foreground"}`}>
+        className={`flex flex-wrap justify-center items-center gap-x-2 gap-y-0.5 rounded-lg min-h-11 px-2 sm:px-4 py-2.5 text-sm sm:text-base font-bold transition-all focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${selected === type ? "bg-secondary/60 text-foreground shadow-sm border border-border/30" : "border border-transparent text-muted-foreground hover:bg-secondary/30 hover:text-foreground"}`}>
         {type === "global" ? "全体" : <><Trophy aria-hidden="true" className="w-4 h-4 shrink-0" /><span>ガチバトル</span><span className="text-[10px] sm:text-xs">（エリート以上）</span></>}
       </button>)}
     </div>
@@ -160,7 +160,7 @@ export default function BrawlerDetailView({ data }: { data: BrawlerPageData }) {
     {data.relatedBrawlers && data.relatedBrawlers.length > 0 && (
       <section aria-labelledby="related-brawlers-title" className="rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-4 sm:p-6 space-y-3">
         <h2 id="related-brawlers-title" className="font-bold text-lg text-zinc-100">他のキャラの勝率・評価</h2>
-        <ul className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+        <ul className="grid grid-cols-1 min-[400px]:grid-cols-2 sm:grid-cols-3 gap-2.5">
           {data.relatedBrawlers.map(row => (
             <li key={row.slug}>
               <Link prefetch={false} href={`/brawlers/${row.slug}`} className="group flex items-center gap-2.5 rounded-xl border border-zinc-800/80 bg-zinc-950/40 p-2.5 hover:border-primary/40 hover:bg-primary/5 transition-colors">

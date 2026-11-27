@@ -16,7 +16,7 @@ export default function Error({
   }, [error])
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[50vh] text-center p-6 space-y-6">
+    <div className="flex flex-col items-center justify-center min-h-[50dvh] text-center p-6 space-y-6">
       <div className="p-4 rounded-full bg-destructive/10 text-destructive border border-destructive/20 shadow-lg">
         <AlertTriangle className="w-12 h-12" />
       </div>
@@ -26,12 +26,12 @@ export default function Error({
           表示の処理中に問題が発生しました。再読み込みまたは下のボタンから再試行してください。
         </p>
       </div>
-      <div className="flex gap-4">
-        <Button onClick={() => reset()} className="shadow-md">
+      <div className="flex flex-wrap justify-center gap-3">
+        <Button onClick={() => reset()} className="min-h-11 shadow-md">
           <RotateCcw className="w-4 h-4 mr-2" />
           再試行
         </Button>
-        <Button variant="outline" onClick={() => window.location.reload()}>
+        <Button variant="outline" onClick={() => window.location.reload()} className="min-h-11">
           ページを再読み込み
         </Button>
       </div>

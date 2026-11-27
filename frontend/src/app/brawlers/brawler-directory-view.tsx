@@ -7,7 +7,7 @@ import { ArrowLeft, Search, Users, X } from "lucide-react"
 import type { brawlerEntries, Cohort } from "@/lib/brawler-page-data"
 import { brawlerRarityLabel, directorySorts, filterAndSortBrawlers, type DirectorySort } from "@/lib/brawler-directory"
 
-const controlStyle = "h-11 w-full rounded-xl border text-sm outline-none transition-colors"
+const controlStyle = "h-11 w-full rounded-xl border text-base sm:text-sm outline-none transition-colors"
 
 export default function BrawlerDirectoryView({ entries }: { entries: ReturnType<typeof brawlerEntries> }) {
   const [query, setQuery] = useState("")
@@ -46,7 +46,7 @@ export default function BrawlerDirectoryView({ entries }: { entries: ReturnType<
           <p className="text-xs sm:text-sm text-muted-foreground">全{entries.length}キャラのTier・勝率・使用率を、全体とガチバトル（エリート以上）の対戦データで比較できます。</p>
         </div>
 
-        <div className="arena-tier-seg-group shrink-0" role="group" aria-label="集計対象切替">
+        <div className="arena-tier-seg-group arena-dir-cohort-switch shrink-0" role="group" aria-label="集計対象切替">
           <button
             type="button"
             className={`arena-tier-seg-btn ${cohort === "global" ? "is-active" : ""}`}
@@ -107,7 +107,7 @@ export default function BrawlerDirectoryView({ entries }: { entries: ReturnType<
           </div>
         </div>
 
-        <div className="arena-dir-rarity-pills" role="group" aria-label="レア度フィルター">
+        <div className="arena-dir-rarity-pills arena-hscroll-fade" role="group" aria-label="レア度フィルター">
           <button
             type="button"
             className={`arena-tier-seg-btn ${rarityFilter === "all" ? "is-active" : ""}`}
@@ -206,10 +206,10 @@ export default function BrawlerDirectoryView({ entries }: { entries: ReturnType<
         </div>
       )}
 
-      <nav aria-label="関連ランキング" className="flex flex-wrap items-center gap-5 text-sm text-primary pt-2">
-        <Link href="/modes" className="hover:underline">モード別ランキング</Link>
-        <Link href="/maps" className="hover:underline">マップ別ランキング</Link>
-        <Link href="/tier" className="inline-flex items-center gap-2 text-sm font-bold text-primary hover:underline transition-colors">
+      <nav aria-label="関連ランキング" className="flex flex-wrap items-center gap-x-5 gap-y-1 text-sm text-primary pt-2">
+        <Link href="/modes" className="inline-flex items-center min-h-10 sm:min-h-0 py-1 hover:underline">モード別ランキング</Link>
+        <Link href="/maps" className="inline-flex items-center min-h-10 sm:min-h-0 py-1 hover:underline">マップ別ランキング</Link>
+        <Link href="/tier" className="inline-flex items-center gap-2 min-h-10 sm:min-h-0 py-1 text-sm font-bold text-primary hover:underline transition-colors">
           <ArrowLeft aria-hidden="true" className="w-4 h-4" />Tier表に戻る
         </Link>
       </nav>

@@ -490,7 +490,7 @@ export default function TierListPage({ initialTierData, initialMatchups, initial
             <div className="arena-tier-filter-row arena-tier-filter-row-sub">
               <div className="arena-tier-filter-group">
                 <span className="arena-tier-filter-label">ランク帯</span>
-                <div className="arena-tier-seg-group" role="group" aria-label="ランク帯フィルター">
+                <div className="arena-tier-seg-group arena-tier-rank-switch" role="group" aria-label="ランク帯フィルター">
                   {RANK_TIERS.map((tier) => (
                     <button
                       key={tier.id}
@@ -515,7 +515,7 @@ export default function TierListPage({ initialTierData, initialMatchups, initial
                   onChange={(e) => setCharQuery(e.target.value)}
                   placeholder="キャラ名で絞り込み..."
                   autoComplete="off"
-                  className="h-11 w-full rounded-xl border text-sm pl-10 pr-11 outline-none transition-colors [&::-webkit-search-cancel-button]:appearance-none"
+                  className="h-11 w-full rounded-xl border text-base sm:text-sm pl-10 pr-11 outline-none transition-colors [&::-webkit-search-cancel-button]:appearance-none"
                 />
                 {charQuery && (
                   <button
@@ -545,7 +545,7 @@ export default function TierListPage({ initialTierData, initialMatchups, initial
                 onChange={(e) => setCharQuery(e.target.value)}
                 placeholder="キャラ名で絞り込み..."
                 autoComplete="off"
-                className="h-11 w-full rounded-xl border text-sm pl-10 pr-11 outline-none transition-colors [&::-webkit-search-cancel-button]:appearance-none"
+                className="h-11 w-full rounded-xl border text-base sm:text-sm pl-10 pr-11 outline-none transition-colors [&::-webkit-search-cancel-button]:appearance-none"
               />
               {charQuery && (
                 <button
@@ -599,7 +599,7 @@ export default function TierListPage({ initialTierData, initialMatchups, initial
                         <span className="arena-tier-count tabular-nums">{chars.length}体</span>
                       </div>
 
-                      <div className="arena-tier-chips flex-1 p-3 sm:p-4">
+                      <div className="arena-tier-chips">
                         {chars.map((charId: string) => {
                           const info = getBrawlerInfo(charId)
                           const stats = tierData?.characters?.[charId]
@@ -653,10 +653,10 @@ export default function TierListPage({ initialTierData, initialMatchups, initial
       {selectedChar && <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent className="w-full sm:max-w-md overflow-y-auto backdrop-blur-xl border-l-primary/20">
           {selectedChar && (
-            <div className="space-y-6 pb-8">
-              <SheetHeader className="text-left">
-                <div className="flex items-center gap-4 mb-2">
-                  <div className="w-20 h-20 shrink-0 border-2 shadow-xl ring-2 ring-primary/20 rounded-xl bg-primary/10 relative overflow-hidden flex items-center justify-center">
+            <div className="space-y-5 sm:space-y-6 px-4 sm:px-6 pb-8 pb-safe">
+              <SheetHeader className="p-0 pt-5 pr-10 text-left">
+                <div className="flex items-center gap-3.5 sm:gap-4 mb-2">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 border-2 shadow-xl ring-2 ring-primary/20 rounded-xl bg-primary/10 relative overflow-hidden flex items-center justify-center">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     {selectedInfo?.imageUrl && (
                       <img
@@ -668,15 +668,15 @@ export default function TierListPage({ initialTierData, initialMatchups, initial
                     )}
                     <User className="w-8 h-8 text-primary/40" />
                   </div>
-                  <div>
-                    <SheetTitle className="text-3xl font-black capitalize">{getBrawlerInfo(selectedChar.character_id).nameJa}</SheetTitle>
-                    <SheetDescription className="flex items-center gap-2 mt-1">
+                  <div className="min-w-0">
+                    <SheetTitle className="text-2xl sm:text-3xl font-black capitalize">{getBrawlerInfo(selectedChar.character_id).nameJa}</SheetTitle>
+                    <SheetDescription className="flex flex-wrap items-center gap-2 mt-1">
                       <Badge variant="outline" className={`font-black text-sm bg-gradient-to-r ${sheetTierGradient[selectedChar.tier] || 'from-gray-500 to-gray-600'} text-white border-none`}>
                         環境Tier {selectedChar.tier}
                       </Badge>
                       <span className="text-xs font-mono tabular-nums text-muted-foreground">スコア: {selectedChar.score} / {selectedChar.total_matches}試合</span>
                     </SheetDescription>
-                    {selectedChar.total_matches > 0 && <a href={brawlerPath(selectedChar.character_id)} className="inline-block mt-2 text-xs text-primary hover:underline" onClick={event => {
+                    {selectedChar.total_matches > 0 && <a href={brawlerPath(selectedChar.character_id)} className="inline-flex items-center min-h-9 py-1 mt-1 text-xs text-primary hover:underline" onClick={event => {
                       if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
                       // Activity retains this page. Unmount the portal before its effects stop.
                       setDetailRequest(null)

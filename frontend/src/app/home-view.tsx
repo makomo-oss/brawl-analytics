@@ -346,7 +346,7 @@ export default function CockpitHomePage({ initialTierData, initialMatchups }: { 
                       key={pTag}
                       type="button"
                       onClick={() => handleSearch(pTag, p.name)}
-                      className="arena-search-suggestion w-full px-4 py-3 flex items-center justify-between hover:bg-zinc-800/70 transition-colors text-left group"
+                      className="arena-search-suggestion w-full px-3 sm:px-4 py-3 flex items-center justify-between gap-2 sm:gap-3 hover:bg-zinc-800/70 transition-colors text-left group"
                     >
                       <div className="flex items-center gap-2.5">
                         <Avatar className="w-9 h-9 border border-zinc-700 shrink-0">
@@ -405,17 +405,17 @@ export default function CockpitHomePage({ initialTierData, initialMatchups }: { 
       </section>
 
       <ArenaToolCards />
-      <nav aria-label="モード・マップのランキング" className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
-        <Link href="/modes" className="hover:text-primary">モード別ランキング</Link>
-        <Link href="/maps" className="hover:text-primary">マップ別ランキング</Link>
+      <nav aria-label="モード・マップのランキング" className="flex flex-wrap justify-center gap-x-5 gap-y-1 text-sm text-muted-foreground">
+        <Link href="/modes" className="inline-flex items-center min-h-10 sm:min-h-0 py-1 hover:text-primary">モード別ランキング</Link>
+        <Link href="/maps" className="inline-flex items-center min-h-10 sm:min-h-0 py-1 hover:text-primary">マップ別ランキング</Link>
       </nav>
 
       {/* ========================================================================= */}
       {/* プレイヤー名検索 複数候補選択モーダル (Sheet/Modal) */}
       {/* ========================================================================= */}
       <Sheet open={candidateModalOpen} onOpenChange={setCandidateModalOpen}>
-        <SheetContent side="bottom" className="sm:max-w-lg mx-auto rounded-t-3xl max-h-[85vh] p-0 flex flex-col bg-zinc-950 border-zinc-800">
-          <SheetHeader className="p-6 pb-3 border-b border-zinc-800 text-left">
+        <SheetContent side="bottom" className="sm:max-w-lg mx-auto rounded-t-3xl max-h-[85dvh] p-0 flex flex-col bg-zinc-950 border-zinc-800">
+          <SheetHeader className="p-4 pr-12 sm:p-6 sm:pr-12 pb-3 border-b border-zinc-800 text-left">
             <div className="flex items-center gap-2">
               <Users className="w-5 h-5 text-primary" />
               <SheetTitle className="text-lg font-bold text-white">
@@ -427,7 +427,7 @@ export default function CockpitHomePage({ initialTierData, initialMatchups }: { 
             </SheetDescription>
           </SheetHeader>
 
-          <div className="flex-1 overflow-y-auto p-4 space-y-2 divide-y divide-zinc-800/50">
+          <div className="flex-1 overflow-y-auto p-3 sm:p-4 pb-safe space-y-2 divide-y divide-zinc-800/50">
             {candidates.map((p: any) => {
               const pTag = p.player_tag || p.tag;
               const rank = p.highest_ranked_rank > 0 ? getRankImage(p.highest_ranked_rank) : null;
@@ -436,10 +436,10 @@ export default function CockpitHomePage({ initialTierData, initialMatchups }: { 
                   key={pTag}
                   type="button"
                   onClick={() => handleSearch(pTag, p.name)}
-                  className="w-full pt-2 first:pt-0 p-3 flex items-center justify-between rounded-2xl hover:bg-zinc-900/90 border border-transparent hover:border-zinc-700 transition-all text-left group"
+                  className="w-full pt-2 first:pt-0 p-3 flex items-center justify-between gap-2 sm:gap-3 rounded-2xl hover:bg-zinc-900/90 border border-transparent hover:border-zinc-700 transition-all text-left group"
                 >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <Avatar className="w-12 h-12 rounded-xl border border-zinc-700 shadow-md shrink-0">
+                  <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                    <Avatar className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl border border-zinc-700 shadow-md shrink-0">
                       <AvatarImage src={`https://cdn.brawlify.com/profile-icons/regular/${p.icon_id || 28000000}.png`} />
                       <AvatarFallback>{p.name?.[0]}</AvatarFallback>
                     </Avatar>
@@ -453,7 +453,7 @@ export default function CockpitHomePage({ initialTierData, initialMatchups }: { 
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3 shrink-0">
+                  <div className="flex items-center gap-2 sm:gap-3 shrink-0">
                     {rank && (
                       <div className="flex items-center gap-1.5 bg-zinc-800/80 px-2.5 py-1 rounded-xl border border-zinc-700/60" title={`最高ランク: ${rank.name} ${rank.tier}`}>
                         <img src={rank.url} alt={rank.name} className="w-6 h-6 object-contain" />
@@ -482,16 +482,16 @@ export default function CockpitHomePage({ initialTierData, initialMatchups }: { 
       {/* ② 優先度: 今日の環境速報 (S+ / S Tier) */}
       {/* ========================================================================= */}
       <section className="arena-home-meta" aria-labelledby="arena-meta-title">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Flame className="w-5 h-5 text-rose-500" />
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
+          <div className="flex items-center gap-2 min-w-0">
+            <Flame className="w-5 h-5 text-rose-500 shrink-0" />
             <h2 id="arena-meta-title" className="arena-section-title">
               今日のガチバトル環境速報 (Tier S+ / S)
             </h2>
           </div>
           <Link
             href="/tier"
-            className="text-xs font-semibold text-primary hover:text-primary/80 flex items-center gap-1 transition-colors py-2 shrink-0"
+            className="text-xs font-semibold text-primary hover:text-primary/80 inline-flex items-center gap-1 min-h-11 transition-colors py-2 shrink-0"
           >
             詳細Tier表を見る <ArrowRight className="w-3.5 h-3.5" />
           </Link>
@@ -578,13 +578,13 @@ export default function CockpitHomePage({ initialTierData, initialMatchups }: { 
         <SheetContent side="right" className="w-full sm:max-w-md p-0 flex flex-col bg-zinc-950 border-zinc-800">
           {selectedChar && (
             <>
-              <SheetHeader className="p-6 pb-4 border-b border-zinc-800 flex flex-row items-center gap-4">
+              <SheetHeader className="p-4 pr-12 sm:p-6 sm:pr-12 pb-4 border-b border-zinc-800 flex flex-row items-center gap-3 sm:gap-4">
                 <Avatar className="w-16 h-16 rounded-xl border-2 border-primary/40 shadow-md">
                   <AvatarImage src={getBrawlerInfo(selectedChar.id).imageUrl} />
                   <AvatarFallback>{selectedChar.id}</AvatarFallback>
                 </Avatar>
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
+                <div className="space-y-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
                     <SheetTitle className="text-xl font-black text-white">
                       {getBrawlerInfo(selectedChar.id).nameJa}
                     </SheetTitle>
@@ -595,7 +595,7 @@ export default function CockpitHomePage({ initialTierData, initialMatchups }: { 
                   <SheetDescription className="text-xs text-zinc-400">
                     環境スコア: {selectedChar.score} / {selectedChar.total_matches?.toLocaleString()}試合
                   </SheetDescription>
-                  {tierData?.characters?.[selectedChar.id]?.total_matches > 0 && <a href={brawlerPath(selectedChar.id)} className="inline-flex items-center gap-1 text-xs text-primary hover:underline" onClick={event => {
+                  {tierData?.characters?.[selectedChar.id]?.total_matches > 0 && <a href={brawlerPath(selectedChar.id)} className="inline-flex items-center gap-1 min-h-9 py-1 text-xs text-primary hover:underline" onClick={event => {
                     if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
                     // Activity retains this page. Unmount the portal before its effects stop.
                     ++detailRequestRef.current;
@@ -607,7 +607,7 @@ export default function CockpitHomePage({ initialTierData, initialMatchups }: { 
                 </div>
               </SheetHeader>
 
-              <ScrollArea className="flex-1 p-6 space-y-6">
+              <ScrollArea className="flex-1 p-4 sm:p-6 pb-safe space-y-6">
                 {/* 3指標カード */}
                 <div className="grid grid-cols-3 gap-2 mb-6">
                   <div className="bg-zinc-900/60 p-3 rounded-xl border border-zinc-800 text-center">

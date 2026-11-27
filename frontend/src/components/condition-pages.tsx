@@ -109,7 +109,7 @@ export function ConditionDirectoryView({ index, kind }: { index: ConditionIndex;
 
   return <div className="arena-workspace arena-conditions space-y-6 sm:space-y-8"><Breadcrumbs kind={kind} /><h1 className={heading}>{kind === "modes" ? "モード別キャラランキング" : "マップ別キャラランキング"}</h1>
     {index[kind].length > 0 && <p className="text-sm leading-relaxed text-muted-foreground">{index[kind].length}{kind === "modes" ? "モード" : "マップ（ステージ）"}ごとに、全体とガチバトル（エリート以上）のキャラ別勝率・使用率ランキングを掲載しています。</p>}
-    <div className="flex gap-3 text-sm font-bold"><Link prefetch={false} href="/modes" aria-current={kind === "modes" ? "page" : undefined} className="rounded-lg border border-primary/20 px-4 py-2 text-primary hover:bg-primary/10">モード一覧</Link><Link prefetch={false} href="/maps" aria-current={kind === "maps" ? "page" : undefined} className="rounded-lg border border-cyan-500/20 px-4 py-2 text-cyan-400 hover:bg-cyan-500/10">マップ一覧</Link></div>
+    <div className="flex flex-wrap gap-3 text-sm font-bold"><Link prefetch={false} href="/modes" aria-current={kind === "modes" ? "page" : undefined} className="inline-flex items-center min-h-11 rounded-lg border border-primary/20 px-4 py-2 text-primary hover:bg-primary/10">モード一覧</Link><Link prefetch={false} href="/maps" aria-current={kind === "maps" ? "page" : undefined} className="inline-flex items-center min-h-11 rounded-lg border border-cyan-500/20 px-4 py-2 text-cyan-400 hover:bg-cyan-500/10">マップ一覧</Link></div>
     {kind === "maps" && modeOptions.length > 0 && (
       <section aria-label="モードでマップを絞り込む" className="arena-dir-filterbar space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -118,7 +118,7 @@ export function ConditionDirectoryView({ index, kind }: { index: ConditionIndex;
             表示中 {visibleEntries.length} / {index.maps.length}マップ
           </span>
         </div>
-        <div className="arena-tier-seg-group" role="group" aria-label="モードフィルター">
+        <div className="arena-tier-seg-group arena-map-mode-pills arena-hscroll-fade" role="group" aria-label="モードフィルター">
           <button
             type="button"
             className={`arena-tier-seg-btn ${selectedMode === "all" ? "is-active" : ""}`}
@@ -179,24 +179,24 @@ export function ConditionDetailView({ data }: { data: ConditionPageData }) {
     <div role="tablist" aria-label="集計対象" className="grid grid-cols-2 gap-1.5 max-w-[600px] mx-auto rounded-xl bg-card/80 border border-border/50 p-1.5">
       {(["global", "gachi"] as const).map(type => <button key={type} type="button" role="tab" id={`${type}-tab`} aria-selected={selected === type} aria-controls={`${type}-panel`} tabIndex={selected === type ? 0 : -1} onClick={() => setSelected(type)}
         onKeyDown={event => { if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return; event.preventDefault(); const next = event.key === "Home" ? "global" : event.key === "End" ? "gachi" : selected === "global" ? "gachi" : "global"; setSelected(next); document.getElementById(`${next}-tab`)?.focus() }}
-        className={`rounded-lg px-2 py-3 text-sm font-bold transition-colors ${selected === type ? "bg-secondary/60 text-foreground" : "text-muted-foreground hover:bg-secondary/30"}`}>{type === "global" ? "全体" : "ガチバトル（エリート以上）"}</button>)}
+        className={`min-h-11 rounded-lg px-2 py-2.5 text-sm font-bold leading-snug transition-colors ${selected === type ? "bg-secondary/60 text-foreground" : "text-muted-foreground hover:bg-secondary/30"}`}>{type === "global" ? "全体" : "ガチバトル（エリート以上）"}</button>)}
     </div>
     {(["global", "gachi"] as const).map(type => <section key={type} role="tabpanel" id={`${type}-panel`} aria-labelledby={`${type}-tab`} hidden={selected !== type} className={card}>
       <h2 className="flex items-center gap-2 font-bold text-lg"><Trophy aria-hidden="true" className="w-5 h-5 text-yellow-500" />最強キャラ・勝率</h2>
       {data.cohorts[type].updatedAt && <p className="text-xs text-muted-foreground mt-2">最終更新：<time dateTime={data.cohorts[type].updatedAt!}>{new Date(data.cohorts[type].updatedAt!).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })}（日本時間）</time></p>}
-      {data.cohorts[type].rows.length ? <div className="overflow-x-auto mt-3"><table className="w-full text-sm"><thead><tr className="text-xs text-muted-foreground border-b border-border/50">
+      {data.cohorts[type].rows.length ? <div tabIndex={0} role="region" aria-label={`${data.entry.label}の最強キャラ・勝率ランキング`} className="arena-table-wrap is-sticky-brawler arena-hscroll-fade mt-3"><table className="w-full text-sm"><thead><tr className="text-xs text-muted-foreground border-b border-border/50">
         {["順位", "キャラ", "勝率", "使用率", "集計件数"].map((name, i) => <th key={name} scope="col" className={`py-3 px-2 font-medium whitespace-nowrap ${i < 2 ? "text-left" : "text-right"}`}>{name}</th>)}
       </tr></thead><tbody>{data.cohorts[type].rows.map((row, i) => <tr key={row.slug} className="border-b border-border/30 last:border-0 hover:bg-primary/5">
         <td className="py-3 px-2 font-black text-primary tabular-nums">{row.sample_sufficient ? i + 1 : "—"}</td>
-        <th scope="row" className="py-3 px-2 text-left"><Link prefetch={false} href={`/brawlers/${row.slug}`} className="inline-flex items-center gap-2 font-bold hover:text-primary whitespace-nowrap">{row.imageUrl && <Image src={row.imageUrl} alt="" width={32} height={32} loading="lazy" className="w-8 h-8 rounded-lg border border-primary/20" />}{row.nameJa}</Link></th>
+        <th scope="row" className="py-2 sm:py-3 px-2 text-left"><Link prefetch={false} href={`/brawlers/${row.slug}`} className="inline-flex items-center min-h-10 sm:min-h-0 gap-2 font-bold hover:text-primary whitespace-nowrap">{row.imageUrl && <Image src={row.imageUrl} alt="" width={32} height={32} loading="lazy" className="w-8 h-8 rounded-lg border border-primary/20" />}{row.nameJa}</Link></th>
         <td className={`py-3 px-2 text-right font-black tabular-nums ${row.win_rate >= 50 ? "text-green-500" : "text-orange-500"}`}>{row.win_rate.toFixed(1)}%{!row.sample_sufficient && <span className="block text-[10px] font-normal text-muted-foreground whitespace-nowrap">データ不足</span>}</td>
         <td className="py-3 px-2 text-right tabular-nums whitespace-nowrap">{row.use_rate.toFixed(2)}%</td><td className="py-3 px-2 text-right tabular-nums text-muted-foreground">{row.total_matches.toLocaleString("ja-JP")}</td>
       </tr>)}</tbody></table></div> : <p className="py-6 text-sm text-muted-foreground">データ不足</p>}
     </section>)}
     {data.related.length > 0 && <section className="space-y-3"><h2 className="font-bold text-lg flex items-center gap-2"><MapPin aria-hidden="true" className="w-5 h-5 text-cyan-400" />{data.entry.kind === "modes" ? "マップ別ランキング" : "モード別ランキング"}</h2><EntryLinks entries={data.related} /></section>}
-    <nav aria-label="関連ツール" className="flex flex-wrap gap-5 text-sm font-bold text-primary">
-      <Link href="/tier" className="hover:underline">Tier表</Link>
-      <Link href="/companion" className="hover:underline">BAN・ピックツール</Link>
+    <nav aria-label="関連ツール" className="flex flex-wrap gap-x-5 gap-y-1 text-sm font-bold text-primary">
+      <Link href="/tier" className="inline-flex items-center min-h-10 sm:min-h-0 py-1 hover:underline">Tier表</Link>
+      <Link href="/companion" className="inline-flex items-center min-h-10 sm:min-h-0 py-1 hover:underline">BAN・ピックツール</Link>
     </nav>
     <FaqSection id="faq-condition" items={conditionFaq(data)} />
   </div>

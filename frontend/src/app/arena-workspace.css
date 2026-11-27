@@ -1,4 +1,28 @@
 /* NEO-STARR HYBRID shared workspace surfaces, Tier, Directory, Companion & Portals. */
+@property --fade-start {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --fade-end {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@keyframes arena-reveal-fade-start {
+  to {
+    --fade-start: var(--fade-size);
+  }
+}
+
+@keyframes arena-hide-fade-end {
+  from {
+    --fade-end: var(--fade-size);
+  }
+}
+
 html.dark {
   --background: #090e1d;
   --foreground: #f8fafc;
@@ -771,7 +795,43 @@ body:has(.arena-workspace, .arena-home) [data-slot="select-item"][data-highlight
 }
 
 @media(pointer:coarse) {
-  .arena-tier-seg-btn { min-block-size: 44px; }
+  .arena-tier-seg-btn,
+  [data-slot="select-item"],
+  [data-slot="tabs-trigger"] {
+    min-block-size: 44px;
+  }
+}
+
+/* Horizontal Scroll Edge Fade & Accessible Responsive Tables */
+.arena-hscroll-fade {
+  --fade-size: 2rem;
+  scroll-padding-inline: 2rem;
+}
+@supports (animation-timeline: scroll()) {
+  .arena-hscroll-fade {
+    mask:
+      linear-gradient(black, black) no-clip subtract,
+      linear-gradient(to right, black, transparent) 0 0 / var(--fade-start) 100% no-repeat no-clip,
+      linear-gradient(to right, transparent, black) 100% 0 / var(--fade-end) 100% no-repeat no-clip;
+    animation: arena-reveal-fade-start linear both, arena-hide-fade-end linear both;
+    animation-timeline: scroll(self inline);
+    animation-range: 0 var(--fade-size), calc(100% - var(--fade-size)) 100%;
+  }
+}
+
+.arena-table-wrap {
+  overflow-x: auto;
+  max-inline-size: 100%;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 12px;
+}
+.arena-table-wrap:focus-visible {
+  outline: 2px solid #ffce00;
+  outline-offset: 2px;
+}
+.arena-table-wrap table {
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
 @media(forced-colors:active) {
@@ -799,12 +859,12 @@ body:has(.arena-workspace, .arena-home) [data-slot="select-item"][data-highlight
 }
 
 @media(max-width:700px) {
-  .arena-workspace :where([data-slot="input"], input[type="search"], select, [data-slot="select-trigger"]) {
+  .arena-workspace :is([data-slot="input"], input[type="search"], select, [data-slot="select-trigger"]) {
     min-height: 44px; font-size: 16px;
   }
   .arena-dashboard > [data-slot="card"]:first-child [data-slot="button"] { min-height: 44px; }
   .arena-mode-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .arena-map-grid { grid-template-columns: 1fr; }
+  .arena-map-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
 }
 
 @media(max-width:640px) {
@@ -814,19 +874,74 @@ body:has(.arena-workspace, .arena-home) [data-slot="select-item"][data-highlight
   .arena-tier-quickcard-icon { width: 32px; height: 32px; }
   .arena-tier-quickcard-title { font-size: 13px; }
   .arena-tier-quickcard-sub { display: none; }
+  .arena-tier-filterbar, .arena-dir-filterbar { padding: 12px 14px; gap: 10px; }
   .arena-tier-filter-group { width: 100%; }
   .arena-tier-scope-switch { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; }
   .arena-tier-scope-switch .arena-tier-seg-btn { padding: 7px 8px; font-size: 12px; }
+  .arena-tier-rank-switch { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
+  .arena-tier-mode-pills { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
+  .arena-tier-mode-pill { justify-content: flex-start; min-block-size: 44px; }
   .arena-tier-search-wrap { max-width: 100%; min-width: 0; }
   .arena-tier-chips { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; padding: 10px; }
   .arena-tier-chip { padding: 8px 4px; gap: 6px; border-radius: 12px; }
-  .arena-tier-chip-avatar { width: 54px; height: 54px; border-radius: 10px; }
+  .arena-tier-chip-avatar { width: min(54px, 100%); height: auto; aspect-ratio: 1; border-radius: 10px; }
   .arena-tier-chip-name { font-size: 11px; }
+  .arena-dir-cohort-switch { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
+  .arena-dir-controls { flex-direction: column; align-items: stretch; gap: 10px; }
+  .arena-dir-rarity-pills,
+  .arena-map-mode-pills {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    width: 100%;
+    max-width: 100%;
+    scroll-snap-type: x proximity;
+    scroll-padding-inline: 2rem;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .arena-dir-rarity-pills::-webkit-scrollbar,
+  .arena-map-mode-pills::-webkit-scrollbar {
+    display: none;
+  }
+  .arena-dir-rarity-pills > button,
+  .arena-map-mode-pills > button {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+    min-block-size: 42px;
+  }
   .arena-jewel-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .arena-jewel-card { height: 196px; }
   .arena-map-browse-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .arena-map-preview { height: 156px; padding: 8px; }
   .arena-map-browse-meta { padding: 10px 11px; gap: 8px; }
+  .arena-trophy-banner, .arena-rank-pedestal { padding: 16px; border-radius: 16px; }
+  .arena-kpi-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .arena-kpi-box { padding: 10px; }
+  .arena-contact-actions-row { flex-direction: column; align-items: stretch; }
+  .arena-contact-actions-row > * { width: 100%; }
+  .arena-table-wrap.is-sticky-brawler tbody th {
+    position: sticky;
+    inset-inline-start: 0;
+    z-index: 1;
+    background: #101933;
+    box-shadow: 6px 0 12px -6px rgba(3, 6, 18, 0.75);
+  }
+  .arena-table-wrap.is-sticky-brawler tbody tr:hover th {
+    background: #192444;
+  }
+}
+
+@media(max-width:420px) {
+  .arena-mode-tile { padding: 8px 10px; gap: 7px; font-size: 12px; }
+  .arena-rank-emblem-box { width: 64px; height: 64px; border-radius: 14px; }
+  .arena-jewel-wr-chip { font-size: 10px; padding: 2px 6px; }
+  .arena-map-browse-meta > svg { display: none; }
+  .arena-contact-summary > div { grid-template-columns: 64px minmax(0, 1fr); gap: 8px; }
+}
+
+@media(max-width:379px) {
+  .arena-tier-chips { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 10px; }
 }
 
 /* =========================================================

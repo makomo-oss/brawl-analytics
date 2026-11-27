@@ -24,6 +24,8 @@
 }
 
 html.dark {
+  color-scheme: dark;
+  background-color: #090e1d;
   --background: #090e1d;
   --foreground: #f8fafc;
   --card: #121c36;
@@ -500,7 +502,13 @@ html.dark {
 }
 .arena-dir-controls > * { min-width: 0; }
 .arena-dir-controls select {
-  height: auto; min-height: 44px; padding: 10px 12px; line-height: 22px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0 10px;
+  line-height: 42px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .arena-tier-badge {
   display: inline-flex; align-items: center; justify-content: center;
@@ -798,6 +806,10 @@ body:has(.arena-workspace, .arena-home) [data-slot="select-item"][data-highlight
   .arena-tier-seg-btn,
   [data-slot="select-item"],
   [data-slot="tabs-trigger"] {
+    min-block-size: 40px;
+  }
+  [data-slot="select-item"],
+  [data-slot="tabs-trigger"] {
     min-block-size: 44px;
   }
 }
@@ -868,26 +880,49 @@ body:has(.arena-workspace, .arena-home) [data-slot="select-item"][data-highlight
 }
 
 @media(max-width:640px) {
+  .arena-tier-eyebrow,
+  .arena-dir-eyebrow,
+  .arena-player-eyebrow {
+    display: none;
+  }
+  .arena-tier-header,
+  .arena-dir-header {
+    gap: 10px;
+  }
   .arena-tier-primary-switch { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
-  .arena-tier-quicknav { gap: 8px; }
-  .arena-tier-quickcard { min-block-size: 50px; padding: 10px 11px; gap: 9px; }
-  .arena-tier-quickcard-icon { width: 32px; height: 32px; }
-  .arena-tier-quickcard-title { font-size: 13px; }
+  .arena-tier-primary-switch .arena-tier-seg-btn { min-block-size: 38px; padding: 6px 12px; }
+  .arena-tier-quicknav { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+  .arena-tier-quickcard.is-brawlers { grid-column: auto; }
+  .arena-tier-quickcard { min-block-size: 44px; padding: 7px 8px; gap: 6px; border-radius: 11px; justify-content: center; }
+  .arena-tier-quickcard-icon { width: 26px; height: 26px; border-radius: 7px; }
+  .arena-tier-quickcard-title { font-size: 12px; }
   .arena-tier-quickcard-sub { display: none; }
-  .arena-tier-filterbar, .arena-dir-filterbar { padding: 12px 14px; gap: 10px; }
-  .arena-tier-filter-group { width: 100%; }
+  .arena-tier-quickcard-arrow { display: none; }
+  .arena-tier-filterbar, .arena-dir-filterbar { padding: 10px 11px; gap: 8px; border-radius: 14px; }
+  .arena-tier-filter-row { gap: 8px; }
+  .arena-tier-filter-row-sub { padding-top: 8px; }
+  .arena-tier-filter-group { width: 100%; gap: 6px; }
   .arena-tier-scope-switch { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; }
-  .arena-tier-scope-switch .arena-tier-seg-btn { padding: 7px 8px; font-size: 12px; }
+  .arena-tier-scope-switch .arena-tier-seg-btn { min-block-size: 38px; padding: 6px 8px; font-size: 12px; }
   .arena-tier-rank-switch { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
   .arena-tier-mode-pills { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
-  .arena-tier-mode-pill { justify-content: flex-start; min-block-size: 44px; }
+  .arena-tier-mode-pill { justify-content: flex-start; min-block-size: 40px; }
   .arena-tier-search-wrap { max-width: 100%; min-width: 0; }
   .arena-tier-chips { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; padding: 10px; }
   .arena-tier-chip { padding: 8px 4px; gap: 6px; border-radius: 12px; }
   .arena-tier-chip-avatar { width: min(54px, 100%); height: auto; aspect-ratio: 1; border-radius: 10px; }
   .arena-tier-chip-name { font-size: 11px; }
   .arena-dir-cohort-switch { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
-  .arena-dir-controls { flex-direction: column; align-items: stretch; gap: 10px; }
+  .arena-dir-cohort-switch .arena-tier-seg-btn { min-block-size: 38px; padding: 6px 10px; }
+  .arena-dir-controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    gap: 8px;
+    align-items: center;
+  }
+  .arena-dir-controls input::placeholder {
+    font-size: 13px;
+  }
   .arena-dir-rarity-pills,
   .arena-map-mode-pills {
     display: flex;
@@ -895,6 +930,7 @@ body:has(.arena-workspace, .arena-home) [data-slot="select-item"][data-highlight
     overflow-x: auto;
     width: 100%;
     max-width: 100%;
+    padding: 3px;
     scroll-snap-type: x proximity;
     scroll-padding-inline: 2rem;
     scrollbar-width: none;
@@ -908,13 +944,17 @@ body:has(.arena-workspace, .arena-home) [data-slot="select-item"][data-highlight
   .arena-map-mode-pills > button {
     flex: 0 0 auto;
     scroll-snap-align: start;
-    min-block-size: 42px;
+    min-block-size: 38px;
+    padding: 5px 10px;
   }
   .arena-jewel-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .arena-jewel-card { height: 196px; }
   .arena-map-browse-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .arena-map-preview { height: 156px; padding: 8px; }
   .arena-map-browse-meta { padding: 10px 11px; gap: 8px; }
+  .arena-player-toolbar { padding: 10px 12px; gap: 8px; }
+  .arena-mode-tile { min-height: 44px; padding: 6px 10px; }
+  .arena-map-card { min-height: 44px; padding: 8px 10px; }
   .arena-trophy-banner, .arena-rank-pedestal { padding: 16px; border-radius: 16px; }
   .arena-kpi-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   .arena-kpi-box { padding: 10px; }
@@ -933,7 +973,7 @@ body:has(.arena-workspace, .arena-home) [data-slot="select-item"][data-highlight
 }
 
 @media(max-width:420px) {
-  .arena-mode-tile { padding: 8px 10px; gap: 7px; font-size: 12px; }
+  .arena-mode-tile { padding: 6px 9px; gap: 7px; font-size: 12px; }
   .arena-rank-emblem-box { width: 64px; height: 64px; border-radius: 14px; }
   .arena-jewel-wr-chip { font-size: 10px; padding: 2px 6px; }
   .arena-map-browse-meta > svg { display: none; }
@@ -942,6 +982,10 @@ body:has(.arena-workspace, .arena-home) [data-slot="select-item"][data-highlight
 
 @media(max-width:379px) {
   .arena-tier-chips { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 10px; }
+}
+
+@media(max-width:359px) {
+  .arena-dir-controls { grid-template-columns: 1fr; }
 }
 
 /* =========================================================

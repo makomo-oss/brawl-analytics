@@ -587,12 +587,12 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
 
   if (phase === "setup") {
     return (
-      <div className="arena-workspace arena-draft arena-draft-setup max-w-3xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <div className="text-center space-y-2.5">
-          <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight">
+      <div className="arena-workspace arena-draft arena-draft-setup max-w-3xl mx-auto space-y-3.5 sm:space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="text-center space-y-1.5 sm:space-y-2.5">
+          <h1 className="text-xl sm:text-4xl font-extrabold tracking-tight">
             ブロスタ ガチバトル ピックツール（BAN・ピック提案）
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs sm:text-sm text-muted-foreground leading-snug sm:leading-relaxed">
             モード・マップ・チームを選んでドラフトを開始します。最新の対戦データからおすすめBAN・ピック候補・カウンター相性を無料で提案します。
           </p>
         </div>
@@ -603,7 +603,7 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
               <p role="alert" className="text-sm text-destructive">{error}</p>
             </CardHeader>
           )}
-          <CardContent className="space-y-6 p-4 sm:p-7">
+          <CardContent className="space-y-4 sm:space-y-6 p-3.5 sm:p-7">
             <div className="space-y-2.5">
               <span id="draft-mode-label" className="arena-setup-label">モード</span>
               <div role="radiogroup" aria-labelledby="draft-mode-label" className="arena-mode-grid">

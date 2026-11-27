@@ -120,6 +120,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 5,
   viewportFit: "cover",
+  themeColor: "#090e1d",
+  colorScheme: "dark",
 };
 
 /** Stable site, publisher, app and game identities shared with live pages. */
@@ -147,7 +149,7 @@ export default function RootLayout({
       </head>
       <body className={`${inter.className} min-h-screen bg-background text-foreground antialiased`}>
         <MainNav />
-        <main id="main-content" tabIndex={-1} className="container mx-auto px-3 pt-4 pb-24 sm:px-6 sm:pt-6 sm:pb-24 lg:p-8 max-w-7xl">
+        <main id="main-content" tabIndex={-1} className="container mx-auto px-3 pt-2.5 pb-20 sm:px-6 sm:pt-6 sm:pb-24 lg:p-8 max-w-7xl">
           {children}
           <SiteFooter />
         </main>

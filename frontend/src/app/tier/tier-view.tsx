@@ -334,16 +334,16 @@ export default function TierListPage({ initialTierData, initialMatchups, initial
   const selectedInfo = selectedChar ? getBrawlerInfo(selectedChar.character_id) : null
 
   return (
-    <div className="arena-workspace arena-tier space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-7xl mx-auto">
+    <div className="arena-workspace arena-tier space-y-3.5 sm:space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-7xl mx-auto">
       <header className="arena-tier-header">
-        <div className="space-y-2 min-w-0">
+        <div className="space-y-1.5 sm:space-y-2 min-w-0">
           <p className="arena-tier-eyebrow">COMPETITIVE TIER LIST</p>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight flex items-center gap-2.5">
-            <Trophy aria-hidden="true" className="w-7 h-7 shrink-0" />
+          <h1 className="text-xl sm:text-3xl font-extrabold tracking-tight flex items-center gap-2 sm:gap-2.5">
+            <Trophy aria-hidden="true" className="w-6 h-6 sm:w-7 sm:h-7 shrink-0" />
             <span>ブロスタ最強キャラ・ティア表</span>
           </h1>
           {!loading && (
-            <p className="text-muted-foreground text-sm sm:text-base leading-relaxed">
+            <p className="text-muted-foreground text-xs sm:text-base leading-snug sm:leading-relaxed">
               {selectedType === "gachi"
                 ? `直近60日のガチバトル・エリート以上の戦績（${(tierData?.metrics?.analyzed_matches ?? 0).toLocaleString()} 件のプレイヤー戦績）から算出。直近30日を重視したランキング。`
                 : `上位プレイヤーの直近60日のバトルログ（${(tierData?.metrics?.analyzed_matches ?? 0).toLocaleString()} 件のプレイヤー戦績）から算出。直近30日を重視したランキング。`

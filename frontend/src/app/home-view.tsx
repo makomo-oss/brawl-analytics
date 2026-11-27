@@ -610,23 +610,23 @@ export default function CockpitHomePage({ initialTierData, initialMatchups }: { 
               <ScrollArea className="flex-1 p-4 sm:p-6 pb-safe space-y-6">
                 {/* 3指標カード */}
                 <div className="grid grid-cols-3 gap-2 mb-6">
-                  <div className="bg-zinc-900/60 p-3 rounded-xl border border-zinc-800 text-center">
+                  <div className="bg-zinc-900/60 p-2.5 sm:p-3 rounded-xl border border-zinc-800 text-center">
                     <div className="text-[10px] text-zinc-400">総合勝率</div>
-                    <div className={`text-base font-black ${
+                    <div className={`text-sm sm:text-base font-black whitespace-nowrap tabular-nums ${
                       selectedChar.win_rate >= 55 ? "text-emerald-400" : selectedChar.win_rate >= 50 ? "text-cyan-400" : "text-amber-400"
                     }`}>
                       {selectedChar.win_rate}%
                     </div>
                   </div>
-                  <div className="bg-zinc-900/60 p-3 rounded-xl border border-zinc-800 text-center">
+                  <div className="bg-zinc-900/60 p-2.5 sm:p-3 rounded-xl border border-zinc-800 text-center">
                     <div className="text-[10px] text-zinc-400">使用率</div>
-                    <div className="text-base font-black text-primary">
+                    <div className="text-sm sm:text-base font-black whitespace-nowrap tabular-nums text-primary">
                       {selectedChar.use_rate}%
                     </div>
                   </div>
-                  <div className="bg-zinc-900/60 p-3 rounded-xl border border-zinc-800 text-center">
+                  <div className="bg-zinc-900/60 p-2.5 sm:p-3 rounded-xl border border-zinc-800 text-center">
                     <div className="text-[10px] text-zinc-400">分析試合</div>
-                    <div className="text-base font-black text-zinc-200">
+                    <div className="text-sm sm:text-base font-black whitespace-nowrap tabular-nums text-zinc-200">
                       {selectedChar.total_matches?.toLocaleString()}
                     </div>
                   </div>

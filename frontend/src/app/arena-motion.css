@@ -47,7 +47,7 @@
 #main-content {--arena-route-distance:24px}
 #main-content[data-route-direction="forward"] {--arena-route-offset:var(--arena-route-distance)}
 #main-content[data-route-direction="backward"] {--arena-route-offset:calc(-1 * var(--arena-route-distance))}
-@media(max-width:1023px) {.arena-route-progress {top:62px}}
+@media(max-width:1023px) {.arena-route-progress {top:48px}}
 @media(max-width:1023px) {#main-content {--arena-route-distance:16px}}
 @media(max-width:639px) {#main-content {--arena-route-distance:10px}}
 

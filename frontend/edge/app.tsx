@@ -176,7 +176,7 @@ export function App({ page }: { page: RuntimePage }) {
     <MainNav />
     {pending && <div className="arena-route-progress" aria-hidden="true" />}
     <div role="status" aria-live="polite" className="sr-only">{pending ? "画面を切り替えています" : revision ? "画面を切り替えました" : ""}</div>
-    <main id="main-content" tabIndex={-1} aria-busy={!!pending} data-arena-route={current.page.path} data-route-direction={direction} className="container mx-auto px-3 pt-4 pb-24 sm:px-6 sm:pt-6 sm:pb-24 lg:p-8 max-w-7xl">
+    <main id="main-content" tabIndex={-1} aria-busy={!!pending} data-arena-route={current.page.path} data-route-direction={direction} className="container mx-auto px-3 pt-2.5 pb-20 sm:px-6 sm:pt-6 sm:pb-24 lg:p-8 max-w-7xl">
       {failure && <div role="alert" className="arena-route-error">
         <p>画面を読み込めませんでした。接続を確認して、もう一度お試しください。</p>
         <button type="button" onClick={() => navigate.current(failure.href, failure.mode)}>もう一度試す</button>

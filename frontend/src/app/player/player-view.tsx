@@ -456,7 +456,7 @@ export default function PlayerView({ defaultTag }: { defaultTag?: string }) {
 
 
   return (
-    <div className="arena-workspace arena-dashboard space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="arena-workspace arena-dashboard space-y-4 sm:space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Unified NEO-STARR Search Toolbar */}
       <section className="arena-player-toolbar relative z-40" ref={searchContainerRef} aria-label="プレイヤー・クラブ検索">
         <div className="relative flex-1 min-w-0 w-full md:max-w-xl">

@@ -1,4 +1,5 @@
 /* NEO-STARR HYBRID navigation and home. Shared tool surfaces live in arena-workspace.css. */
+html { color-scheme: dark; background-color: #090e1d; }
 body { overflow-wrap: break-word; }
 :where(p a, li a, code) { overflow-wrap: anywhere; }
 .arena-skip-link {
@@ -431,118 +432,136 @@ body:has(.arena-home, .arena-workspace) {
 }
 
 @media(max-width:1023px) {
+  .arena-site-header {
+    transition: transform .22s ease;
+  }
+  .arena-site-header.is-hidden:not(:focus-within) {
+    transform: translateY(-100%);
+  }
   .arena-header-inner {
-    min-height: 64px;
+    min-height: 50px;
     padding: 0;
-    padding-inline: max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-right, 0px));
-    gap: 14px;
+    padding-inline: max(14px, env(safe-area-inset-left, 0px)) max(14px, env(safe-area-inset-right, 0px));
+    gap: 12px;
   }
   .arena-site-tabbar { display: none; }
-  .arena-brand { font-size: 20px; }
-  .arena-brand > svg { height: 29px; width: 29px; }
-  .arena-header-contact { min-height: 44px; }
+  .arena-brand { font-size: 18px; }
+  .arena-brand > svg { height: 26px; width: 26px; }
+  .arena-header-contact {
+    position: relative;
+    min-height: 36px;
+    padding: 6px 11px;
+    font-size: 12px;
+  }
+  .arena-header-contact::after {
+    content: "";
+    position: absolute;
+    inset: -4px;
+  }
   .arena-bottom-nav {
     isolation: isolate; display: flex; justify-content: space-around; align-items: center;
     position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
     padding-left: env(safe-area-inset-left, 0px);
     padding-right: env(safe-area-inset-right, 0px);
-    background: rgba(9, 14, 29, 0.94); border-top: 1px solid rgba(255, 255, 255, 0.16);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: rgba(9, 14, 29, 0.96); border-top: 1px solid rgba(255, 255, 255, 0.14);
     color: #8496ba; backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
     transition: transform .22s;
   }
   .arena-bottom-nav.is-hidden { transform: translateY(150%); }
   .arena-bottom-link {
     position: relative; z-index: 1; display: flex; flex-direction: column;
-    align-items: center; justify-content: center; gap: 4px; min-width: 0;
-    font-size: 10px; min-height: 61px; flex: 1; padding: 8px 2px; line-height: 1.4; font-weight: 700;
+    align-items: center; justify-content: center; gap: 2px; min-width: 0;
+    font-size: 10px; min-height: 50px; flex: 1; padding: 5px 2px; line-height: 1.25; font-weight: 700;
   }
   .arena-bottom-link > span {
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     max-width: 100%; letter-spacing: -0.02em;
   }
-  .arena-bottom-link > svg { width: 20px; height: 20px; stroke-width: 1.8; }
+  .arena-bottom-link > svg { width: 18px; height: 18px; stroke-width: 1.8; }
   .arena-bottom-link.is-active { color: #ffce00; }
-  .arena-home-hero { grid-template-columns: 1fr; gap: 24px; }
+  .arena-home-hero { grid-template-columns: 1fr; gap: 18px; }
   html {
-    scroll-padding-top: calc(76px + env(safe-area-inset-top, 0px));
-    scroll-padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+    scroll-padding-top: calc(56px + env(safe-area-inset-top, 0px));
+    scroll-padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
   }
   #main-content {
-    padding-bottom: calc(6rem + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px));
   }
 }
 
 @media(max-width:700px) {
   .arena-header-inner {
-    min-height: 62px;
-    padding-inline: max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-right, 0px));
-    gap: 10px;
+    min-height: 48px;
+    padding-inline: max(14px, env(safe-area-inset-left, 0px)) max(14px, env(safe-area-inset-right, 0px));
+    gap: 8px;
   }
-  .arena-brand { font-size: 18px; gap: 8px; }
-  .arena-brand > svg { width: 27px; height: 27px; }
-  .arena-brand small { font-size: 10px; letter-spacing: 0.1em; }
-  .arena-header-contact { gap: 6px; min-height: 44px; padding: 8px 12px; font-size: 12px; }
-  .arena-home { padding: 4px 0 0; gap: 24px; }
+  .arena-brand { font-size: 16px; gap: 7px; }
+  .arena-brand > svg { width: 24px; height: 24px; }
+  .arena-brand small { display: none; }
+  .arena-header-contact { gap: 5px; min-height: 36px; padding: 6px 10px; font-size: 11px; border-radius: 9px; }
+  .arena-home { padding: 0; gap: 18px; }
+  .arena-home-hero { gap: 16px; }
   .arena-home-kicker { font-size: 10px; padding: 4px 10px; letter-spacing: 0.03em; }
-  .arena-home-title { font-size: clamp(2rem, 1.4rem + 4.5vw, 2.5rem); letter-spacing: -0.03em; line-height: 1.24; margin: 12px 0 12px; }
+  .arena-home-title { font-size: clamp(2rem, 1.4rem + 4.5vw, 2.5rem); letter-spacing: -0.03em; line-height: 1.22; margin: 8px 0; }
   .arena-home-title > span::after { height: 7px; bottom: 2px; }
-  .arena-home-description { font-size: 13px; line-height: 1.8; }
-  .arena-search-region { margin-top: 18px; }
+  .arena-home-description { font-size: 13px; line-height: 1.65; }
+  .arena-search-region { margin-top: 12px; }
   .arena-search-form { padding: 5px 5px 5px 12px; gap: 7px; border-radius: 12px; }
   .arena-search-form .arena-search-input { height: 44px; font-size: 16px; padding-inline: 0; }
   .arena-search-form .arena-search-input::placeholder { font-size: 13px; }
   .arena-search-form .arena-search-button { font-size: 12px; padding: 11px 16px; min-height: 44px; border-radius: 9px; }
-  .arena-recent-searches { margin-top: 12px; font-size: 11px; gap: 6px; }
+  .arena-recent-searches { margin-top: 10px; font-size: 11px; gap: 6px; }
   .arena-history-chip { min-height: 40px; }
 
-  .arena-home-stage { height: 368px; border-radius: 16px; }
-  .arena-stage-label { padding: 14px 16px; font-size: 10px; letter-spacing: 0.1em; }
-  .arena-stage-watermark { font-size: 74px; top: 52px; right: 12px; }
-  .arena-fighter { width: 43%; padding: 8px 9px 10px; border-radius: 10px; }
-  .arena-fighter-amber { left: 4%; top: 54px; }
-  .arena-fighter-spike { right: 4%; top: 100px; width: 41%; }
-  .arena-fighter-role { font-size: 10px; letter-spacing: 0.02em; gap: 4px; }
-  .arena-fighter-role-icon { width: 20px; height: 20px; }
-  .arena-fighter-role-icon > svg { width: 12px; height: 12px; }
-  .arena-fighter > img { height: 112px; margin: 6px 0; }
-  .arena-fighter-spike > img { height: 102px; }
-  .arena-fighter-name { font-size: 14px; padding-top: 6px; }
-  .arena-fighter-name > small { font-size: 10px; margin-top: 2px; }
-  .arena-stage-versus { width: 44px; height: 44px; left: 50%; margin-left: -22px; top: 44%; font-size: 22px; border-radius: 9px; }
-  .arena-stage-sticker { font-size: 10px; top: 44px; right: 10px; padding: 5px 8px; }
-  .arena-stage-action { left: 14px; right: 14px; bottom: 14px; font-size: 12px; min-height: 44px; padding: 10px 12px; }
+  .arena-home-stage { height: 300px; border-radius: 14px; }
+  .arena-stage-label { padding: 11px 14px; font-size: 10px; letter-spacing: 0.1em; }
+  .arena-stage-watermark { font-size: 64px; top: 44px; right: 12px; }
+  .arena-fighter { width: 42%; padding: 7px 8px 8px; border-radius: 10px; }
+  .arena-fighter-amber { left: 4%; top: 44px; }
+  .arena-fighter-spike { right: 4%; top: 76px; width: 40%; }
+  .arena-fighter-role { font-size: 9px; letter-spacing: 0.02em; gap: 4px; }
+  .arena-fighter-role-icon { width: 18px; height: 18px; }
+  .arena-fighter-role-icon > svg { width: 11px; height: 11px; }
+  .arena-fighter > img { height: 92px; margin: 4px 0; }
+  .arena-fighter-spike > img { height: 84px; }
+  .arena-fighter-name { font-size: 13px; padding-top: 5px; }
+  .arena-fighter-name > small { font-size: 10px; margin-top: 1px; }
+  .arena-stage-versus { width: 40px; height: 40px; left: 50%; margin-left: -20px; top: 41%; font-size: 20px; border-radius: 8px; }
+  .arena-stage-sticker { font-size: 9.5px; top: 38px; right: 10px; padding: 4px 7px; }
+  .arena-stage-action { left: 12px; right: 12px; bottom: 12px; font-size: 12px; min-height: 42px; padding: 9px 12px; }
 
-  .arena-tool-cards { grid-template-columns: 1fr; gap: 12px; }
-  .arena-tool-card { display: grid; grid-template-columns: 46px minmax(0, 1fr); gap: 12px; padding: 16px; align-items: start; border-radius: 14px; }
+  .arena-tool-cards { grid-template-columns: 1fr; gap: 10px; }
+  .arena-tool-card { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 12px; padding: 14px; align-items: start; border-radius: 14px; }
   .arena-tool-top { flex-direction: column; align-items: center; gap: 8px; margin-bottom: 0; }
   .arena-tool-pill { display: none; }
-  .arena-tool-icon { width: 42px; height: 42px; border-radius: 11px; }
-  .arena-tool-icon svg { width: 20px; height: 20px; }
-  .arena-tool-number { font-size: 20px; }
-  .arena-tool-card h2 { font-size: 18px; }
+  .arena-tool-icon { width: 40px; height: 40px; border-radius: 10px; }
+  .arena-tool-icon svg { width: 19px; height: 19px; }
+  .arena-tool-number { font-size: 18px; }
+  .arena-tool-card h2 { font-size: 17px; }
   .arena-tool-lead { font-size: 12px; }
-  .arena-tool-description { font-size: 11px; margin-bottom: 10px; }
+  .arena-tool-description { font-size: 11px; margin-bottom: 8px; }
 
   .arena-meta-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-  .arena-section-title { font-size: 18px; }
-  .arena-directory-callout { flex-wrap: wrap; padding: 18px 16px; gap: 14px; }
-  .arena-directory-callout h2 { font-size: 19px; }
+  .arena-section-title { font-size: 17px; }
+  .arena-directory-callout { flex-wrap: wrap; padding: 16px 14px; gap: 12px; }
+  .arena-directory-callout h2 { font-size: 18px; }
   .arena-directory-action { margin-left: 0; width: 100%; justify-content: center; }
-  .arena-home-footer { flex-wrap: wrap; gap: 10px; padding: 18px 0 6px; }
+  .arena-home-footer { flex-wrap: wrap; gap: 10px; padding: 16px 0 6px; }
 }
 
 @media(max-width:420px) {
   .arena-home-kicker { white-space: normal; text-wrap: balance; }
-  .arena-home-stage { height: 332px; }
-  .arena-fighter > img { height: 92px; }
-  .arena-fighter-spike > img { height: 84px; }
-  .arena-fighter-role { font-size: 9px; letter-spacing: 0; }
-  .arena-fighter-name { font-size: 13px; }
-  .arena-stage-sticker { font-size: 9.5px; padding: 4px 7px; }
+  .arena-home-stage { height: 284px; }
+  .arena-fighter > img { height: 82px; }
+  .arena-fighter-spike > img { height: 76px; }
+  .arena-fighter-role { font-size: 8.5px; letter-spacing: 0; }
+  .arena-fighter-name { font-size: 12.5px; }
+  .arena-stage-sticker { font-size: 9px; padding: 3px 6px; }
 }
 
 @media(pointer:coarse) {
-  .arena-history-chip, .arena-header-contact { min-height: 44px; }
+  .arena-history-chip { min-height: 44px; }
 }
 
 @media(prefers-reduced-motion:reduce) {

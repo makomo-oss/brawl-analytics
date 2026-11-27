@@ -4,8 +4,8 @@
   "description": "ブロスタ（Brawl Stars）のガチバトル戦績検索・環境Tier表・BAN/Pick支援を提供する無料分析ツール",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#10182c",
-  "theme_color": "#10182c",
+  "background_color": "#090e1d",
+  "theme_color": "#090e1d",
   "lang": "ja",
   "icons": [
     {

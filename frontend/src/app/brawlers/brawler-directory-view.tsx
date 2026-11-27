@@ -30,20 +30,20 @@ export default function BrawlerDirectoryView({ entries }: { entries: ReturnType<
     : sortedAndSearched.filter((entry) => entry.rarity?.id === rarityFilter)
 
   return (
-    <div className="arena-workspace arena-directory max-w-7xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="arena-workspace arena-directory max-w-7xl mx-auto space-y-3.5 sm:space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <header className="arena-dir-header">
-        <div className="space-y-1.5 min-w-0">
+        <div className="space-y-1 sm:space-y-1.5 min-w-0">
           <nav aria-label="パンくず" className="text-xs text-muted-foreground">
             <Link href="/" className="hover:text-primary">ホーム</Link>
             <span aria-hidden="true"> / </span>
             <span aria-current="page">キャラ一覧</span>
           </nav>
           <p className="arena-dir-eyebrow">JEWEL RARITY DIRECTORY</p>
-          <h1 className="flex items-center gap-2.5 text-2xl sm:text-3xl font-extrabold tracking-tight">
-            <Users aria-hidden="true" className="w-7 h-7 shrink-0" />
+          <h1 className="flex items-center gap-2 sm:gap-2.5 text-xl sm:text-3xl font-extrabold tracking-tight">
+            <Users aria-hidden="true" className="w-6 h-6 sm:w-7 sm:h-7 shrink-0" />
             <span className="tabular-nums">キャラ一覧 ({visible.length} / {entries.length})</span>
           </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground">全{entries.length}キャラのTier・勝率・使用率を、全体とガチバトル（エリート以上）の対戦データで比較できます。</p>
+          <p className="text-xs sm:text-sm leading-snug sm:leading-relaxed text-muted-foreground">全{entries.length}キャラのTier・勝率・使用率を、全体とガチバトル（エリート以上）の対戦データで比較できます。</p>
         </div>
 
         <div className="arena-tier-seg-group arena-dir-cohort-switch shrink-0" role="group" aria-label="集計対象切替">
@@ -66,19 +66,19 @@ export default function BrawlerDirectoryView({ entries }: { entries: ReturnType<
         </div>
       </header>
 
-      <section aria-label="キャラを探す" className="arena-dir-filterbar space-y-3">
+      <section aria-label="キャラを探す" className="arena-dir-filterbar">
         <div className="arena-dir-controls">
           <div className="relative flex-1 min-w-0">
             <label htmlFor="brawler-search" className="sr-only">キャラ名を検索</label>
-            <Search aria-hidden="true" className="absolute left-3.5 top-3.5 w-4 h-4 text-muted-foreground pointer-events-none" />
+            <Search aria-hidden="true" className="absolute left-3 top-3.5 w-4 h-4 text-muted-foreground pointer-events-none" />
             <input
               id="brawler-search"
               type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="キャラ名で検索（日本語・英語）"
+              placeholder="キャラ名検索"
               autoComplete="off"
-              className={`${controlStyle} pl-10 pr-11 [&::-webkit-search-cancel-button]:appearance-none`}
+              className={`${controlStyle} pl-9 ${query ? "pr-10" : "pr-3"} [&::-webkit-search-cancel-button]:appearance-none`}
             />
             {query && (
               <button

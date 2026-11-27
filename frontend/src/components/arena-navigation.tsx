@@ -38,7 +38,7 @@ export function ArenaNavigation({ pathname, visible }: { pathname: string; visib
   const mobile = useArenaTabIndicator(pathname);
   return <>
     <a href="#main-content" className="arena-skip-link">メインコンテンツへ</a>
-    <header className="arena-site-header">
+    <header className={`arena-site-header${visible ? "" : " is-hidden"}`}>
       <div className="arena-header-inner">
         <Link href="/" className="arena-brand" aria-label="ブロラボ ホーム">
           <BurolaboIcon size={32} />
@@ -68,7 +68,7 @@ export function ArenaNavigation({ pathname, visible }: { pathname: string; visib
         </Link>
       </div>
     </header>
-    <nav ref={mobile.navigation} className={`arena-bottom-nav pb-safe${visible ? "" : " is-hidden"}`} aria-label="モバイルナビゲーション">
+    <nav ref={mobile.navigation} className={`arena-bottom-nav${visible ? "" : " is-hidden"}`} aria-label="モバイルナビゲーション">
       <span ref={mobile.indicator} className="arena-nav-indicator arena-mobile-indicator" aria-hidden="true" />
       {[destinations[3], destinations[1], destinations[2], destinations[4]].map(item =>
         <Destination key={item.href} item={item} pathname={pathname} mobile />)}

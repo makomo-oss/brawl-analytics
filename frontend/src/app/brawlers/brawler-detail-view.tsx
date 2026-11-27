@@ -130,14 +130,14 @@ function StatsPanel({ data }: { data: CohortData }) {
 
 export default function BrawlerDetailView({ data }: { data: BrawlerPageData }) {
   const [selected, setSelected] = useState<Cohort>("global")
-  return <div className="arena-workspace arena-detail max-w-7xl mx-auto space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+  return <div className="arena-workspace arena-detail max-w-7xl mx-auto space-y-4 sm:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
     <nav aria-label="パンくず" className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
       <Link href="/" className="hover:text-primary">ホーム</Link><span aria-hidden="true">/</span>
       <Link href="/brawlers" className="hover:text-primary">キャラ一覧</Link><span aria-hidden="true">/</span><span aria-current="page">{data.nameJa}</span>
     </nav>
-    <header className="flex items-center gap-4 sm:gap-6">
-      {data.imageUrl && <Image src={data.imageUrl} alt={data.nameJa} width={80} height={80} className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl border-4 border-background ring-2 ring-primary/20 bg-primary/10 shadow-xl shrink-0" priority />}
-      <div className="min-w-0"><p className="text-xs font-bold text-muted-foreground mb-1">ブロスタ キャラ分析</p><h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-primary via-purple-400 to-cyan-400 bg-clip-text text-transparent">{data.nameJa}の勝率・相性</h1></div>
+    <header className="flex items-center gap-3.5 sm:gap-6">
+      {data.imageUrl && <Image src={data.imageUrl} alt={data.nameJa} width={80} height={80} className="w-14 h-14 sm:w-20 sm:h-20 rounded-xl border-4 border-background ring-2 ring-primary/20 bg-primary/10 shadow-xl shrink-0" priority />}
+      <div className="min-w-0"><p className="text-xs font-bold text-muted-foreground mb-0.5 sm:mb-1">ブロスタ キャラ分析</p><h1 className="text-xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-primary via-purple-400 to-cyan-400 bg-clip-text text-transparent">{data.nameJa}の勝率・相性</h1></div>
     </header>
     <DataSummary summary={brawlerSummary(data)} />
     <div role="tablist" aria-label="集計対象" className="grid grid-cols-2 gap-1.5 max-w-[600px] mx-auto rounded-xl bg-card/80 backdrop-blur-sm border border-border/50 shadow-sm p-1.5">

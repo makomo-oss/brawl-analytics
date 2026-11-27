@@ -137,9 +137,14 @@ export default function BrawlerDetailView({ data }: { data: BrawlerPageData }) {
     </nav>
     <header className="flex items-center gap-3.5 sm:gap-6">
       {data.imageUrl && <Image src={data.imageUrl} alt={data.nameJa} width={80} height={80} className="w-14 h-14 sm:w-20 sm:h-20 rounded-xl border-4 border-background ring-2 ring-primary/20 bg-primary/10 shadow-xl shrink-0" priority />}
-      <div className="min-w-0"><p className="text-xs font-bold text-muted-foreground mb-0.5 sm:mb-1">ブロスタ キャラ分析</p><h1 className="text-[1.625rem] sm:text-4xl leading-tight font-extrabold tracking-tight bg-gradient-to-r from-primary via-purple-400 to-cyan-400 bg-clip-text text-transparent">{data.nameJa}の勝率・相性</h1></div>
+      <div className="min-w-0">
+        <p className="text-xs font-bold text-muted-foreground mb-0.5 sm:mb-1">ブロスタ キャラ分析</p>
+        <h1 className="text-[1.5rem] sm:text-4xl leading-tight font-extrabold tracking-tight bg-gradient-to-r from-primary via-purple-400 to-cyan-400 bg-clip-text text-transparent">
+          <span className="inline-block">{data.nameJa}の</span>
+          <span className="inline-block">勝率・相性</span>
+        </h1>
+      </div>
     </header>
-    <DataSummary summary={brawlerSummary(data)} />
     <div role="tablist" aria-label="集計対象" className="grid grid-cols-2 gap-1.5 max-w-[600px] mx-auto rounded-xl bg-card/80 backdrop-blur-sm border border-border/50 shadow-sm p-1.5">
       {(["global", "gachi"] as const).map(type => <button key={type} type="button" role="tab" id={`${type}-tab`} aria-selected={selected === type} aria-controls={`${type}-panel`}
         tabIndex={selected === type ? 0 : -1} onClick={() => setSelected(type)}
@@ -157,6 +162,12 @@ export default function BrawlerDetailView({ data }: { data: BrawlerPageData }) {
     {(["global", "gachi"] as const).map(type => <section key={type} role="tabpanel" id={`${type}-panel`} aria-labelledby={`${type}-tab`} hidden={selected !== type}>
       <StatsPanel data={data.cohorts[type]} />
     </section>)}
+    {brawlerSummary(data) && (
+      <section aria-labelledby="brawler-summary-title" className="rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-4 sm:p-6 space-y-2 min-w-0">
+        <h2 id="brawler-summary-title" className="font-bold text-base sm:text-lg text-zinc-100">{data.nameJa}の評価サマリー</h2>
+        <DataSummary summary={brawlerSummary(data)} />
+      </section>
+    )}
     {data.relatedBrawlers && data.relatedBrawlers.length > 0 && (
       <section aria-labelledby="related-brawlers-title" className="rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-4 sm:p-6 space-y-3">
         <h2 id="related-brawlers-title" className="font-bold text-lg text-zinc-100">他のキャラの勝率・評価</h2>

@@ -588,13 +588,13 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
   if (phase === "setup") {
     return (
       <div className="arena-workspace arena-draft arena-draft-setup max-w-3xl mx-auto space-y-3.5 sm:space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <div className="text-center space-y-1.5 sm:space-y-2.5">
-          <h1 className="text-[1.625rem] sm:text-4xl leading-tight font-extrabold tracking-tight">
-            ブロスタ ガチバトル ピックツール（BAN・ピック提案）
+        <div className="text-center space-y-1.5 sm:space-y-2">
+          <h1 className="text-[1.5rem] sm:text-4xl leading-tight font-extrabold tracking-tight">
+            <span className="inline-block">ブロスタ</span>{" "}
+            <span className="inline-block">ガチバトル</span>{" "}
+            <span className="inline-block">ピックツール</span>
+            <span className="inline-block text-[0.76em] text-slate-300 font-bold">（BAN・ピック提案）</span>
           </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground leading-snug sm:leading-relaxed">
-            モード・マップ・チームを選んでドラフトを開始します。最新の対戦データからおすすめBAN・ピック候補・カウンター相性を無料で提案します。
-          </p>
         </div>
 
         <Card className="arena-setup-card">
@@ -713,6 +713,9 @@ export default function DraftCompanionPage({ initialCategories }: { initialCateg
             </Button>
           </CardContent>
         </Card>
+        <p className="text-xs sm:text-sm text-muted-foreground text-center leading-relaxed max-w-2xl mx-auto">
+          モード・マップ・チームを選んでドラフトを開始します。最新の対戦データからおすすめBAN・ピック候補・カウンター相性を無料で提案します。
+        </p>
         <nav aria-label="モード・マップのランキング" className="flex flex-wrap justify-center gap-x-5 gap-y-1 text-sm text-muted-foreground">
           <Link href="/modes" className="inline-flex items-center min-h-10 sm:min-h-0 py-1 hover:text-primary">モード一覧</Link>
           <Link href="/maps" className="inline-flex items-center min-h-10 sm:min-h-0 py-1 hover:text-primary">マップ一覧</Link>

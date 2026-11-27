@@ -6,8 +6,11 @@ import { PLAYER_FAQ } from "@/lib/faq"
 export function PlayerHeader() {
   return <header className="mb-3 sm:mb-6 space-y-1 sm:space-y-2">
     <div className="arena-player-eyebrow">PLAYER &amp; CLUB ANALYTICS</div>
-    <h1 className="text-[1.625rem] sm:text-4xl leading-tight font-extrabold tracking-tight">ブロスタ戦績検索・勝率確認</h1>
-    <p className="text-xs sm:text-sm text-muted-foreground">プレイヤータグ・名前・クラブから戦績と勝率をリアルタイム分析します。</p>
+    <h1 className="text-[1.5rem] sm:text-4xl leading-tight font-extrabold tracking-tight">
+      <span className="inline-block">ブロスタ</span>
+      <span className="inline-block">戦績検索・勝率確認</span>
+    </h1>
+    <p className="text-xs sm:text-sm text-muted-foreground">タグ・名前・クラブから戦績と勝率をリアルタイム分析。</p>
   </header>
 }
 

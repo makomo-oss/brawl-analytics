@@ -297,8 +297,9 @@ export default function ContactView() {
           <MessageSquarePlus className="h-3.5 w-3.5" aria-hidden="true" />
           FEEDBACK &amp; SUPPORT
         </p>
-        <h1 id={formTitleId} className="text-[1.625rem] sm:text-4xl leading-tight font-extrabold tracking-tight">
-          お問い合わせ・ご要望
+        <h1 id={formTitleId} className="text-[1.5rem] sm:text-4xl leading-tight font-extrabold tracking-tight">
+          <span className="inline-block">お問い合わせ・</span>
+          <span className="inline-block">ご要望</span>
         </h1>
         <p className="text-sm leading-relaxed text-muted-foreground">
           新機能のリクエスト、不具合の報告、キャラ名や統計表示の誤りなど、気軽にお送りください。いただいた内容はすべて運営が確認し、今後の改善に活かします。

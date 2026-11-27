@@ -39,11 +39,13 @@ export default function BrawlerDirectoryView({ entries }: { entries: ReturnType<
             <span aria-current="page">キャラ一覧</span>
           </nav>
           <p className="arena-dir-eyebrow">JEWEL RARITY DIRECTORY</p>
-          <h1 className="flex items-center gap-2 sm:gap-2.5 text-[1.625rem] sm:text-3xl leading-tight font-extrabold tracking-tight">
-            <Users aria-hidden="true" className="w-7 h-7 shrink-0" />
-            <span className="tabular-nums">キャラ一覧 ({visible.length} / {entries.length})</span>
+          <h1 className="flex items-center gap-2 sm:gap-2.5 text-[1.5rem] sm:text-3xl leading-tight font-extrabold tracking-tight">
+            <Users aria-hidden="true" className="w-6 h-6 sm:w-7 sm:h-7 shrink-0" />
+            <span className="tabular-nums">
+              <span className="inline-block">キャラ一覧</span>{" "}
+              <span className="inline-block text-[0.82em] text-slate-300 font-bold">({visible.length} / {entries.length})</span>
+            </span>
           </h1>
-          <p className="text-xs sm:text-sm leading-snug sm:leading-relaxed text-muted-foreground">全{entries.length}キャラのTier・勝率・使用率を、全体とガチバトル（エリート以上）の対戦データで比較できます。</p>
         </div>
 
         <div className="arena-tier-seg-group arena-dir-cohort-switch shrink-0" role="group" aria-label="集計対象切替">
@@ -206,7 +208,11 @@ export default function BrawlerDirectoryView({ entries }: { entries: ReturnType<
         </div>
       )}
 
-      <nav aria-label="関連ランキング" className="flex flex-wrap items-center gap-x-5 gap-y-1 text-sm text-primary pt-2">
+      <p className="text-xs sm:text-sm leading-relaxed text-muted-foreground pt-1">
+        全{entries.length}キャラのTier・勝率・使用率を、全体とガチバトル（エリート以上）の対戦データで比較できます。
+      </p>
+
+      <nav aria-label="関連ランキング" className="flex flex-wrap items-center gap-x-5 gap-y-1 text-sm text-primary pt-1">
         <Link href="/modes" className="inline-flex items-center min-h-10 sm:min-h-0 py-1 hover:underline">モード別ランキング</Link>
         <Link href="/maps" className="inline-flex items-center min-h-10 sm:min-h-0 py-1 hover:underline">マップ別ランキング</Link>
         <Link href="/tier" className="inline-flex items-center gap-2 min-h-10 sm:min-h-0 py-1 text-sm font-bold text-primary hover:underline transition-colors">

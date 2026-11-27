@@ -496,7 +496,6 @@ export default function CockpitHomePage({ initialTierData, initialMatchups }: { 
             詳細Tier表を見る <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
-        <DataSummary summary={homeSummary} />
 
         {loadingTier ? (
           <div className="arena-meta-grid">
@@ -558,6 +557,7 @@ export default function CockpitHomePage({ initialTierData, initialMatchups }: { 
             環境データを読み込み中...
           </div>
         )}
+        <DataSummary summary={homeSummary} className="text-xs sm:text-sm" />
       </section>
 
       {/* ========================================================================= */}

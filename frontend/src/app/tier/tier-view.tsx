@@ -336,26 +336,27 @@ export default function TierListPage({ initialTierData, initialMatchups, initial
   return (
     <div className="arena-workspace arena-tier space-y-3.5 sm:space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-7xl mx-auto">
       <header className="arena-tier-header">
-        <div className="space-y-1.5 sm:space-y-2 min-w-0">
+        <div className="space-y-1 sm:space-y-1.5 min-w-0">
           <p className="arena-tier-eyebrow">COMPETITIVE TIER LIST</p>
-          <h1 className="text-[1.625rem] sm:text-3xl leading-tight font-extrabold tracking-tight flex items-center gap-2 sm:gap-2.5">
-            <Trophy aria-hidden="true" className="w-7 h-7 shrink-0" />
-            <span>ブロスタ最強キャラ・ティア表</span>
+          <h1 className="text-[1.5rem] sm:text-3xl leading-tight font-extrabold tracking-tight flex items-center gap-2 sm:gap-2.5">
+            <Trophy aria-hidden="true" className="w-6 h-6 sm:w-7 sm:h-7 shrink-0" />
+            <span>
+              <span className="inline-block">ブロスタ</span>
+              <span className="inline-block">最強キャラ・ティア表</span>
+            </span>
           </h1>
-          {!loading && (
-            <p className="text-muted-foreground text-xs sm:text-base leading-snug sm:leading-relaxed">
-              {selectedType === "gachi"
-                ? `直近60日のガチバトル・エリート以上の戦績（${(tierData?.metrics?.analyzed_matches ?? 0).toLocaleString()} 件のプレイヤー戦績）から算出。直近30日を重視したランキング。`
-                : `上位プレイヤーの直近60日のバトルログ（${(tierData?.metrics?.analyzed_matches ?? 0).toLocaleString()} 件のプレイヤー戦績）から算出。直近30日を重視したランキング。`
-              }
-            </p>
-          )}
           {!loading && tierData && (
-            <p className="text-muted-foreground text-xs flex items-center gap-1.5 pt-0.5">
-              <Clock3 aria-hidden="true" className="w-3.5 h-3.5" />
-              最終更新：{updatedLabel
-                ? <time dateTime={updatedAt!.toISOString()}>{updatedLabel}（日本時間）</time>
-                : "—"}
+            <p className="text-muted-foreground text-xs flex flex-wrap items-center gap-x-2 gap-y-0.5 pt-0.5 tabular-nums">
+              <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                <Clock3 aria-hidden="true" className="w-3.5 h-3.5 shrink-0" />
+                最終更新：{updatedLabel
+                  ? <time dateTime={updatedAt!.toISOString()}>{updatedLabel}<span className="hidden sm:inline">（日本時間）</span></time>
+                  : "—"}
+              </span>
+              <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                <span aria-hidden="true" className="opacity-50">·</span>
+                <span>{(tierData?.metrics?.analyzed_matches ?? 0).toLocaleString()}件集計</span>
+              </span>
             </p>
           )}
         </div>
@@ -413,8 +414,6 @@ export default function TierListPage({ initialTierData, initialMatchups, initial
           <ArrowRight aria-hidden="true" className="arena-tier-quickcard-arrow w-4 h-4" />
         </BrawlerDirectoryLink>
       </nav>
-
-      <DataSummary summary={loading ? null : activeSummary} />
 
       <section className="arena-tier-filterbar" aria-label="ティア表フィルター">
         {selectedType === "gachi" ? (
@@ -642,7 +641,19 @@ export default function TierListPage({ initialTierData, initialMatchups, initial
         )}
       </div>
 
-      <Link href="/brawlers" className="inline-block text-sm font-medium text-primary hover:underline">キャラ詳細一覧を見る</Link>
+      <Link href="/brawlers" className="inline-flex items-center min-h-10 sm:min-h-0 text-sm font-medium text-primary hover:underline">キャラ詳細一覧を見る</Link>
+      {!loading && (activeSummary || tierData) && (
+        <section aria-labelledby="tier-summary-title" className="rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-4 sm:p-6 space-y-2 min-w-0">
+          <h2 id="tier-summary-title" className="font-bold text-base sm:text-lg text-zinc-100">環境サマリー・集計対象</h2>
+          <DataSummary summary={activeSummary} />
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            {selectedType === "gachi"
+              ? `直近60日のガチバトル・エリート以上の戦績（${(tierData?.metrics?.analyzed_matches ?? 0).toLocaleString()} 件のプレイヤー戦績）から算出。直近30日を重視したランキング。`
+              : `上位プレイヤーの直近60日のバトルログ（${(tierData?.metrics?.analyzed_matches ?? 0).toLocaleString()} 件のプレイヤー戦績）から算出。直近30日を重視したランキング。`
+            }
+          </p>
+        </section>
+      )}
       <RankingTable id="tier-top" title={`${activeScopeLabel}Tier 上位10キャラ`} rows={loading ? [] : activeSummary?.top || []} />
       {selectedType === "global" && initialGachiSummary && (
         <RankingTable id="tier-gachi-top" title="ガチバトル（エリート以上）Tier 上位5キャラ" rows={initialGachiSummary.top.slice(0, 5)} />

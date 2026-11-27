@@ -4,7 +4,7 @@ import { ABOUT_REVISED } from "@/lib/about"
 import { jstDate } from "@/lib/dates"
 
 const card = "rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-4 sm:p-6 space-y-3 min-w-0"
-const heading = "text-[1.625rem] sm:text-4xl leading-tight font-extrabold tracking-tight bg-gradient-to-r from-primary via-purple-400 to-cyan-400 bg-clip-text text-transparent"
+const heading = "text-[1.5rem] sm:text-4xl leading-tight font-extrabold tracking-tight bg-gradient-to-r from-primary via-purple-400 to-cyan-400 bg-clip-text text-transparent"
 const text = "text-sm leading-relaxed text-muted-foreground break-words"
 
 function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
@@ -18,7 +18,7 @@ export default function AboutView() {
   const revised = jstDate(ABOUT_REVISED)
   return <div className="arena-workspace max-w-4xl mx-auto space-y-6 sm:space-y-8">
     <header className="space-y-3">
-      <h1 className={heading}>ブロラボについて・集計方法</h1>
+      <h1 className={heading}><span className="inline-block">ブロラボについて・</span><span className="inline-block">集計方法</span></h1>
       <p className={text}>ブロラボ（Brawl Lab）は、ブロスタ（Brawl Stars）の戦績検索、最強キャラのTier表、キャラ・モード・マップ別の勝率、ガチバトルのBAN・ピック支援を無料で提供する非公式ファンツールです。運営：ブロラボ運営。</p>
     </header>
     <Section id="source" title="データの出典">

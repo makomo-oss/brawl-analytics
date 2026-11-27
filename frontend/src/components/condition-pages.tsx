@@ -15,7 +15,7 @@ import { DataSummary } from "@/components/data-summary"
 import { FaqSection } from "@/components/faq-section"
 
 const card = "rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-4 sm:p-6"
-const heading = "text-[1.625rem] sm:text-4xl leading-tight font-extrabold tracking-tight bg-gradient-to-r from-primary via-purple-400 to-cyan-400 bg-clip-text text-transparent"
+const heading = "text-[1.5rem] sm:text-4xl leading-tight font-extrabold tracking-tight bg-gradient-to-r from-primary via-purple-400 to-cyan-400 bg-clip-text text-transparent"
 
 function entryMapName(entry: ConditionEntry): string {
   return entry.ids.global || entry.ids.gachi || entry.label
@@ -107,8 +107,7 @@ export function ConditionDirectoryView({ index, kind }: { index: ConditionIndex;
     : []
   const visibleEntries = kind === "maps" ? filterMapsByMode(index.maps, selectedMode) : index.modes
 
-  return <div className="arena-workspace arena-conditions space-y-3.5 sm:space-y-8"><Breadcrumbs kind={kind} /><h1 className={heading}>{kind === "modes" ? "モード別キャラランキング" : "マップ別キャラランキング"}</h1>
-    {index[kind].length > 0 && <p className="text-xs sm:text-sm leading-snug sm:leading-relaxed text-muted-foreground">{index[kind].length}{kind === "modes" ? "モード" : "マップ（ステージ）"}ごとに、全体とガチバトル（エリート以上）のキャラ別勝率・使用率ランキングを掲載しています。</p>}
+  return <div className="arena-workspace arena-conditions space-y-3.5 sm:space-y-8"><Breadcrumbs kind={kind} /><h1 className={heading}><span className="inline-block">{kind === "modes" ? "モード別" : "マップ別"}</span><span className="inline-block">キャラランキング</span></h1>
     <div className="flex flex-wrap gap-2.5 sm:gap-3 text-sm font-bold"><Link prefetch={false} href="/modes" aria-current={kind === "modes" ? "page" : undefined} className="inline-flex items-center min-h-10 sm:min-h-11 rounded-lg border border-primary/20 px-4 py-1.5 sm:py-2 text-primary hover:bg-primary/10">モード一覧</Link><Link prefetch={false} href="/maps" aria-current={kind === "maps" ? "page" : undefined} className="inline-flex items-center min-h-10 sm:min-h-11 rounded-lg border border-cyan-500/20 px-4 py-1.5 sm:py-2 text-cyan-400 hover:bg-cyan-500/10">マップ一覧</Link></div>
     {kind === "maps" && modeOptions.length > 0 && (
       <section aria-label="モードでマップを絞り込む" className="arena-dir-filterbar">
@@ -155,6 +154,7 @@ export function ConditionDirectoryView({ index, kind }: { index: ConditionIndex;
         </button>
       </div>
     )}
+    {index[kind].length > 0 && <p className="text-xs sm:text-sm leading-relaxed text-muted-foreground pt-1">{index[kind].length}{kind === "modes" ? "モード" : "マップ（ステージ）"}ごとに、全体とガチバトル（エリート以上）のキャラ別勝率・使用率ランキングを掲載しています。</p>}
   </div>
 }
 
@@ -162,18 +162,18 @@ export function ConditionDetailView({ data }: { data: ConditionPageData }) {
   useMapCatalog()
   const [selected, setSelected] = useState<Cohort>(data.cohorts.global.rows.length ? "global" : "gachi")
   const hasMapPreview = data.entry.kind === "maps" && Boolean(getMapImageUrl(entryMapName(data.entry)))
+  const summary = conditionSummary(data)
 
   return <div className="arena-workspace arena-conditions space-y-4 sm:space-y-8"><Breadcrumbs entry={data.entry} kind={data.entry.kind} />
-    <header className={hasMapPreview ? "flex flex-col sm:flex-row sm:items-start gap-5" : "space-y-3"}>
+    <header className={hasMapPreview ? "flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-5" : "space-y-2.5"}>
       {hasMapPreview && (
         <div className="w-full sm:w-44 shrink-0">
           <MapPreview entry={data.entry} prioritize compact />
         </div>
       )}
-      <div className="space-y-3 min-w-0 flex-1">
-        <h1 className={`${heading} flex items-center gap-3`}>{data.entry.kind === "modes" && <Image src={getModeIconUrl(data.entry.modeIds[0])} alt="" width={40} height={40} className="w-10 h-10 object-contain shrink-0 drop-shadow-md" />}<span>{data.entry.label}のキャラランキング</span></h1>
+      <div className="space-y-2 min-w-0 flex-1">
+        <h1 className={`${heading} flex items-center gap-2.5 sm:gap-3`}>{data.entry.kind === "modes" && <Image src={getModeIconUrl(data.entry.modeIds[0])} alt="" width={40} height={40} className="w-9 h-9 sm:w-10 sm:h-10 object-contain shrink-0 drop-shadow-md" />}<span><span className="inline-block">{data.entry.label}の</span><span className="inline-block">キャラランキング</span></span></h1>
         {data.entry.kind === "maps" && <ModeIcons entry={data.entry} />}
-        <DataSummary summary={conditionSummary(data)} />
       </div>
     </header>
     <div role="tablist" aria-label="集計対象" className="grid grid-cols-2 gap-1.5 max-w-[600px] mx-auto rounded-xl bg-card/80 border border-border/50 p-1.5">
@@ -193,6 +193,12 @@ export function ConditionDetailView({ data }: { data: ConditionPageData }) {
         <td className="py-3 px-2 text-right tabular-nums whitespace-nowrap">{row.use_rate.toFixed(2)}%</td><td className="py-3 px-2 text-right tabular-nums text-muted-foreground">{row.total_matches.toLocaleString("ja-JP")}</td>
       </tr>)}</tbody></table></div> : <p className="py-6 text-sm text-muted-foreground">データ不足</p>}
     </section>)}
+    {summary && (
+      <section aria-labelledby="condition-summary-title" className={`${card} space-y-2`}>
+        <h2 id="condition-summary-title" className="font-bold text-base sm:text-lg text-zinc-100">{data.entry.label}の環境サマリー</h2>
+        <DataSummary summary={summary} />
+      </section>
+    )}
     {data.related.length > 0 && <section className="space-y-3"><h2 className="font-bold text-lg flex items-center gap-2"><MapPin aria-hidden="true" className="w-5 h-5 text-cyan-400" />{data.entry.kind === "modes" ? "マップ別ランキング" : "モード別ランキング"}</h2><EntryLinks entries={data.related} /></section>}
     <nav aria-label="関連ツール" className="flex flex-wrap gap-x-5 gap-y-1 text-sm font-bold text-primary">
       <Link href="/tier" className="inline-flex items-center min-h-10 sm:min-h-0 py-1 hover:underline">Tier表</Link>

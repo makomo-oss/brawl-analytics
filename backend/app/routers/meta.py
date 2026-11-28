@@ -30,6 +30,7 @@ async def map_catalog(response: Response):
 
 
 USAGE_ADJUSTMENT_CAP = 2.0
+CORE_3V3_MODES = frozenset({"brawlBall", "gemGrab", "hotZone", "heist", "bounty", "knockout"})
 MIN_DISPLAY_MATCHUP_MATCHES = 5
 MIN_DISPLAY_MATCHUP_WEIGHT = 3.0
 
@@ -371,6 +372,7 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
         }
         
     # フィルタリング
+    restrict_global_modes = type == "global" and not (sub_type in ("mode", "map") and id) and not mode
     filtered_data = []
     for row in data:
         map_id = str(row.get("map_id", ""))
@@ -391,6 +393,8 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
         elif type == "global":
             # 全体Tierの場合: 二重カウント防止のためgachi専用タグ以外の基本データを抽出
             if match_type.startswith("gachi"):
+                continue
+            if restrict_global_modes and row.get("mode") not in CORE_3V3_MODES:
                 continue
             
         # マップ別フィルタ

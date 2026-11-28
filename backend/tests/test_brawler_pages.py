@@ -32,7 +32,8 @@ def test_new_character_is_discovered_without_static_catalog_or_build(rows):
     assert "future new hero" in index["overview"]["global"]["characters"]
     page = brawler_pages.snapshot("future-new-hero")
     for cohort in ("global", "gachi"):
-        assert page["details"][cohort]["future new hero"]["total_matches"] == 300
+        expected_matches = 200 if cohort == "global" else 300
+        assert page["details"][cohort]["future new hero"]["total_matches"] == expected_matches
         assert set(page["contexts"][cohort]["modes"]) == {"gemGrab", "brawlBall"}
         assert page["mapModes"][cohort]["shared-map"] == ["brawlBall", "trioShowdown"]
         for map_id, characters in page["contexts"][cohort]["maps"].items():
@@ -145,7 +146,7 @@ def test_clear_during_inflight_build_does_not_repopulate_old_cache(rows, monkeyp
         future.result(timeout=3)
     assert not brawler_pages._pages
     rows[0]['total_wins'] = 80
-    assert brawler_pages.snapshot('amber')['details']['global']['amber']['win_rate'] == 60
+    assert brawler_pages.snapshot('amber')['details']['global']['amber']['win_rate'] == 65
 
 
 def test_failure_is_not_cached_and_next_request_can_retry(rows, monkeypatch):

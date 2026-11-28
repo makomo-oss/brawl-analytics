@@ -359,6 +359,47 @@ def test_solo_showdown_rank_uses_event_mode_when_battle_mode_missing():
     assert [r['result'] for r in records] == ['victory', 'defeat']
 
 
+def test_global_overview_excludes_showdown_and_special_modes_while_keeping_ranked(monkeypatch):
+    rows = [
+        # Core 3v3 modes across trophy ('ranked') and Ranked ('soloRanked', 'teamRanked')
+        dict(character_id='colt', map_id='m1', mode='brawlBall', match_type='ranked', total_matches=40, total_wins=20),
+        dict(character_id='colt', map_id='m2', mode='gemGrab', match_type='soloRanked', total_matches=30, total_wins=18),
+        dict(character_id='colt', map_id='m3', mode='knockout', match_type='teamRanked', total_matches=30, total_wins=12),
+        # Duplicate gachi cohort tag must remain excluded from global
+        dict(character_id='colt', map_id='m2', mode='gemGrab', match_type='gachi', total_matches=30, total_wins=18),
+        # Showdown & special event modes must be excluded from global overview
+        dict(character_id='colt', map_id='Skull Creek', mode='soloShowdown', match_type='ranked', total_matches=200, total_wins=200),
+        dict(character_id='colt', map_id='Skull Creek', mode='duoShowdown', match_type='ranked', total_matches=100, total_wins=100),
+        dict(character_id='colt', map_id='Skull Creek', mode='trioShowdown', match_type='ranked', total_matches=100, total_wins=100),
+        dict(character_id='colt', map_id='m4', mode='megaShowdown', match_type='ranked', total_matches=100, total_wins=0),
+        dict(character_id='colt', map_id='m5', mode='hunterSurvivor', match_type='ranked', total_matches=100, total_wins=100),
+        dict(character_id='colt', map_id='m6', mode='airHockey', match_type='ranked', total_matches=100, total_wins=100),
+        # Another character only appearing in Showdown
+        dict(character_id='shelly', map_id='Skull Creek', mode='soloShowdown', match_type='ranked', total_matches=50, total_wins=40),
+    ]
+    monkeypatch.setattr(meta, 'get_db', lambda: None)
+    monkeypatch.setattr(meta, '_get_cached_macro_data', lambda db: rows)
+
+    overview = meta.get_tier_list(type='global')
+    assert set(overview['characters']) == {'colt'}
+    assert overview['characters']['colt']['total_matches'] == 100
+    assert overview['characters']['colt']['win_rate'] == 50.0
+    assert overview['metrics']['analyzed_matches'] == 100
+
+    # Explicit sub_type='all' still behaves as global overview
+    overview_all = meta.get_tier_list(type='global', sub_type='all')
+    assert overview_all['characters']['colt']['total_matches'] == 100
+
+    # Explicit mode/map queries keep Showdown data available for mode/map pages
+    sd_mode = meta.get_tier_list(type='global', sub_type='mode', id='soloShowdown')
+    assert sd_mode['characters']['colt']['total_matches'] == 200
+    assert sd_mode['characters']['shelly']['total_matches'] == 50
+
+    sd_map = meta.get_tier_list(type='global', sub_type='map', id='Skull Creek')
+    assert sd_map['characters']['colt']['total_matches'] == 400
+    assert sd_map['characters']['shelly']['total_matches'] == 50
+
+
 def test_profile_sync_keeps_rank_and_inventory():
     record = profile_record('ABC', {'tag':'#ABC','name':'Real','rankedRank':13,'highestAllTimeRankedRank':16,'brawlers':[{'name':'COLT','power':11}]})
     assert record['unlocked_characters']['ranked_rank'] == 13

@@ -25,6 +25,18 @@ export function isRuntimePage(value: unknown, path: string): value is RuntimePag
 
 export type RouteDocument = { page: RuntimePage; html: string }
 
+function createTimeout(ms: number) {
+  if (typeof AbortSignal !== "undefined" && typeof AbortSignal.timeout === "function") {
+    return { signal: AbortSignal.timeout(ms), cleanup: () => {} }
+  }
+  if (typeof AbortController === "function") {
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(new Error("Timed out")), ms)
+    return { signal: controller.signal, cleanup: () => clearTimeout(timer) }
+  }
+  return { signal: undefined, cleanup: () => {} }
+}
+
 // Documents remain the source of truth for data, SEO and outage fallbacks.
 // A bounded, short-lived memory cache makes revisits immediate without masking
 // future statistics updates or accumulating every character visited.
@@ -39,7 +51,16 @@ export function createRouteLoader(fetcher: typeof fetch = fetch) {
       const running = pending.get(path)
       if (running) return running
       const job = (async () => {
-        const response = await fetcher(path, { headers: { Accept: "text/html" }, signal: AbortSignal.timeout(15_000) })
+        const timeout = createTimeout(15_000)
+        let response: Response
+        try {
+          response = await fetcher(path, {
+            headers: { Accept: "text/html" },
+            ...(timeout.signal ? { signal: timeout.signal } : {}),
+          })
+        } finally {
+          timeout.cleanup()
+        }
         if (!response.ok || !response.headers.get("content-type")?.includes("text/html")) throw new Error("画面を読み込めませんでした。")
         const html = await response.text()
         if (html.length > 4_000_000) throw new Error("画面のデータを取得できませんでした。")

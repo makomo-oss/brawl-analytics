@@ -16,7 +16,8 @@ import ContactView from "@/app/contact/contact-view"
 import { SiteFooter } from "@/components/site-footer"
 import DraftCompanionPage from "@/app/companion/companion-view"
 import type { DraftCategories } from "@/lib/draft-categories"
-import { createRouteLoader, isRuntimePath } from "./route-loader"
+import { createRouteLoader, isRuntimePath, type RouteDocument } from "./route-loader"
+import { createScrollHistory } from "./scroll-history"
 import { navigationDirection } from "@/lib/arena-navigation-motion"
 import type { BrawlerSnapshot } from "@/lib/brawler-page-data"
 import { applyBrawlerCatalog } from "@/lib/use-brawler-catalog"
@@ -86,15 +87,16 @@ export function App({ page }: { page: RuntimePage }) {
   useEffect(() => {
     const originalRestoration = history.scrollRestoration
     history.scrollRestoration = "manual"
+    const scrollHistory = createScrollHistory()
     // Keep server HTML deterministic; read deep-link query parameters on mount.
     const initialHref = location.pathname + location.search + location.hash
     setCurrent({ page, href: initialHref })
     setVisits([{ page, href: initialHref }])
     let scrollFrame = 0
-    const saveScroll = () => history.replaceState({ ...history.state, arenaScroll: window.scrollY }, "")
     const onScroll = () => {
-      if (!scrollFrame) scrollFrame = requestAnimationFrame(() => { scrollFrame = 0; saveScroll() })
+      if (!scrollFrame) scrollFrame = requestAnimationFrame(() => { scrollFrame = 0; scrollHistory.recordScroll() })
     }
+    const onPageHide = () => scrollHistory.persist()
     const perform = async (href: string, mode: "push" | "replace" | "pop" = "push", scroll = 0) => {
       const url = new URL(href, location.href)
       if (url.origin !== location.origin || !isRuntimePath(url.pathname)) {
@@ -107,35 +109,42 @@ export function App({ page }: { page: RuntimePage }) {
       const nextHref = url.pathname + url.search + url.hash
       if (mode !== "pop" && nextHref === location.pathname + location.search + location.hash) { setPending(null); return }
       setPending(url.pathname)
+      let routeDocument: RouteDocument
       try {
-        const document = await loader.load(url.pathname)
-        if (id !== sequence.current) return
-        if (mode !== "pop") {
-          saveScroll()
-          history[mode === "replace" ? "replaceState" : "pushState"]({ arenaScroll: 0 }, "", nextHref)
-        }
-        updateDocumentHead(document.html)
-        if ("catalog" in document.page && Array.isArray(document.page.catalog)) {
-          applyBrawlerCatalog({ brawlers: document.page.catalog })
-        }
-        const visit = { page: document.page, href: nextHref }
-        const nextDirection = navigationDirection(displayedPath.current, url.pathname, mode, window.matchMedia("(max-width: 1023px)").matches)
-        restore.current = { scroll, hash: url.hash }
-        startTransition(() => {
-          setVisits(previous => {
-            const retained = previous.filter(row => row.page.path !== visit.page.path)
-            // Keep the five tool sessions. Public details remount so their
-            // document-local anchor/ARIA IDs never coexist with another detail.
-            return [...retained.filter(row => primaryPaths.has(row.page.path)), visit]
-          })
-          setCurrent(visit)
-          setDirection(nextDirection)
-          setRevision(value => value + 1)
-          setPending(null)
-        })
+        routeDocument = await loader.load(url.pathname)
       } catch {
         if (id === sequence.current) { setPending(null); setFailure({ href: nextHref, mode }) }
+        return
       }
+      if (id !== sequence.current) return
+      if (mode !== "pop" && !scrollHistory.commit(mode, nextHref)) {
+        if (mode === "replace") location.replace(url.href)
+        else location.assign(url.href)
+        return
+      }
+      try {
+        updateDocumentHead(routeDocument.html)
+      } catch {
+        /* Non-fatal head sync error must not abort navigation. */
+      }
+      if ("catalog" in routeDocument.page && Array.isArray(routeDocument.page.catalog)) {
+        applyBrawlerCatalog({ brawlers: routeDocument.page.catalog })
+      }
+      const visit = { page: routeDocument.page, href: nextHref }
+      const nextDirection = navigationDirection(displayedPath.current, url.pathname, mode, window.matchMedia("(max-width: 1023px)").matches)
+      restore.current = { scroll, hash: url.hash }
+      startTransition(() => {
+        setVisits(previous => {
+          const retained = previous.filter(row => row.page.path !== visit.page.path)
+          // Keep the five tool sessions. Public details remount so their
+          // document-local anchor/ARIA IDs never coexist with another detail.
+          return [...retained.filter(row => primaryPaths.has(row.page.path)), visit]
+        })
+        setCurrent(visit)
+        setDirection(nextDirection)
+        setRevision(value => value + 1)
+        setPending(null)
+      })
     }
     navigate.current = (href, mode) => { void perform(href, mode) }
     const findLink = (event: Event) => event.target instanceof Element ? event.target.closest<HTMLAnchorElement>("a[href]") : null
@@ -154,12 +163,16 @@ export function App({ page }: { page: RuntimePage }) {
       const url = new URL(link.href, location.href)
       if (url.origin === location.origin && primaryPaths.has(url.pathname) && url.pathname !== location.pathname) void loader.load(url.pathname).catch(() => {})
     }
-    const onPop = (event: PopStateEvent) => { void perform(location.href, "pop", Number(event.state?.arenaScroll) || 0) }
+    const onPop = (event: PopStateEvent) => {
+      const scroll = scrollHistory.resolvePop(event.state)
+      void perform(location.href, "pop", scroll)
+    }
     document.addEventListener("click", onClick)
     document.addEventListener("pointerover", onIntent)
     document.addEventListener("focusin", onIntent)
     window.addEventListener("popstate", onPop)
     window.addEventListener("scroll", onScroll, { passive: true })
+    window.addEventListener("pagehide", onPageHide)
     return () => {
       ++sequence.current
       history.scrollRestoration = originalRestoration
@@ -169,6 +182,7 @@ export function App({ page }: { page: RuntimePage }) {
       document.removeEventListener("focusin", onIntent)
       window.removeEventListener("popstate", onPop)
       window.removeEventListener("scroll", onScroll)
+      window.removeEventListener("pagehide", onPageHide)
     }
   }, [page, loader])
 

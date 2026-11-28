@@ -232,6 +232,26 @@ def observation_weights(df: pd.DataFrame) -> pd.Series:
     return (2.0 ** (-recent_age / HALF_LIFE_DAYS - older_age / OLDER_HALF_LIFE_DAYS)).fillna(0.0)
 
 
+def _is_mirror_observation(hero_used: str, opponents, mode: str) -> bool:
+    """Detect mirror matches in team modes (excluding multi-team Showdown)."""
+    if not hero_used or "showdown" in str(mode or "").lower():
+        return False
+    if opponents is None:
+        return False
+    if isinstance(opponents, str):
+        import ast
+        try:
+            opponents = ast.literal_eval(opponents)
+        except Exception:
+            return False
+    if not isinstance(opponents, (list, tuple, set)):
+        try:
+            opponents = list(opponents)
+        except TypeError:
+            return False
+    return any(str(opp or "").lower().strip() == hero_used for opp in opponents)
+
+
 def calc_macro_map_stats(df: pd.DataFrame, rank_segments: dict = None):
     """マクロマップ適性（勝率とピック率偏差値）を計算 (ランク帯別ガチバトル専用集計対応)"""
     logger.info("Calculating macro map stats with rank brackets...")
@@ -310,15 +330,41 @@ def calc_macro_map_stats(df: pd.DataFrame, rank_segments: dict = None):
     combined_df["mode"] = combined_df["mode"].fillna("unknown")
     combined_df["weight"] = observation_weights(combined_df)
     combined_df["weighted_win"] = combined_df["is_win"] * combined_df["weight"]
+    if "opponents" in combined_df.columns:
+        is_mirror = pd.Series(
+            [
+                _is_mirror_observation(hero, opps, mode)
+                for hero, opps, mode in zip(
+                    combined_df["hero_used"], combined_df["opponents"], combined_df["mode"]
+                )
+            ],
+            index=combined_df.index,
+            dtype=bool,
+        )
+    else:
+        is_mirror = pd.Series(False, index=combined_df.index, dtype=bool)
+    non_mirror = (~is_mirror).astype(int)
+    combined_df["nm_match"] = non_mirror
+    combined_df["nm_win"] = combined_df["is_win"] * non_mirror
+    combined_df["nm_weighted_match"] = combined_df["weight"] * non_mirror
+    combined_df["nm_weighted_win"] = combined_df["weighted_win"] * non_mirror
     grouped = combined_df.groupby(["match_type", "mode", "map_id", "hero_used"]).agg(
         total_matches=("is_win", "size"),
         total_wins=("is_win", "sum"),
         weighted_matches=("weight", "sum"),
-        weighted_wins=("weighted_win", "sum")
+        weighted_wins=("weighted_win", "sum"),
+        non_mirror_matches=("nm_match", "sum"),
+        non_mirror_wins=("nm_win", "sum"),
+        non_mirror_weighted_matches=("nm_weighted_match", "sum"),
+        non_mirror_weighted_wins=("nm_weighted_win", "sum"),
     ).reset_index()
     
-    # 勝率の計算
-    grouped["win_rate"] = (grouped["total_wins"] / grouped["total_matches"]) * 100.0
+    # 勝率の計算 (ミラーマッチ除外ベース; 全試合がミラーの極端なケースのみ全試合勝率へフォールバック)
+    nm_denom = grouped["non_mirror_matches"]
+    grouped["win_rate"] = (
+        grouped["non_mirror_wins"].where(nm_denom > 0, grouped["total_wins"])
+        / nm_denom.where(nm_denom > 0, grouped["total_matches"])
+    ) * 100.0
     
     # ピック率偏差値の計算 (マップ内での出現回数の偏差値)
     counts = grouped.groupby(["match_type", "mode", "map_id"])["weighted_matches"]
@@ -336,6 +382,10 @@ def calc_macro_map_stats(df: pd.DataFrame, rank_segments: dict = None):
             "mode": row["mode"],
             "weighted_matches": float(row["weighted_matches"]),
             "weighted_wins": float(row["weighted_wins"]),
+            "non_mirror_matches": int(row["non_mirror_matches"]),
+            "non_mirror_wins": int(row["non_mirror_wins"]),
+            "non_mirror_weighted_matches": float(row["non_mirror_weighted_matches"]),
+            "non_mirror_weighted_wins": float(row["non_mirror_weighted_wins"]),
             "character_id": row["hero_used"],
             "total_wins": int(row["total_wins"]),
             "total_matches": int(row["total_matches"]),

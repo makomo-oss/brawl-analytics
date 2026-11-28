@@ -7,6 +7,7 @@ from app.algorithm.statistics import (
     battle_identity,
     blend_tier_score,
     dynamic_tier_thresholds,
+    pick_share_reliability,
     posterior_rate,
     supported_win_lift,
 )
@@ -113,7 +114,7 @@ def test_usage_blend_keeps_win_at_70_percent_and_saturates_smoothly():
     assert win_m == pytest.approx(.7 * (37.9 - 50))
     assert win_a == pytest.approx(.7 * (45.4 - 50))
     assert 0 < usage_a < usage_1s < usage_2s < usage_3s < 2.0
-    assert usage_m == pytest.approx(2.0 * math.tanh(0.3 * 4.0 * 2.14 / 2.0))
+    assert usage_m == pytest.approx(2.0 * math.tanh(0.3 * 4.5 * 2.14 / 2.0))
     assert usage_neg == pytest.approx(-usage_1s)
     assert usage_zero_cap == 0.0
     assert usage_neg_cap == 0.0
@@ -398,6 +399,120 @@ def test_global_overview_excludes_showdown_and_special_modes_while_keeping_ranke
     sd_map = meta.get_tier_list(type='global', sub_type='map', id='Skull Creek')
     assert sd_map['characters']['colt']['total_matches'] == 400
     assert sd_map['characters']['shelly']['total_matches'] == 50
+
+
+def test_pick_share_reliability_discounts_low_usage_smoothly():
+    assert pick_share_reliability(-1.0) == 0.0
+    assert pick_share_reliability(0.0) == 0.0
+    assert pick_share_reliability(0.5) == pytest.approx(0.5)
+    assert pick_share_reliability(0.1) < pick_share_reliability(0.5) < pick_share_reliability(1.0) < pick_share_reliability(3.0) < 1.0
+
+
+def test_macro_map_stats_excludes_3v3_mirrors_from_win_totals_but_keeps_pick_counts():
+    base = observation()
+    rows = [
+        # 2 non-mirror wins + 2 mirror losses in brawlBall => total 4 (50%), non-mirror 2 (100%)
+        {**base, 'match_id': 'm1', 'opponents': ['bull', 'shelly'], 'result': 'victory'},
+        {**base, 'match_id': 'm2', 'opponents': ['BULL', 'RICO'], 'result': 'victory'},
+        {**base, 'match_id': 'm3', 'opponents': [' COLT ', 'bull'], 'result': 'defeat'},
+        {**base, 'match_id': 'm4', 'opponents': "['colt', 'piper']", 'result': 'defeat'},
+        # All-mirror character in gemGrab => safe fallback without zero division
+        {**base, 'match_id': 'm5', 'hero_used': 'bull', 'mode': 'gemGrab', 'opponents': ['bull'], 'result': 'defeat'},
+        # Showdown does not exclude same-brawler opponents
+        {**base, 'match_id': 'm6', 'hero_used': 'shelly', 'mode': 'soloShowdown', 'opponents': ['shelly', 'colt'], 'result': 'victory'},
+    ]
+    stats = {(r['character_id'], r['mode']): r for r in calc_macro_map_stats(pd.DataFrame(rows))}
+
+    colt = stats[('colt', 'brawlBall')]
+    assert colt['total_matches'] == 4
+    assert colt['total_wins'] == 2
+    assert colt['non_mirror_matches'] == 2
+    assert colt['non_mirror_wins'] == 2
+    assert colt['win_rate'] == 100.0
+    assert colt['weighted_matches'] > colt['non_mirror_weighted_matches']
+
+    bull = stats[('bull', 'gemGrab')]
+    assert bull['total_matches'] == 1
+    assert bull['non_mirror_matches'] == 0
+    assert bull['win_rate'] == 0.0
+
+    shelly = stats[('shelly', 'soloShowdown')]
+    assert shelly['non_mirror_matches'] == 1
+    assert shelly['non_mirror_wins'] == 1
+
+
+def test_tier_list_uses_non_mirror_wins_and_keeps_full_pick_share(monkeypatch):
+    rows = [
+        # Popular hero with many 50/50 mirror matches: raw 56%, non-mirror 70%
+        dict(character_id='gus', map_id='map', mode='brawlBall', match_type='ranked',
+             total_matches=1000, total_wins=560, weighted_matches=1000.0, weighted_wins=560.0,
+             non_mirror_matches=300, non_mirror_wins=210, non_mirror_weighted_matches=300.0, non_mirror_weighted_wins=210.0),
+        # Niche hero with 70% win rate on only 50 matches
+        dict(character_id='grom', map_id='map', mode='brawlBall', match_type='ranked',
+             total_matches=50, total_wins=35, weighted_matches=50.0, weighted_wins=35.0,
+             non_mirror_matches=50, non_mirror_wins=35, non_mirror_weighted_matches=50.0, non_mirror_weighted_wins=35.0),
+        # All-mirror edge case
+        dict(character_id='mirror_only', map_id='map', mode='brawlBall', match_type='ranked',
+             total_matches=30, total_wins=15, weighted_matches=30.0, weighted_wins=15.0,
+             non_mirror_matches=0, non_mirror_wins=0, non_mirror_weighted_matches=0.0, non_mirror_weighted_wins=0.0),
+    ] + [
+        dict(character_id=f'avg{i}', map_id='map', mode='brawlBall', match_type='ranked',
+             total_matches=400, total_wins=200, weighted_matches=400.0, weighted_wins=200.0,
+             non_mirror_matches=350, non_mirror_wins=175, non_mirror_weighted_matches=350.0, non_mirror_weighted_wins=175.0)
+        for i in range(6)
+    ]
+    monkeypatch.setattr(meta, 'get_db', lambda: None)
+    monkeypatch.setattr(meta, '_get_cached_macro_data', lambda db: rows)
+    result = meta.get_tier_list(type='global')
+    gus = result['characters']['gus']
+    grom = result['characters']['grom']
+    mirror_only = result['characters']['mirror_only']
+
+    # Non-mirror win rate is displayed and used; use_rate keeps full 1000 matches.
+    assert gus['win_rate'] == 70.0
+    assert gus['use_rate'] == pytest.approx(1000 / 3480 * 100, abs=0.01)
+    # Niche brawler with the same 70% non-mirror win rate is damped relative to staple gus.
+    assert grom['supported_win_lift'] < gus['supported_win_lift']
+    assert grom['score'] < gus['score']
+    # All-mirror edge case falls back safely without crashing.
+    assert mirror_only['win_rate'] == 50.0
+    assert mirror_only['weighted_win_rate'] is None
+
+
+def test_gachi_all_stratifies_rank_brackets_before_combining(monkeypatch):
+    # Mythic has low baseline (45%, high volume); Masters has high baseline (65%, lower volume).
+    # 'lumi' excels in Masters (+15% vs Masters baseline) while struggling slightly in Mythic,
+    # whereas 'niche' only wins in Mythic and never appears in Masters.
+    rows = []
+    for i in range(6):
+        rows.append(dict(character_id=f'avg{i}', map_id='map', mode='brawlBall', match_type='gachi_mythic',
+                         total_matches=500, total_wins=225))
+        rows.append(dict(character_id=f'avg{i}', map_id='map', mode='brawlBall', match_type='gachi_legendary',
+                         total_matches=500, total_wins=265))
+        rows.append(dict(character_id=f'avg{i}', map_id='map', mode='brawlBall', match_type='gachi_masters',
+                         total_matches=100, total_wins=65))
+    # lumi: strong in Masters & solid in Legendary, weak in Mythic
+    rows.extend([
+        dict(character_id='lumi', map_id='map', mode='brawlBall', match_type='gachi_mythic', total_matches=300, total_wins=120),
+        dict(character_id='lumi', map_id='map', mode='brawlBall', match_type='gachi_legendary', total_matches=300, total_wins=168),
+        dict(character_id='lumi', map_id='map', mode='brawlBall', match_type='gachi_masters', total_matches=150, total_wins=120),
+    ])
+    # niche: low-usage Mythic specialist absent from Masters
+    rows.extend([
+        dict(character_id='niche', map_id='map', mode='brawlBall', match_type='gachi_mythic', total_matches=40, total_wins=24),
+        dict(character_id='niche', map_id='map', mode='brawlBall', match_type='gachi_legendary', total_matches=30, total_wins=17),
+    ])
+    monkeypatch.setattr(meta, 'get_db', lambda: None)
+    monkeypatch.setattr(meta, '_get_cached_macro_data', lambda db: rows)
+
+    result = meta.get_tier_list(type='gachi', rank_tier='all')
+    assert result['metrics']['rank_stratified'] is True
+    lumi = result['characters']['lumi']
+    niche = result['characters']['niche']
+    assert lumi['total_matches'] == 750
+    assert lumi['score'] > niche['score']
+    # Masters-only absence penalizes niche pick_rate_deviation.
+    assert niche['pick_rate_deviation'] < lumi['pick_rate_deviation']
 
 
 def test_profile_sync_keeps_rank_and_inventory():

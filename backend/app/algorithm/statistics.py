@@ -5,9 +5,10 @@ import math
 
 PRIOR_MATCHES = 20.0
 TIER_EVIDENCE_MATCHES = 50.0  # Single Beta prior for positive lift: half credit at 50 weighted observations.
+TIER_VERSATILITY_HALF_SHARE = 0.5  # Half positive-lift credit at 50% of cohort average pick share.
 TIER_WIN_WEIGHT = 0.7
 TIER_USAGE_WEIGHT = 0.3
-TIER_USAGE_STD_POINTS = 4.0  # Scales 1σ of log-pick-rate to typical ~4pt win-lift spread before 70/30 blend.
+TIER_USAGE_STD_POINTS = 4.5  # Scales 1σ of log-pick-rate to typical win-lift spread before 70/30 blend.
 TIER_NAMES = ("S+", "S", "A+", "A", "B", "C")
 DYNAMIC_TIER_Z = (1.75, 1.0, 0.35, -0.35, -1.0, -1.75)
 TIER_PRIOR_CHARS = 10.0
@@ -44,6 +45,20 @@ def supported_win_lift(wins: float, matches: float, baseline: float) -> tuple[fl
     lift = mean - baseline
     supported = (wins - matches * baseline) / (matches + TIER_EVIDENCE_MATCHES) if lift > 0 else lift
     return lift, supported, lift - supported
+
+
+def pick_share_reliability(relative_pick_share: float) -> float:
+    """Discount positive win lift for niche/last-pick brawlers with low pick share.
+
+    `relative_pick_share` is a character's recency-weighted pick count divided
+    by the cohort mean (1.0 = average usage). Low-usage specialists often show
+    inflated win rates from favorable last-pick matchups, so positive lift is
+    scaled by r / (r + TIER_VERSATILITY_HALF_SHARE) while negative lift is left
+    unreduced.
+    """
+    if relative_pick_share <= 0:
+        return 0.0
+    return relative_pick_share / (relative_pick_share + TIER_VERSATILITY_HALF_SHARE)
 
 
 def blend_tier_score(performance_score: float, pick_deviation: float, usage_cap: float) -> tuple[float, float, float]:

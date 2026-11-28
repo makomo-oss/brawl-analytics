@@ -8,7 +8,7 @@ from threading import BoundedSemaphore, Lock
 from app.database import get_db
 from app.routers.cron import verify_cron_secret
 from app.services.db_reads import execute_read
-from app.algorithm.statistics import assign_tier, blend_tier_score, dynamic_tier_thresholds, posterior_rate, supported_win_lift, wilson_interval, MIN_TIER_MATCHES, MIN_TIER_WEIGHT, TIER_EVIDENCE_MATCHES, TIER_WIN_WEIGHT, TIER_USAGE_WEIGHT, ANALYSIS_WINDOW_DAYS, RECENT_WINDOW_DAYS, HALF_LIFE_DAYS, OLDER_HALF_LIFE_DAYS
+from app.algorithm.statistics import assign_tier, blend_tier_score, dynamic_tier_thresholds, pick_share_reliability, posterior_rate, supported_win_lift, wilson_interval, MIN_TIER_MATCHES, MIN_TIER_WEIGHT, PRIOR_MATCHES, TIER_EVIDENCE_MATCHES, TIER_VERSATILITY_HALF_SHARE, TIER_WIN_WEIGHT, TIER_USAGE_WEIGHT, ANALYSIS_WINDOW_DAYS, RECENT_WINDOW_DAYS, HALF_LIFE_DAYS, OLDER_HALF_LIFE_DAYS
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +31,8 @@ async def map_catalog(response: Response):
 
 USAGE_ADJUSTMENT_CAP = 2.0
 CORE_3V3_MODES = frozenset({"brawlBall", "gemGrab", "hotZone", "heist", "bounty", "knockout"})
+# Rank-stratified weights for overall Ranked ("gachi", rank_tier="all").
+GACHI_RANK_BRACKETS = (("gachi_mythic", 0.20), ("gachi_legendary", 0.40), ("gachi_masters", 0.40))
 MIN_DISPLAY_MATCHUP_MATCHES = 5
 MIN_DISPLAY_MATCHUP_WEIGHT = 3.0
 
@@ -351,6 +353,111 @@ def _display_matchups(pairs):
     return favorable[:5], unfavorable[:5]
 
 
+def _row_non_mirror_values(row: dict) -> tuple[int, int, float, float, float, float]:
+    """Extract (nm_matches, nm_wins, nm_weighted_matches, nm_weighted_wins, pick_weighted_matches, pick_weighted_wins)."""
+    tm = int(row.get("total_matches") or 0)
+    tw = int(row.get("total_wins") or 0)
+    pick_wn = float(row["weighted_matches"]) if row.get("weighted_matches") is not None else float(tm)
+    pick_ww = float(row["weighted_wins"]) if row.get("weighted_wins") is not None else float(tw)
+    nm_tm = int(row["non_mirror_matches"]) if row.get("non_mirror_matches") is not None else tm
+    nm_tw = int(row["non_mirror_wins"]) if row.get("non_mirror_wins") is not None else tw
+    nm_wn = float(row["non_mirror_weighted_matches"]) if row.get("non_mirror_weighted_matches") is not None else pick_wn
+    nm_ww = float(row["non_mirror_weighted_wins"]) if row.get("non_mirror_weighted_wins") is not None else pick_ww
+    return nm_tm, nm_tw, nm_wn, nm_ww, pick_wn, pick_ww
+
+
+def _aggregate_cohort_rows(rows: list[dict]) -> dict:
+    """Standardize win lift (mirror-excluded) and log pick share within one cohort/bracket."""
+    contexts: dict[tuple, list[float]] = {}
+    valid_rows = []
+    for row in rows:
+        cid = str(row.get("character_id") or "").lower().strip()
+        if not cid or cid == "unknown":
+            continue
+        vals = _row_non_mirror_values(row)
+        valid_rows.append((cid, row, vals))
+        key = (row.get("match_type"), row.get("mode"), row.get("map_id"))
+        aggregate = contexts.setdefault(key, [0.0, 0.0])
+        aggregate[0] += vals[3]  # non_mirror_weighted_wins
+        aggregate[1] += vals[2]  # non_mirror_weighted_matches
+
+    char_stats: dict[str, dict] = {}
+    for cid, row, (nm_tm, nm_tw, nm_wn, nm_ww, pick_wn, pick_ww) in valid_rows:
+        entry = char_stats.setdefault(cid, {
+            "total_wins": 0,
+            "total_matches": 0,
+            "weighted_matches": 0.0,
+            "weighted_wins": 0.0,
+            "nm_matches": 0,
+            "nm_wins": 0,
+            "nm_weighted_matches": 0.0,
+            "nm_weighted_wins": 0.0,
+            "expected_wins": 0.0,
+        })
+        entry["total_wins"] += int(row.get("total_wins") or 0)
+        entry["total_matches"] += int(row.get("total_matches") or 0)
+        entry["weighted_matches"] += pick_wn
+        entry["weighted_wins"] += pick_ww
+        entry["nm_matches"] += nm_tm
+        entry["nm_wins"] += nm_tw
+        entry["nm_weighted_matches"] += nm_wn
+        entry["nm_weighted_wins"] += nm_ww
+        context_w, context_n = contexts[(row.get("match_type"), row.get("mode"), row.get("map_id"))]
+        entry["expected_wins"] += nm_wn * (context_w / context_n if context_n else 0.5)
+
+    nm_total = sum(v["nm_weighted_matches"] for v in char_stats.values())
+    nm_wins_total = sum(v["nm_weighted_wins"] for v in char_stats.values())
+    baseline = nm_wins_total / nm_total if nm_total else 0.5
+
+    eligible_stats = [
+        s for s in char_stats.values()
+        if s["total_matches"] >= MIN_TIER_MATCHES and s["weighted_matches"] >= MIN_TIER_WEIGHT
+    ]
+    pick_population = eligible_stats if len(eligible_stats) >= 2 else list(char_stats.values())
+    mean_pick_wn = (
+        sum(s["weighted_matches"] for s in pick_population) / len(pick_population)
+        if pick_population else 0.0
+    )
+    log_picks = [math.log1p(max(0.0, s["weighted_matches"])) for s in pick_population]
+    mean_log_picks = sum(log_picks) / len(log_picks) if log_picks else 0.0
+    pick_log_std = (
+        math.sqrt(sum((lp - mean_log_picks) ** 2 for lp in log_picks) / len(log_picks))
+        if log_picks else 0.0
+    )
+
+    standardized = {}
+    for cid, stats in char_stats.items():
+        nm_wn = stats["nm_weighted_matches"]
+        pick_wn = stats["weighted_matches"]
+        expected_rate = stats["expected_wins"] / nm_wn if nm_wn else baseline
+        lift, supported_lift, _ = supported_win_lift(stats["nm_weighted_wins"], nm_wn, expected_rate)
+        rel_pick = (pick_wn / mean_pick_wn) if mean_pick_wn > 0 else 1.0
+        effective_lift = (
+            supported_lift * pick_share_reliability(rel_pick)
+            if supported_lift > 0 else supported_lift
+        )
+        pick_z = (
+            (math.log1p(max(0.0, pick_wn)) - mean_log_picks) / pick_log_std
+            if pick_log_std else 0.0
+        )
+        standardized[cid] = {
+            "expected_rate": expected_rate,
+            "lift": lift,
+            "supported_lift": effective_lift,
+            "sample_discount": lift - effective_lift,
+            "pick_z": pick_z,
+            "rel_pick": rel_pick,
+        }
+
+    return {
+        "char_stats": char_stats,
+        "standardized": standardized,
+        "baseline": baseline,
+        "mean_log_picks": mean_log_picks,
+        "pick_log_std": pick_log_std,
+    }
+
+
 @router.get("/tier-list")
 def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, rank_tier: str = "all", include_details: bool = False, mode: str = None, detail_character: str = None, include_matchup_fallback: bool = True):
     db = get_db()
@@ -371,104 +478,136 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
             "characters": {}
         }
         
-    # フィルタリング
+    # マップ・モードの共通フィルタを先に適用
     restrict_global_modes = type == "global" and not (sub_type in ("mode", "map") and id) and not mode
-    filtered_data = []
+    scoped_rows = []
     for row in data:
         map_id = str(row.get("map_id", ""))
         clean_map_id = map_id.replace("gachi_", "")
-        match_type = str(row.get("match_type", "unknown"))
-        
-        # ガチバトル指定の場合: ランク帯（all, mythic, legendary, masters）で分岐
-        if type == "gachi":
-            target_match_type = {
-                "all": ["gachi"],
-                "mythic": ["gachi_mythic"],
-                "legendary": ["gachi_legendary"],
-                "masters": ["gachi_masters"]
-            }.get(rank_tier, ["gachi"])
-            
-            if match_type not in target_match_type:
-                continue
-        elif type == "global":
-            # 全体Tierの場合: 二重カウント防止のためgachi専用タグ以外の基本データを抽出
-            if match_type.startswith("gachi"):
-                continue
-            if restrict_global_modes and row.get("mode") not in CORE_3V3_MODES:
-                continue
-            
-        # マップ別フィルタ
         if sub_type == "map" and id:
             clean_id = id.replace("gachi_", "")
             if clean_map_id != clean_id and map_id != id:
                 continue
-                
         if sub_type == "mode" and id and row.get("mode") != id:
             continue
-
         if mode and row.get("mode") != mode:
             continue
-        filtered_data.append(row)
-        
-    data = filtered_data
+        scoped_rows.append(row)
 
-    # Compare each character with the same map/mode/cohort population to reduce mix bias.
-    contexts = {}
-    valid_rows = []
-    for row in data:
-        cid = str(row.get("character_id") or "").lower().strip()
-        if not cid or cid == "unknown":
-            continue
-        valid_rows.append((cid, row))
-        key = (row.get("match_type"), row.get("mode"), row.get("map_id"))
-        wins = row.get("weighted_wins") if row.get("weighted_wins") is not None else (row.get("total_wins") or 0)
-        matches = row.get("weighted_matches") if row.get("weighted_matches") is not None else (row.get("total_matches") or 0)
-        aggregate = contexts.setdefault(key, [0.0, 0.0])
-        aggregate[0] += wins
-        aggregate[1] += matches
-    char_stats = {}
-    for cid, row in valid_rows:
-        if cid not in char_stats:
-            char_stats[cid] = {
-                "total_wins": 0,
-                "total_matches": 0,
-                "weighted_matches": 0.0,
-                "weighted_wins": 0.0,
-                "expected_wins": 0.0
+    # コホート抽出 (ガチバトル総合はランク帯別データがあればランク帯ごとに標準化して合算)
+    bracket_names = {name for name, _ in GACHI_RANK_BRACKETS}
+    stratified_gachi = False
+    if type == "gachi" and rank_tier == "all":
+        bracket_rows = [r for r in scoped_rows if str(r.get("match_type", "")) in bracket_names]
+        if bracket_rows:
+            stratified_gachi = True
+            data = bracket_rows
+        else:
+            data = [r for r in scoped_rows if str(r.get("match_type", "")) == "gachi"]
+    elif type == "gachi":
+        target_match_type = {
+            "mythic": "gachi_mythic",
+            "legendary": "gachi_legendary",
+            "masters": "gachi_masters",
+        }.get(rank_tier, "gachi")
+        data = [r for r in scoped_rows if str(r.get("match_type", "")) == target_match_type]
+    elif type == "global":
+        # 全体Tierの場合: 二重カウント防止のためgachi専用タグ以外の基本データを抽出
+        data = [
+            r for r in scoped_rows
+            if not str(r.get("match_type", "unknown")).startswith("gachi")
+            and (not restrict_global_modes or r.get("mode") in CORE_3V3_MODES)
+        ]
+    else:
+        data = scoped_rows
+
+    char_stats: dict[str, dict] = {}
+    standardized_by_char: dict[str, dict] = {}
+    if stratified_gachi:
+        active_brackets = []
+        for b_type, b_weight in GACHI_RANK_BRACKETS:
+            b_rows = [r for r in data if str(r.get("match_type", "")) == b_type]
+            if not b_rows:
+                continue
+            summary = _aggregate_cohort_rows(b_rows)
+            if summary["char_stats"]:
+                active_brackets.append((b_weight, summary))
+        total_b_weight = sum(w for w, _ in active_brackets) or 1.0
+        baseline = sum(w * s["baseline"] for w, s in active_brackets) / total_b_weight
+
+        # Merge raw factual counts across brackets for display and eligibility.
+        for _, summary in active_brackets:
+            for cid, s in summary["char_stats"].items():
+                agg = char_stats.setdefault(cid, {
+                    "total_wins": 0,
+                    "total_matches": 0,
+                    "weighted_matches": 0.0,
+                    "weighted_wins": 0.0,
+                    "nm_matches": 0,
+                    "nm_wins": 0,
+                    "nm_weighted_matches": 0.0,
+                    "nm_weighted_wins": 0.0,
+                })
+                for field in agg:
+                    agg[field] += s[field]
+
+        # Combine bracket-standardized lifts (weighted by bracket importance * evidence)
+        # and log-pick Z-scores (across all active brackets so absence in high ranks counts).
+        for cid in char_stats:
+            ev_weight_sum = 0.0
+            lift_num = 0.0
+            eff_lift_num = 0.0
+            exp_rate_num = 0.0
+            pick_z_num = 0.0
+            for b_weight, summary in active_brackets:
+                norm_bw = b_weight / total_b_weight
+                b_char = summary["char_stats"].get(cid)
+                b_std = summary["standardized"].get(cid)
+                if b_char and b_std:
+                    nm_wn_b = b_char["nm_weighted_matches"]
+                    ev_b = nm_wn_b / (nm_wn_b + PRIOR_MATCHES) if nm_wn_b > 0 else 0.0
+                    comb_w = norm_bw * ev_b
+                    lift_num += comb_w * b_std["lift"]
+                    eff_lift_num += comb_w * b_std["supported_lift"]
+                    exp_rate_num += comb_w * b_std["expected_rate"]
+                    ev_weight_sum += comb_w
+                    z_b = max(-3.0, min(3.0, b_std["pick_z"]))
+                else:
+                    # Character did not appear in this bracket -> log1p(0) = 0.
+                    z_b = (
+                        max(-3.0, min(3.0, (0.0 - summary["mean_log_picks"]) / summary["pick_log_std"]))
+                        if summary["pick_log_std"] else 0.0
+                    )
+                pick_z_num += norm_bw * z_b
+            if ev_weight_sum > 0:
+                lift_c = lift_num / ev_weight_sum
+                eff_lift_c = eff_lift_num / ev_weight_sum
+                exp_rate_c = exp_rate_num / ev_weight_sum
+            else:
+                lift_c = 0.0
+                eff_lift_c = 0.0
+                exp_rate_c = baseline
+            standardized_by_char[cid] = {
+                "expected_rate": exp_rate_c,
+                "lift": lift_c,
+                "supported_lift": eff_lift_c,
+                "sample_discount": lift_c - eff_lift_c,
+                "pick_z": pick_z_num,
             }
-        char_stats[cid]["total_wins"] += (row.get("total_wins") or 0)
-        char_stats[cid]["total_matches"] += (row.get("total_matches") or 0)
-        context_w, context_n = contexts[(row.get("match_type"), row.get("mode"), row.get("map_id"))]
-        row_n = row.get("weighted_matches") if row.get("weighted_matches") is not None else (row.get("total_matches") or 0)
-        char_stats[cid]["expected_wins"] += row_n * (context_w / context_n if context_n else 0.5)
-        char_stats[cid]["weighted_matches"] += row_n
-        char_stats[cid]["weighted_wins"] += row.get("weighted_wins") if row.get("weighted_wins") is not None else (row.get("total_wins") or 0)
-        
+    else:
+        summary = _aggregate_cohort_rows(data)
+        char_stats = summary["char_stats"]
+        standardized_by_char = summary["standardized"]
+        baseline = summary["baseline"]
+
     # スコア計算と詳細データの作成
     scored_chars = []
     characters_detail = {}
     
-    # 全体の総試合数 (使用率計算用)
+    # 全体の総試合数 (使用率計算用: ミラー含む全試合ベース)
     global_total_matches = sum(s["total_matches"] for s in char_stats.values())
-    if global_total_matches == 0: global_total_matches = 1
-    # Popularity contributes to the score, so it must use the same recency
-    # weights as performance. Log-transforming weighted observations removes the
-    # heavy right skew of pick counts, and computing moments over eligible
-    # characters prevents sparse N/A entries from inflating every eligible score.
-    weighted_total = sum(v["weighted_matches"] for v in char_stats.values())
-    eligible_stats = [
-        s for s in char_stats.values()
-        if s["total_matches"] >= MIN_TIER_MATCHES and s["weighted_matches"] >= MIN_TIER_WEIGHT
-    ]
-    pick_population = eligible_stats if len(eligible_stats) >= 2 else list(char_stats.values())
-    log_picks = [math.log1p(max(0.0, s["weighted_matches"])) for s in pick_population]
-    mean_log_picks = sum(log_picks) / len(log_picks) if log_picks else 0.0
-    pick_log_std = math.sqrt(sum((lp - mean_log_picks) ** 2 for lp in log_picks) / len(log_picks)) if log_picks else 0.0
-    
-    # Shrink the win component toward the selected population before blending
-    # it with the usage deviation required by the Tier specification.
-    weighted_wins = sum(v["weighted_wins"] for v in char_stats.values())
-    baseline = weighted_wins / weighted_total if weighted_total else 0.5
+    if global_total_matches == 0:
+        global_total_matches = 1
     pair_data = (_contextual_pairs(db, type, sub_type, id, rank_tier, mode, detail_character)
                  if include_details else {})
     broad_pair_data = (_contextual_pairs(db, "gachi", None, None, "all", None, detail_character)
@@ -477,25 +616,30 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
     for cid, stats in char_stats.items():
         tm = stats["total_matches"]
         tw = stats["total_wins"]
-        
-        # 表示用の実勝率
-        actual_wr = (tw / tm * 100) if tm > 0 else 50.0
-        
+        nm_tm = stats["nm_matches"]
+        nm_tw = stats["nm_wins"]
         weighted_n = stats["weighted_matches"]
-        expected_rate = stats["expected_wins"] / weighted_n if weighted_n else baseline
-        lift, supported_lift, sample_discount = supported_win_lift(stats["weighted_wins"], weighted_n, expected_rate)
+        nm_wn = stats["nm_weighted_matches"]
+        nm_ww = stats["nm_weighted_wins"]
+
+        # 表示用の実勝率 (ミラーマッチ除外ベース; 非ミラー0件時のみ全試合へフォールバック)
+        actual_wr = (nm_tw / nm_tm * 100) if nm_tm > 0 else ((tw / tm * 100) if tm > 0 else 50.0)
+
+        std = standardized_by_char[cid]
+        expected_rate = std["expected_rate"]
+        lift = std["lift"]
+        supported_lift = std["supported_lift"]
+        sample_discount = std["sample_discount"]
         adjusted = expected_rate + lift
         performance_score = min(100.0, max(0.0, 50.0 + 100.0 * supported_lift))
-        char_log_pick = math.log1p(max(0.0, weighted_n))
-        pick_deviation = min(100.0, max(0.0, 50.0 + 10.0 * (char_log_pick - mean_log_picks) / pick_log_std)) if pick_log_std else 50.0
+        pick_deviation = min(100.0, max(0.0, 50.0 + 10.0 * std["pick_z"]))
         # Blend deviations from neutral at the specified 70/30 weights.
-        # Smooth saturation keeps usage bounded without abrupt ±0.67σ clipping.
         score, win_adjustment, usage_adjustment = blend_tier_score(performance_score, pick_deviation, USAGE_ADJUSTMENT_CAP)
         use_rate = tm / global_total_matches * 100
         eligible = tm >= MIN_TIER_MATCHES and weighted_n >= MIN_TIER_WEIGHT
         if eligible:
             scored_chars.append({"id": cid, "score": score})
-        low, high = wilson_interval(tw, tm)
+        low, high = wilson_interval(nm_tw, nm_tm) if nm_tm > 0 else wilson_interval(tw, tm)
 
         # 基本情報（score, win_rate, use_rate, total_matches）は常時提供 (超軽量: 数KB)
         char_entry = {
@@ -508,7 +652,7 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
             "use_rate": round(use_rate, 2),
             "total_matches": tm,
             "weighted_matches": round(weighted_n, 2),
-            "weighted_win_rate": round(stats["weighted_wins"] / weighted_n * 100, 1) if weighted_n else None,
+            "weighted_win_rate": round(nm_ww / nm_wn * 100, 1) if nm_wn else None,
             "context_baseline_win_rate": round(expected_rate * 100, 1),
             "adjusted_win_rate": round(adjusted * 100, 1),
             "estimated_win_lift": round(lift * 100, 1),
@@ -550,7 +694,12 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
                     matchups[enemy] = round(rate * 100, 1)
                 else:
                     ally_stats = next((v for k, v in char_stats.items() if _normalize_id(k) == enemy), None)
-                    ally_rate = posterior_rate(ally_stats["weighted_wins"], ally_stats["weighted_matches"], baseline) if ally_stats else baseline
+                    if ally_stats:
+                        ally_wn = ally_stats["nm_weighted_matches"] or ally_stats["weighted_matches"]
+                        ally_ww = ally_stats["nm_weighted_wins"] if ally_stats["nm_weighted_matches"] else ally_stats["weighted_wins"]
+                        ally_rate = posterior_rate(ally_ww, ally_wn, baseline)
+                    else:
+                        ally_rate = baseline
                     expected = (adjusted + ally_rate) / 2
                     synergy_rate = posterior_rate(weighted_w, weighted_m, expected)
                     synergies[enemy] = {"win_rate": round(synergy_rate * 100, 1),
@@ -584,7 +733,7 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
         "tiers": tiers,
         "type": type,
         "rank_tier": rank_tier,
-        "metrics": {"analyzed_matches": display_matches, "count_unit": "player_observations", "baseline_win_rate": round(baseline * 100, 1), "minimum_matches": MIN_TIER_MATCHES, "analysis_window_days": ANALYSIS_WINDOW_DAYS, "recent_window_days": RECENT_WINDOW_DAYS, "half_life_days": HALF_LIFE_DAYS, "older_half_life_days": OLDER_HALF_LIFE_DAYS, "evidence_half_credit_matches": TIER_EVIDENCE_MATCHES, "win_weight": TIER_WIN_WEIGHT, "usage_weight": TIER_USAGE_WEIGHT, "usage_adjustment_cap": USAGE_ADJUSTMENT_CAP, "tier_method": "dynamic_score_thresholds", "tier_thresholds": {name: score for score, name in thresholds}, "eligible_characters": len(scored_chars), "method": "context_bayes_log_usage_70_30_v9"},
+        "metrics": {"analyzed_matches": display_matches, "count_unit": "player_observations", "baseline_win_rate": round(baseline * 100, 1), "minimum_matches": MIN_TIER_MATCHES, "analysis_window_days": ANALYSIS_WINDOW_DAYS, "recent_window_days": RECENT_WINDOW_DAYS, "half_life_days": HALF_LIFE_DAYS, "older_half_life_days": OLDER_HALF_LIFE_DAYS, "evidence_half_credit_matches": TIER_EVIDENCE_MATCHES, "pick_share_half_credit": TIER_VERSATILITY_HALF_SHARE, "win_weight": TIER_WIN_WEIGHT, "usage_weight": TIER_USAGE_WEIGHT, "usage_adjustment_cap": USAGE_ADJUSTMENT_CAP, "rank_stratified": stratified_gachi, "tier_method": "dynamic_score_thresholds", "tier_thresholds": {name: score for score, name in thresholds}, "eligible_characters": len(scored_chars), "method": "context_non_mirror_stratified_v10"},
         "characters": characters_detail
     }
     return response_data

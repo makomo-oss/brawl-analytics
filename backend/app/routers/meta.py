@@ -8,7 +8,7 @@ from threading import BoundedSemaphore, Lock
 from app.database import get_db
 from app.routers.cron import verify_cron_secret
 from app.services.db_reads import execute_read
-from app.algorithm.statistics import blend_tier_score, normal_tier_boundaries, posterior_rate, supported_win_lift, wilson_interval, MIN_TIER_MATCHES, MIN_TIER_WEIGHT, TIER_EVIDENCE_MATCHES, TIER_WIN_WEIGHT, TIER_USAGE_WEIGHT, ANALYSIS_WINDOW_DAYS, RECENT_WINDOW_DAYS, HALF_LIFE_DAYS, OLDER_HALF_LIFE_DAYS
+from app.algorithm.statistics import assign_tier, blend_tier_score, dynamic_tier_thresholds, posterior_rate, supported_win_lift, wilson_interval, MIN_TIER_MATCHES, MIN_TIER_WEIGHT, TIER_EVIDENCE_MATCHES, TIER_WIN_WEIGHT, TIER_USAGE_WEIGHT, ANALYSIS_WINDOW_DAYS, RECENT_WINDOW_DAYS, HALF_LIFE_DAYS, OLDER_HALF_LIFE_DAYS
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,6 @@ async def map_catalog(response: Response):
 
 
 USAGE_ADJUSTMENT_CAP = 2.0
-GACHI_TIER_THRESHOLDS = ((57, "S+"), (54, "S"), (52, "A+"), (50, "A"), (48, "B"), (46, "C"))
 MIN_DISPLAY_MATCHUP_MATCHES = 5
 MIN_DISPLAY_MATCHUP_WEIGHT = 3.0
 
@@ -411,7 +410,12 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
 
     # Compare each character with the same map/mode/cohort population to reduce mix bias.
     contexts = {}
+    valid_rows = []
     for row in data:
+        cid = str(row.get("character_id") or "").lower().strip()
+        if not cid or cid == "unknown":
+            continue
+        valid_rows.append((cid, row))
         key = (row.get("match_type"), row.get("mode"), row.get("map_id"))
         wins = row.get("weighted_wins") if row.get("weighted_wins") is not None else (row.get("total_wins") or 0)
         matches = row.get("weighted_matches") if row.get("weighted_matches") is not None else (row.get("total_matches") or 0)
@@ -419,12 +423,7 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
         aggregate[0] += wins
         aggregate[1] += matches
     char_stats = {}
-    for row in data:
-        # 大文字と小文字のデータが混在している場合の重複を防ぐため小文字に統一
-        cid = row.get("character_id", "").lower()
-        if not cid or cid == "unknown":
-            continue
-            
+    for cid, row in valid_rows:
         if cid not in char_stats:
             char_stats[cid] = {
                 "total_wins": 0,
@@ -438,7 +437,7 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
         context_w, context_n = contexts[(row.get("match_type"), row.get("mode"), row.get("map_id"))]
         row_n = row.get("weighted_matches") if row.get("weighted_matches") is not None else (row.get("total_matches") or 0)
         char_stats[cid]["expected_wins"] += row_n * (context_w / context_n if context_n else 0.5)
-        char_stats[cid]["weighted_matches"] += row.get("weighted_matches") if row.get("weighted_matches") is not None else (row.get("total_matches") or 0)
+        char_stats[cid]["weighted_matches"] += row_n
         char_stats[cid]["weighted_wins"] += row.get("weighted_wins") if row.get("weighted_wins") is not None else (row.get("total_wins") or 0)
         
     # スコア計算と詳細データの作成
@@ -449,10 +448,18 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
     global_total_matches = sum(s["total_matches"] for s in char_stats.values())
     if global_total_matches == 0: global_total_matches = 1
     # Popularity contributes to the score, so it must use the same recency
-    # weights as performance. Raw use_rate remains a factual 60-day share.
+    # weights as performance. Log-transforming weighted observations removes the
+    # heavy right skew of pick counts, and computing moments over eligible
+    # characters prevents sparse N/A entries from inflating every eligible score.
     weighted_total = sum(v["weighted_matches"] for v in char_stats.values())
-    mean_picks = weighted_total / len(char_stats) if char_stats else 0.0
-    pick_std = math.sqrt(sum((s["weighted_matches"] - mean_picks) ** 2 for s in char_stats.values()) / len(char_stats)) if char_stats else 0.0
+    eligible_stats = [
+        s for s in char_stats.values()
+        if s["total_matches"] >= MIN_TIER_MATCHES and s["weighted_matches"] >= MIN_TIER_WEIGHT
+    ]
+    pick_population = eligible_stats if len(eligible_stats) >= 2 else list(char_stats.values())
+    log_picks = [math.log1p(max(0.0, s["weighted_matches"])) for s in pick_population]
+    mean_log_picks = sum(log_picks) / len(log_picks) if log_picks else 0.0
+    pick_log_std = math.sqrt(sum((lp - mean_log_picks) ** 2 for lp in log_picks) / len(log_picks)) if log_picks else 0.0
     
     # Shrink the win component toward the selected population before blending
     # it with the usage deviation required by the Tier specification.
@@ -475,9 +482,10 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
         lift, supported_lift, sample_discount = supported_win_lift(stats["weighted_wins"], weighted_n, expected_rate)
         adjusted = expected_rate + lift
         performance_score = min(100.0, max(0.0, 50.0 + 100.0 * supported_lift))
-        pick_deviation = min(100.0, max(0.0, 50.0 + 10.0 * (weighted_n - mean_picks) / pick_std)) if pick_std else 50.0
+        char_log_pick = math.log1p(max(0.0, weighted_n))
+        pick_deviation = min(100.0, max(0.0, 50.0 + 10.0 * (char_log_pick - mean_log_picks) / pick_log_std)) if pick_log_std else 50.0
         # Blend deviations from neutral at the specified 70/30 weights.
-        # Capping usage must not silently raise the win component from 70% to 100%.
+        # Smooth saturation keeps usage bounded without abrupt ±0.67σ clipping.
         score, win_adjustment, usage_adjustment = blend_tier_score(performance_score, pick_deviation, USAGE_ADJUSTMENT_CAP)
         use_rate = tm / global_total_matches * 100
         eligible = tm >= MIN_TIER_MATCHES and weighted_n >= MIN_TIER_WEIGHT
@@ -552,22 +560,16 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
     # スコアで降順ソート
     scored_chars.sort(key=lambda x: (-x["score"], -characters_detail[x["id"]]["weighted_matches"], x["id"]))
     
-    # The global view is a relative ranking: map score ranks to normal-curve
-    # proportions while leaving numerical evidence scores untouched. Ranked-only
-    # cohorts stay on fixed thresholds because most characters lack enough data.
+    # Classify both global and ranked cohorts with Empirical-Bayes dynamic
+    # thresholds derived from each cohort's score distribution, evaluated
+    # against the 1-decimal displayed score so UI scores and Tiers never conflict.
     tiers = {key: [] for key in ["S+", "S", "A+", "A", "B", "C", "D", "N/A"]}
     for rank, sc in enumerate(scored_chars, 1):
         characters_detail[sc["id"]]["rank_position"] = rank
-    if type == "global":
-        boundaries = normal_tier_boundaries([sc["score"] for sc in scored_chars]) + [len(scored_chars)]
-        start = 0
-        for tier, end in zip(("S+", "S", "A+", "A", "B", "C", "D"), boundaries):
-            tiers[tier] = [sc["id"] for sc in scored_chars[start:end]]
-            start = end
-    else:
-        for sc in scored_chars:
-            tier = next((name for threshold, name in GACHI_TIER_THRESHOLDS if sc["score"] >= threshold), "D")
-            tiers[tier].append(sc["id"])
+    thresholds = dynamic_tier_thresholds([sc["score"] for sc in scored_chars])
+    for sc in scored_chars:
+        tier = assign_tier(characters_detail[sc["id"]]["score"], thresholds)
+        tiers[tier].append(sc["id"])
     tiers["N/A"] = [cid for cid, stats in characters_detail.items() if not stats["sample_sufficient"]]
 
     # Each source row describes one observed player's match, not all six players.
@@ -578,7 +580,7 @@ def get_tier_list(type: str = "global", sub_type: str = None, id: str = None, ra
         "tiers": tiers,
         "type": type,
         "rank_tier": rank_tier,
-        "metrics": {"analyzed_matches": display_matches, "count_unit": "player_observations", "baseline_win_rate": round(baseline * 100, 1), "minimum_matches": MIN_TIER_MATCHES, "analysis_window_days": ANALYSIS_WINDOW_DAYS, "recent_window_days": RECENT_WINDOW_DAYS, "half_life_days": HALF_LIFE_DAYS, "older_half_life_days": OLDER_HALF_LIFE_DAYS, "evidence_half_credit_matches": TIER_EVIDENCE_MATCHES, "win_weight": TIER_WIN_WEIGHT, "usage_weight": TIER_USAGE_WEIGHT, "usage_adjustment_cap": USAGE_ADJUSTMENT_CAP, "tier_method": "normal_rank_quantiles" if type == "global" else "fixed_score_thresholds", "tier_thresholds": None if type == "global" else {name: score for score, name in GACHI_TIER_THRESHOLDS}, "eligible_characters": len(scored_chars), "method": "context_smooth_sample_shrinkage_70_30_v8"},
+        "metrics": {"analyzed_matches": display_matches, "count_unit": "player_observations", "baseline_win_rate": round(baseline * 100, 1), "minimum_matches": MIN_TIER_MATCHES, "analysis_window_days": ANALYSIS_WINDOW_DAYS, "recent_window_days": RECENT_WINDOW_DAYS, "half_life_days": HALF_LIFE_DAYS, "older_half_life_days": OLDER_HALF_LIFE_DAYS, "evidence_half_credit_matches": TIER_EVIDENCE_MATCHES, "win_weight": TIER_WIN_WEIGHT, "usage_weight": TIER_USAGE_WEIGHT, "usage_adjustment_cap": USAGE_ADJUSTMENT_CAP, "tier_method": "dynamic_score_thresholds", "tier_thresholds": {name: score for score, name in thresholds}, "eligible_characters": len(scored_chars), "method": "context_bayes_log_usage_70_30_v9"},
         "characters": characters_detail
     }
     return response_data

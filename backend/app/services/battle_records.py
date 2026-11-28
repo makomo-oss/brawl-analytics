@@ -65,15 +65,19 @@ def parse_battlelog(player_tag: str, items: list) -> tuple[list[dict], set[str]]
     for item in items or []:
         try:
             battle = item.get("battle") or {}
+            event = item.get("event") or {}
             battle_type = battle.get("type")
             if battle_type not in SUPPORTED_TYPES:
                 continue
+            raw_mode = event.get("mode")
+            if not raw_mode or raw_mode == "unknown":
+                raw_mode = battle.get("mode") or "unknown"
             result = battle.get("result")
             if not result:
                 rank = battle.get("rank")
                 trophy_change = battle.get("trophyChange")
                 if rank is not None:
-                    winner = rank <= (4 if str(battle.get("mode", "")).lower() == "soloshowdown" else 2)
+                    winner = rank <= (4 if str(raw_mode).lower() == "soloshowdown" else 2)
                     result = "victory" if winner else "defeat"
                 elif trophy_change is not None and trophy_change != 0:
                     result = "victory" if trophy_change > 0 else "defeat"
@@ -84,7 +88,6 @@ def parse_battlelog(player_tag: str, items: list) -> tuple[list[dict], set[str]]
             if not battle_time:
                 continue
             match_at = parse_battle_time(battle_time)
-            event = item.get("event") or {}
             teams = battle.get("teams") or []
             players = battle.get("players") or []
             hero_used = "unknown"
@@ -122,9 +125,7 @@ def parse_battlelog(player_tag: str, items: list) -> tuple[list[dict], set[str]]
             if hero_used == "unknown":
                 continue
 
-            mode = event.get("mode")
-            if not mode or mode == "unknown":
-                mode = battle.get("mode") or "unknown"
+            mode = raw_mode
             if mode in ("duoShowdown", "duo_showdown") and teams and any(len(t) >= 3 for t in teams):
                 mode = "trioShowdown"
 

@@ -1,8 +1,17 @@
 from datetime import datetime, timedelta, timezone
+import math
 import pandas as pd
 import pytest
-from app.algorithm.statistics import battle_identity, blend_tier_score, normal_tier_boundaries, posterior_rate, supported_win_lift
+from app.algorithm.statistics import (
+    assign_tier,
+    battle_identity,
+    blend_tier_score,
+    dynamic_tier_thresholds,
+    posterior_rate,
+    supported_win_lift,
+)
 from app.scripts.daily_calc import calc_macro_map_stats, calc_dynamic_counters
+from app.services.battle_records import parse_battlelog
 from app.routers import meta
 from app.services.player_profiles import profile_record
 
@@ -50,6 +59,17 @@ def test_single_win_is_shrunk_not_a_perfect_matchup():
     assert 0.5 < posterior_rate(1, 1) < 0.55
 
 
+def test_supported_win_lift_uses_single_prior_without_double_shrinkage():
+    # At 50 weighted observations, positive lift earns exactly half of the raw lift.
+    lift, supported, discount = supported_win_lift(50 * .70, 50, .50)
+    assert lift == pytest.approx(.20 * 50 / 70)
+    assert supported == pytest.approx(.20 * 50 / 100)
+    assert discount == pytest.approx(lift - supported)
+    assert supported_win_lift(0, 0, .5) == (0.0, 0.0, 0.0)
+    assert supported_win_lift(5, -1, .5) == (0.0, 0.0, 0.0)
+    assert posterior_rate(0, 0, .6) == pytest.approx(.6)
+
+
 def test_supported_win_lift_requires_more_evidence_for_a_high_tier():
     # The same 75% recent win rate should not earn the same strength score
     # from 57 weighted observations as from 450.
@@ -81,24 +101,49 @@ def test_positive_lift_is_shrunk_smoothly_without_a_cutoff():
     assert discount == pytest.approx(lift - supported)
 
 
-def test_usage_cap_keeps_win_component_at_70_percent():
-    mortis, win_m, usage_m = blend_tier_score(37.9, 71.4, 2)
-    mandy, win_a, usage_a = blend_tier_score(45.4, 52.6, 2)
+def test_usage_blend_keeps_win_at_70_percent_and_saturates_smoothly():
+    mortis, win_m, usage_m = blend_tier_score(37.9, 71.4, 2.0)
+    mandy, win_a, usage_a = blend_tier_score(45.4, 52.6, 2.0)
+    _, _, usage_1s = blend_tier_score(50.0, 60.0, 2.0)
+    _, _, usage_2s = blend_tier_score(50.0, 70.0, 2.0)
+    _, _, usage_3s = blend_tier_score(50.0, 80.0, 2.0)
+    _, _, usage_neg = blend_tier_score(50.0, 40.0, 2.0)
+    _, _, usage_zero_cap = blend_tier_score(50.0, 80.0, 0.0)
+    _, _, usage_neg_cap = blend_tier_score(50.0, 80.0, -1.0)
     assert win_m == pytest.approx(.7 * (37.9 - 50))
     assert win_a == pytest.approx(.7 * (45.4 - 50))
-    assert usage_m == 2
-    assert usage_a == pytest.approx(.3 * (52.6 - 50))
-    assert mortis == pytest.approx(43.53)
-    assert mandy == pytest.approx(47.56)
+    assert 0 < usage_a < usage_1s < usage_2s < usage_3s < 2.0
+    assert usage_m == pytest.approx(2.0 * math.tanh(0.3 * 4.0 * 2.14 / 2.0))
+    assert usage_neg == pytest.approx(-usage_1s)
+    assert usage_zero_cap == 0.0
+    assert usage_neg_cap == 0.0
+    assert mortis < mandy < 50.0
 
 
-def test_normal_tier_sizes_follow_quantiles_without_splitting_displayed_ties():
-    scores = [(107 - index) / 10 for index in range(107)]
-    assert normal_tier_boundaries(scores) == [2, 12, 37, 70, 95, 105]
-    scores[37] = scores[36]
-    boundaries = normal_tier_boundaries(scores)
-    assert boundaries[2] in (36, 38)
-    assert round(scores[boundaries[2] - 1], 1) > round(scores[boundaries[2]], 1)
+def test_dynamic_tier_thresholds_adapt_stabilize_and_match_displayed_scores():
+    # Empty cohort falls back to the neutral prior (mean=50, std=2.5).
+    empty = dynamic_tier_thresholds([])
+    assert [name for _, name in empty] == ['S+', 'S', 'A+', 'A', 'B', 'C']
+    assert [th for th, _ in empty] == [54.4, 52.5, 50.9, 49.1, 47.5, 45.6]
+
+    # Tied cohort stays strictly descending via the std floor and maps all ties to A.
+    tied = dynamic_tier_thresholds([50.0] * 100)
+    assert all(tied[i][0] > tied[i + 1][0] for i in range(len(tied) - 1))
+    assert assign_tier(50.0, tied) == 'A'
+
+    # Multiple clear outliers all earn S+ instead of being capped by a fixed rank count.
+    spread = [58.0, 57.5, 57.2, 57.0] + [50.0] * 90 + [43.0, 42.5]
+    th = dynamic_tier_thresholds(spread)
+    assert all(assign_tier(s, th) == 'S+' for s in (58.0, 57.5, 57.2, 57.0))
+    assert assign_tier(50.0, th) == 'A'
+    assert assign_tier(42.5, th) == 'D'
+
+    # Displayed 1-decimal rounding governs Tier assignment (no 52.0 in A when A+>=52.0).
+    exact = ((57.0, 'S+'), (54.0, 'S'), (52.0, 'A+'), (50.0, 'A'), (48.0, 'B'), (46.0, 'C'))
+    assert assign_tier(51.96, exact) == 'A+'
+    assert assign_tier(51.94, exact) == 'A'
+    assert assign_tier(45.96, exact) == 'C'
+    assert assign_tier(45.94, exact) == 'D'
 
 
 def test_small_sample_is_not_given_s_tier(monkeypatch):
@@ -255,6 +300,63 @@ def test_popularity_cannot_promote_below_average_win_performance_to_s_tier(monke
     assert edgar['usage_adjustment'] <= 2
     assert edgar['score'] < 57
     assert 'edgar' not in result['tiers']['S+']
+
+
+def test_gachi_and_global_use_dynamic_thresholds_consistent_with_displayed_scores(monkeypatch):
+    rows = [
+        dict(character_id=f'b{i}', map_id='map', mode='brawlBall', match_type='gachi',
+             total_matches=100 + i * 5, total_wins=40 + i * 3)
+        for i in range(25)
+    ]
+    # Add an unknown row to verify it does not pollute context baseline.
+    rows.append(dict(character_id='unknown', map_id='map', mode='brawlBall', match_type='gachi',
+                     total_matches=5000, total_wins=5000))
+    # Add sparse N/A rows to verify eligible pick distribution stays centered.
+    rows.extend(dict(character_id=f'na{i}', map_id='map', mode='brawlBall', match_type='gachi',
+                     total_matches=2, total_wins=1) for i in range(20))
+    monkeypatch.setattr(meta, 'get_db', lambda: None)
+    monkeypatch.setattr(meta, '_get_cached_macro_data', lambda db: rows)
+    result = meta.get_tier_list(type='gachi')
+    metrics = result['metrics']
+    assert metrics['tier_method'] == 'dynamic_score_thresholds'
+    th_map = metrics['tier_thresholds']
+    thresholds = tuple((th_map[t], t) for t in ('S+', 'S', 'A+', 'A', 'B', 'C'))
+    for tier_name, names in result['tiers'].items():
+        if tier_name == 'N/A':
+            continue
+        for cid in names:
+            displayed = result['characters'][cid]['score']
+            assert assign_tier(displayed, thresholds) == tier_name
+    # Context baseline must ignore the unknown 100%-win row (~52% instead of >90%).
+    assert 45.0 < metrics['baseline_win_rate'] < 60.0
+    # Mean usage adjustment across eligible characters should be centered near 0.
+    eligible_usage = [result['characters'][f'b{i}']['usage_adjustment'] for i in range(25)]
+    assert abs(sum(eligible_usage) / len(eligible_usage)) < 0.15
+
+
+def test_solo_showdown_rank_uses_event_mode_when_battle_mode_missing():
+    items = [
+        {
+            'battleTime': '20261127T010000.000Z',
+            'event': {'mode': 'soloShowdown', 'map': 'Skull Creek'},
+            'battle': {
+                'type': 'ranked',
+                'rank': 4,
+                'players': [{'tag': '#ABC', 'brawler': {'name': 'COLT'}}],
+            },
+        },
+        {
+            'battleTime': '20261127T010500.000Z',
+            'event': {'mode': 'soloShowdown', 'map': 'Skull Creek'},
+            'battle': {
+                'type': 'ranked',
+                'rank': 5,
+                'players': [{'tag': '#ABC', 'brawler': {'name': 'COLT'}}],
+            },
+        },
+    ]
+    records, _ = parse_battlelog('#ABC', items)
+    assert [r['result'] for r in records] == ['victory', 'defeat']
 
 
 def test_profile_sync_keeps_rank_and_inventory():
